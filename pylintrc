@@ -1,0 +1,34 @@
+[MASTER]
+ignore = thirdparty,doc
+known-third-party = P4
+
+[MESSAGES CONTROL]
+disable = missing-docstring,
+          fixme,
+          too-many-instance-attributes,
+          too-many-branches,
+          too-many-arguments,
+          too-few-public-methods,
+          too-many-statements,
+          global-statement,
+          broad-except,
+          undefined-variable,
+          unused-argument,
+          unused-import,
+          no-name-in-module,
+          no-member,
+          unsupported-assignment-operation,
+          super-init-not-called
+
+[BASIC]
+no-docstring-rgx = .*
+variable-rgx = [a-z_][a-z0-9_]{0,30}$
+const-rgx = (([a-z_][a-z0-9_]*)|([A-Z_][A-Z0-9_]*)|(__.*__))$
+attr-rgx = [a-z_][a-z0-9_]{1,30}$
+function-rgx = [a-z_][a-z0-9_]*$
+
+[FORMAT]
+max-line-length = 130
+
+[SIMILARITIES]
+ignore-imports=yes

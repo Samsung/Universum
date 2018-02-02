@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Project &#39;Universum&#39; &mdash; Universum 0.12.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Universum 0.12.4 documentation" href="#"/>
+        <link rel="next" title="Prerequisites" href="prerequisites.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> Universum
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="args.html">Command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuring.html">Configuring the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_support.html">'configuration_support' module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teamcity.html">Integration with TeamCity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog_ref.html">Change log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Universum</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Project 'Universum'</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="project-universum">
+<h1>Project 'Universum'<a class="headerlink" href="#project-universum" title="Permalink to this headline">¶</a></h1>
+<p>Project <cite>Universum</cite> is a continuous integration framework, containing
+a collection of functions that simplify implementation of the
+automatic build, testing, static analysis and other steps.
+The goal of this project is to provide unified approach for adding continuous integration
+to any project. It currently supports Perforce, Swarm and TeamCity.</p>
+<p>Sometimes <cite>Universum</cite> system can be referred to as the framework or just CI.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Before launching the <cite>Universum</cite>, please make sure your system meets the following
+<a class="reference internal" href="prerequisites.html"><span class="doc">Prerequisites</span></a>.</p>
+<p>The main script <code class="docutils literal"><span class="pre">universum.py</span></code> is used for performing all CI-related
+actions. Launch it with <code class="docutils literal"><span class="pre">--help</span></code> parameter to obtain information on
+<a class="reference internal" href="args.html"><span class="doc">all supported options</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ ./universum.py --help
+</pre></div>
+</div>
+<p>In order to use the CI system with a project, a special <code class="docutils literal"><span class="pre">configs.py</span></code> file
+must be created. We recommend to place it somewhere inside the project
+tree. Its location is specified by the <cite>CONFIG_PATH</cite> environment variable.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently the CI system is maintained in two separate branches: <cite>DEV</cite> and <cite>MAIN</cite>.
+We recommend to use <cite>MAIN</cite> branch in production.</p>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The sample project can be found in the <cite>examples</cite> directory.
+This sample project consists of the following files:</p>
+<ol class="arabic simple">
+<li><cite>basic_build_script.sh</cite> - sort of build script, which simulates
+success and failure builds. This shell script is referred by
+the configuration files</li>
+<li><cite>basic_config.py</cite> - sample configuration file for the project,
+displaying most crucial <a class="reference internal" href="configuring.html"><span class="doc">configuring features</span></a></li>
+<li><cite>if_env_set_config.py</cite> - another configuration file, demonstrating
+configuration filtering</li>
+</ol>
+<p>The example of using <cite>Universum</cite> system can be launched by <code class="docutils literal"><span class="pre">run_basic_example.sh</span></code>
+shell script, like follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ ./run_basic_example.sh
+
+Run using &#39;basic_config.py&#39;
+
+1. Preparing repository
+|   1.1. Copying sources to working directory
+|      └ [Success]
+... lots of output ...
+
+Run using &#39;if_env_set_config.py&#39;
+
+1. Preparing repository
+|   1.1. Copying sources to working directory
+|      └ [Success]
+... lots of output ...
+</pre></div>
+</div>
+<p>You can inspect this basic sample to understand the using of the CI system.</p>
+<p>The detailed description of project configuration can be found on a <a class="reference internal" href="configuring.html"><span class="doc">Configuring the project</span></a> section.</p>
+</div>
+</div>
+<div class="section" id="further-reading">
+<h1>Further reading<a class="headerlink" href="#further-reading" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Prerequisites</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prerequisites.html#preinstalled-packages">Preinstalled packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prerequisites.html#optional-used-for-internal-tests">Optional (used for internal tests)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="args.html">Command line</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Artifact collection">Artifact collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Result reporting">Result reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#TeamCity variables">TeamCity variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Output">Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Configuration execution">Configuration execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Source files">Source files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Git">Git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Perforce">Perforce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Swarm">Swarm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="args.html#Local files">Local files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuring.html">Configuring the project</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#project-configuration">Project configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#minimal-project-configuration-file">Minimal project configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#execution-directory">Execution directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#list-of-configurations">List of configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#common-variations-keys">Common <cite>Variations</cite> keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#dump-configurations-list">Dump configurations list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#combining-configurations">Combining configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html#excluding-configurations">Excluding configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_support.html">'configuration_support' module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration_support.html#universum-configuration-support"><code class="docutils literal"><span class="pre">_universum.configuration_support</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="teamcity.html">Integration with TeamCity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#install-universum-on-build-agents">Install Universum on build agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#create-a-top-level-project">Create a top-level project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#create-a-common-meta-runner">Create a common meta-runner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#configure-project-using-perforce">Configure project using Perforce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#create-basic-postcommit-configuration">Create basic postcommit configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#create-configuration-for-custom-builds">Create configuration for custom builds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#integrate-with-swarm">Integrate with Swarm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teamcity.html#configure-project-and-configurations-using-git">Configure project and configurations using Git</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog_ref.html">Change log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id1">0.12.4 (2018-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id2">0.12.3 (2018-01-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id4">0.12.2 (2017-12-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id7">0.12.1 (2017-12-11)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id10">0.12.0 (2017-11-29)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id12">0.11.2 (2017-11-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id15">0.11.1 (2017-11-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id18">0.11.0 (2017-11-09)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id20">0.10.7 (2017-11-07)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id22">0.10.6 (2017-11-06)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id25">0.10.5 (2017-11-03)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id27">0.10.4 (2017-10-17)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id30">0.10.3 (2017-10-17)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id32">0.10.2 (2017-10-10)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id35">0.10.1 (2017-09-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id38">0.10.0 (2017-09-13)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id41">0.9.1 (2017-08-25)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id43">0.9.0 (2017-08-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id46">0.8.1 (2017-08-03)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id49">0.8.0 (2017-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id52">0.7.0 (2017-07-21)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id55">0.6.3 (2017-07-13)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id57">0.6.2 (2017-07-11)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id59">0.6.1 (2017-07-05)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id62">0.6.0 (2017-07-05)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id64">0.5.0 (2017-06-06)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id67">0.4.1 (2017-05-30)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id69">0.4.0 (2017-05-30)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id71">0.3.0 (2017-05-25)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id74">0.2.1 (2017-05-17)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id76">0.2.0 (2017-05-16)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id80">0.1.1 (2017-04-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog_ref.html#id82">0.1.0 (2017-04-26)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="prerequisites.html" class="btn btn-neutral float-right" title="Prerequisites" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Samsung Electornics Co., Ltd..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.12.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

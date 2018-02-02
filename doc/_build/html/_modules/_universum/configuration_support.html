@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>_universum.configuration_support &mdash; Universum 0.12.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Universum 0.12.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Universum
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../prerequisites.html">Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../args.html">Command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuring.html">Configuring the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration_support.html">'configuration_support' module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../teamcity.html">Integration with TeamCity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog_ref.html">Change log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Universum</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>_universum.configuration_support</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for _universum.configuration_support</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: UTF-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;Variations&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;code_style_cmd&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;code_style_type&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;combine&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;set_project_root&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_project_root&quot;</span>
+<span class="p">]</span>
+
+<span class="n">skip_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;children&quot;</span><span class="p">,</span> <span class="s2">&quot;skip_numbering_level&quot;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="combine"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.combine">[docs]</a><span class="k">def</span> <span class="nf">combine</span><span class="p">(</span><span class="n">dictionary_a</span><span class="p">,</span> <span class="n">dictionary_b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combine two dictionaries using plus operator for matching keys</span>
+
+<span class="sd">    :param dictionary_a: may have any keys and values</span>
+<span class="sd">    :param dictionary_b: may have any keys, but the values of keys, matching `dictionary_a`,</span>
+<span class="sd">        should be the same type</span>
+<span class="sd">    :return: new dictionary containing all keys from both `dictionary_a` and `dictionary_b`;</span>
+<span class="sd">        for each matching key the value in resulting dictionary is a sum of two corresponding values</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; combine(dict(attr_a = &quot;a1&quot;, attr_b = [&quot;b11&quot;, &quot;b12&quot;]), dict(attr_a = &quot;a2&quot;, attr_b = [&quot;b2&quot;]))</span>
+<span class="sd">    {&#39;attr_b&#39;: [&#39;b11&#39;, &#39;b12&#39;, &#39;b2&#39;], &#39;attr_a&#39;: &#39;a1a2&#39;}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary_a</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">skip_attributes</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary_b</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dictionary_a</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+</span> <span class="n">dictionary_b</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dictionary_a</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary_b</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">skip_attributes</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary_a</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dictionary_b</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<span class="k">def</span> <span class="nf">stringify</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">command_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">argument</span><span class="p">:</span>
+            <span class="n">argument</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">argument</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">command_line</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">command_line</span> <span class="o">=</span> <span class="n">argument</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">command_line</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">argument</span>
+
+    <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">command_line</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="Variations"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.Variations">[docs]</a><span class="k">class</span> <span class="nc">Variations</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    `Variations` is a class for establishing project configurations.</span>
+<span class="sd">    This class object is a list of dictionaries:</span>
+
+<span class="sd">    &gt;&gt;&gt; v1 = Variations([{&quot;field1&quot;: &quot;string&quot;}])</span>
+<span class="sd">    &gt;&gt;&gt; v1</span>
+<span class="sd">    [{&#39;field1&#39;: &#39;string&#39;}]</span>
+
+<span class="sd">    Build-in method all() generates iterable for all configuration dictionaries for further usage:</span>
+
+<span class="sd">    &gt;&gt;&gt; for i in v1.all(): i</span>
+<span class="sd">    {&#39;field1&#39;: &#39;string&#39;}</span>
+
+<span class="sd">    Built-in method dump() will generate a printable string representation of the object.</span>
+<span class="sd">    This string will be printed into console output</span>
+
+<span class="sd">    &gt;&gt;&gt; v1.dump()</span>
+<span class="sd">    &quot;[{&#39;field1&#39;: &#39;string&#39;}]&quot;</span>
+
+<span class="sd">    Adding two objects will extend list of dictionaries:</span>
+
+<span class="sd">    &gt;&gt;&gt; v2 = Variations([{&quot;field1&quot;: &quot;line&quot;}])</span>
+<span class="sd">    &gt;&gt;&gt; for i in (v1 + v2).all(): i</span>
+<span class="sd">    {&#39;field1&#39;: &#39;string&#39;}</span>
+<span class="sd">    {&#39;field1&#39;: &#39;line&#39;}</span>
+
+<span class="sd">    While multiplying them will combine same fields of dictionaries:</span>
+
+<span class="sd">    &gt;&gt;&gt; for i in (v1 * v2).all(): i</span>
+<span class="sd">    {&#39;field1&#39;: &#39;stringline&#39;}</span>
+
+<span class="sd">    When a field value is a list itself -</span>
+
+<span class="sd">    &gt;&gt;&gt; v3 = Variations([dict(field2=[&quot;string&quot;])])</span>
+<span class="sd">    &gt;&gt;&gt; v4 = Variations([dict(field2=[&quot;line&quot;])])</span>
+
+<span class="sd">    multiplying them will extend the inner list:</span>
+
+<span class="sd">    &gt;&gt;&gt; for i in (v3 * v4).all(): i</span>
+<span class="sd">    {&#39;field2&#39;: [&#39;string&#39;, &#39;line&#39;]}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Variations.__add__"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.Variations.__add__">[docs]</a>    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This functions defines operator ``+`` for :class:`.Variations` class objects by</span>
+<span class="sd">        concatenating lists of dictionaries into one list.</span>
+<span class="sd">        The order of list members in resulting list is preserved: first all dictionaries from `self`,</span>
+<span class="sd">        then all dictionaries from `other`.</span>
+
+<span class="sd">        :param other: `Variations` object to be added to `self`</span>
+<span class="sd">        :return: new `Variations` object, including all configurations from both `self` and `other` objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Variations</span><span class="p">(</span><span class="nb">list</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">other</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Variations.__mul__"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.Variations.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This functions defines operator ``*`` for :class:`.Variations` class objects.</span>
+<span class="sd">        The resulting object is created by combining every `self` list member with</span>
+<span class="sd">        every `other` list member using :func:`.combine()` function.</span>
+
+<span class="sd">        :param other: `Variations` object to be multiplied to `self`</span>
+<span class="sd">        :return: new `Variations` object, consisting of the list of combined configurations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">long</span><span class="p">)):</span>
+            <span class="n">result_list</span> <span class="o">=</span> <span class="nb">list</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">obj_a</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">obj_a_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">obj_a</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;children&quot;</span> <span class="ow">in</span> <span class="n">obj_a</span><span class="p">:</span>
+                    <span class="n">obj_a_copy</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj_a</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">other</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">obj_a_copy</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                <span class="n">obj_a_copy</span><span class="p">[</span><span class="s2">&quot;skip_numbering_level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+                <span class="n">result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj_a_copy</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">Variations</span><span class="p">(</span><span class="n">result_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Variations.all"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.Variations.all">[docs]</a>    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function for configuration iterating.</span>
+
+<span class="sd">        :return: iterable for all dictionary objects in :class:`.Variations` list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">obj_a</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+
+            <span class="n">obj_a_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">obj_a</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;children&quot;</span> <span class="ow">in</span> <span class="n">obj_a_copy</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">obj_b</span> <span class="ow">in</span> <span class="n">obj_a_copy</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">obj_a_copy</span><span class="p">,</span> <span class="n">obj_b</span><span class="p">)</span>
+
+                    <span class="k">yield</span> <span class="n">res</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">obj_a_copy</span></div>
+
+<div class="viewcode-block" id="Variations.dump"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.Variations.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">produce_string_command</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function for :class:`.Variations` objects pretty printing.</span>
+
+<span class="sd">        :param produce_string_command: if set to False, prints &quot;command&quot; as list instead of string</span>
+<span class="sd">        :return: a user-friendly string representation of all configurations list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">space_found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+            <span class="k">if</span> <span class="n">produce_string_command</span> <span class="ow">and</span> <span class="s2">&quot;command&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">stringify</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                    <span class="n">space_found</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">result</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+
+        <span class="k">if</span> <span class="n">space_found</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">WARNING! We have detected space character within some of the command-line parameters.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="s2">&quot;Please make sure you are not trying to pass two or more parameters as one.&quot;</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Variations.filter"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.Variations.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checker</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function is supposed to be called from main script, not configuration file.</span>
+<span class="sd">        It uses provided `checker` to find all the configurations that pass the check,</span>
+<span class="sd">        removing those not matching conditions.</span>
+
+<span class="sd">        :param checker: a function that returns `True` if configuration passes the filter and `False` otherwise</span>
+<span class="sd">        :param parent: an inner parameter for recursive usage; should be None when function is called from outside</span>
+<span class="sd">        :return: new `Variations` object without configurations not matching `checker` conditions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">filtered_variations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">obj_a</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">obj_a</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="s2">&quot;children&quot;</span> <span class="ow">in</span> <span class="n">obj_a</span><span class="p">:</span>
+                <span class="n">active_children</span> <span class="o">=</span> <span class="n">obj_a</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">active_children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">active_children</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">obj_a_copy</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">obj_a</span><span class="p">,</span> <span class="n">active_children</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="s2">&quot;children&quot;</span> <span class="ow">in</span> <span class="n">active_children</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                            <span class="n">obj_a_copy</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">active_children</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;children&quot;</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">obj_a_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">obj_a</span><span class="p">)</span>
+                        <span class="n">obj_a_copy</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">active_children</span>
+                    <span class="n">filtered_variations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj_a_copy</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">checker</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+                    <span class="n">filtered_variations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">obj_a</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">Variations</span><span class="p">(</span><span class="n">filtered_variations</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">code_style_cmd</span><span class="p">(</span><span class="n">script_path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Variations</span><span class="p">([</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Style&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="p">[</span><span class="n">script_path</span><span class="p">,</span> <span class="s2">&quot;--continuous-integration&quot;</span><span class="p">])])</span>
+
+
+<span class="n">code_style_type</span> <span class="o">=</span> <span class="n">Variations</span><span class="p">([</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot; - DOS end of lines check&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--end&quot;</span><span class="p">]),</span>
+                              <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot; - tab check&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--tab&quot;</span><span class="p">]),</span>
+                              <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot; - trailing whitespaces check&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--space&quot;</span><span class="p">]),</span>
+                              <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot; - uncrustify Code Style check&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--uncrustify&quot;</span><span class="p">])])</span>
+
+<span class="n">global_project_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="set_project_root"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.set_project_root">[docs]</a><span class="k">def</span> <span class="nf">set_project_root</span><span class="p">(</span><span class="n">project_root</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to be called from main script; not supposed to be used in configuration file.</span>
+<span class="sd">    Stores generated project location for further usage. This function is needed because</span>
+<span class="sd">    project sources most likely will be copied to a temporary directory</span>
+<span class="sd">    of some automatically generated location and the CI run will be performed there.</span>
+
+<span class="sd">    :param project_root: path to actual project root</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">global_project_root</span>
+    <span class="n">global_project_root</span> <span class="o">=</span> <span class="n">project_root</span></div>
+
+
+<div class="viewcode-block" id="get_project_root"><a class="viewcode-back" href="../../configuration_support.html#_universum.configuration_support.get_project_root">[docs]</a><span class="k">def</span> <span class="nf">get_project_root</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to be used in configuration file. Inserts actual project location after</span>
+<span class="sd">    that location is generated. If project root is not set, function returns current directory.</span>
+
+<span class="sd">    :return: actual project root</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">global_project_root</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Samsung Electornics Co., Ltd..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.12.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

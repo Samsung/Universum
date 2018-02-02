@@ -1,0 +1,601 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Command line &mdash; Universum 0.12.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Universum 0.12.4 documentation" href="index.html"/>
+        <link rel="next" title="Configuring the project" href="configuring.html"/>
+        <link rel="prev" title="Prerequisites" href="prerequisites.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Universum
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Prerequisites</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command line</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Artifact collection">Artifact collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Result reporting">Result reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#TeamCity variables">TeamCity variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Output">Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Configuration execution">Configuration execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Source files">Source files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Git">Git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Perforce">Perforce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Swarm">Swarm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Local files">Local files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuring.html">Configuring the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_support.html">'configuration_support' module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teamcity.html">Integration with TeamCity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog_ref.html">Change log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Universum</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Command line</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/args.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="command-line">
+<h1>Command line<a class="headerlink" href="#command-line" title="Permalink to this headline">¶</a></h1>
+<p>Main script of project <cite>Universum</cite> is <code class="docutils literal"><span class="pre">universum.py</span></code>.
+All command-line parameters, general and module-related, are passed to this main script.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Most of command-line parameters can be replaced by setting up corresponding environment
+variables (see 'env' comment in descriptions)</p>
+</div>
+<p>Universum 0.12.4</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">universum</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">version</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">artifact</span><span class="o">-</span><span class="nb">dir</span> <span class="n">ARTIFACT_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">archive</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="n">env</span> <span class="p">{</span><span class="n">tc</span><span class="p">,</span><span class="n">local</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="n">build</span><span class="o">-</span><span class="n">start</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="n">build</span><span class="o">-</span><span class="n">success</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">tc</span><span class="o">-</span><span class="n">server</span> <span class="n">TEAMCITY_SERVER</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">tc</span><span class="o">-</span><span class="n">build</span><span class="o">-</span><span class="nb">id</span> <span class="n">BUILD_ID</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">tc</span><span class="o">-</span><span class="n">configuration</span><span class="o">-</span><span class="nb">id</span> <span class="n">CONFIGURATION_ID</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">out</span><span class="o">-</span><span class="nb">type</span> <span class="p">{</span><span class="n">tc</span><span class="p">,</span><span class="n">term</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">launcher</span><span class="o">-</span><span class="n">output</span> <span class="p">{</span><span class="n">console</span><span class="p">,</span><span class="n">file</span><span class="p">}]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">launcher</span><span class="o">-</span><span class="n">config</span><span class="o">-</span><span class="n">path</span> <span class="n">CONFIG_PATH</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">vcs</span><span class="o">-</span><span class="nb">type</span> <span class="p">{</span><span class="n">none</span><span class="p">,</span><span class="n">p4</span><span class="p">,</span><span class="n">git</span><span class="p">,</span><span class="n">gerrit</span><span class="p">}]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">project</span><span class="o">-</span><span class="n">root</span> <span class="n">PROJECT_ROOT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">review</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">git</span><span class="o">-</span><span class="n">repo</span> <span class="n">GIT_REPO</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">git</span><span class="o">-</span><span class="n">refspec</span> <span class="n">GIT_REFSPEC</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">git</span><span class="o">-</span><span class="n">user</span> <span class="n">GITUSER</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">git</span><span class="o">-</span><span class="n">email</span> <span class="n">GITEMAIL</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">git</span><span class="o">-</span><span class="n">checkout</span><span class="o">-</span><span class="nb">id</span> <span class="n">GIT_CHECKOUT_ID</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">git</span><span class="o">-</span><span class="n">cherry</span><span class="o">-</span><span class="n">pick</span><span class="o">-</span><span class="nb">id</span> <span class="n">GIT_CHERRYPICK_ID</span> <span class="p">[</span><span class="n">GIT_CHERRYPICK_ID</span> <span class="o">...</span><span class="p">]]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">sync</span> <span class="n">SYNC_CHANGELIST</span> <span class="p">[</span><span class="n">SYNC_CHANGELIST</span> <span class="o">...</span><span class="p">]]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">shelve</span> <span class="n">SHELVE_CHANGELIST</span> <span class="p">[</span><span class="n">SHELVE_CHANGELIST</span> <span class="o">...</span><span class="p">]]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">port</span> <span class="n">P4PORT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">user</span> <span class="n">P4USER</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">password</span> <span class="n">P4PASSWD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">project</span><span class="o">-</span><span class="n">depot</span><span class="o">-</span><span class="n">path</span> <span class="n">P4_PATH</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">mappings</span> <span class="n">P4_MAPPINGS</span> <span class="p">[</span><span class="n">P4_MAPPINGS</span> <span class="o">...</span><span class="p">]]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">client</span> <span class="n">P4CLIENT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">p4</span><span class="o">-</span><span class="n">force</span><span class="o">-</span><span class="n">clean</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">swarm</span><span class="o">-</span><span class="n">server</span><span class="o">-</span><span class="n">url</span> <span class="n">SWARM_SERVER</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">swarm</span><span class="o">-</span><span class="n">review</span><span class="o">-</span><span class="nb">id</span> <span class="n">REVIEW</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">swarm</span><span class="o">-</span><span class="k">pass</span><span class="o">-</span><span class="n">link</span> <span class="n">PASS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">swarm</span><span class="o">-</span><span class="n">fail</span><span class="o">-</span><span class="n">link</span> <span class="n">FAIL</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">files</span><span class="o">-</span><span class="n">source</span><span class="o">-</span><span class="nb">dir</span> <span class="n">SOURCE_DIR</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h2>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h2>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--version</kbd></td>
+</tr>
+<tr><td>&#160;</td><td>Display product name &amp; version instead of launching.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Artifact collection">
+<h2>Artifact collection<a class="headerlink" href="#Artifact collection" title="Permalink to this headline">¶</a></h2>
+<p>Parameters of archiving and collecting of build artifacts</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--artifact-dir, -ad</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Directory to collect artifacts to. Default is 'artifacts'</p>
+<p class="last">Environment variable: $ARTIFACT_DIR</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--no-archive</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">By default all directories noted as artifacts are copied as .zip archives. This option turn archiving off to copy bare directories to artifact directory</p>
+<p class="last">Default: False</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Result reporting">
+<h2>Result reporting<a class="headerlink" href="#Result reporting" title="Permalink to this headline">¶</a></h2>
+<p>Build results collecting and publishing parameters</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--report-env, -re</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Possible choices: tc, local</p>
+<p class="last">Type of environment to refer to (tc - TeamCity, local - user local terminal). TeamCity environment is detected automatically when launched on build agent</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--report-build-start, -rst</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Send additional comment to review system on build started (with link to log)</p>
+<p class="last">Default: False</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--report-build-success, -rsu</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Send comment to review system on build success (in addition to vote up)</p>
+<p class="last">Default: False</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="TeamCity variables">
+<h2>TeamCity variables<a class="headerlink" href="#TeamCity variables" title="Permalink to this headline">¶</a></h2>
+<p>TeamCity-specific parameters</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--tc-server, -ts</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">TeamCity server URL</p>
+<p class="last">Environment variable: $TEAMCITY_SERVER</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--tc-build-id, -tbi</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">teamcity.build.id</p>
+<p class="last">Environment variable: $BUILD_ID</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--tc-configuration-id, -tci</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">system.teamcity.byildType.id</p>
+<p class="last">Environment variable: $CONFIGURATION_ID</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Output">
+<h2>Output<a class="headerlink" href="#Output" title="Permalink to this headline">¶</a></h2>
+<p>Log appearance parameters</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--out-type, -ot</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Possible choices: tc, term</p>
+<p class="last">Type of output to produce (tc - TeamCity, term - terminal). TeamCity environment is detected automatically when launched on build agent.</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Configuration execution">
+<h2>Configuration execution<a class="headerlink" href="#Configuration execution" title="Permalink to this headline">¶</a></h2>
+<p>External command launching and reporting parameters</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--launcher-output, -lo</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Possible choices: console, file</p>
+<p class="last">Define whether to print build logs to console or store to files. Log file names are generated based on the names of build steps. Possible values: 'console', 'file'. By default, logs are printed to console when the build is launched on TeamCity agent</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--launcher-config-path, -lcp</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Project configs.py file location. Mandatory parameter</p>
+<p class="last">Environment variable: $CONFIG_PATH</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Source files">
+<h2>Source files<a class="headerlink" href="#Source files" title="Permalink to this headline">¶</a></h2>
+<p>Parameters determining the processing of repository files</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--vcs-type, -vt</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Possible choices: none, p4, git, gerrit</p>
+<p>Select repository type to download sources from: Perforce ('p4', the default), Git ('git'), Gerrit ('gerrit') or a local directory ('none'). Gerrit uses Git parameters. Each VCS type has its own settings.</p>
+<p class="last">Default: &quot;p4&quot;</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--project-root, -pr</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Temporary directory to copy sources to. Default is 'temp'</p>
+<p class="last">Environment variable: $PROJECT_ROOT</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--report-to-review</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Perform test build for code review system (e.g. Gerrit or Swarm).</p>
+<p class="last">Default: False</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Git">
+<h2>Git<a class="headerlink" href="#Git" title="Permalink to this headline">¶</a></h2>
+<p>Git repository settings</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--git-repo, -gr</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">See your project home page for exact repository identifier, passed to 'git clone'. If using SSH, '--git-repo' format is '<a class="reference external" href="ssh://user&#64;server:port/detailed/path">ssh://user&#64;server:port/detailed/path</a>'</p>
+<p class="last">Environment variable: $GIT_REPO</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--git-refspec, -grs</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Any additional refspec to be fetched</p>
+<p class="last">Environment variable: $GIT_REFSPEC</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--git-user, -gu</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Git user name; right now is only used for submitting</p>
+<p class="last">Environment variable: $GITUSER</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--git-email, -ge</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Git user email; right now is only used for submitting</p>
+<p class="last">Environment variable: $GITEMAIL</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--git-checkout-id, -gco</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">A commit ID to checkout. Could be exact commit hash, or branch name, or tag, etc.</p>
+<p class="last">Environment variable: $GIT_CHECKOUT_ID</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--git-cherry-pick-id, -gcp</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">List of commit IDs to be cherry-picked, separated by comma. '--git-cherry-pick-id' can be added to the command line several times</p>
+<p class="last">Environment variable: $GIT_CHERRYPICK_ID</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Perforce">
+<h2>Perforce<a class="headerlink" href="#Perforce" title="Permalink to this headline">¶</a></h2>
+<p>Please read the details about P4 environment variables in official Helix manual</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-sync, -p4h</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Sync (head) CL(s). Just a number will be interpreted as united CL for all added VCS roots. To add a sync CL for specific depot/workspace location, write location in the same format as in P4_MAPPINGS with '&#64;&lt;CL number&gt;' in the end, e.g. '//DEV/Solution/MyProject/...&#64;1234567'. To specify more than one sync CL for several locations, add '--p4-sync' several times or split them with comma</p>
+<p class="last">Environment variable: $SYNC_CHANGELIST</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-shelve, -p4s</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">List of shelve CLs to be applied, separated by comma. --p4-shelve can be added to the command line several times. Also, 5 additional shelve CLs can be specified via environment variables: SHELVE_CHANGELIST_1..5.</p>
+<p class="last">Environment variable: $SHELVE_CHANGELIST</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-port, -p4p</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">P4 port (e.g. 'myhost.net:1666')</p>
+<p class="last">Environment variable: $P4PORT</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-user, -p4u</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">P4 user name</p>
+<p class="last">Environment variable: $P4USER</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-password, -p4P</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">P4 password</p>
+<p class="last">Environment variable: $P4PASSWD</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-project-depot-path, -p4d</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Depot path to get sources from (starts with '//', ends with '/...'Only supports one path. Cannot be used with '--p4-mappings' option</p>
+<p class="last">Environment variable: $P4_PATH</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-mappings, -p4m</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">P4 mappings. Cannot be used with '--p4-project-depot-path' option. Use the following format: '//depot/path/... /local/path/...', where the right half is the same as in real P4 mappings, but without client name. Just start from client root with one slash. For more than one add several times or split with ',' character</p>
+<p class="last">Environment variable: $P4_MAPPINGS</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-client, -p4c</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">P4 client (workspace) name. Use '--p4-force-clean' option to make a disposable client</p>
+<p class="last">Environment variable: $P4CLIENT</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--p4-force-clean</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first"><strong>Revert all files within '--p4-client' and delete the workspace.</strong> Mandatory for CI environment, otherwise use with caution</p>
+<p class="last">Default: False</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Swarm">
+<h2>Swarm<a class="headerlink" href="#Swarm" title="Permalink to this headline">¶</a></h2>
+<p>Parameters for performing a test run for pre-commit review</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--swarm-server-url, -ssu</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Swarm server URL; is used for additional interaction such as voting for the review</p>
+<p class="last">Environment variable: $SWARM_SERVER</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--swarm-review-id, -sre</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Swarm review number; is sent by Swarm triggering link as '{review}'</p>
+<p class="last">Environment variable: $REVIEW</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--swarm-pass-link, -spl</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Swarm 'success' link; is sent by Swarm triggering link as '{pass}'</p>
+<p class="last">Environment variable: $PASS</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>--swarm-fail-link, -sfl</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'</p>
+<p class="last">Environment variable: $FAIL</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Local files">
+<h2>Local files<a class="headerlink" href="#Local files" title="Permalink to this headline">¶</a></h2>
+<p>Parameters for file settings in case of no VCS used</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>--files-source-dir, -fsd</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">A local folder for project sources to be copied from. This option is only needed when '--vcs-type' is set to 'none'</p>
+<p class="last">Environment variable: $SOURCE_DIR</p>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configuring.html" class="btn btn-neutral float-right" title="Configuring the project" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="prerequisites.html" class="btn btn-neutral" title="Prerequisites" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Samsung Electornics Co., Ltd..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.12.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
