@@ -105,7 +105,7 @@ class ArtifactCollector(Module):
                     text = "Build artifacts, such as"
                     for matching_path in matches:
                         text += "\n * '" + os.path.basename(matching_path) + "'"
-                    text += "\nalready exist in '" + os.path.dirname(item) + "' directory."
+                    text += "\nalready exist in '" + os.path.dirname(item["path"]) + "' directory."
                     text += "\nPossible reason of this error: previous build results in working directory"
                     raise CriticalCiException(text)
 
