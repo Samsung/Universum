@@ -54,7 +54,7 @@ class GerritVcs(ReportObserver, git_vcs.GitVcs):
         self.repo.remotes.origin.push(progress=self.logger, refspec="HEAD:refs/for/" + self.refspec)
 
         if not review:
-            text = "gerrit review --submit --code-review +2 --verified +1 --message 'This is an automatic vote' "
+            text = "gerrit review --submit --code-review +2 --label Verified=1 --message 'This is an automatic vote' "
             text += change
             self.run_ssh_command(text)
 
@@ -93,9 +93,9 @@ class GerritVcs(ReportObserver, git_vcs.GitVcs):
 
     def report_result(self, result, report_text=None):
         if result:
-            vote = "--verified +1 "
+            vote = "--label Verified=1 "
         else:
-            vote = "--verified -1 "
+            vote = "--label Verified=-1 "
 
         text = "gerrit review " + vote
         if report_text:
