@@ -1,8 +1,15 @@
 Change log
 ==========
 
-0.12.5 (2018-02-??)
+0.12.5 (2018-02-06)
 -------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **gerrit:** update 'Verified' to work with non-default labels
+* **docs:** doc files removed from master
+* **artifacts:** fix exception message when encountering existing artifacts
 
 
 0.12.4 (2018-01-31)
