@@ -225,3 +225,17 @@ class GitServer(object):
 def git_server(tmpdir):
     directory = tmpdir.mkdir("server")
     yield GitServer(directory, "testing")
+
+
+def check_output((out, err)):
+    assert not err, "Stderr detected!"
+    for text in ["Traceback", "Exception"]:
+        assert text not in out, text + " detected in stdout!"
+
+
+# pylint: disable = protected-access
+@pytest.fixture(autouse=True)
+def detect_fails(capsys):
+    yield capsys
+    check_output(capsys.readouterr())
+    check_output(capsys._outerr)
