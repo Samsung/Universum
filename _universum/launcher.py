@@ -198,10 +198,10 @@ class Launcher(Module):
         self.project_configs = None
 
         if settings.output is None:
-            if utils.is_launched_on_team_city():
-                settings.output = "console"
-            else:
+            if utils.detect_environment() != "tc":
                 settings.output = "file"
+            else:
+                settings.output = "console"
 
         if getattr(self.settings, "config_path") is None:
             raise IncorrectParameterError(
