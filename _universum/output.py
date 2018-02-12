@@ -2,7 +2,7 @@
 
 from . import jenkins_driver, teamcity_driver, local_driver, utils
 from .gravity import Module, Dependency
-from .ci_exception import CriticalCiException, SilentAbortException, CriticalStepException
+from .ci_exception import CriticalCiException, SilentAbortException, StepException
 
 __all__ = [
     "Output",
@@ -109,10 +109,8 @@ class Output(Module):
             result = operation(*args, **kwargs)
         except SilentAbortException:
             raise
-        except CriticalStepException as ex:
-            if ex.message:
-                self.fail_current_block(unicode(ex))
-            raise CriticalStepException()
+        except StepException:
+            raise
         except CriticalCiException as e:
             self.fail_current_block(unicode(e))
             raise SilentAbortException()

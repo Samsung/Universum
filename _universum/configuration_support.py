@@ -12,7 +12,7 @@ __all__ = [
     "get_project_root"
 ]
 
-skip_attributes = {"children", "skip_numbering_level"}
+skip_attributes = {"children", "critical", "skip_numbering_level"}
 
 
 def combine(dictionary_a, dictionary_b):
