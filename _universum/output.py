@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from . import teamcity_driver, local_driver, utils
+from . import jenkins_driver, teamcity_driver, local_driver, utils
 from .gravity import Module, Dependency
-from .ci_exception import CriticalCiException, SilentAbortException, CriticalStepException
+from .ci_exception import CriticalCiException, SilentAbortException, StepException
 
 __all__ = [
     "Output",
@@ -33,26 +33,23 @@ def needs_output(klass):
 class Output(Module):
     teamcity_driver_factory = Dependency(teamcity_driver.TeamCityOutput)
     local_driver_factory = Dependency(local_driver.LocalOutput)
+    jenkins_driver_factory = Dependency(jenkins_driver.JenkinsOutput)
 
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
-        parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term"],
-                            help="Type of output to produce (tc - TeamCity, term - terminal). "
+        parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins"],
+                            help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
                                  "TeamCity environment is detected automatically when launched on build agent.")
 
     def __init__(self, settings):
         self.top_block_number = 1
         self.blocks = []
 
-        if settings.type is None:
-            if utils.is_launched_on_team_city():
-                settings.type = "tc"
-
-        if settings.type == "tc":
-            self.driver = self.teamcity_driver_factory()
-        else:
-            self.driver = self.local_driver_factory()
+        self.driver = utils.create_diver(local_factory=self.local_driver_factory,
+                                         teamcity_factory=self.teamcity_driver_factory,
+                                         jenkins_factory=self.jenkins_driver_factory,
+                                         default=settings.type)
 
     def log(self, line):
         self.driver.log(line)
@@ -112,10 +109,8 @@ class Output(Module):
             result = operation(*args, **kwargs)
         except SilentAbortException:
             raise
-        except CriticalStepException as ex:
-            if ex.message:
-                self.fail_current_block(unicode(ex))
-            raise CriticalStepException()
+        except StepException:
+            raise
         except CriticalCiException as e:
             self.fail_current_block(unicode(e))
             raise SilentAbortException()

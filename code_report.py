@@ -59,10 +59,13 @@ class CodeReport(object):
                 issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                 issues_loads.append(issue)
             sys.stdout.write(json.dumps(issues_loads))
+            return 1
+        return 0
 
     def execute(self):
         if self.settings.code_report in ["pylint", "pylint3"]:
-            self.run_pylint()
+            return self.run_pylint()
+        return 2
 
 
 def main():
@@ -70,8 +73,9 @@ def main():
     CodeReport.define_arguments(parser)
     settings = parser.parse_args()
     report = CodeReport(settings)
-    report.execute()
+    return report.execute()
 
 
 if __name__ == "__main__":
-    main()
+    result = main()
+    sys.exit(result)

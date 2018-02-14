@@ -8,7 +8,7 @@ import json
 import sh
 
 from . import configuration_support, utils, artifact_collector
-from .ci_exception import CiException, CriticalCiException, CriticalStepException
+from .ci_exception import CiException, CriticalCiException, StepException
 from .gravity import Module, Dependency
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
@@ -20,17 +20,12 @@ __all__ = [
 ]
 
 
-def make_command(name, critical):
+def make_command(name):
     try:
         return sh.Command(name)
     except sh.CommandNotFound:
         text = "No such file or command as '" + name + "'"
-        if critical:
-            text += "\nAccording to your settings, running this command is critical. " \
-                    "The further step execution will not proceed"
-            raise CriticalStepException(text)
-        else:
-            raise CiException(text)
+        raise CiException(text)
 
 
 def check_if_env_set(variations):
@@ -54,7 +49,7 @@ def check_if_env_set(variations):
     return True
 
 
-def finalize_execution(cmd, log, critical=False):
+def finalize_execution(cmd, log):
     try:
         text = ""
         try:
@@ -69,9 +64,7 @@ def finalize_execution(cmd, log, critical=False):
         stderr = '\n'.join(log.error_lines)
         if text:
             log.report_fail(text + stderr)
-            if critical:
-                raise CriticalStepException("According to your settings, running this command is critical. "
-                                            "The further step execution will not proceed")
+            raise StepException()
         else:
             if stderr:
                 log.report_warning(stderr)
@@ -198,10 +191,10 @@ class Launcher(Module):
         self.project_configs = None
 
         if settings.output is None:
-            if utils.is_launched_on_team_city():
-                settings.output = "console"
-            else:
+            if utils.detect_environment() != "tc":
                 settings.output = "file"
+            else:
+                settings.output = "console"
 
         if getattr(self.settings, "config_path") is None:
             raise IncorrectParameterError(
@@ -244,16 +237,18 @@ class Launcher(Module):
             raise CriticalCiException(text)
         return self.project_configs
 
-    def run_cmd(self, name, step_name, working_directory, background, critical, code_report, *args, **kwargs):
+    def run_cmd(self, name, step_name, working_directory, background, code_report, *args, **kwargs):
         try:
-            cmd = make_command(name, False)
-        except CiException:
-            if working_directory is None:
-                raise
-
-            name = os.path.abspath(os.path.join(working_directory, name))
-            cmd = make_command(name, critical)
-
+            try:
+                cmd = make_command(name)
+            except CiException:
+                if working_directory is None:
+                    raise
+                name = os.path.abspath(os.path.join(working_directory, name))
+                cmd = make_command(name)
+        except CiException as ex:
+            self.out.fail_current_block(unicode(ex))
+            raise StepException()
         if code_report:
             log_writer = LogWriterCodeReport(self.out, self.artifacts, self.reporter, step_name, background)
         else:
@@ -266,8 +261,7 @@ class Launcher(Module):
             self.background_processes.append({'cmd': ret, 'log': log_writer})
             self.out.log("Will continue in background")
         else:
-            finalize_execution(ret, log_writer, critical)
-        return ret
+            finalize_execution(ret, log_writer)
 
     def execute_configuration(self, item):
         try:
@@ -275,7 +269,7 @@ class Launcher(Module):
             working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
                                                  self.project_root)
             self.run_cmd(command_path, item.get("name", ''), working_directory, item.get("background", False),
-                         item.get("critical", False), item.get("code_report", False), *(item["command"][1:]))
+                         item.get("code_report", False), *(item["command"][1:]))
         except KeyError as e:
             if e.message == "command":
                 self.out.log("No 'command' found. Nothing to execute")
@@ -286,24 +280,31 @@ class Launcher(Module):
         if parent is None:
             parent = dict()
 
+        child_step_failed = False
         for obj_a in variations:
+            try:
+                item = configuration_support.combine(parent, copy.deepcopy(obj_a))
 
-            item = configuration_support.combine(parent, copy.deepcopy(obj_a))
+                if "children" in obj_a:
+                    # Here pass_errors=True, because any exception outside executing build step
+                    # is not step-related and should stop script executing
 
-            if "children" in obj_a:
-                # Here pass_errors=True, because any exception outside executing build step
-                # is not step-related and should stop script executing
+                    self.out.run_in_block(self.execute_steps_recursively, item.get("name", ''), True, item,
+                                          obj_a["children"])
+                else:
+                    self.configs_current_number += 1
+                    step_name = " [ " + unicode(self.configs_current_number) + "/" + \
+                                unicode(self.configs_total_count) + " ] " + item.get("name", '')
+                    # Here pass_errors=False, because any exception while executing build step
+                    # can be step-related and may not affect other steps
 
-                self.out.run_in_block(self.execute_steps_recursively,
-                                      item.get("name", ''), True, item, obj_a["children"])
-            else:
-                self.configs_current_number += 1
-                step_name = " [ " + unicode(self.configs_current_number) + "/" + unicode(self.configs_total_count) + \
-                            " ] " + item.get("name", '')
-                # Here pass_errors=False, because any exception while executing build step
-                # can be step-related and may not affect other steps
-
-                self.out.run_in_block(self.execute_configuration, step_name, False, item)
+                    self.out.run_in_block(self.execute_configuration, step_name, False, item)
+            except StepException:
+                child_step_failed = True
+                if obj_a.get("critical", False):
+                    break
+        if child_step_failed:
+            raise StepException
 
     @make_block("Reporting background steps")
     def report_background_steps(self):
@@ -316,7 +317,7 @@ class Launcher(Module):
                                   None, self.project_configs)
             if self.background_processes:
                 self.report_background_steps()
-        except CriticalStepException:
+        except StepException:
             pass
-            # CriticalStepException only stops build step execution,
+            # StepException only stops build step execution,
             # not affecting other Universum functions, e.g. artifact collecting or finalizing

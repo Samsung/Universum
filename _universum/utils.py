@@ -7,13 +7,14 @@ import sys
 import codecs
 
 from _universum.ci_exception import SilentAbortException
-from .ci_exception import CriticalCiException, CiException
+from .ci_exception import CriticalCiException
 
 __all__ = [
     "Colors",
     "strip_path_start",
     "parse_path",
-    "is_launched_on_team_city",
+    "detect_environment",
+    "create_diver",
     "format_traceback",
     "make_block",
     "catch_exception",
@@ -50,11 +51,31 @@ def parse_path(path, starting_point):
     return os.path.abspath(path)
 
 
-def is_launched_on_team_city():
+def detect_environment():
     """
-    :return: True if the script is launched on TeamCity agent, False otherwise
+    :return: "tc" if the script is launched on TeamCity agent,
+             "jenkins" is launched on Jenkins agent,
+             "terminal" otherwise
     """
-    return "TEAMCITY_VERSION" in os.environ
+    teamcity = "TEAMCITY_VERSION" in os.environ
+    jenkins = "JENKINS_HOME" in os.environ
+    if teamcity and not jenkins:
+        return "tc"
+    if not teamcity and jenkins:
+        return "jenkins"
+    return "terminal"
+
+
+def create_diver(local_factory, teamcity_factory, jenkins_factory, default=None):
+    if default:
+        env_type = default
+    else:
+        env_type = detect_environment()
+    if env_type == "tc":
+        return teamcity_factory()
+    elif env_type == "jenkins":
+        return jenkins_factory()
+    return local_factory()
 
 
 def format_traceback(ex, trace):

@@ -1,7 +1,7 @@
-TEST_TARGETS = pytest source_doctest doc_doctest pylint
+TEST_TARGETS = pytest source_doctest doc_doctest
 
 
-.PHONY: all doc test $(TEST_TARGETS)
+.PHONY: all doc test $(TEST_TARGETS) pylint
 
 all: doc 
 
@@ -29,4 +29,4 @@ doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	-pytest --pylint -m pylint
+	pytest --pylint -m pylint

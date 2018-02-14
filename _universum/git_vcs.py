@@ -87,13 +87,14 @@ class GitVcs(base_classes.VcsBase):
         if not self.settings.repo:
             raise CriticalCiException("Cannot clone: GIT_REPO is not specified")
 
-        self.sources_need_cleaning = True
         self.out.log("Cloning '" + self.settings.repo + "'...")
         if history_depth:
             self.repo = git.Repo.clone_from(self.settings.repo, self.project_root,
                                             depth=history_depth, no_single_branch=True, progress=self.logger)
         else:
             self.repo = git.Repo.clone_from(self.settings.repo, self.project_root, progress=self.logger)
+
+        self.sources_need_cleaning = True
         self.append_repo_status("Git repo: " + self.settings.repo + "\n\n")
 
         self.out.log("Please note that default remote name is 'origin'")

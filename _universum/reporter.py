@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
-from . import teamcity_driver, local_driver, utils
+from . import jenkins_driver, teamcity_driver, local_driver, utils
 from .gravity import Module, Dependency
 from .output import needs_output
 from .utils import make_block
@@ -34,13 +34,15 @@ class ReportObserver(object):
 class Reporter(Module):
     teamcity_info_factory = Dependency(teamcity_driver.TeamCityBuildInfo)
     local_info_factory = Dependency(local_driver.LocalBuildInfo)
+    jenkins_info_factory = Dependency(jenkins_driver.JenkinsBuildInfo)
 
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Result reporting",
                                                      "Build results collecting and publishing parameters")
-        parser.add_argument("--report-env", "-re", dest="env", choices=["tc", "local"],
-                            help="Type of environment to refer to (tc - TeamCity, local - user local terminal). "
+        parser.add_argument("--report-env", "-re", dest="env", choices=["tc", "jenkins", "local"],
+                            help="Type of environment to refer to (tc - TeamCity, jenkins - Jenkins, "
+                                 "local - user local terminal). "
                                  "TeamCity environment is detected automatically when launched on build agent")
 
         parser.add_argument("--report-build-start", "-rst", action="store_true", dest="report_start",
@@ -50,14 +52,10 @@ class Reporter(Module):
 
     def __init__(self, settings):
         self.settings = settings
-        if settings.env is None:
-            if utils.is_launched_on_team_city():
-                settings.env = "tc"
-
-        if settings.env == "tc":
-            self.driver = self.teamcity_info_factory()
-        else:
-            self.driver = self.local_info_factory()
+        self.driver = utils.create_diver(teamcity_factory=self.teamcity_info_factory,
+                                         jenkins_factory=self.jenkins_info_factory,
+                                         local_factory=self.local_info_factory,
+                                         default=settings.env)
 
         self.observers = []
         self.report_initialized = False

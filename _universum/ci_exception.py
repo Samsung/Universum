@@ -19,5 +19,5 @@ class SilentAbortException(Exception):
         self.application_exit_code = application_exit_code
 
 
-class CriticalStepException(Exception):
+class StepException(Exception):
     pass
