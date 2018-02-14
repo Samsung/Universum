@@ -1,8 +1,23 @@
 Change log
 ==========
 
-0.12.6 (2018-02-??)
+0.13.0 (2018-02-14)
 -------------------
+
+New features
+~~~~~~~~~~~~
+
+* **report:** add driver for processing Jenkins builds
+* **launcher:** critical steps for groups
+* **setup:** add entry points for all high level scripts
+
+Bug fixes
+~~~~~~~~~
+
+* **files:** fix cleaning sources function in finalize for Git
+* **tests:** add stderr and exception/traceback detection
+* **tests:** remove pylint error ignoring
+* **report:** add exit codes for code report
 
 
 0.12.5 (2018-02-06)
