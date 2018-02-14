@@ -109,17 +109,19 @@ class GitVcs(base_classes.VcsBase):
         result = {}
 
         branch_name = self.refspec
-        result[branch_name] = set()
+        result[branch_name] = []
 
         last_change = self.repo.git.log("origin/" + branch_name, pretty="oneline", max_count=1).split(" ")[0]
         reference_change = changes_reference.get(branch_name, last_change)
 
         # Ranges like "commit^.." do not work for single-commit branches, so reference change is processed manually
-        result[branch_name].add(reference_change)
+        result[branch_name].append(reference_change)
         submitted_changes = self.repo.git.log("--first-parent", "origin/" + branch_name, reference_change + "..",
                                               pretty="oneline", max_count=max_number).splitlines()
+
+        submitted_changes.reverse()
         for change in submitted_changes:
-            result[branch_name].add(change.split(" ")[0])
+            result[branch_name].append(change.split(" ")[0])
 
         return result
 
