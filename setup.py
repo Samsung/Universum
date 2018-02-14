@@ -19,8 +19,13 @@ setup(
     author_email='k.dovgan@samsung.com',
     license='BSD',
     packages=['_universum'],
-    py_modules=['universum', 'submit'],
-    entry_points={'console_scripts': ['universum = universum:main', 'universum_submit = submit:main']},
+    py_modules=['universum', 'submit', 'poll', 'code_report'],
+    entry_points={'console_scripts': [
+        'universum = universum:main',
+        'universum_submit = submit:main',
+        'universum_poll = poll:main',
+        'universum_static = code_report:main'
+    ]},
     setup_requires=['setuptools'],
     install_requires=[
         'gitpython',
