@@ -152,7 +152,7 @@ class PerforceVcs(base_classes.VcsBase):
         for depot in self.mappings:
             depot_path = depot.split(" ")[0]
             if depot_path not in result:
-                result[depot_path] = set()
+                result[depot_path] = []
 
             changes = self.p4.run_changes("-s", "submitted", "-m1", depot_path)
             last_cl = changes[0]["change"]
@@ -160,8 +160,10 @@ class PerforceVcs(base_classes.VcsBase):
 
             rev_range_string = depot_path + "@" + reference_cl + ",#head"
             submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + unicode(max_number), rev_range_string)
+
+            submitted_cls.reverse()
             for cl in submitted_cls:
-                result[depot_path].add(cl["change"])
+                result[depot_path].append(cl["change"])
 
         return result
 

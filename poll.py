@@ -38,18 +38,18 @@ class Poller(Module):
             return
 
         for change in self.latest_cls[depot]:
-            if change != self.stored_cls[depot]:
-                if change in self.triggered_cls:
-                    self.out.log("Commit {} already processed".format(change))
-                    continue
+            if change == self.stored_cls[depot]:
+                self.out.log("Commit {} is latest known".format(change))
+                continue
 
-                self.out.log("Detected commit {}, triggering build".format(change))
-                if self.server.trigger_build(change):
-                    self.triggered_cls.add(change)
-                    if self.stored_cls[depot] < change:
-                        self.stored_cls[depot] = change
-            else:
+            if change in self.triggered_cls:
                 self.out.log("Commit {} already processed".format(change))
+                continue
+
+            self.out.log("Detected commit {}, triggering build".format(change))
+            if self.server.trigger_build(change):
+                self.triggered_cls.add(change)
+                self.stored_cls[depot] = change
 
     @make_block("Enumerating changes")
     def execute(self):
