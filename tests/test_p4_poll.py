@@ -120,3 +120,40 @@ def test_success_two_changes(stdout_checker, http_request_checker, p4_poll_setti
 
     http_request_checker.assert_request_was_made({"cl": [cl1]})
     http_request_checker.assert_request_was_made({"cl": [cl2]})
+
+
+def test_changes_several_times(stdout_checker, http_request_checker, p4_poll_settings):
+    # initialize working directory with initial data
+    assert poll.run(p4_poll_settings) == 0
+
+    # make changes in workspace
+    cl1 = make_one_change(p4_poll_settings)
+    cl2 = make_one_change(p4_poll_settings)
+
+    # run poll again and trigger the url twice
+    assert poll.run(p4_poll_settings) == 0
+
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + cl1)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + cl2)
+
+    http_request_checker.assert_request_was_made({"cl": [cl1]})
+    http_request_checker.assert_request_was_made({"cl": [cl2]})
+
+    # make more changes in workspace
+    stdout_checker.reset()
+    http_request_checker.reset()
+    cl3 = make_one_change(p4_poll_settings)
+    cl4 = make_one_change(p4_poll_settings)
+
+    # run poll again and trigger the url twice
+    assert poll.run(p4_poll_settings) == 0
+
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + cl3)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + cl4)
+    stdout_checker.assert_absent_calls_with_param("==> Detected commit " + cl1)
+    stdout_checker.assert_absent_calls_with_param("==> Detected commit " + cl2)
+
+    http_request_checker.assert_request_was_made({"cl": [cl3]})
+    http_request_checker.assert_request_was_made({"cl": [cl4]})
+    http_request_checker.assert_request_was_not_made({"cl": [cl1]})
+    http_request_checker.assert_request_was_not_made({"cl": [cl2]})

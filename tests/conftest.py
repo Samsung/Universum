@@ -45,6 +45,7 @@ class FuzzyCallChecker(object):
         return '\nExpected param: %s\nActual list: %r' % (string_to_find, self.mock_object.mock_calls)
 
     def _find_call_with_param(self, string_param):
+        print self.mock_object.mock_calls
         for call in self.mock_object.mock_calls:
             _, args, _ = call
             for arg in args:
@@ -52,6 +53,9 @@ class FuzzyCallChecker(object):
                     return True
         # return explicit False
         return False
+
+    def reset(self):
+        self.mock_object.reset_mock()
 
     def assert_has_calls_with_param(self, string_param):
         assert self._find_call_with_param(string_param), 'String parameter is not found in call list. %s' \
@@ -87,6 +91,22 @@ class HttpChecker(object):
             queries.append(request.querystring)
 
         assert False, 'Query string is not found in calls to http server.\nExpected: %s\nActual: %r' % (query, queries)
+
+    @staticmethod
+    def assert_request_was_not_made(query):
+        queries = []
+        for request in httpretty.httpretty.latest_requests:
+            if request.querystring == query:
+                assert False, 'Query string was found in calls to http server.' \
+                              '\nExpected: %s\nActual: %r' % (query, queries)
+            queries.append(request.querystring)
+
+    @staticmethod
+    def reset():
+        httpretty.disable()
+        httpretty.reset()
+        httpretty.enable()
+        httpretty.register_uri(httpretty.GET, "https://localhost/")
 
 
 @pytest.fixture()

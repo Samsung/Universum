@@ -129,6 +129,43 @@ def test_success_two_changes(stdout_checker, http_request_checker, git_poll_sett
     http_request_checker.assert_request_was_made({"cl": [change2]})
 
 
+def test_changes_several_times(stdout_checker, http_request_checker, git_poll_settings):
+    # initialize working directory with initial data
+    assert poll.run(git_poll_settings.settings) == 0
+
+    # make changes in workspace
+    change1 = git_poll_settings.server.make_a_change()
+    change2 = git_poll_settings.server.make_a_change()
+
+    # run poll and trigger the urls
+    assert poll.run(git_poll_settings.settings) == 0
+
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
+
+    http_request_checker.assert_request_was_made({"cl": [change1]})
+    http_request_checker.assert_request_was_made({"cl": [change2]})
+
+    # make more changes in workspace
+    stdout_checker.reset()
+    http_request_checker.reset()
+    change3 = git_poll_settings.server.make_a_change()
+    change4 = git_poll_settings.server.make_a_change()
+
+    # run poll and trigger urls for the new changes only
+    assert poll.run(git_poll_settings.settings) == 0
+
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
+    stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change1)
+    stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change2)
+
+    http_request_checker.assert_request_was_made({"cl": [change3]})
+    http_request_checker.assert_request_was_made({"cl": [change4]})
+    http_request_checker.assert_request_was_not_made({"cl": [change1]})
+    http_request_checker.assert_request_was_not_made({"cl": [change2]})
+
+
 def test_max_number_commits(stdout_checker, http_request_checker, git_poll_settings):
     # initialize working directory with initial data
     assert poll.run(git_poll_settings.settings) == 0
