@@ -79,7 +79,6 @@ class Reporter(Module):
             return
 
         text = "Review update detected!\n\n"
-        text += "Please see the review testing log here:\n"
         text += self.driver.report_build_location()
         text += "\n\nPlease do not submit until revision testing is finished."
 
