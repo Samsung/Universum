@@ -38,7 +38,7 @@ def test_minimal_install(command_runner, perforce_workspace):
     command_runner.assert_success("rm -rf {}".format(artifact_dir))
 
     # Run from P4
-    project_dir = unicode(perforce_workspace.workspace_root.join("examples"))
+    project_dir = unicode(perforce_workspace.root_directory.join("examples"))
     try:
         shutil.copytree(os.path.join(os.getcwd(), "examples"), project_dir)
     except OSError:

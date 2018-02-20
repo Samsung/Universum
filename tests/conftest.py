@@ -12,7 +12,7 @@ import pytest
 import mock
 from . import utils
 
-pytest_plugins = ['tests.perforce_utils']
+pytest_plugins = ['tests.perforce_utils', 'tests.git_utils']
 
 
 def pytest_addoption(parser):
@@ -45,7 +45,6 @@ class FuzzyCallChecker(object):
         return '\nExpected param: %s\nActual list: %r' % (string_to_find, self.mock_object.mock_calls)
 
     def _find_call_with_param(self, string_param):
-        print self.mock_object.mock_calls
         for call in self.mock_object.mock_calls:
             _, args, _ = call
             for arg in args:
@@ -107,6 +106,11 @@ class HttpChecker(object):
         httpretty.reset()
         httpretty.enable()
         httpretty.register_uri(httpretty.GET, "https://localhost/")
+
+    @staticmethod
+    def stop():
+        httpretty.disable()
+        httpretty.reset()
 
 
 @pytest.fixture()
@@ -177,74 +181,6 @@ def command_runner(request, docker_registry_params):
         if container is not None:
             container.remove(force=True)
         raise
-
-
-class GitServer(object):
-    def __init__(self, working_directory, branch_name):
-        self.url = "file://" + unicode(working_directory)
-        self.target_branch = branch_name
-        self.target_file = "readme.txt"
-
-        self._working_directory = working_directory
-        self._repo = git.Repo.init(unicode(working_directory))
-        configurator = self._repo.config_writer()
-        configurator.set_value("user", "name", "Testing user")
-        configurator.set_value("user", "email", "some@email.com")
-        self._file = self._working_directory.join(self.target_file)
-        self._file.write("")
-
-        self._repo.index.add([unicode(self._file)])
-        self._repo.index.commit("initial commit")
-        self._commit_count = 0
-
-        self._branch = self._repo.create_head(branch_name)
-
-    def make_a_change(self):
-        self._branch.checkout()
-
-        self._file.write("One more line\n")
-        self._commit_count += 1
-
-        self._repo.index.add([unicode(self._file)])
-        change = unicode(self._repo.index.commit("add line " + unicode(self._commit_count)))
-        self._repo.heads.master.checkout()
-        return change
-
-    def commit_new_file(self):
-        """ Make a mergeble commit """
-        self._commit_count += 1
-        test_file = self._working_directory.join("test%s.txt" % self._commit_count)
-        test_file.write("Commit number #%s" % (self._commit_count))
-        self._repo.index.add([unicode(test_file)])
-        return unicode(self._repo.index.commit("Add file " + unicode(self._commit_count)))
-
-    def make_branch(self, name):
-        self._repo.git.checkout("-b", name)
-
-    def switch_branch(self, name):
-        self._repo.git.checkout(name)
-
-    def merge_branch(self, name, fast_forward):
-        """
-        Merge specified branch to the current
-        :param name: Name of merged branch
-        :param fast_forward: Boolean. Try to use fast forward or create a merge commit on merge
-        :return: None
-        """
-        if fast_forward:
-            cmd_option = "--ff-only"
-        else:
-            cmd_option = "--no-ff"
-        self._repo.git.merge(cmd_option, name)
-
-    def get_last_commit(self):
-        return self._repo.git.log('-n1', pretty='format:"%H"').replace('"', '')
-
-
-@pytest.fixture()
-def git_server(tmpdir):
-    directory = tmpdir.mkdir("server")
-    yield GitServer(directory, "testing")
 
 
 def check_output((out, err)):
