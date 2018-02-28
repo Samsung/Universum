@@ -281,7 +281,7 @@ class Launcher(Module):
             else:
                 raise
 
-    def execute_steps_recursively(self, parent, variations):
+    def execute_steps_recursively(self, parent, variations, skipped=False):
         if parent is None:
             parent = dict()
 
@@ -294,20 +294,24 @@ class Launcher(Module):
                     # Here pass_errors=True, because any exception outside executing build step
                     # is not step-related and should stop script executing
 
-                    self.out.run_in_block(self.execute_steps_recursively, item.get("name", ''), True, item,
-                                          obj_a["children"])
+                    self.out.run_in_block(self.execute_steps_recursively, item.get("name", ' '), True, item,
+                                          obj_a["children"], skipped)
                 else:
                     self.configs_current_number += 1
                     step_name = " [ " + unicode(self.configs_current_number) + "/" + \
-                                unicode(self.configs_total_count) + " ] " + item.get("name", '')
+                                unicode(self.configs_total_count) + " ] " + item.get("name", ' ')
                     # Here pass_errors=False, because any exception while executing build step
                     # can be step-related and may not affect other steps
 
-                    self.out.run_in_block(self.execute_configuration, step_name, False, item)
+                    if not skipped:
+                        self.out.run_in_block(self.execute_configuration, step_name, False, item)
+                    else:
+                        self.out.report_skipped_block(step_name)
             except StepException:
                 child_step_failed = True
                 if obj_a.get("critical", False):
-                    break
+                    self.out.report_critical_block_failure()
+                    skipped = True
         if child_step_failed:
             raise StepException
 

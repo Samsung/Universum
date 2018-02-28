@@ -52,6 +52,9 @@ class LocalOutput(OutputBase):
     def report_error(self, description):
         pass
 
+    def report_skipped(self, message):
+        self.print_lines(Colors.dark_cyan, message, Colors.reset)
+
     def change_status(self, message):
         pass
 

@@ -79,6 +79,16 @@ class Output(Module):
         else:
             self.blocks[-1].child_number += 1
 
+    def report_critical_block_failure(self):
+        self.driver.report_skipped("Critical step failed. All further configurations will be skipped")
+
+    def report_skipped_block(self, name):
+        self.driver.report_skipped(self.get_block_num_str() + " " + name + " skipped because of critical step failure")
+        if not self.blocks:
+            self.top_block_number += 1
+        else:
+            self.blocks[-1].child_number += 1
+
     def fail_current_block(self, error=None):
         if error:
             self.log_exception(error)
@@ -107,9 +117,7 @@ class Output(Module):
         self.open_block(block_name)
         try:
             result = operation(*args, **kwargs)
-        except SilentAbortException:
-            raise
-        except StepException:
+        except (SilentAbortException, StepException):
             raise
         except CriticalCiException as e:
             self.fail_current_block(unicode(e))
