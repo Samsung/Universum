@@ -32,7 +32,7 @@ class Colors(object):
     dark_red = "\033[0;31m"
     green = "\033[1;32m"
     blue = "\033[1;34m"
-    dark_cyan = "\033[1;36m"
+    dark_cyan = "\033[0;36m"
     dark_yellow = "\033[0;33m"
     reset = "\033[00m"
 

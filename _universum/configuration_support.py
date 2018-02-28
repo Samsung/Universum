@@ -220,6 +220,8 @@ class Variations(list):
                         obj_a_copy = combine(obj_a, active_children[0])
                         if "children" in active_children[0]:
                             obj_a_copy["children"] = active_children[0]["children"]
+                        obj_a_copy["critical"] = \
+                            obj_a.get("critical", False) or active_children[0].get("critical", False)
                     else:
                         obj_a_copy = copy.deepcopy(obj_a)
                         obj_a_copy["children"] = active_children
