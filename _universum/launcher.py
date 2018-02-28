@@ -214,7 +214,12 @@ class Launcher(Module):
 
         try:
             execfile(config_path, config_globals)
+
             self.source_project_configs = config_globals["configs"]
+            dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
+            dump_file.write(self.source_project_configs.dump())
+            dump_file.close()
+
             self.project_configs = self.source_project_configs.filter(check_if_env_set)
             self.configs_total_count = sum(1 for _ in self.project_configs.all())
 
