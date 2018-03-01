@@ -6,9 +6,9 @@ import git
 
 from . import base_classes, utils
 from .ci_exception import CriticalCiException
-from .utils import make_block
-from .output import needs_output
 from .module_arguments import IncorrectParameterError
+from .output import needs_output
+from .utils import make_block
 
 __all__ = [
     "GitVcs"

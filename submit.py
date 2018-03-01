@@ -2,12 +2,12 @@
 # -*- coding: UTF-8 -*-
 
 from _universum import file_manager, utils
+from _universum.entry_points import run_main_for_module, run_with_settings
 from _universum.gravity import Module, Dependency
-from _universum.perforce_vcs import catch_p4exception
-from _universum.utils import make_block
 from _universum.module_arguments import IncorrectParameterError
 from _universum.output import needs_output
-from _universum.entry_points import run_main_for_module, run_with_settings
+from _universum.perforce_vcs import catch_p4exception
+from _universum.utils import make_block
 
 
 @needs_output

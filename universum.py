@@ -5,10 +5,8 @@ from _universum import artifact_collector, file_manager, launcher, reporter
 from _universum import utils, __title__, __version__
 from _universum.entry_points import run_main_for_module, setup_arg_parser
 from _universum.gravity import Module, Dependency
-from _universum.output import needs_output
 
 
-@needs_output
 class Main(Module):
     description = __title__
     files_factory = Dependency(file_manager.FileManager)
@@ -44,11 +42,9 @@ class Main(Module):
                 report_artifact_list.append(dict(path=path, clean=clean))
 
         if artifact_list:
-            self.out.run_in_block(self.artifacts.set_and_clean_artifacts,
-                                  "Setting and preprocessing artifacts according to configs", True, artifact_list)
+            self.artifacts.set_and_clean_artifacts(artifact_list)
         if report_artifact_list:
-            self.out.run_in_block(self.artifacts.set_and_clean_report_artifacts,
-                                  "Setting and preprocessing artifacts to be mentioned in report", True, report_artifact_list)
+            self.artifacts.set_and_clean_report_artifacts(report_artifact_list)
 
         self.reporter.report_build_started()
         self.launcher.launch_project()

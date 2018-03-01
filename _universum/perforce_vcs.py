@@ -8,10 +8,11 @@ from P4 import P4, P4Exception
 
 from . import base_classes, swarm, utils, artifact_collector
 from .ci_exception import CriticalCiException, SilentAbortException
-from .utils import Uninterruptible, make_block
-from .output import needs_output
 from .gravity import Dependency
 from .module_arguments import IncorrectParameterError
+from .output import needs_output
+from .structure_handler import needs_structure
+from .utils import Uninterruptible, make_block
 
 __all__ = [
     "PerforceVcs",
@@ -36,6 +37,7 @@ def catch_p4warning(func, text, *args, **kwargs):
 
 
 @needs_output
+@needs_structure
 class PerforceVcs(base_classes.VcsBase):
     swarm_factory = Dependency(swarm.Swarm)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
@@ -383,12 +385,12 @@ class PerforceVcs(base_classes.VcsBase):
                 return
             if "Not connected" in w[0].message.message:
                 text = "Perforce client is not connected on disconnect. Something must have gone wrong"
-                self.out.fail_current_block(text)
+                self.structure.fail_current_block(text)
             else:
                 text = ""
                 for line in w:
                     text += "\n" + warnings.formatwarning(line.message, line.category, line.filename, line.lineno)
-                self.out.fail_current_block("Unexpected warning(s): " + text)
+                self.structure.fail_current_block("Unexpected warning(s): " + text)
             raise SilentAbortException()
 
     def map_local_path_to_depot(self, report):

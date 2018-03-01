@@ -3,14 +3,16 @@
 
 import json
 
-from _universum.gravity import Module, Dependency
 from _universum import automation_server, file_manager
-from _universum.utils import make_block
-from _universum.output import needs_output
 from _universum.entry_points import run_main_for_module, run_with_settings
+from _universum.gravity import Module, Dependency
+from _universum.output import needs_output
+from _universum.structure_handler import needs_structure
+from _universum.utils import make_block
 
 
 @needs_output
+@needs_structure
 class Poller(Module):
     description = "Polling module of Universum "
     files_factory = Dependency(file_manager.FileManager)
@@ -65,7 +67,7 @@ class Poller(Module):
         try:
             self.latest_cls = self.files.vcs.get_changes(self.stored_cls, self.settings.max_number)
             for depot in self.latest_cls.keys():
-                self.out.run_in_block(self.process_single_mapping, "Processing depot " + depot, True, depot)
+                self.structure.run_in_block(self.process_single_mapping, "Processing depot " + depot, True, depot)
         finally:
             with open(self.settings.db_file, "w") as db_file:
                 json.dump(self.stored_cls, db_file, indent=4, sort_keys=True)

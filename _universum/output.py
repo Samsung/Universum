@@ -2,19 +2,11 @@
 
 from . import jenkins_driver, teamcity_driver, local_driver, utils
 from .gravity import Module, Dependency
-from .ci_exception import CriticalCiException, SilentAbortException, StepException
 
 __all__ = [
     "Output",
     "needs_output"
 ]
-
-
-class Block(object):
-    def __init__(self, name):
-        self.name = name
-        self.status = "Success"
-        self.child_number = 1
 
 
 def needs_output(klass):
@@ -43,9 +35,6 @@ class Output(Module):
                                  "TeamCity environment is detected automatically when launched on build agent.")
 
     def __init__(self, settings):
-        self.top_block_number = 1
-        self.blocks = []
-
         self.driver = utils.create_diver(local_factory=self.local_driver_factory,
                                          teamcity_factory=self.teamcity_driver_factory,
                                          jenkins_factory=self.jenkins_driver_factory,
@@ -57,42 +46,21 @@ class Output(Module):
     def log_external_command(self, command):
         self.driver.log_external_command(command)
 
-    def get_block_num_str(self):
-        num_str = unicode(self.top_block_number) + "."
-        for block in self.blocks:
-            num_str += unicode(block.child_number) + "."
-        return num_str
+    def open_block(self, number, name):
+        self.driver.open_block(number, name)
 
-    def open_block(self, name):
-        self.driver.open_block(self.get_block_num_str(), name)
-        self.blocks.append(Block(name))
+    def close_block(self, number, name, status):
+        self.driver.close_block(number, name, status)
 
-    def close_block(self):
-        block = self.blocks.pop()
-        if block.status == "Failed":
-            self.report_build_problem(block.name + " " + block.status)
+    def report_build_status(self, status):
+        self.driver.change_status(status)
 
-        self.driver.close_block(self.get_block_num_str(), block.name, block.status)
+    # TODO: pass build problem to the Report module
+    def report_build_problem(self, problem):
+        self.driver.report_error(problem)
 
-        if not self.blocks:
-            self.top_block_number += 1
-        else:
-            self.blocks[-1].child_number += 1
-
-    def report_critical_block_failure(self):
-        self.driver.report_skipped("Critical step failed. All further configurations will be skipped")
-
-    def report_skipped_block(self, name):
-        self.driver.report_skipped(self.get_block_num_str() + " " + name + " skipped because of critical step failure")
-        if not self.blocks:
-            self.top_block_number += 1
-        else:
-            self.blocks[-1].child_number += 1
-
-    def fail_current_block(self, error=None):
-        if error:
-            self.log_exception(error)
-        self.blocks[-1].status = "Failed"
+    def report_skipped(self, message):
+        self.driver.report_skipped(message)
 
     def log_exception(self, line):
         self.driver.log_exception(line)
@@ -102,31 +70,3 @@ class Output(Module):
 
     def log_shell_output(self, line):
         self.driver.log_shell_output(line)
-
-    # TODO: pass build problem to the Report module
-    def report_build_problem(self, problem):
-        self.driver.report_error(problem)
-
-    def report_build_status(self, status):
-        self.driver.change_status(status)
-
-    # The exact block will be reported as failed only if pass_errors is False
-    # Otherwise the exception will be passed to the higher level function and handled there
-    def run_in_block(self, operation, block_name, pass_errors, *args, **kwargs):
-        result = None
-        self.open_block(block_name)
-        try:
-            result = operation(*args, **kwargs)
-        except (SilentAbortException, StepException):
-            raise
-        except CriticalCiException as e:
-            self.fail_current_block(unicode(e))
-            raise SilentAbortException()
-        except Exception as e:
-            if pass_errors is True:
-                raise
-            else:
-                self.fail_current_block(unicode(e))
-        finally:
-            self.close_block()
-        return result
