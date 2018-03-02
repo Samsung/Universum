@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import copy
 import os
 import os.path
 import sys
@@ -186,8 +185,6 @@ class Launcher(Module):
 
     def __init__(self, settings, project_root):
         self.project_root = project_root
-        self.configs_current_number = 0
-        self.configs_total_count = 0
         self.settings = settings
         self.background_processes = []
         self.source_project_configs = None
@@ -224,7 +221,6 @@ class Launcher(Module):
             dump_file.close()
 
             self.project_configs = self.source_project_configs.filter(check_if_env_set)
-            self.configs_total_count = sum(1 for _ in self.project_configs.all())
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
@@ -280,58 +276,27 @@ class Launcher(Module):
             command_path = utils.strip_path_start(item["command"][0])
             working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
                                                  self.project_root)
-            self.run_cmd(command_path, item.get("name", ''), working_directory, item.get("background", False),
-                         item.get("code_report", False), *(item["command"][1:]))
+            self.run_cmd(command_path,
+                         item.get("name", ''),
+                         working_directory,
+                         item.get("background", False),
+                         item.get("code_report", False),
+                         *(item["command"][1:]))
         except KeyError as e:
             if e.message == "command":
                 self.out.log("No 'command' found. Nothing to execute")
             else:
                 raise
 
-    # TODO: move this functionality to StructureHandler
-    def execute_steps_recursively(self, parent, variations, skipped=False):
-        if parent is None:
-            parent = dict()
-
-        child_step_failed = False
-        for obj_a in variations:
-            try:
-                item = configuration_support.combine(parent, copy.deepcopy(obj_a))
-
-                if "children" in obj_a:
-                    # Here pass_errors=True, because any exception outside executing build step
-                    # is not step-related and should stop script executing
-
-                    self.structure.run_in_block(self.execute_steps_recursively, item.get("name", ' '), True, item,
-                                                obj_a["children"], skipped)
-                else:
-                    self.configs_current_number += 1
-                    step_name = " [ " + unicode(self.configs_current_number) + "/" + \
-                                unicode(self.configs_total_count) + " ] " + item.get("name", ' ')
-                    # Here pass_errors=False, because any exception while executing build step
-                    # can be step-related and may not affect other steps
-
-                    if not skipped:
-                        self.structure.run_in_block(self.execute_configuration, step_name, False, item)
-                    else:
-                        self.structure.report_skipped_block(step_name)
-            except StepException:
-                child_step_failed = True
-                if obj_a.get("critical", False):
-                    self.structure.report_critical_block_failure()
-                    skipped = True
-        if child_step_failed:
-            raise StepException
-
     @make_block("Reporting background steps")
     def report_background_steps(self):
         for process in self.background_processes:
             self.structure.run_in_block(finalize_execution, process['log'].step_name, False, **process)
 
+    @make_block("Executing build steps")
     def launch_project(self):
         try:
-            self.structure.run_in_block(self.execute_steps_recursively, "Executing build steps", True,
-                                        None, self.project_configs)
+            self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
             if self.background_processes:
                 self.report_background_steps()
         except StepException:
