@@ -160,7 +160,10 @@ class LogWriterCodeReport(LogWriter):
 
         self.file.write(json.dumps(report, indent=4))
         self.report_comments(report)
-        self.out.log("Found " + unicode(len(report)) + " issues")
+        if report:
+            self.structure.fail_current_block("Found " + unicode(len(report)) + " issues")
+        else:
+            self.out.log("Issues not found.")
 
 
 @needs_output
@@ -255,11 +258,11 @@ class Launcher(Module):
             raise StepException()
 
         if code_report:
-            output_type = "file"
+            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter, "file",
+                                             step_name, background)
         else:
-            output_type = self.settings.output
-        log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter,
-                               output_type, step_name, background)
+            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter, self.settings.output,
+                                   step_name, background)
 
         ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
                   _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)

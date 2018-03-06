@@ -39,8 +39,11 @@ class CodeReport(object):
         for pattern in self.settings.file_list:
             files.extend(glob.glob(pattern))
         try:
-            cmd = sh.Command(self.settings.code_report)
-            issues = cmd("-f", "json", "--rcfile=" + self.settings.rcfile, *files).stdout
+            if self.settings.code_report == "pylint3":
+                cmd = sh.Command("python3")
+            else:
+                cmd = sh.Command("python")
+            issues = cmd("-m", "pylint", "-f", "json", "--rcfile=" + self.settings.rcfile, *files).stdout
         except sh.CommandNotFound as e:
             sys.stderr.write("No such file or command as '" + str(e) + "'. "
                              "Make sure, that required code report tool is installed.\n")
@@ -59,7 +62,6 @@ class CodeReport(object):
                 issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                 issues_loads.append(issue)
             sys.stdout.write(json.dumps(issues_loads))
-            return 1
         return 0
 
     def execute(self):
