@@ -13,11 +13,15 @@ __all__ = [
 ]
 
 
-def report_steps_recursively(block, text, indent):
+def report_steps_recursively(block, text, indent, only_fails=False):
     text_status, is_successful = block.get_full_status()
-    text += indent + text_status + "\n"
+    if only_fails:
+        if not is_successful:
+            text += text_status + "\n"
+    else:
+        text += indent + text_status + "\n"
     for substep in block.children:
-        text, status = report_steps_recursively(substep, text, indent + "  ")
+        text, status = report_steps_recursively(substep, text, indent + "  ", only_fails)
         is_successful = is_successful and status
     return text, is_successful
 
@@ -60,6 +64,8 @@ class Reporter(Module):
                             help="Send additional comment to review system on build started (with link to log)")
         parser.add_argument("--report-build-success", "-rsu", action="store_true", dest="report_success",
                             help="Send comment to review system on build success (in addition to vote up)")
+        parser.add_argument("--report-only-fails", "-rof", action="store_true", dest="only_fails",
+                            help="Include only the list of failed steps to reporting comments")
 
     def __init__(self, settings):
         self.settings = settings
@@ -117,6 +123,8 @@ class Reporter(Module):
         for step in self.blocks_to_report:
             text, status = report_steps_recursively(step, text, "", self.settings.only_fails)
             is_successful = is_successful and status
+            if self.settings.only_fails and is_successful:
+                text += "  All steps succeeded"
 
         self.out.log(text)
         if not self.observers:
