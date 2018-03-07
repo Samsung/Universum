@@ -68,7 +68,6 @@ def finalize_execution(cmd, log):
         else:
             if stderr:
                 log.report_warning(stderr)
-            log.report_success()
 
     finally:
         log.end_log()
@@ -125,10 +124,6 @@ class LogWriter(object):
         if self.file:
             self.file.write(line + "\n")
         self.structure.fail_current_block(line)
-        self.reporter.report_build_step(self.step_name, False)
-
-    def report_success(self):
-        self.reporter.report_build_step(self.step_name, True)
 
     def end_log(self):
         self.handle_stdout()
@@ -258,11 +253,11 @@ class Launcher(Module):
             raise StepException()
 
         if code_report:
-            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter, "file",
-                                             step_name, background)
+            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter,
+                                             "file", step_name, background)
         else:
-            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter, self.settings.output,
-                                   step_name, background)
+            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter,
+                                   self.settings.output, step_name, background)
 
         ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
                   _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)
@@ -298,6 +293,7 @@ class Launcher(Module):
 
     @make_block("Executing build steps")
     def launch_project(self):
+        self.reporter.add_block_to_report(self.structure.get_current_block())
         try:
             self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
             if self.background_processes:

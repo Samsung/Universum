@@ -140,7 +140,6 @@ class ArtifactCollector(Module):
                 self.out.log("No artifacts found.")
                 return
             else:
-                self.reporter.report_build_step("Collecting artifacts - " + os.path.basename(path), False)
                 text = "No artifacts found!" + "\nPossible reasons of this error:\n" + \
                        " * Artifact was not created while building the project due to some internal errors\n" + \
                        " * Artifact path was not specified correctly in 'configs.py'"
@@ -170,6 +169,7 @@ class ArtifactCollector(Module):
 
     @make_block("Collecting artifacts", pass_errors=False)
     def collect_artifacts(self):
+        self.reporter.add_block_to_report(self.structure.get_current_block())
         for path in self.report_artifact_list:
             name = "Collecting '" + os.path.basename(path) + "' for report"
             self.structure.run_in_block(self.move_artifact, name, False, path, is_report=True)

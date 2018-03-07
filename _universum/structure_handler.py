@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 import copy
 
 from . import configuration_support
@@ -41,6 +40,16 @@ class Block(object):
 
     def get_status(self):
         return self.status
+
+    def get_full_status(self):
+        text = get_block_num_str(self) + " "
+        if self.children:
+            text += self.name
+        else:
+            text += self.name + " - " + self.status
+        if self.status == "Success":
+            return text, True
+        return text, False
 
 
 def get_block_num_str(block):
@@ -90,6 +99,9 @@ class StructureHandler(Module):
         if error:
             self.out.log_exception(error)
         self.current_block.set_status("Failed")
+
+    def get_current_block(self):
+        return self.current_block
 
     # The exact block will be reported as failed only if pass_errors is False
     # Otherwise the exception will be passed to the higher level function and handled there
