@@ -8,9 +8,9 @@ import sh
 from . import base_classes, gerrit_vcs, git_vcs, perforce_vcs, artifact_collector, utils
 from .gravity import Module, Dependency
 from .ci_exception import CriticalCiException
-from .utils import make_block
-from .output import needs_output
 from .module_arguments import IncorrectParameterError
+from .output import needs_output
+from .utils import make_block
 
 __all__ = [
     "LocalVcs",

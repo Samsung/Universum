@@ -1,6 +1,25 @@
 Change log
 ==========
 
+0.13.2 (2018-03-07)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **artifacts:** add CONFIGS_DUMP.txt to build artifacts
+* **reporter:** add support for pylint3 for ubuntu14, restore LogWriterCodeReport
+* **report:** update build result reporting, add skipped steps
+* **report:** add option to only report failed steps
+
+Bug fixes
+~~~~~~~~~
+
+* **report:** remove duplicating comment
+* **out:** fix skipped steps reporting
+* **configs:** fix critical step handling while merging one-element Variations
+
+
 0.13.1 (2018-02-16)
 -------------------
 

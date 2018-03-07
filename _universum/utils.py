@@ -6,8 +6,8 @@ import traceback
 import sys
 import codecs
 
-from _universum.ci_exception import SilentAbortException
-from .ci_exception import CriticalCiException
+from .ci_exception import CriticalCiException, SilentAbortException
+from .gravity import construct_component
 
 __all__ = [
     "Colors",
@@ -32,6 +32,7 @@ class Colors(object):
     dark_red = "\033[0;31m"
     green = "\033[1;32m"
     blue = "\033[1;34m"
+    dark_cyan = "\033[0;36m"
     dark_yellow = "\033[0;33m"
     reset = "\033[00m"
 
@@ -87,7 +88,8 @@ def format_traceback(ex, trace):
 def make_block(block_name, pass_errors=True):
     def decorated_function(function):
         def function_in_block(self, *args, **kwargs):
-            return self.out.run_in_block(function, block_name, pass_errors, self, *args, **kwargs)
+            self.structure = construct_component('StructureHandler', self.main_settings)
+            return self.structure.run_in_block(function, block_name, pass_errors, self, *args, **kwargs)
         return function_in_block
     return decorated_function
 

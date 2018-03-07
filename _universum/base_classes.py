@@ -29,6 +29,9 @@ class OutputBase(Module):
     def report_error(self, description):
         raise NotImplementedError
 
+    def report_skipped(self, message):
+        raise NotImplementedError
+
     def change_status(self, message):
         raise NotImplementedError
 

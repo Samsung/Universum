@@ -6,12 +6,19 @@ import string
 
 import docker
 
+from _universum import gravity
+import poll
+import submit
+from . import default_args
+
 __all__ = [
     "Params",
     "is_pycharm",
     "randomize_name",
     "pull_image",
-    "get_image"
+    "get_image",
+    "create_settings",
+    "TestEnvironment"
 ]
 
 
@@ -63,3 +70,34 @@ def get_image(request, client, params, name):
         request.raiseerror("Cannot find docker image '%s'. Try building it manually\n" % name)
 
     return image
+
+
+def create_settings(class_name):
+    argument_parser = default_args.ArgParserWithDefault()
+    gravity.define_arguments_recursive(class_name, argument_parser)
+    return argument_parser.parse_args([])
+
+
+class TestEnvironment(object):
+    def __init__(self, test_type):
+        if test_type == "poll":
+            self.settings = create_settings(poll.Poller)
+            self.settings.Poller.db_file = self.db_file
+            self.settings.BasicServer.url = "https://localhost/?cl=%s"
+        else:
+            self.settings = create_settings(submit.Submit)
+            self.settings.Submit.commit_message = "Test CL"
+            self.settings.FileManager.project_root = unicode(self.root_directory)
+        self.settings.Output.type = "term"
+
+    def get_last_change(self):
+        raise NotImplementedError()
+
+    def file_present(self, file_path):
+        raise NotImplementedError()
+
+    def text_in_file(self, text, file_path):
+        raise NotImplementedError()
+
+    def make_a_change(self):
+        raise NotImplementedError()

@@ -4,7 +4,7 @@
 import datetime
 import time
 
-import P4
+from P4 import P4, P4Exception
 import docker
 import pytest
 from requests.exceptions import ReadTimeout
@@ -27,7 +27,7 @@ def ignore_p4_exception(ignore_if, func, *args, **kwargs):
     result = None
     try:
         result = func(*args, **kwargs)
-    except P4.P4Exception as e:
+    except P4Exception as e:
         if ignore_if not in unicode(e):
             raise
     return result
@@ -161,7 +161,7 @@ def docker_perforce(request, docker_registry_params):
 
 @pytest.fixture()
 def perforce_connection(request, docker_perforce):
-    p4 = P4.P4()
+    p4 = P4()
     p4.port = docker_perforce.port
     p4.user = docker_perforce.user
     p4.password = docker_perforce.password
@@ -205,8 +205,8 @@ def perforce_workspace(request, perforce_connection, tmpdir):
                            commited_change=commited_change,
                            depot=depot,
                            work_dir=work_dir,
-                           workspace_root=root,
-                           workspace_file=tmpfile,
+                           root_directory=root,
+                           repo_file=tmpfile,
                            tmpfile=tmpfile)
 
     finally:
@@ -215,3 +215,54 @@ def perforce_workspace(request, perforce_connection, tmpdir):
             for item in remainig_shelves:
                 p4.run_shelve("-dfc", item["change"])
             p4.delete_client("-f", client_name)
+
+
+class P4Environment(utils.TestEnvironment):
+    def __init__(self, perforce_workspace, directory, test_type):
+        db_file = directory.join("p4poll.json")
+        self.db_file = unicode(db_file)
+        self.root_directory = perforce_workspace.root_directory
+        self.repo_file = perforce_workspace.repo_file
+        self.p4 = perforce_workspace.p4
+        self.depot = perforce_workspace.depot
+
+        super(P4Environment, self).__init__(test_type)
+
+        self.settings.PerforceVcs.project_depot_path = perforce_workspace.depot
+        self.settings.PerforceVcs.client = perforce_workspace.client_name
+
+        self.settings.FileManager.vcs = "p4"
+        self.settings.PerforceVcs.port = perforce_workspace.p4.port
+        self.settings.PerforceVcs.user = perforce_workspace.p4.user
+        self.settings.PerforceVcs.password = perforce_workspace.p4.password
+
+    def get_last_change(self):
+        changes = self.p4.run_changes("-s", "submitted", "-m1", self.depot)
+        return changes[0]["change"]
+
+    def file_present(self, file_path):
+        try:
+            self.p4.run_files("-e", file_path)
+            return True
+        except P4Exception as e:
+            if not e.warnings:
+                raise
+            if "no such file(s)" not in e.warnings[0]:
+                raise
+            return False
+
+    def text_in_file(self, text, file_path):
+        return text in self.p4.run_print(file_path)[-1]
+
+    def make_a_change(self):
+        tmpfile = self.repo_file
+        self.p4.run("edit", str(tmpfile))
+        tmpfile.write("Change #1 " + str(tmpfile))
+
+        change = self.p4.run_change("-o")[0]
+        change["Description"] = "Test submit #1"
+
+        committed_change = self.p4.run_submit(change)
+
+        cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
+        return cl

@@ -11,6 +11,7 @@ from .ci_exception import CriticalCiException, CiException
 from .gravity import Module, Dependency
 from .output import needs_output
 from .reporter import Reporter
+from .structure_handler import needs_structure
 from .utils import make_block
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
 
 
 @needs_output
+@needs_structure
 class ArtifactCollector(Module):
     reporter_factory = Dependency(Reporter)
 
@@ -122,9 +124,11 @@ class ArtifactCollector(Module):
         new_artifact_list.sort(key=len, reverse=True)
         return new_artifact_list
 
+    @make_block("Setting and preprocessing artifacts according to configs")
     def set_and_clean_artifacts(self, path_list):
         self.artifact_list = self.preprocess_artifact_list(path_list)
 
+    @make_block("Setting and preprocessing artifacts to be mentioned in report")
     def set_and_clean_report_artifacts(self, path_list):
         self.report_artifact_list = self.preprocess_artifact_list(path_list)
 
@@ -136,7 +140,6 @@ class ArtifactCollector(Module):
                 self.out.log("No artifacts found.")
                 return
             else:
-                self.reporter.report_build_step("Collecting artifacts - " + os.path.basename(path), False)
                 text = "No artifacts found!" + "\nPossible reasons of this error:\n" + \
                        " * Artifact was not created while building the project due to some internal errors\n" + \
                        " * Artifact path was not specified correctly in 'configs.py'"
@@ -166,10 +169,11 @@ class ArtifactCollector(Module):
 
     @make_block("Collecting artifacts", pass_errors=False)
     def collect_artifacts(self):
+        self.reporter.add_block_to_report(self.structure.get_current_block())
         for path in self.report_artifact_list:
             name = "Collecting '" + os.path.basename(path) + "' for report"
-            self.out.run_in_block(self.move_artifact, name, False, path, is_report=True)
+            self.structure.run_in_block(self.move_artifact, name, False, path, is_report=True)
         self.reporter.report_artifacts(self.artifact_dir, list(self.collected_report_artifacts))
         for path in self.artifact_list:
             name = "Collecting '" + os.path.basename(path) + "'"
-            self.out.run_in_block(self.move_artifact, name, False, path)
+            self.structure.run_in_block(self.move_artifact, name, False, path)

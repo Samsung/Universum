@@ -4,12 +4,26 @@ from collections import defaultdict
 from . import jenkins_driver, teamcity_driver, local_driver, utils
 from .gravity import Module, Dependency
 from .output import needs_output
+from .structure_handler import needs_structure
 from .utils import make_block
 
 __all__ = [
     "ReportObserver",
     "Reporter"
 ]
+
+
+def report_steps_recursively(block, text, indent, only_fails=False):
+    text_status, is_successful = block.get_full_status()
+    if only_fails:
+        if not is_successful:
+            text += text_status + "\n"
+    else:
+        text += indent + text_status + "\n"
+    for substep in block.children:
+        text, status = report_steps_recursively(substep, text, indent + "  ", only_fails)
+        is_successful = is_successful and status
+    return text, is_successful
 
 
 class ReportObserver(object):
@@ -31,6 +45,7 @@ class ReportObserver(object):
 
 
 @needs_output
+@needs_structure
 class Reporter(Module):
     teamcity_info_factory = Dependency(teamcity_driver.TeamCityBuildInfo)
     local_info_factory = Dependency(local_driver.LocalBuildInfo)
@@ -42,13 +57,15 @@ class Reporter(Module):
                                                      "Build results collecting and publishing parameters")
         parser.add_argument("--report-env", "-re", dest="env", choices=["tc", "jenkins", "local"],
                             help="Type of environment to refer to (tc - TeamCity, jenkins - Jenkins, "
-                                 "local - user local terminal). "
-                                 "TeamCity environment is detected automatically when launched on build agent")
+                                 "local - user local terminal). TeamCity and Jenkins environment "
+                                 "is detected automatically when launched on build agent")
 
         parser.add_argument("--report-build-start", "-rst", action="store_true", dest="report_start",
                             help="Send additional comment to review system on build started (with link to log)")
         parser.add_argument("--report-build-success", "-rsu", action="store_true", dest="report_success",
                             help="Send comment to review system on build success (in addition to vote up)")
+        parser.add_argument("--report-only-fails", "-rof", action="store_true", dest="only_fails",
+                            help="Include only the list of failed steps to reporting comments")
 
     def __init__(self, settings):
         self.settings = settings
@@ -59,7 +76,7 @@ class Reporter(Module):
 
         self.observers = []
         self.report_initialized = False
-        self.steps_to_report = []
+        self.blocks_to_report = []
         self.artifacts_to_report = []
         self.local_artifacts_dir = None
         self.code_report_comments = defaultdict(list)
@@ -79,15 +96,14 @@ class Reporter(Module):
             return
 
         text = "Review update detected!\n\n"
-        text += "Please see the review testing log here:\n"
         text += self.driver.report_build_location()
         text += "\n\nPlease do not submit until revision testing is finished."
 
         for observer in self.observers:
             observer.report_start(text)
 
-    def report_build_step(self, name, result):
-        self.steps_to_report.append([name, result])
+    def add_block_to_report(self, block):
+        self.blocks_to_report.append(block)
 
     def report_artifacts(self, local_artifacts_dir, artifact_list):
         self.local_artifacts_dir = local_artifacts_dir
@@ -103,15 +119,14 @@ class Reporter(Module):
             return
 
         is_successful = True
-        text = "The following steps were checked:\n"
-        for name, result in self.steps_to_report:
-            text += name
-            if result:
-                text += " - SUCCEEDED\n"
-            else:
-                text += " - FAILED\n"
-                is_successful = False
+        text = "Here is the summarized build result:\n"
+        for step in self.blocks_to_report:
+            text, status = report_steps_recursively(step, text, "", self.settings.only_fails)
+            is_successful = is_successful and status
+            if self.settings.only_fails and is_successful:
+                text += "  All steps succeeded"
 
+        self.out.log(text)
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
             return

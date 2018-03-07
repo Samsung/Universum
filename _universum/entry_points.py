@@ -1,10 +1,10 @@
 import sys
 
-from .module_arguments import ModuleArgumentParser, IncorrectParameterError
-from .gravity import construct_component, define_arguments_recursive
-from .ci_exception import SilentAbortException
-from .utils import Uninterruptible, format_traceback
 from . import __version__
+from .ci_exception import SilentAbortException
+from .gravity import construct_component, define_arguments_recursive
+from .module_arguments import ModuleArgumentParser, IncorrectParameterError
+from .utils import Uninterruptible, format_traceback
 
 
 def run_with_settings(main_class, settings):

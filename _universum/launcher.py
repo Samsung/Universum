@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import copy
 import os
 import os.path
 import sys
@@ -12,8 +11,9 @@ from .ci_exception import CiException, CriticalCiException, StepException
 from .gravity import Module, Dependency
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
-from .utils import make_block
 from .reporter import Reporter
+from .structure_handler import needs_structure
+from .utils import make_block
 
 __all__ = [
     "Launcher"
@@ -68,7 +68,6 @@ def finalize_execution(cmd, log):
         else:
             if stderr:
                 log.report_warning(stderr)
-            log.report_success()
 
     finally:
         log.end_log()
@@ -76,8 +75,9 @@ def finalize_execution(cmd, log):
 
 class LogWriter(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, out, artifacts, reporter, output_type, step_name, background=False):
+    def __init__(self, out, structure, artifacts, reporter, output_type, step_name, background=False):
         self.out = out
+        self.structure = structure
         self.reporter = reporter
         self.background = background
         self.step_name = step_name
@@ -123,11 +123,7 @@ class LogWriter(object):
 
         if self.file:
             self.file.write(line + "\n")
-        self.out.fail_current_block(line)
-        self.reporter.report_build_step(self.step_name, False)
-
-    def report_success(self):
-        self.reporter.report_build_step(self.step_name, True)
+        self.structure.fail_current_block(line)
 
     def end_log(self):
         self.handle_stdout()
@@ -136,8 +132,8 @@ class LogWriter(object):
 
 
 class LogWriterCodeReport(LogWriter):
-    def __init__(self, out, artifacts, reporter, step_name, background):
-        super(LogWriterCodeReport, self).__init__(out, artifacts, reporter, "file", step_name, background)
+    def __init__(self, *args, **kwargs):
+        super(LogWriterCodeReport, self).__init__(*args, **kwargs)
         self.collect = ''
 
     def report_comments(self, report):
@@ -159,10 +155,14 @@ class LogWriterCodeReport(LogWriter):
 
         self.file.write(json.dumps(report, indent=4))
         self.report_comments(report)
-        self.out.log_shell_output("Found " + str(len(report)) + " issues.")
+        if report:
+            self.structure.fail_current_block("Found " + unicode(len(report)) + " issues")
+        else:
+            self.out.log("Issues not found.")
 
 
 @needs_output
+@needs_structure
 class Launcher(Module):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(Reporter)
@@ -183,8 +183,6 @@ class Launcher(Module):
 
     def __init__(self, settings, project_root):
         self.project_root = project_root
-        self.configs_current_number = 0
-        self.configs_total_count = 0
         self.settings = settings
         self.background_processes = []
         self.source_project_configs = None
@@ -214,9 +212,13 @@ class Launcher(Module):
 
         try:
             execfile(config_path, config_globals)
+
             self.source_project_configs = config_globals["configs"]
+            dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
+            dump_file.write(self.source_project_configs.dump())
+            dump_file.close()
+
             self.project_configs = self.source_project_configs.filter(check_if_env_set)
-            self.configs_total_count = sum(1 for _ in self.project_configs.all())
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
@@ -247,12 +249,16 @@ class Launcher(Module):
                 name = os.path.abspath(os.path.join(working_directory, name))
                 cmd = make_command(name)
         except CiException as ex:
-            self.out.fail_current_block(unicode(ex))
+            self.structure.fail_current_block(unicode(ex))
             raise StepException()
+
         if code_report:
-            log_writer = LogWriterCodeReport(self.out, self.artifacts, self.reporter, step_name, background)
+            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter,
+                                             "file", step_name, background)
         else:
-            log_writer = LogWriter(self.out, self.artifacts, self.reporter, self.settings.output, step_name, background)
+            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter,
+                                   self.settings.output, step_name, background)
+
         ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
                   _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)
         log_writer.print_cmd(ret.ran)
@@ -268,53 +274,28 @@ class Launcher(Module):
             command_path = utils.strip_path_start(item["command"][0])
             working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
                                                  self.project_root)
-            self.run_cmd(command_path, item.get("name", ''), working_directory, item.get("background", False),
-                         item.get("code_report", False), *(item["command"][1:]))
+            self.run_cmd(command_path,
+                         item.get("name", ''),
+                         working_directory,
+                         item.get("background", False),
+                         item.get("code_report", False),
+                         *(item["command"][1:]))
         except KeyError as e:
             if e.message == "command":
                 self.out.log("No 'command' found. Nothing to execute")
             else:
                 raise
 
-    def execute_steps_recursively(self, parent, variations):
-        if parent is None:
-            parent = dict()
-
-        child_step_failed = False
-        for obj_a in variations:
-            try:
-                item = configuration_support.combine(parent, copy.deepcopy(obj_a))
-
-                if "children" in obj_a:
-                    # Here pass_errors=True, because any exception outside executing build step
-                    # is not step-related and should stop script executing
-
-                    self.out.run_in_block(self.execute_steps_recursively, item.get("name", ''), True, item,
-                                          obj_a["children"])
-                else:
-                    self.configs_current_number += 1
-                    step_name = " [ " + unicode(self.configs_current_number) + "/" + \
-                                unicode(self.configs_total_count) + " ] " + item.get("name", '')
-                    # Here pass_errors=False, because any exception while executing build step
-                    # can be step-related and may not affect other steps
-
-                    self.out.run_in_block(self.execute_configuration, step_name, False, item)
-            except StepException:
-                child_step_failed = True
-                if obj_a.get("critical", False):
-                    break
-        if child_step_failed:
-            raise StepException
-
     @make_block("Reporting background steps")
     def report_background_steps(self):
         for process in self.background_processes:
-            self.out.run_in_block(finalize_execution, process['log'].step_name, False, **process)
+            self.structure.run_in_block(finalize_execution, process['log'].step_name, False, **process)
 
+    @make_block("Executing build steps")
     def launch_project(self):
+        self.reporter.add_block_to_report(self.structure.get_current_block())
         try:
-            self.out.run_in_block(self.execute_steps_recursively, "Executing build steps", True,
-                                  None, self.project_configs)
+            self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
             if self.background_processes:
                 self.report_background_steps()
         except StepException:

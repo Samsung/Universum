@@ -23,6 +23,11 @@ class TeamCityOutput(OutputBase):
     def report_error(self, description):
         print "##teamcity[buildProblem description='<{}>']".format(escape(description))
 
+    def report_skipped(self, message):
+        lines = message.split("\n")
+        for single_line in lines:
+            print u"##teamcity[message text='{}' status='WARNING']".format(escape(single_line))
+
     def change_status(self, message):
         print "##teamcity[buildStatus text='{}']".format(escape(message))
 
