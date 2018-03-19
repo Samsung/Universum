@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import sys
+
 from _universum import file_manager, utils
 from _universum.entry_points import run_main_for_module, run_with_settings
 from _universum.gravity import Module, Dependency
@@ -70,4 +72,5 @@ def main(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)
