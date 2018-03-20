@@ -2,6 +2,7 @@
 
 import os
 import os.path
+import re
 import sys
 import json
 import sh
@@ -16,7 +17,8 @@ from .structure_handler import needs_structure
 from .utils import make_block
 
 __all__ = [
-    "Launcher"
+    "Launcher",
+    "check_if_env_set"
 ]
 
 
@@ -28,23 +30,57 @@ def make_command(name):
         raise CiException(text)
 
 
-def check_if_env_set(variations):
-    if "if_env_set" in variations:
-        variables = variations["if_env_set"].split("&")
+def check_if_env_set(configuration):
+    """
+    Predicate function for :func:`_universum.configuration_support.Variations.filter`,
+    used to decide whether this particular configuration should be executed in this
+    particular environment. For more information see :ref:`filtering`
+
+    >>> from _universum.configuration_support import Variations
+    >>> c = Variations([dict(if_env_set="MY_VAR != some value")])
+    >>> check_if_env_set(c[0])
+    True
+
+    >>> c = Variations([dict(if_env_set="MY_VAR != some value && OTHER_VAR")])
+    >>> check_if_env_set(c[0])
+    False
+
+    >>> c = Variations([dict(if_env_set="MY_VAR == some value")])
+    >>> os.environ["MY_VAR"] = "some value"
+    >>> check_if_env_set(c[0])
+    True
+
+    :param configuration: :class:`~_universum.configuration_support.Variations`
+           object containing one leaf configuration
+    :return: True if environment satisfies described requirements; False otherwise
+    """
+
+    if "if_env_set" in configuration:
+        variables = configuration["if_env_set"].split("&")
         for var in variables:
             if var.strip():
-                if "==" in var.strip():
-                    comparison = var.strip().split("==")
-                    if len(comparison) != 2:
-                        raise CriticalCiException("Comparison '" + var.strip() + "' cannot be parsed")
-                    if not os.getenv(comparison[0].strip()):
-                        return False
-                    if os.getenv(comparison[0].strip()) != comparison[1].strip():
-                        return False
-                else:
+                match = re.match(r"\s*(\w+)\s*(!=|==)\s*(.*?)\s*$", var)
+
+                # With no operator 'match' is None
+                # In this case variable should be obligatory set to any positive value
+                if not match:
                     if not os.getenv(var.strip()):
                         return False
                     if os.getenv(var.strip()) not in ["True", "true", "Yes", "yes", "Y", "y"]:
+                        return False
+                    continue
+
+                name, operator, value = match.groups()
+                # In "==" case variable should be obligatory set to 'value'
+                if operator == "==":
+                    if not os.getenv(name):
+                        return False
+                    if os.getenv(name) != value:
+                        return False
+
+                # In "!=" case variable can be unset or set to any value not matching 'value'
+                elif os.getenv(name):
+                    if os.getenv(name) == value:
                         return False
     return True
 
