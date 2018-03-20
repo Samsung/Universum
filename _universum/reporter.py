@@ -123,8 +123,8 @@ class Reporter(Module):
         for step in self.blocks_to_report:
             text, status = report_steps_recursively(step, text, "", self.settings.only_fails)
             is_successful = is_successful and status
-            if self.settings.only_fails and is_successful:
-                text += "  All steps succeeded"
+        if self.settings.only_fails and is_successful:
+            text += "  All steps succeeded"
 
         self.out.log(text)
         if not self.observers:
