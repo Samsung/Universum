@@ -193,7 +193,7 @@ class LogWriterCodeReport(LogWriter):
         self.report_comments(report)
         if report:
             self.structure.fail_current_block("Found " + unicode(len(report)) + " issues")
-        else:
+        elif not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
             self.out.log("Issues not found.")
 
 

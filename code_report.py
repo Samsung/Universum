@@ -30,7 +30,6 @@ class CodeReport(object):
         self.settings = settings
 
     def run_pylint(self):
-
         issues = []
         files = []
         if not self.settings.rcfile:
@@ -48,20 +47,26 @@ class CodeReport(object):
             sys.stderr.write("No such file or command as '" + str(e) + "'. "
                              "Make sure, that required code report tool is installed.\n")
         except Exception as e:
-            if 'ErrorReturnCode_' in e.__class__.__name__:
+            if e.stderr and not e.stdout:
+                sys.stderr.write(e.stderr)
+                return 1
+            elif e.stdout:
                 issues = e.stdout
-            else:
-                # print exception to stderr instead of stdout
-                ex_traceback = sys.exc_info()[2]
-                sys.stderr.write(format_traceback(e, ex_traceback))
+
         if issues:
-            issues_loads = []
-            for issue in json.loads(issues):
-                # pylint has its own escape rules for json output of "message" values.
-                # it uses cgi.escape lib and escapes symbols <>&
-                issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
-                issues_loads.append(issue)
-            sys.stdout.write(json.dumps(issues_loads))
+            try:
+                issues_loads = []
+                loads = json.loads(issues)
+                for issue in loads:
+                    # pylint has its own escape rules for json output of "message" values.
+                    # it uses cgi.escape lib and escapes symbols <>&
+                    issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+                    issues_loads.append(issue)
+                sys.stdout.write(json.dumps(issues_loads))
+            except ValueError as e:
+                sys.stderr.write(e.message)
+                sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
+                sys.stderr.write(issues)
         return 0
 
     def execute(self):
