@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import json
+import sys
 
 from _universum import automation_server, file_manager
 from _universum.entry_points import run_main_for_module, run_with_settings
@@ -85,4 +86,5 @@ def main(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)

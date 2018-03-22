@@ -1,0 +1,5 @@
+"""
+Docstring.
+"""
+
+print "Hello world."

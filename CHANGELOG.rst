@@ -1,6 +1,20 @@
 Change log
 ==========
 
+0.13.3 (2018-03-22)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **config:** add :ref:`negative 'if_env_set' values <filtering>`
+
+Bug fixes
+~~~~~~~~~
+
+* **add return of exit codes to all main scripts**
+* **report:** fix bug with multiple success reporting
+
 0.13.2 (2018-03-07)
 -------------------
 

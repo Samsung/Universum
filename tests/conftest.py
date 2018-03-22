@@ -1,18 +1,12 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
-import getpass
-from pwd import getpwnam
-import os
-
-import docker
-import git
 import httpretty
 import pytest
 import mock
 from . import utils
 
-pytest_plugins = ['tests.perforce_utils', 'tests.git_utils']
+pytest_plugins = ['tests.perforce_utils', 'tests.git_utils', 'tests.deployment_utils']
 
 
 def pytest_addoption(parser):
@@ -120,67 +114,6 @@ def http_request_checker(request):
     yield HttpChecker()
     httpretty.disable()
     httpretty.reset()
-
-
-class CommandRunner(object):
-    def __init__(self, client, container, bound_dir):
-        self._client = client
-        self._container = container
-        self._bound_dir = bound_dir
-
-    def get_working_directory(self):
-        return self._bound_dir
-
-    def exit(self):
-        user_id = getpwnam(getpass.getuser()).pw_uid
-        self._container.exec_run("chown -R {} {}".format(user_id, self._bound_dir))
-        self._container.stop(timeout=0)
-
-    def _run_and_check(self, cmd, result):
-        process_id = self._client.api.exec_create(self._container.id, cmd)
-        print "$ " + cmd
-        log = self._client.api.exec_start(process_id)
-        print log
-
-        exit_code = self._client.api.exec_inspect(process_id)['ExitCode']
-        if result:
-            assert exit_code == 0
-        else:
-            assert exit_code != 0
-
-        return log
-
-    def assert_success(self, cmd):
-        return self._run_and_check(cmd, True)
-
-    def assert_failure(self, cmd):
-        return self._run_and_check(cmd, False)
-
-
-@pytest.fixture()
-def command_runner(request, docker_registry_params):
-    client = docker.from_env()
-    container = None
-    runner = None
-    bind_dir = "/host"
-    try:
-        try:
-            image = utils.get_image(request, client, docker_registry_params, "pythonp4")
-            container = client.containers.run(image,
-                                              command="sleep infinity",
-                                              volumes={os.getcwd(): {'bind': bind_dir, 'mode': 'rw'}},
-                                              network_mode='host',
-                                              auto_remove=True,
-                                              detach=True)
-            runner = CommandRunner(client, container, bind_dir)
-            yield runner
-        finally:
-            if runner is not None:
-                runner.exit()
-    except:
-        if container is not None:
-            container.remove(force=True)
-        raise
 
 
 def check_output((out, err)):

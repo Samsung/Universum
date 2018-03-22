@@ -511,6 +511,10 @@ configuration is not executed. If any other value should be set, use
 the absence of any quotation marks around `variable_value`: if added, `$VARIABLE_NAME` will be
 compared with `"variable_value"` string and thus fail.
 
+If such environment variable should not be set to specific value, please use
+``if_env_set="VARIABLE_NAME != variable_value"`` (especially ``!= True`` for variables
+to not be set at all).
+
 If executing the configuration depends on more than one environment variable,
 use ``&`` inside `if_env_set` value. For example,
 ``if_env_set="SPECIAL_TOOL_PATH & ADDITIONAL_SOURCES_ROOT"`` configuration will be executed only

@@ -10,8 +10,10 @@ Further reading
     args.rst
     configuring.rst
     configuration_support.rst
+    universum_docs.rst
     teamcity.rst
     changelog_ref.rst
+
 
 Indices and tables
 ==================

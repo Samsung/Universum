@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import sys
+
 from _universum import artifact_collector, file_manager, launcher, reporter
 from _universum import utils, __title__, __version__
 from _universum.entry_points import run_main_for_module, setup_arg_parser
@@ -64,4 +66,5 @@ def main(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)

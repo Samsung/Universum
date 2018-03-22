@@ -14,28 +14,18 @@ def update_directory(workspace, directory):
     workspace.p4.run_submit(change)
 
 
-def test_minimal_install(command_runner, perforce_workspace):
-    working_dir = command_runner.get_working_directory()
-    source_dir = os.path.join(working_dir, "examples")
-    project_root = os.path.join(working_dir, "temp")
-    artifact_dir = os.path.join(working_dir, "artifacts")
-
-    # Install
-    log = command_runner.assert_success("pip install " + working_dir)
-    assert "Successfully installed" in log
+def test_minimal_install(command_runner, perforce_workspace, universum_runner):
 
     # Run without parameters
     log = command_runner.assert_failure("universum")
     assert "command not found" not in log
 
     # Run with parameters
-    cmd = "universum --vcs-type none -fsd {} -lcp {} -pr {} -ad {}" \
-        .format(source_dir, "basic_config.py", project_root, artifact_dir)
-    log = command_runner.assert_success(cmd)
+    log = universum_runner.run_from_source("basic_config.py")
     assert "Build for platform B 32 bits" in log
 
     assert os.path.exists(os.path.join(os.getcwd(), "artifacts/out.zip"))
-    command_runner.assert_success("rm -rf {}".format(artifact_dir))
+    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
 
     # Run from P4
     project_dir = unicode(perforce_workspace.root_directory.join("examples"))
@@ -55,10 +45,10 @@ def test_minimal_install(command_runner, perforce_workspace):
                 "//depot/examples/...",
                 "my_disposable_p4_client",
                 "basic_config.py",
-                project_root,
-                artifact_dir)
+                universum_runner.project_root,
+                universum_runner.artifact_dir)
     log = command_runner.assert_success(cmd)
     assert "Build for platform B 32 bits" in log
 
     assert os.path.exists(os.path.join(os.getcwd(), "artifacts/out.zip"))
-    command_runner.assert_success("rm -rf {}".format(artifact_dir))
+    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
