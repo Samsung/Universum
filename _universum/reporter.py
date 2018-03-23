@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
-from . import jenkins_driver, teamcity_driver, local_driver, utils
+from .build_info import BuildInfo
 from .gravity import Module, Dependency
 from .output import needs_output
 from .structure_handler import needs_structure
@@ -47,18 +47,12 @@ class ReportObserver(object):
 @needs_output
 @needs_structure
 class Reporter(Module):
-    teamcity_info_factory = Dependency(teamcity_driver.TeamCityBuildInfo)
-    local_info_factory = Dependency(local_driver.LocalBuildInfo)
-    jenkins_info_factory = Dependency(jenkins_driver.JenkinsBuildInfo)
+    build_info_factory = Dependency(BuildInfo)
 
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Result reporting",
                                                      "Build results collecting and publishing parameters")
-        parser.add_argument("--report-env", "-re", dest="env", choices=["tc", "jenkins", "local"],
-                            help="Type of environment to refer to (tc - TeamCity, jenkins - Jenkins, "
-                                 "local - user local terminal). TeamCity and Jenkins environment "
-                                 "is detected automatically when launched on build agent")
 
         parser.add_argument("--report-build-start", "-rst", action="store_true", dest="report_start",
                             help="Send additional comment to review system on build started (with link to log)")
@@ -69,17 +63,14 @@ class Reporter(Module):
 
     def __init__(self, settings):
         self.settings = settings
-        self.driver = utils.create_diver(teamcity_factory=self.teamcity_info_factory,
-                                         jenkins_factory=self.jenkins_info_factory,
-                                         local_factory=self.local_info_factory,
-                                         default=settings.env)
 
         self.observers = []
         self.report_initialized = False
         self.blocks_to_report = []
         self.artifacts_to_report = []
-        self.local_artifacts_dir = None
         self.code_report_comments = defaultdict(list)
+
+        self.build_info = self.build_info_factory()
 
     def subscribe(self, observer):
         self.observers.append(observer)
@@ -96,7 +87,7 @@ class Reporter(Module):
             return
 
         text = "Review update detected!\n\n"
-        text += self.driver.report_build_location()
+        text += self.build_info.report_build_location()
         text += "\n\nPlease do not submit until revision testing is finished."
 
         for observer in self.observers:
@@ -105,8 +96,7 @@ class Reporter(Module):
     def add_block_to_report(self, block):
         self.blocks_to_report.append(block)
 
-    def report_artifacts(self, local_artifacts_dir, artifact_list):
-        self.local_artifacts_dir = local_artifacts_dir
+    def report_artifacts(self, artifact_list):
         self.artifacts_to_report.extend(artifact_list)
 
     def code_report(self, path, message):
@@ -141,12 +131,12 @@ class Reporter(Module):
         else:
             self.out.log("Reporting failed build...")
             if not self.settings.report_start:
-                text += "\n" + self.driver.report_build_location()
+                text += "\n" + self.build_info.report_build_location()
 
         if self.artifacts_to_report:
             text += "\n\nThe following artifacts were generated during check:\n"
             for item in self.artifacts_to_report:
-                text += "* " + self.driver.artifact_path(self.local_artifacts_dir, item) + "\n"
+                text += "* " + item + "\n"
             text += "Please take a look."
 
         for observer in self.observers:
