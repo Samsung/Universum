@@ -7,7 +7,7 @@ import glob
 import os
 import shutil
 
-from .build_info import BuildInfo
+from .automation_server import AutomationServer
 from .ci_exception import CriticalCiException, CiException
 from .gravity import Module, Dependency
 from .output import needs_output
@@ -24,7 +24,7 @@ __all__ = [
 @needs_structure
 class ArtifactCollector(Module):
     reporter_factory = Dependency(Reporter)
-    build_info_factory = Dependency(BuildInfo)
+    automation_server_factory = Dependency(AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -41,7 +41,7 @@ class ArtifactCollector(Module):
     def __init__(self, settings):
         self.settings = settings
         self.reporter = self.reporter_factory()
-        self.build_info = self.build_info_factory()
+        self.automation_server = self.automation_server_factory()
 
         self.artifact_list = []
         self.report_artifact_list = []
@@ -82,7 +82,7 @@ class ArtifactCollector(Module):
                     raise CriticalCiException(text)
 
             self.file_list.add(file_name)
-            file_path = self.build_info.artifact_path(self.artifact_dir, os.path.basename(file_name))
+            file_path = self.automation_server.artifact_path(self.artifact_dir, os.path.basename(file_name))
             self.out.log("Adding file " + file_path + " to artifacts...")
             return codecs.open(encoded_name, "a", encoding="utf-8")
         except IOError as e:
@@ -156,7 +156,7 @@ class ArtifactCollector(Module):
                 try:
                     shutil.make_archive(destination, "zip", matching_path)
                     if is_report:
-                        artifact_path = self.build_info.artifact_path(self.artifact_dir, artifact_name + ".zip")
+                        artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name + ".zip")
                         self.collected_report_artifacts.add(artifact_path)
                     continue
                 except OSError:
@@ -170,7 +170,7 @@ class ArtifactCollector(Module):
             except distutils.errors.DistutilsFileError:
                 shutil.copyfile(matching_path, destination)
                 if is_report:
-                    artifact_path = self.build_info.artifact_path(self.artifact_dir, artifact_name)
+                    artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name)
                     self.collected_report_artifacts.add(artifact_path)
 
     @make_block("Collecting artifacts", pass_errors=False)

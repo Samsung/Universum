@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
-from .build_info import BuildInfo
+from .automation_server import AutomationServer
 from .gravity import Module, Dependency
 from .output import needs_output
 from .structure_handler import needs_structure
@@ -47,7 +47,7 @@ class ReportObserver(object):
 @needs_output
 @needs_structure
 class Reporter(Module):
-    build_info_factory = Dependency(BuildInfo)
+    automation_server_factory = Dependency(AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -70,7 +70,7 @@ class Reporter(Module):
         self.artifacts_to_report = []
         self.code_report_comments = defaultdict(list)
 
-        self.build_info = self.build_info_factory()
+        self.automation_server = self.automation_server_factory()
 
     def subscribe(self, observer):
         self.observers.append(observer)
@@ -87,7 +87,7 @@ class Reporter(Module):
             return
 
         text = "Review update detected!\n\n"
-        text += self.build_info.report_build_location()
+        text += self.automation_server.report_build_location()
         text += "\n\nPlease do not submit until revision testing is finished."
 
         for observer in self.observers:
@@ -131,7 +131,7 @@ class Reporter(Module):
         else:
             self.out.log("Reporting failed build...")
             if not self.settings.report_start:
-                text += "\n" + self.build_info.report_build_location()
+                text += "\n" + self.automation_server.report_build_location()
 
         if self.artifacts_to_report:
             text += "\n\nThe following artifacts were generated during check:\n"

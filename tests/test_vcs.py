@@ -19,8 +19,8 @@ def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_worksp
                         "-p4p", perforce_workspace.p4.port,
                         "-p4u", perforce_workspace.p4.user,
                         "-p4P", perforce_workspace.p4.password,
-                        "-p4d", "//depot/...", "-u",
-                        "https://localhost/?%s"])
+                        "-p4d", "//depot/...",
+                        "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
@@ -32,7 +32,7 @@ def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tm
                         "-f", unicode(db_file),
                         "-gr", git_server.url,
                         "-grs", git_server.target_branch,
-                        "-u", "https://localhost/?%s"])
+                        "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
@@ -45,8 +45,8 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
                         "-p4p", "127.0.0.1:1024",
                         "-p4u", perforce_workspace.p4.user,
                         "-p4P", perforce_workspace.p4.password,
-                        "-p4d", "//depot/...", "-u",
-                        "https://localhost/?%s"])
+                        "-p4d", "//depot/...",
+                        "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
 
@@ -58,7 +58,7 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
                         "-f", unicode(db_file),
                         "-gr", "file:///non-existing-directory",
                         "-grs", git_server.target_branch,
-                        "-u", "https://localhost/?%s"])
+                        "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("Cmd('git') failed due to: exit code(128)")
 

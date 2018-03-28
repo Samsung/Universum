@@ -2,13 +2,11 @@
 
 import sys
 
-from .base_classes import OutputBase, BuildInfoBase
-from .utils import Colors
-
+from ..base_classes import OutputBase
+from ..utils import Colors
 
 __all__ = [
-    "LocalOutput",
-    "LocalBuildInfo"
+    "LocalOutput"
 ]
 
 
@@ -72,12 +70,3 @@ class LocalOutput(OutputBase):
 
     def log_shell_output(self, line):
         self.print_lines(line)
-
-
-class LocalBuildInfo(BuildInfoBase):
-
-    def report_build_location(self):
-        return "Local build. No external logs provided"
-
-    def artifact_path(self, local_artifacts_dir, item):
-        return local_artifacts_dir + "/" + item
