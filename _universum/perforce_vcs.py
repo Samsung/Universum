@@ -274,6 +274,7 @@ class PerforceVcs(base_classes.VcsBase):
         client = self.p4.fetch_client(self.client_name)
         client["Root"] = self.client_root
         client["View"] = self.client_view
+        client["Options"] = client["Options"].replace("noallwrite", "allwrite")
         self.p4.save_client(client)
         self.p4.client = self.client_name
         self.out.log("Workspace '" + self.client_name + "' created/updated.")
