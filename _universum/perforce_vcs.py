@@ -180,17 +180,18 @@ class PerforceVcs(base_classes.VcsBase):
         self.p4.client = self.settings.client
         client = self.p4.fetch_client(self.settings.client)
         workspace_root = client['Root']
-        file_list = [utils.parse_path(item, workspace_root) for item in file_list]
 
         for file_path in file_list:
+            # TODO: cover 'not file_path.startswith("/")' case with tests
+            if not file_path.startswith("/"):
+                file_path = workspace_root + "/" + file_path
+            if file_path.endswith("/"):
+                file_path += "..."
             if edit_only:
                 if catch_p4warning(self.p4.run_reconcile, "no file(s) to reconcile", "-e", file_path):
-                    if catch_p4warning(self.p4.run_reconcile, "no file(s) to reconcile", "-e", file_path + "/..."):
-                        file_name = os.path.relpath(file_path, workspace_root)
-                        self.out.log("Skipping '{}'...".format(file_name))
+                    self.out.log("The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
             else:
-                if catch_p4warning(self.p4.run_reconcile, "no file(s) to reconcile", file_path):
-                    self.p4.run_reconcile(file_path + "/...")
+                catch_p4warning(self.p4.run_reconcile, "no file(s) to reconcile", file_path)
 
         current_cl = self.p4.fetch_change()
         current_cl['Description'] = description
