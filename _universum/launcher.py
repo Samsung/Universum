@@ -15,6 +15,7 @@ from .output import needs_output
 from .reporter import Reporter
 from .structure_handler import needs_structure
 from .utils import make_block
+from .automation_server import AutomationServer
 
 __all__ = [
     "Launcher",
@@ -85,7 +86,7 @@ def check_if_env_set(configuration):
     return True
 
 
-def finalize_execution(cmd, log):
+def finalize_execution(cmd, log, pass_tag, fail_tag):
     try:
         text = ""
         try:
@@ -100,24 +101,28 @@ def finalize_execution(cmd, log):
         stderr = '\n'.join(log.error_lines)
         if text:
             log.report_fail(text + stderr)
+            if fail_tag:
+                log.add_tag(fail_tag)
             raise StepException()
         else:
             if stderr:
                 log.report_warning(stderr)
-
+            if pass_tag:
+                log.add_tag(pass_tag)
     finally:
         log.end_log()
 
 
 class LogWriter(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, out, structure, artifacts, reporter, output_type, step_name, background=False):
+    def __init__(self, out, structure, artifacts, reporter, server, output_type, step_name, background=False):
         self.out = out
         self.structure = structure
         self.reporter = reporter
         self.background = background
         self.step_name = step_name
         self.error_lines = []
+        self.server = server
 
         if self.background:
             output_type = "file"
@@ -161,6 +166,13 @@ class LogWriter(object):
             self.file.write(line + "\n")
         self.structure.fail_current_block(line)
 
+    def add_tag(self, tag):
+        request = self.server.add_build_tag(tag)
+        if request.status_code != 200:
+            self.out.log_stderr(request.text)
+        else:
+            self.out.log("Tag '" + tag + "' added to build.")
+
     def end_log(self):
         self.handle_stdout()
         if self.file:
@@ -202,6 +214,7 @@ class LogWriterCodeReport(LogWriter):
 class Launcher(Module):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(Reporter)
+    server_factory = Dependency(AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -236,6 +249,7 @@ class Launcher(Module):
 
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
+        self.server = self.server_factory()
 
     @make_block("Processing project configs")
     def process_project_configs(self):
@@ -275,7 +289,7 @@ class Launcher(Module):
             raise CriticalCiException(text)
         return self.project_configs
 
-    def run_cmd(self, name, step_name, working_directory, background, code_report, *args, **kwargs):
+    def run_cmd(self, name, step_name, working_directory, background, code_report, pass_tag, fail_tag, *args, **kwargs):
         try:
             try:
                 cmd = make_command(name)
@@ -289,10 +303,10 @@ class Launcher(Module):
             raise StepException()
 
         if code_report:
-            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter,
+            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter, self.server,
                                              "file", step_name, background)
         else:
-            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter,
+            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter, self.server,
                                    self.settings.output, step_name, background)
 
         ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
@@ -300,10 +314,11 @@ class Launcher(Module):
         log_writer.print_cmd(ret.ran)
 
         if background:
-            self.background_processes.append({'cmd': ret, 'log': log_writer})
+            self.background_processes.append({'cmd': ret, 'log': log_writer,
+                                              'pass_tag': pass_tag, 'fail_tag': fail_tag})
             self.out.log("Will continue in background")
         else:
-            finalize_execution(ret, log_writer)
+            finalize_execution(ret, log_writer, pass_tag, fail_tag)
 
     def execute_configuration(self, item):
         try:
@@ -315,6 +330,8 @@ class Launcher(Module):
                          working_directory,
                          item.get("background", False),
                          item.get("code_report", False),
+                         item.get("pass_tag", False),
+                         item.get("fail_tag", False),
                          *(item["command"][1:]))
         except KeyError as e:
             if e.message == "command":

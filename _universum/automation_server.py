@@ -39,3 +39,6 @@ class AutomationServer(Module):
 
     def artifact_path(self, local_artifacts_dir, item):
         return self.driver.artifact_path(local_artifacts_dir, item)
+
+    def add_build_tag(self, tag):
+        return self.driver.add_build_tag(tag)
