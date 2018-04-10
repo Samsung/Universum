@@ -204,7 +204,9 @@ class LogWriterCodeReport(LogWriter):
         self.file.write(json.dumps(report, indent=4))
         self.report_comments(report)
         if report:
-            self.structure.fail_current_block("Found " + unicode(len(report)) + " issues")
+            text = unicode(len(report)) + " issues"
+            self.structure.fail_current_block("Found " + text)
+            self.out.report_build_status(self.step_name + ": " + text)
         elif not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
             self.out.log("Issues not found.")
 
