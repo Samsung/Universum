@@ -263,6 +263,51 @@ background
     starting a background step, not waiting for it to be completed. Several background steps
     can be executed simultaneously.
 
+.. _tc_tags:
+
+pass_tag, fail_tag
+    Basic usage is adding ``pass_tag="PASS", fail_tag="FAIL"`` to the configuration description.
+    These keys is implemented only for TeamCity build. You can specify one, both or neither of them per step.
+    Defining ``pass_tag="PASS"`` means that current build on TeamCity will be tagged with label ``PASS``
+    if this particular step succeeds. Defining ``fail_tag="FAIL"`` means that current build on TeamCity will be
+    tagged with label ``FAIL`` if this particular step fails. Key values can be set to any strings acceptable by
+    TeamCity as tags. It is not recommended to separate words in the tag with spaces, since you cannot create
+    a tag with spaces in TeamCity's web-interface. Every tag is added (if matching condition) after executing
+    build step it is set in, not in the end of all run.
+    ``pass_tag`` and ``fail_tag`` can also be used in configurations multiplications, like this:
+
+    .. testsetup::
+
+        #!/usr/bin/env python
+
+        from _universum.configuration_support import Variations
+
+    .. testcode::
+
+        make = Variations([dict(name="Make ", command=["make"], pass_tag="pass_")])
+
+        target = Variations([dict(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
+                             dict(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
+                             ])
+
+        configs = make * target
+
+    This code will produce this list of configurations:
+
+    .. testcode::
+        :hide:
+
+        print "$ ./configs.py"
+        print configs.dump()
+
+    .. testoutput::
+
+        $ ./configs.py
+        [{'command': 'make --platform Linux', 'name': 'Make Linux', 'pass_tag': 'pass_Linux'},
+        {'command': 'make --platform Windows', 'name': 'Make Windows', 'pass_tag': 'pass_Windows'}]
+
+    This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
+
 
 .. note::
 
