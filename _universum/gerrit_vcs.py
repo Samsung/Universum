@@ -81,11 +81,12 @@ class GerritVcs(ReportObserver, git_vcs.GitVcs):
         # git show returns string, each file separated by \n,
         # first line consists of commit id and commit comment, so it's skipped
         commit_files = self.repo.git.show("--name-only", "--oneline", self.commit_id).split('\n')[1:]
+        stdin = {'comments': {}}
+        text = "gerrit review " + self.commit_id + ' --json '
         for path, issues in report.iteritems():
-            text = "gerrit review " + self.commit_id + ' --json '
             if path in commit_files:
-                stdin = {'comments': {path: issues}}
-                self.run_ssh_command(text, json.dumps(stdin))
+                stdin['comments'].update({path: issues})
+        self.run_ssh_command(text, json.dumps(stdin))
 
     def report_start(self, report_text):
         text = "gerrit review --message '" + report_text + "' " + self.commit_id

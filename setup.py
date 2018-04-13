@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import _universum
 
@@ -18,7 +18,7 @@ setup(
     author='Ivan Keliukh, Kateryna Dovgan',
     author_email='k.dovgan@samsung.com',
     license='BSD',
-    packages=['_universum'],
+    packages=find_packages(exclude='tests'),
     py_modules=['universum', 'submit', 'poll', 'code_report'],
     entry_points={'console_scripts': [
         'universum = universum:main',

@@ -83,7 +83,8 @@ class TestEnvironment(object):
         if test_type == "poll":
             self.settings = create_settings(poll.Poller)
             self.settings.Poller.db_file = self.db_file
-            self.settings.BasicServer.url = "https://localhost/?cl=%s"
+            self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
+            self.settings.AutomationServer.type = "jenkins"
         else:
             self.settings = create_settings(submit.Submit)
             self.settings.Submit.commit_message = "Test CL"

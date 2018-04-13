@@ -9,8 +9,7 @@ from .utils import make_block
 
 __all__ = [
     "OutputBase",
-    "AutomationServerBase",
-    "BuildInfoBase",
+    "AutomationServerDriverBase",
     "VcsBase"
 ]
 
@@ -51,19 +50,16 @@ class OutputBase(Module):
         raise NotImplementedError
 
 
-class AutomationServerBase(Module):
+class AutomationServerDriverBase(Module):
     """
     Abstract base class for API of automation (CI) server
     """
 
-    def trigger_build(self, revision):
-        raise NotImplementedError
+    def trigger_build(self, revision):  # pylint: disable=no-self-use
+        raise RuntimeError("Trigger build function is not defined for current driver.")
 
-
-class BuildInfoBase(Module):
-    """
-    Abstract base class for build result locations
-    """
+    def add_build_tag(self, tag):  # pylint: disable=no-self-use
+        raise RuntimeError("Tag adding function is not defined for current driver.")
 
     def report_build_location(self):
         raise NotImplementedError

@@ -1,37 +1,44 @@
 # -*- coding: UTF-8 -*-
 
-import urllib2
+from .jenkins.driver import JenkinsServer
+from .local.driver import LocalServer
+from .teamcity.driver import TeamCityServer
+from . import utils
+from .gravity import Dependency, Module
 
-from .ci_exception import CriticalCiException
-from .base_classes import AutomationServerBase
-from .output import needs_output
+__all__ = [
+    "AutomationServer"
+]
 
 
-@needs_output
-class BasicServer(AutomationServerBase):
+class AutomationServer(Module):
+    teamcity_server_factory = Dependency(TeamCityServer)
+    local_server_factory = Dependency(LocalServer)
+    jenkins_server_factory = Dependency(JenkinsServer)
 
     @staticmethod
     def define_arguments(argument_parser):
-        parser = argument_parser.get_or_create_group("Automation server", "Basic automation server options")
-        parser.add_argument('--url', '-u', dest='url',
-                            help='Url to trigger, must include exactly one conversion specifier (%%s) to be '
-                                 'replaced by CL number, for example: http://localhost/%%s', required=True, metavar="URL")
+        parser = argument_parser.get_or_create_group("Automation server", "Automation server options")
+        parser.add_argument("--server-type", "-st", dest="type", choices=["tc", "jenkins", "local"],
+                            help="Type of environment to refer to (tc - TeamCity, jenkins - Jenkins, "
+                                 "local - user local terminal). TeamCity and Jenkins environment "
+                                 "is detected automatically when launched on build agent")
 
     def __init__(self, settings):
+        self.driver = utils.create_driver(teamcity_factory=self.teamcity_server_factory,
+                                          jenkins_factory=self.jenkins_server_factory,
+                                          local_factory=self.local_server_factory,
+                                          default=settings.type)
         self.settings = settings
 
     def trigger_build(self, revision):
+        return self.driver.trigger_build(revision)
 
-        processed_url = self.settings.url % revision
+    def report_build_location(self):
+        return self.driver.report_build_location()
 
-        self.out.log("Triggering url %s" % processed_url)
-        try:
-            urllib2.urlopen(processed_url)
-        except urllib2.URLError as url_error:
-            raise CriticalCiException("Error opening URL, error message " + unicode(url_error.reason))
-        except ValueError as value_error:
-            raise CriticalCiException("Error opening URL, error message " + unicode(value_error))
+    def artifact_path(self, local_artifacts_dir, item):
+        return self.driver.artifact_path(local_artifacts_dir, item)
 
-        return True
-
-AutomationServer = BasicServer
+    def add_build_tag(self, tag):
+        return self.driver.add_build_tag(tag)

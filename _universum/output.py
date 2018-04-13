@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
 
-from . import jenkins_driver, teamcity_driver, local_driver, utils
+from .jenkins.output import JenkinsOutput
+from .local.output import LocalOutput
+from .teamcity.output import TeamCityOutput
+from . import utils
 from .gravity import Module, Dependency
 
 __all__ = [
@@ -23,9 +26,9 @@ def needs_output(klass):
 
 
 class Output(Module):
-    teamcity_driver_factory = Dependency(teamcity_driver.TeamCityOutput)
-    local_driver_factory = Dependency(local_driver.LocalOutput)
-    jenkins_driver_factory = Dependency(jenkins_driver.JenkinsOutput)
+    teamcity_driver_factory = Dependency(TeamCityOutput)
+    local_driver_factory = Dependency(LocalOutput)
+    jenkins_driver_factory = Dependency(JenkinsOutput)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -35,10 +38,10 @@ class Output(Module):
                                  "TeamCity environment is detected automatically when launched on build agent.")
 
     def __init__(self, settings):
-        self.driver = utils.create_diver(local_factory=self.local_driver_factory,
-                                         teamcity_factory=self.teamcity_driver_factory,
-                                         jenkins_factory=self.jenkins_driver_factory,
-                                         default=settings.type)
+        self.driver = utils.create_driver(local_factory=self.local_driver_factory,
+                                          teamcity_factory=self.teamcity_driver_factory,
+                                          jenkins_factory=self.jenkins_driver_factory,
+                                          default=settings.type)
 
     def log(self, line):
         self.driver.log(line)

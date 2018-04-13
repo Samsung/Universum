@@ -14,7 +14,7 @@ __all__ = [
     "strip_path_start",
     "parse_path",
     "detect_environment",
-    "create_diver",
+    "create_driver",
     "format_traceback",
     "make_block",
     "catch_exception",
@@ -67,7 +67,7 @@ def detect_environment():
     return "terminal"
 
 
-def create_diver(local_factory, teamcity_factory, jenkins_factory, default=None):
+def create_driver(local_factory, teamcity_factory, jenkins_factory, default=None):
     if default:
         env_type = default
     else:
