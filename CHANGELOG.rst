@@ -1,8 +1,21 @@
 Change log
 ==========
 
-0.13.4 (2018-04-??)
+0.13.4 (2018-04-13)
 -------------------
+
+New features
+~~~~~~~~~~~~
+
+* **code report:** add number of issues to build status
+* **artifacts:** add link to artifact files to build log
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** p4 client now is created with allwrite option
+* **gerrit:** report all issues to review with a single request
+* **code report:** return error if pylint is not installed
 
 
 0.13.3 (2018-03-22)
