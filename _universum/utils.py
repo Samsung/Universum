@@ -112,7 +112,7 @@ def catch_exception(exception, ignore_if=None):
 
 def trim_and_convert_to_unicode(line):
     if isinstance(line, str):
-        line = line.decode("utf-8")
+        line = line.decode("utf-8", "replace")
     elif not isinstance(line, unicode):
         line = unicode(line)
 
