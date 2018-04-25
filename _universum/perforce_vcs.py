@@ -24,18 +24,6 @@ def catch_p4exception(ignore_if=None):
     return utils.catch_exception(P4Exception, ignore_if)
 
 
-def catch_p4warning(func, text, *args, **kwargs):
-    try:
-        func(*args, **kwargs)
-        return False
-    except P4Exception as e:
-        if not e.warnings:
-            raise
-        if text not in e.warnings[0]:
-            raise
-        return True
-
-
 @needs_output
 @needs_structure
 class PerforceVcs(base_classes.VcsBase):
@@ -169,6 +157,16 @@ class PerforceVcs(base_classes.VcsBase):
 
         return result
 
+    def p4reconcile(self, *args, **kwargs):
+        try:
+            return self.p4.run_reconcile(*args, **kwargs)
+        except P4Exception as e:
+            if not e.warnings:
+                raise
+            if "no file(s) to reconcile" not in e.warnings[0]:
+                raise
+            return []
+
     def submit_new_change(self, description, file_list, review=False, edit_only=False):
         self.connect()
 
@@ -188,10 +186,15 @@ class PerforceVcs(base_classes.VcsBase):
             if file_path.endswith("/"):
                 file_path += "..."
             if edit_only:
-                if catch_p4warning(self.p4.run_reconcile, "no file(s) to reconcile", "-e", file_path):
+                reconcile_result = self.p4reconcile("-e", file_path)
+                if not reconcile_result:
                     self.out.log("The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
             else:
-                catch_p4warning(self.p4.run_reconcile, "no file(s) to reconcile", file_path)
+                reconcile_result = self.p4reconcile(file_path)
+
+            for line in reconcile_result:
+                if line["action"] == "add":
+                    self.p4.run_reopen("-t", "+w", line["depotFile"])
 
         current_cl = self.p4.fetch_change()
         current_cl['Description'] = description
@@ -275,7 +278,6 @@ class PerforceVcs(base_classes.VcsBase):
         client = self.p4.fetch_client(self.client_name)
         client["Root"] = self.client_root
         client["View"] = self.client_view
-        client["Options"] = client["Options"].replace("noallwrite", "allwrite")
         self.p4.save_client(client)
         self.p4.client = self.client_name
         self.out.log("Workspace '" + self.client_name + "' created/updated.")

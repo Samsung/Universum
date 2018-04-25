@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# pylint: disable = redefined-outer-name
+# pylint: disable = redefined-outer-name, too-many-locals
 
 import datetime
 import time
@@ -190,11 +190,15 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         p4.client = client_name
 
         ignore_p4_exception("no such file(s).", p4.run_sync, "//depot/...")
-        tmpfile = root.join("test.txt")
 
-        p4.run("add", str(tmpfile))
-        p4.run("edit", str(tmpfile))
-        tmpfile.write("Test path" + str(tmpfile))
+        usual_file = root.join("usual_file.txt")
+        p4.run("add", str(usual_file))
+        p4.run("edit", str(usual_file))
+        usual_file.write("File " + str(usual_file) + " has no special modifiers")
+
+        writeable_file = root.join("writeable_file.txt")
+        p4.run("add", "-t", "+w", str(writeable_file))
+        writeable_file.write("File " + str(writeable_file) + " is always writable")
 
         change = p4.run_change("-o")[0]
         change["Description"] = "Test submit"
@@ -206,8 +210,8 @@ def perforce_workspace(request, perforce_connection, tmpdir):
                            depot=depot,
                            work_dir=work_dir,
                            root_directory=root,
-                           repo_file=tmpfile,
-                           tmpfile=tmpfile)
+                           repo_file=writeable_file,
+                           nonwritable_file=usual_file)
 
     finally:
         if client_created:
@@ -223,9 +227,9 @@ class P4Environment(utils.TestEnvironment):
         self.db_file = unicode(db_file)
         self.root_directory = perforce_workspace.root_directory
         self.repo_file = perforce_workspace.repo_file
+        self.nonwritable_file = perforce_workspace.nonwritable_file
         self.p4 = perforce_workspace.p4
         self.depot = perforce_workspace.depot
-
         super(P4Environment, self).__init__(test_type)
 
         self.settings.PerforceVcs.project_depot_path = perforce_workspace.depot
