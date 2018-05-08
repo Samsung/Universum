@@ -130,8 +130,9 @@ class Reporter(Module):
                 text = None
         else:
             self.out.log("Reporting failed build...")
-            if not self.settings.report_start:
-                text += "\n" + self.automation_server.report_build_location()
+
+        if not self.settings.report_start:
+            text += "\n\n" + self.automation_server.report_build_location()
 
         if self.artifacts_to_report:
             text += "\n\nThe following artifacts were generated during check:\n"
