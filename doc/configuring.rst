@@ -226,7 +226,7 @@ report_artifacts
 
 .. _clean_artifacts:
 
-clean
+artifact_prebuild_clean
     Basic usage is adding ``clean=True`` to configuration description.
     By default artifacts are not stored in VCS, and artifact presence before build most likely
     means that working directory is not cleaned after previous build and therefore might influence
