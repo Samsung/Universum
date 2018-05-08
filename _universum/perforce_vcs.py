@@ -412,7 +412,6 @@ class PerforceVcs(base_classes.VcsBase):
         if self.report_to_review:
             self.swarm.client_root = self.client_root
             self.swarm.mappings_dict = self.mappings_dict
-            self.out.log("Please see the link to the review:\n\n    " + self.swarm.get_review_link() + "\n")
 
     def finalize(self):
         with Uninterruptible() as run:

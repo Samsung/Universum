@@ -34,6 +34,9 @@ class ReportObserver(object):
     def __init__(self, *args, **kwargs):
         self.super_init(ReportObserver, *args, **kwargs)
 
+    def get_review_link(self):
+        raise NotImplementedError
+
     def report_start(self, report_text):
         raise NotImplementedError
 
@@ -82,8 +85,11 @@ class Reporter(Module):
             self.out.log("Nowhere to report. Skipping...")
             return
 
+        for observer in self.observers:
+            self.out.log("Review can be found here: " + observer.get_review_link())
+
         if not self.settings.report_start:
-            self.out.log("Skipped. To report build start, use '--report-build-start' option")
+            self.out.log("Reporting skipped. To report build start, use '--report-build-start' option")
             return
 
         text = "Review update detected!\n\n"
