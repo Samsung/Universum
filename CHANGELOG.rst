@@ -1,8 +1,31 @@
 Change log
 ==========
 
-0.13.5 (2018-04-??)
+0.13.5 (2018-05-10)
 -------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **p4:** remove ``allwritable`` option in p4 client;
+          please set '+w' modifier for files in VCS to be edited
+
+New features
+~~~~~~~~~~~~
+
+* **report:** add support of :ref:`tagging <tc_tags>` TeamCity builds
+* **swarm:** ``PASS`` and ``FAIL`` parameters are no longer required
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** fix unhandled 'no file(s) to reconcile' P4Exception
+* **out:** fix bug with decoding non-ascii strings
+* **submit:** new files are now added to VCS by submitter with '+w' modifier
+* **report:** add link to build log to successful reports
+* **report:** move link to review to 'Reporting build started' block
+* **docs:** documentation fixed and updated; please pay special attention to
+            :ref:`prebuild artifact cleaning <clean_artifacts>` `Variations` key
 
 
 0.13.4 (2018-04-13)
