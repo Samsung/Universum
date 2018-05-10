@@ -248,7 +248,6 @@ def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, sub
     assert parameters.file_present(file_path)
 
     # Modify a file
-    os.chmod(file_path, 0o777)
     temp_file = open(file_path, "ab")
     text = "This is a new line in the file"
     temp_file.write(text + "\n")
@@ -286,7 +285,6 @@ def test_submit_success_commit_modified_while_edit_only(submit_parameters, submi
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.repo_file
-    target_file.chmod(0o777)
     text = utils.randomize_name("This is change ")
     target_file.write(text + "\n")
 
@@ -298,7 +296,6 @@ def test_submit_error_review(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.repo_file
-    target_file.chmod(0o777)
     target_file.write("This is some change")
 
     result = parameters.submit_path_list([unicode(target_file)], review=True)
@@ -317,7 +314,7 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir)])
+    parameters.assert_submit_success([unicode(tmp_dir) + "/"])
 
     for i in range(0, 9):
         file_path = tmp_dir.join("new_file{}.txt".format(i))
@@ -328,17 +325,16 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
     tmp_file = another_dir.join("new_file.txt")
     tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir)])
+    parameters.assert_submit_success([unicode(tmp_dir) + "/"])
     assert parameters.file_present(unicode(tmp_file))
 
     # Modify some files
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir)], edit_only=True)
+    parameters.assert_submit_success([unicode(tmp_dir) + "/"], edit_only=True)
 
     for i in range(0, 9, 2):
         file_path = tmp_dir.join("/new_file{}.txt".format(i))
@@ -386,7 +382,7 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         tmp_file = other_tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(parameters.environment.root_directory) + "/new_directory*"])
+    parameters.assert_submit_success([unicode(parameters.environment.root_directory) + "/new_directory*/"])
 
     for i in range(0, 9):
         file_name = "new_file{}.txt".format(i)
@@ -402,13 +398,10 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
         tmp_file = inner_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
         tmp_file = tmp_dir.join("another_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([unicode(tmp_dir) + "/new_file*.txt"], edit_only=True)
@@ -425,13 +418,10 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
     text = utils.randomize_name("This is change ")
     for i in range(1, 9, 2):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
         tmp_file = inner_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
         tmp_file = tmp_dir.join("another_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([unicode(tmp_dir) + "/*/*.txt"])
@@ -448,13 +438,10 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 3):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
         tmp_file = inner_dir.join("new_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
         tmp_file = tmp_dir.join("another_file{}.txt".format(i))
-        tmp_file.chmod(0o777)
         tmp_file.write(text + "\n")
 
         parameters.assert_submit_success([unicode(tmp_dir) + "/*/*.txt"], edit_only=True)

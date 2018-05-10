@@ -64,9 +64,6 @@ class GerritVcs(ReportObserver, git_vcs.GitVcs):
         super(GerritVcs, self).prepare_repository()
         self.commit_id = unicode(self.repo.head.commit)
 
-        if self.report_to_review:
-            self.out.log("Please see the link to the review:\n\n    " + self.get_review_link() + "\n")
-
     def run_ssh_command(self, line, stdin=None):
         try:
             self.ssh(line, _in=stdin)

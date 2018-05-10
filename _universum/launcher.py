@@ -57,10 +57,10 @@ def check_if_env_set(configuration):
     """
 
     if "if_env_set" in configuration:
-        variables = configuration["if_env_set"].split("&")
+        variables = configuration["if_env_set"].split("&&")
         for var in variables:
             if var.strip():
-                match = re.match(r"\s*(\w+)\s*(!=|==)\s*(.*?)\s*$", var)
+                match = re.match(r"\s*([A-Za-z_]\w*)\s*(!=|==)\s*(.*?)\s*$", var)
 
                 # With no operator 'match' is None
                 # In this case variable should be obligatory set to any positive value
@@ -74,13 +74,13 @@ def check_if_env_set(configuration):
                 name, operator, value = match.groups()
                 # In "==" case variable should be obligatory set to 'value'
                 if operator == "==":
-                    if not os.getenv(name):
+                    if os.getenv(name) is None:
                         return False
                     if os.getenv(name) != value:
                         return False
 
                 # In "!=" case variable can be unset or set to any value not matching 'value'
-                elif os.getenv(name):
+                elif os.getenv(name) is not None:
                     if os.getenv(name) == value:
                         return False
     return True

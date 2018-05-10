@@ -226,7 +226,7 @@ report_artifacts
 
 .. _clean_artifacts:
 
-clean
+artifact_prebuild_clean
     Basic usage is adding ``clean=True`` to configuration description.
     By default artifacts are not stored in VCS, and artifact presence before build most likely
     means that working directory is not cleaned after previous build and therefore might influence
@@ -262,6 +262,51 @@ background
     are collected in the end of `Universum` run. Next step execution begins immediately after
     starting a background step, not waiting for it to be completed. Several background steps
     can be executed simultaneously.
+
+.. _tc_tags:
+
+pass_tag, fail_tag
+    Basic usage is adding ``pass_tag="PASS", fail_tag="FAIL"`` to the configuration description.
+    These keys is implemented only for TeamCity build. You can specify one, both or neither of them per step.
+    Defining ``pass_tag="PASS"`` means that current build on TeamCity will be tagged with label ``PASS``
+    if this particular step succeeds. Defining ``fail_tag="FAIL"`` means that current build on TeamCity will be
+    tagged with label ``FAIL`` if this particular step fails. Key values can be set to any strings acceptable by
+    TeamCity as tags. It is not recommended to separate words in the tag with spaces, since you cannot create
+    a tag with spaces in TeamCity's web-interface. Every tag is added (if matching condition) after executing
+    build step it is set in, not in the end of all run.
+    ``pass_tag`` and ``fail_tag`` can also be used in configurations multiplications, like this:
+
+    .. testsetup::
+
+        #!/usr/bin/env python
+
+        from _universum.configuration_support import Variations
+
+    .. testcode::
+
+        make = Variations([dict(name="Make ", command=["make"], pass_tag="pass_")])
+
+        target = Variations([dict(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
+                             dict(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
+                             ])
+
+        configs = make * target
+
+    This code will produce this list of configurations:
+
+    .. testcode::
+        :hide:
+
+        print "$ ./configs.py"
+        print configs.dump()
+
+    .. testoutput::
+
+        $ ./configs.py
+        [{'command': 'make --platform Linux', 'name': 'Make Linux', 'pass_tag': 'pass_Linux'},
+        {'command': 'make --platform Windows', 'name': 'Make Windows', 'pass_tag': 'pass_Windows'}]
+
+    This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
 
 
 .. note::
@@ -509,15 +554,20 @@ such key, if there's no environment variable with stated name set to either "tru
 configuration is not executed. If any other value should be set, use
 ``if_env_set="VARIABLE_NAME == variable_value"`` comparison. Please pay special attention on
 the absence of any quotation marks around `variable_value`: if added, `$VARIABLE_NAME` will be
-compared with `"variable_value"` string and thus fail.
+compared with `"variable_value"` string and thus fail. Also, please note, that all spaces before and after
+`variable_value` will be automatically removed, so ``if_env_set="VARIABLE_NAME == variable_value "`` will
+be equal to ``os.environ["VARIABLE_NAME"] = "variable_value"`` but not
+``os.environ["VARIABLE_NAME"] = "variable_value "``.
+
+`$VARIABLE_NAME` consist solely of letters, digits, and the '_' (underscore) and not begin with a digit.
 
 If such environment variable should not be set to specific value, please use
 ``if_env_set="VARIABLE_NAME != variable_value"`` (especially ``!= True`` for variables
 to not be set at all).
 
 If executing the configuration depends on more than one environment variable,
-use ``&`` inside `if_env_set` value. For example,
-``if_env_set="SPECIAL_TOOL_PATH & ADDITIONAL_SOURCES_ROOT"`` configuration will be executed only
+use ``&&`` inside `if_env_set` value. For example,
+``if_env_set="SPECIAL_TOOL_PATH && ADDITIONAL_SOURCES_ROOT"`` configuration will be executed only
 in case of both `$SPECIAL_TOOL_PATH` and `$ADDITIONAL_SOURCES_ROOT` environment variables set
 to some values. If any of them is missing or not set in current environment,
 the configuration will be excluded from current run.

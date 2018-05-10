@@ -9,6 +9,7 @@ from .ci_exception import CiException
 from .gravity import Module, Dependency
 from .module_arguments import IncorrectParameterError
 from .reporter import ReportObserver, Reporter
+from .output import needs_output
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
 
@@ -17,7 +18,7 @@ __all__ = [
     "Swarm"
 ]
 
-
+@needs_output
 class Swarm(ReportObserver, Module):
     reporter_factory = Dependency(Reporter)
 
@@ -37,13 +38,6 @@ class Swarm(ReportObserver, Module):
         parser.add_argument("--swarm-fail-link", "-sfl", dest="fail_link", metavar="FAIL",
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
-    def check_required_option(self, name, env_var):
-        if getattr(self.settings, name) is None:
-            text = "'" + env_var + "' variable was not retrieved correctly." \
-                   "\nPlease make sure Swarm has passed required parameters to corresponding environment variables " \
-                   "or, for debug purposes, set them manually"
-            raise IncorrectParameterError(text)
-
     def __init__(self, settings, user, password, **kwargs):
         self.super_init(Swarm, **kwargs)
         self.settings = settings
@@ -56,9 +50,11 @@ class Swarm(ReportObserver, Module):
         if not self.settings.server_url:
             raise IncorrectParameterError("Please set up '--swarm-server-url' for correct interaction with Swarm")
 
-        self.check_required_option("review_id", "REVIEW")
-        self.check_required_option("pass_link", "PASS")
-        self.check_required_option("fail_link", "FAIL")
+        if getattr(self.settings, "review_id") is None:
+            text = "'REVIEW' variable was not retrieved correctly." \
+                   "\nPlease make sure Swarm has passed required parameters to corresponding environment variables " \
+                   "or, for debug purposes, set them manually"
+            raise IncorrectParameterError(text)
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
@@ -97,7 +93,12 @@ class Swarm(ReportObserver, Module):
             link = self.settings.fail_link
 
         try:
-            urllib.urlopen(link)
+            if link is not None:
+                self.out.log("Swarm will be informed about state of pass or fail tests by URL" + link)
+                urllib.urlopen(link)
+            else:
+                self.out.log("Swarm will not be informed about state of tests because " \
+                            "the \"{0}\" link was not provided".format("PASS" if result else "FAIL"))
         except IOError as e:
             if e.args[0] == "http error":
                 text = "HTTP error " + unicode(e.args[1]) + ": " + e.args[2]
