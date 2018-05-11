@@ -7,23 +7,24 @@ Change log
 BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
-* **p4:** remove ``allwritable`` option in p4 client;
+* **p4:** remove ``allwrite`` option in p4 client;
           please set '+w' modifier for files in VCS to be edited
+* **configs:** :ref:`if_env_set <filtering>` variables should now be splat with ``&&`` only
 
 New features
 ~~~~~~~~~~~~
 
 * **report:** add support of :ref:`tagging <tc_tags>` TeamCity builds
-* **swarm:** ``PASS`` and ``FAIL`` parameters are no longer required
+* **swarm:** ``PASS`` and ``FAIL`` parameters are no longer mandatory
+* **submit:** new files are now added to VCS by submitter with '+w' modifier
+* **report:** add link to build log to successful reports
+* **report:** move link to review to 'Reporting build started' block
 
 Bug fixes
 ~~~~~~~~~
 
 * **p4:** fix unhandled 'no file(s) to reconcile' P4Exception
 * **out:** fix bug with decoding non-ascii strings
-* **submit:** new files are now added to VCS by submitter with '+w' modifier
-* **report:** add link to build log to successful reports
-* **report:** move link to review to 'Reporting build started' block
 * **docs:** documentation fixed and updated; please pay special attention to
             :ref:`prebuild artifact cleaning <clean_artifacts>` `Variations` key
 
