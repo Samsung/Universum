@@ -1,6 +1,20 @@
 Change log
 ==========
 
+0.13.6 (2018-05-18)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **p4:** create environment variables for each mapping's sync CL
+
+Bug fixes
+~~~~~~~~~
+
+* **docs:** fix change log
+
+
 0.13.5 (2018-05-10)
 -------------------
 
