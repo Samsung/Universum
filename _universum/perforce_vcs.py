@@ -294,7 +294,7 @@ class PerforceVcs(base_classes.VcsBase):
         self.sources_need_cleaning = True
         self.append_repo_status("Sync CLs:\n")
 
-        for depot in self.depots:
+        for idx, depot in enumerate(self.depots):
             if depot["cl"] is None:
                 self.out.log("Getting latest CL number for '" + depot["path"] + "'")
                 try:
@@ -305,6 +305,9 @@ class PerforceVcs(base_classes.VcsBase):
                 self.out.log("Latest CL: " + depot["cl"])
 
             line = depot["path"] + '@' + depot["cl"]
+            # Set environment variable for each mapping in order of there definition
+            os.environ["SYNC_CL_{}".format(idx)] = depot["cl"]
+
             self.out.log("Downloading " + line)
             try:
                 result = self.p4.run_sync("-f", line)
