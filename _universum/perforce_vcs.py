@@ -204,7 +204,7 @@ class PerforceVcs(base_classes.VcsBase):
             return 0
 
         result = self.p4.run_submit(current_cl, "-f", "revertunchanged")
-        cl_number = result[0]['change']
+        cl_number = result[-1]['submittedChange']
 
         return cl_number
 
