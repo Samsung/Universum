@@ -60,6 +60,9 @@ def detect_environment():
     """
     teamcity = "TEAMCITY_VERSION" in os.environ
     jenkins = "JENKINS_HOME" in os.environ
+    pycharm = "PYCHARM_HOSTED" in os.environ
+    if pycharm:
+        return "terminal"
     if teamcity and not jenkins:
         return "tc"
     if not teamcity and jenkins:
