@@ -32,7 +32,8 @@ setup(
         'mechanize',
         'requests',
         'sh',
-        'P4'
+        'P4',
+        'lxml'
     ],
     extras_require={
         'development': [
