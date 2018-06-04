@@ -179,6 +179,15 @@ class PerforceVcs(base_classes.VcsBase):
         client = self.p4.fetch_client(self.settings.client)
         workspace_root = client['Root']
 
+        try: # Make sure default CL is empty.
+            change = self.p4.fetch_change()
+            if "Files" in change:
+                self.out.log("Default change list contains some files, though reconcile was not called yet."
+                             "Skipping Submit.")
+                return 0
+        except P4Exception:
+            pass
+
         for file_path in file_list:
             # TODO: cover 'not file_path.startswith("/")' case with tests
             if not file_path.startswith("/"):
