@@ -41,7 +41,7 @@ setup(
         ],
         'test': [
             'docker',
-            'httpretty',
+            'httpretty<=0.8',
             'mock',
             'pytest',
             'pylint',
