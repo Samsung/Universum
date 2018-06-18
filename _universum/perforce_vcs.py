@@ -426,7 +426,7 @@ class PerforceVcs(base_classes.VcsBase):
             self.swarm.mappings_dict = self.mappings_dict
 
     def finalize(self):
-        with Uninterruptible() as run:
+        with Uninterruptible(self.out.log_exception) as run:
             if self.settings.force_clean:
                 run(self.clean_workspace)
             run(self.disconnect)

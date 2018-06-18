@@ -81,17 +81,12 @@ class FileManager(Module):
 
         parser.add_argument("--vcs-type", "-vt", dest="vcs", default="p4",
                             choices=["none", "p4", "git", "gerrit"],
-                            help="Select repository type to download sources from: "
-                                 "Perforce ('p4', the default), Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
-                                 "Gerrit uses Git parameters. "
-                                 "Each VCS type has its own settings.")
+                            help="Select repository type to download sources from: Perforce ('p4', the default), "
+                                 "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
+                                 "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
         parser.add_argument("--project-root", "-pr", dest="project_root", metavar="PROJECT_ROOT",
                             help="Temporary directory to copy sources to. Default is 'temp'")
-
-        parser.add_hidden_argument("--no-finalize", action="store_true", dest="no_finalize", is_hidden=True,
-                                   help="Skip 'Finalizing' step: do not clear sources, do not revert workspace files. "
-                                        "Is applied automatically when using existing VCS client")
 
         parser.add_argument("--report-to-review", action="store_true", dest="report_to_review", default=False,
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
@@ -128,7 +123,4 @@ class FileManager(Module):
 
     @make_block("Finalizing")
     def finalize(self):
-        if self.settings.no_finalize:
-            self.out.log("Skipped because of '--no-finalize' option")
-            return
         self.vcs.finalize()
