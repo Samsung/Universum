@@ -27,6 +27,12 @@ class Main(Module):
                                         "do not clear sources, do not revert workspace files, etc. "
                                         "Is applied automatically when using existing VCS client")
 
+        parser.add_hidden_argument("--finalize-only", action="store_true", dest="finalize_only", is_hidden=True,
+                                   help="Perform only 'Finalizing' step: clear sources, revert workspace files, etc. "
+                                        "Recommended to use after '--no-finalize' runs. "
+                                        "Please make sure to move artifacts from working directory "
+                                        "or pass different artifact folder")
+
     def __init__(self, settings):
         self.settings = settings
         self.files = self.files_factory()
@@ -36,6 +42,11 @@ class Main(Module):
         self.reporter = self.reporter_factory()
 
     def execute(self):
+        if self.settings.finalize_only:
+            self.files.vcs.sources_need_cleaning = True
+            self.out.log("Execution skipped because of '--finalize-only' option")
+            return
+
         self.files.prepare_repository()
         project_configs = self.launcher.process_project_configs()
 
@@ -63,7 +74,7 @@ class Main(Module):
 
     def finalize(self):
         if self.settings.no_finalize:
-            self.out.log("Skipped because of '--no-finalize' option")
+            self.out.log("Cleaning skipped because of '--no-finalize' option")
             return
         self.files.finalize()
 

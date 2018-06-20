@@ -83,7 +83,7 @@ Create a common meta-runner
       <description>Basic project configuration</description>
       <settings>
         <build-runners>
-          <runner name="Global script" type="simpleRunner">
+          <runner name="Download and run" type="simpleRunner">
             <parameters>
               <param name="script.content"><![CDATA[
     #!/bin/bash
@@ -98,9 +98,37 @@ Create a common meta-runner
     echo "==> Run: ${cmd}"
     ${cmd} || EXITCODE=1
 
-    exit $EXITCODE
-              ]]></param>
+    echo "##teamcity[setParameter name='STOPPED_BY_USER' value='false']"
+
+    exit $EXITCODE]]></param>
               <param name="teamcity.step.mode" value="default" />
+              <param name="use.custom.script" value="true" />
+            </parameters>
+          </runner>
+          <runner name="Clean" type="simpleRunner">
+            <parameters>
+              <param name="script.content"><![CDATA[
+    #!/bin/bash
+
+    if [ %STOPPED_BY_USER% == true ]
+    then
+    echo "==> User interrupted, force cleaning"
+
+    EXITCODE=0
+
+    HOST=`hostame | sed -e "s/_/-/"`
+    USER=`whoami | sed -e "s/_/-/"`
+    P4CLIENT="Disposable_workspace_"$HOST"-"$USER
+
+    cmd="python -u ./universum.py --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS% --finalize-only --artifact-dir finalization_artifacts"
+    echo "==> Run: ${cmd}"
+    ${cmd}
+
+    else
+    echo "==> Additional cleaning not needed, skipping"
+    fi
+              ]]></param>
+              <param name="teamcity.step.mode" value="execute_always" />
               <param name="use.custom.script" value="true" />
             </parameters>
           </runner>
