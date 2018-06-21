@@ -29,6 +29,7 @@ setup(
     setup_requires=['setuptools'],
     install_requires=[
         'gitpython',
+        'glob2',
         'mechanize',
         'requests',
         'sh',

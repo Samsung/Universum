@@ -3,9 +3,10 @@
 import codecs
 import distutils
 from distutils import dir_util, errors
-import glob
 import os
 import shutil
+
+import glob2
 
 from .automation_server import AutomationServer
 from .ci_exception import CriticalCiException, CiException
@@ -97,7 +98,7 @@ class ArtifactCollector(Module):
         dir_list = set()
         for item in artifact_list:
             # Check existence in place: wildcards applied
-            matches = glob.glob(item["path"])
+            matches = glob2.glob(item["path"])
             if matches:
                 if item["clean"]:
                     for matching_path in matches:
@@ -138,7 +139,7 @@ class ArtifactCollector(Module):
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
-        matches = glob.glob(path)
+        matches = glob2.glob(path)
         if not matches:
             if is_report:
                 self.out.log("No artifacts found.")
