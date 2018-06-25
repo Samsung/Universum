@@ -1,4 +1,7 @@
+import atexit
+import signal
 import sys
+
 
 from . import __version__
 from .ci_exception import SilentAbortException
@@ -12,10 +15,18 @@ def run_with_settings(main_class, settings):
 
     main = construct_component(main_class, settings)
 
+    finalized = False
+
+    def finalize():
+        if not finalized:
+            main.finalize()
+
     try:
-        with Uninterruptible() as run:
+        with Uninterruptible(main.out.log_exception) as run:
             run(main.execute)
             run(main.finalize)
+            finalized = True
+
     except SilentAbortException as e:
         result = e.application_exit_code
 
@@ -24,6 +35,11 @@ def run_with_settings(main_class, settings):
         main.out.log_exception("Unexpected error.\n" + format_traceback(e, ex_traceback))
         main.out.report_build_problem("Unexpected error while executing script.")
         result = 2
+
+    atexit.register(finalize)
+    signal.signal(signal.SIGTERM, finalize)
+    signal.signal(signal.SIGHUP, finalize)
+    signal.signal(signal.SIGINT, finalize)
 
     return result
 

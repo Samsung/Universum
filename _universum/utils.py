@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import os.path
 import traceback
 import sys
 import codecs
@@ -60,6 +59,9 @@ def detect_environment():
     """
     teamcity = "TEAMCITY_VERSION" in os.environ
     jenkins = "JENKINS_HOME" in os.environ
+    pycharm = "PYCHARM_HOSTED" in os.environ
+    if pycharm:
+        return "terminal"
     if teamcity and not jenkins:
         return "tc"
     if not teamcity and jenkins:
@@ -146,8 +148,9 @@ def unify_argument_list(source_list, separator=',', additional_list=None):
 
 
 class Uninterruptible(object):
-    def __init__(self):
+    def __init__(self, error_logger):
         self.return_code = 0
+        self.error_logger = error_logger
         self.exceptions = []
 
     def __enter__(self):
@@ -156,6 +159,9 @@ class Uninterruptible(object):
                 func(*args, **kwargs)
             except SilentAbortException as e:
                 self.return_code = max(self.return_code, e.application_exit_code)
+            except (KeyboardInterrupt, SystemExit):
+                self.error_logger("Interrupted from outer scope\n")
+                self.return_code = 3
             except Exception as e:
                 ex_traceback = sys.exc_info()[2]
                 self.exceptions.append(format_traceback(e, ex_traceback))
@@ -163,9 +169,8 @@ class Uninterruptible(object):
         return excepted_function
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.return_code == 1:
-            raise SilentAbortException()
         if self.return_code == 2:
             for entry in self.exceptions:
                 sys.stderr.write(entry)
-            raise SilentAbortException(application_exit_code=2)
+        if self.return_code != 0:
+            raise SilentAbortException(application_exit_code=self.return_code)

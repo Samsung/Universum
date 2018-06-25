@@ -29,10 +29,12 @@ setup(
     setup_requires=['setuptools'],
     install_requires=[
         'gitpython',
+        'glob2',
         'mechanize',
         'requests',
         'sh',
-        'P4'
+        'P4',
+        'lxml'
     ],
     extras_require={
         'development': [
@@ -41,7 +43,7 @@ setup(
         ],
         'test': [
             'docker',
-            'httpretty',
+            'httpretty<=0.8',
             'mock',
             'pytest',
             'pylint',

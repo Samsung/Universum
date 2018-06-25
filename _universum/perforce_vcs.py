@@ -100,8 +100,8 @@ class PerforceVcs(base_classes.VcsBase):
         self.check_required_option("user", "P4USER")
         self.check_required_option("password", "P4PASSWD")
 
-        self.client_name = None
-        self.client_root = None
+        self.client_name = self.settings.client
+        self.client_root = self.project_root
         self.sync_cls = []
         self.shelve_cls = []
         self.depots = []
@@ -125,12 +125,13 @@ class PerforceVcs(base_classes.VcsBase):
     @make_block("Connecting")
     @catch_p4exception()
     def connect(self):
-        self.p4.port = self.settings.port
-        self.p4.user = self.settings.user
-        self.p4.password = self.settings.password
+        if not self.p4.connected():
+            self.p4.port = self.settings.port
+            self.p4.user = self.settings.user
+            self.p4.password = self.settings.password
 
-        self.p4.connect()
-        self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
+            self.p4.connect()
+            self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     def get_changes(self, changes_reference=None, max_number='1'):
         self.connect()
@@ -179,6 +180,15 @@ class PerforceVcs(base_classes.VcsBase):
         client = self.p4.fetch_client(self.settings.client)
         workspace_root = client['Root']
 
+        try: # Make sure default CL is empty.
+            change = self.p4.fetch_change()
+            if "Files" in change:
+                self.out.log("Default change list contains some files, though reconcile was not called yet."
+                             "Skipping Submit.")
+                return 0
+        except P4Exception:
+            pass
+
         for file_path in file_list:
             # TODO: cover 'not file_path.startswith("/")' case with tests
             if not file_path.startswith("/"):
@@ -204,14 +214,12 @@ class PerforceVcs(base_classes.VcsBase):
             return 0
 
         result = self.p4.run_submit(current_cl, "-f", "revertunchanged")
-        cl_number = result[0]['change']
+        cl_number = result[-1]['submittedChange']
 
         return cl_number
 
     def expand_workspace_parameters(self):
-        # Prepare workspace settings: client root & view; create a list of depots for sync
-        self.client_name = self.settings.client
-        self.client_root = self.project_root
+        # Create a list of depots for sync
         for mapping in self.mappings:
             splat_mapping = mapping.split(" ")
             self.depots.append({"path": splat_mapping[0]})
@@ -417,8 +425,9 @@ class PerforceVcs(base_classes.VcsBase):
             self.swarm.mappings_dict = self.mappings_dict
 
     def finalize(self):
-        with Uninterruptible() as run:
+        with Uninterruptible(self.out.log_exception) as run:
             if self.settings.force_clean:
+                run(self.connect)
                 run(self.clean_workspace)
             run(self.disconnect)
             run(super(PerforceVcs, self).finalize)
