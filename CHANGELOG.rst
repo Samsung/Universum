@@ -1,8 +1,24 @@
 Change log
 ==========
 
-0.14.0 (2018-06-??)
+0.14.0 (2018-06-25)
 -------------------
+
+New features
+~~~~~~~~~~~~
+
+* **code_report:** add svace analysis tool
+* **main:** add finalizing execution even if interrupted by user
+* **main:** add '--finalize-only' option for cleaning without execution
+* **artifacts:** add recursive wildcards (**) to artifacts
+* **utils:** add PyCharm case to environment detection
+* **submit:** fix submitted P4 CL number in logs
+
+Bug fixes
+~~~~~~~~~
+
+* **submit:** skip P4 submit if default CL has any files before reconciling
+* **setup:** specify httpretty version to avoid SSL import errors
 
 
 0.13.6 (2018-05-18)
