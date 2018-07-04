@@ -4,8 +4,9 @@ import json
 import urlparse
 import sh
 
-from . import git_vcs, utils
+from . import utils
 from .ci_exception import CiException
+from .git_vcs import GitVcs
 from .gravity import Dependency
 from .module_arguments import IncorrectParameterError
 from .reporter import ReportObserver, Reporter
@@ -15,10 +16,10 @@ __all__ = [
 ]
 
 
-class GerritVcs(ReportObserver, git_vcs.GitVcs):
+class GerritVcs(ReportObserver, GitVcs):
     """
-        This class contains encapsulates Gerrit VCS functions (not code review)
-        """
+    This class contains encapsulates Gerrit VCS functions
+    """
     reporter_factory = Dependency(Reporter)
 
     @staticmethod
@@ -26,7 +27,9 @@ class GerritVcs(ReportObserver, git_vcs.GitVcs):
         pass
 
     def __init__(self, project_root, report_to_review):
-        self.super_init(GerritVcs, project_root, False)
+        self.add_settings(GitVcs)
+
+        super(GerritVcs, self).__init__(project_root, False)
         self.report_to_review = report_to_review
 
         if not self.settings.repo.startswith("ssh://"):

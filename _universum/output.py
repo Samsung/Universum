@@ -3,17 +3,16 @@
 from .jenkins.output import JenkinsOutput
 from .local.output import LocalOutput
 from .teamcity.output import TeamCityOutput
-from . import utils
 from .gravity import Module, Dependency
+from . import utils
 
 __all__ = [
-    "Output",
     "needs_output"
 ]
 
 
 def needs_output(klass):
-    klass.out_factory = Dependency("Output")
+    klass.out_factory = Dependency(Output)
     original_init = klass.__init__
 
     def new_init(self, *args, **kwargs):
@@ -37,11 +36,11 @@ class Output(Module):
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
                                  "TeamCity environment is detected automatically when launched on build agent.")
 
-    def __init__(self, settings):
+    def __init__(self):
         self.driver = utils.create_driver(local_factory=self.local_driver_factory,
                                           teamcity_factory=self.teamcity_driver_factory,
                                           jenkins_factory=self.jenkins_driver_factory,
-                                          default=settings.type)
+                                          default=self.settings.type)
 
     def log(self, line):
         self.driver.log(line)

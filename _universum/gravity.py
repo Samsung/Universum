@@ -1,43 +1,55 @@
-__all__ = ["Module", "Dependency", "construct_component", "define_arguments_recursive"]
+# -*- coding: UTF-8 -*-
+
+__all__ = [
+    "Module",
+    "Dependency",
+    "construct_component",
+    "define_arguments_recursive"
+]
+
+
+class Settings(object):
+    def __get__(self, obj, objtype=None):
+        settings = getattr(obj._main_settings, obj.__class__.__name__, None)
+        if not settings:
+            raise AttributeError("No settings available for module " + obj.__class__.__name__)
+        return settings
+
+    def __set__(self, obj, settings):
+        setattr(obj._main_settings, obj.__class__.__name__, settings)
+
+
+def get_string_name(name):
+    if not isinstance(name, basestring):
+        name = name.__name__
+    return name
 
 
 class Module(object):
-    pass
+    settings = Settings()
 
+    def __new__(cls, main_settings=None, *args, **kwargs):
+        instance = super(Module, cls).__new__(cls)
+        if main_settings:
+            instance._main_settings = main_settings
+        return instance
 
-def wrap_module(klass):
-    # TODO: we do not support calls of parent class with regular super, which is not ok for
-    # TODO: non-module classes participating in multiple inheritance
-    # TODO: this could be fixed by changing wrapping using class with rewriting __init__
-    # TODO: at construction time
-    class Wrapped(klass):
-        def __init__(self, main_settings, *args, **kwargs):
-            self.main_settings = main_settings
-            self.super_init(Wrapped, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        pass
 
-        def super_init(self, type1, *args, **kwargs):
-            super_self = super(type1, self)
-            super_name = self.__class__.__mro__[self.__class__.__mro__.index(type1) + 1].__name__
-            type1_settings = getattr(self.main_settings, super_name, None)
-
-            try:
-                if type1_settings is not None:
-                    super_self.__init__(type1_settings, *args, **kwargs)
-                else:
-                    super_self.__init__(*args, **kwargs)
-
-            except TypeError, exc:
-                if not getattr(exc, "already_processed", False):
-                    # Modify exception message to add reference to object being constructed
-                    exc.args = (exc.args[0] + ", super_self is instance of " + super_name,) + exc.args[1:]
-                    # Do not modify the exception message twice, if one constructor calls another inside
-                    exc.already_processed = True
-                raise
-
-        def __repr__(self):
-            return "<Wrapped(" + klass.__module__ + "." + klass.__name__ + ") object at " + str(hex(id(self))) + " >"
-
-    return Wrapped
+    def add_settings(self, module_name):
+        new_settings = getattr(self._main_settings, get_string_name(module_name), None)
+        try:
+            current_settings = self.settings
+            for item in vars(new_settings):
+                if not hasattr(current_settings, item):
+                    setattr(current_settings, item, getattr(new_settings, item))
+        except AttributeError:
+            # current module has no own settings
+            setattr(self._main_settings, self.__class__.__name__, new_settings)
+        except TypeError:
+            # 'module_name' module has no own settings
+            return
 
 
 def construct_component(name, main_settings, *args, **kwargs):
@@ -47,25 +59,23 @@ def construct_component(name, main_settings, *args, **kwargs):
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = dict()
 
-    if not isinstance(name, basestring):
-        name = name.__name__
+    name = get_string_name(name)
 
     if name not in main_settings.active_modules:
-        klass = wrap_module(main_settings.name_to_module_map[name])
-        instance = klass(main_settings, *args, **kwargs)
+        klass = main_settings.name_to_module_map[name]
+        instance = klass.__new__(klass, main_settings=main_settings)
+        instance.__init__(*args, **kwargs)
         main_settings.active_modules[name] = instance
     return main_settings.active_modules[name]
 
 
 class Dependency(object):
     def __init__(self, name):
-        if not isinstance(name, basestring):
-            name = name.__name__
-        self.name = name
+        self.name = get_string_name(name)
 
     def __get__(self, instance, owner):
         def constructor_function(*args, **kwargs):
-            return construct_component(self.name, instance.main_settings, *args, **kwargs)
+            return construct_component(self.name, instance._main_settings, *args, **kwargs)
 
         return constructor_function
 

@@ -1,21 +1,18 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import os.path
 import re
 import sys
 import json
 import sh
 
-from . import configuration_support, utils, artifact_collector
+from . import configuration_support, utils, artifact_collector, automation_server, reporter
 from .ci_exception import CiException, CriticalCiException, StepException
 from .gravity import Module, Dependency
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
-from .reporter import Reporter
 from .structure_handler import needs_structure
 from .utils import make_block
-from .automation_server import AutomationServer
 
 __all__ = [
     "Launcher",
@@ -211,8 +208,8 @@ class LogWriterCodeReport(LogWriter):
 @needs_structure
 class Launcher(Module):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
-    reporter_factory = Dependency(Reporter)
-    server_factory = Dependency(AutomationServer)
+    reporter_factory = Dependency(reporter.Reporter)
+    server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -228,18 +225,17 @@ class Launcher(Module):
         parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
 
-    def __init__(self, settings, project_root):
+    def __init__(self, project_root):
         self.project_root = project_root
-        self.settings = settings
         self.background_processes = []
         self.source_project_configs = None
         self.project_configs = None
 
-        if settings.output is None:
+        if self.settings.output is None:
             if utils.detect_environment() != "tc":
-                settings.output = "file"
+                self.settings.output = "file"
             else:
-                settings.output = "console"
+                self.settings.output = "console"
 
         if getattr(self.settings, "config_path") is None:
             raise IncorrectParameterError(

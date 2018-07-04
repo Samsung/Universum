@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
-from .automation_server import AutomationServer
+
+from . import automation_server
 from .gravity import Module, Dependency
 from .output import needs_output
 from .structure_handler import needs_structure
@@ -28,11 +29,8 @@ def report_steps_recursively(block, text, indent, only_fails=False):
 
 class ReportObserver(object):
     """
-    Abstract base class for reporting modules.
+    Abstract base class for reporting modules
     """
-
-    def __init__(self, *args, **kwargs):
-        self.super_init(ReportObserver, *args, **kwargs)
 
     def get_review_link(self):
         raise NotImplementedError
@@ -50,7 +48,7 @@ class ReportObserver(object):
 @needs_output
 @needs_structure
 class Reporter(Module):
-    automation_server_factory = Dependency(AutomationServer)
+    automation_server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -64,9 +62,7 @@ class Reporter(Module):
         parser.add_argument("--report-only-fails", "-rof", action="store_true", dest="only_fails",
                             help="Include only the list of failed steps to reporting comments")
 
-    def __init__(self, settings):
-        self.settings = settings
-
+    def __init__(self):
         self.observers = []
         self.report_initialized = False
         self.blocks_to_report = []

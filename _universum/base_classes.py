@@ -1,5 +1,5 @@
 """
-    Declare all base classes for further implementation
+Declare all base classes for further implementation
 """
 import shutil
 
@@ -16,7 +16,7 @@ __all__ = [
 
 class OutputBase(Module):
     """
-    Abstract base class for output modules.
+    Abstract base class for output modules
     """
 
     def open_block(self, num_str, name):
@@ -69,9 +69,11 @@ class AutomationServerDriverBase(Module):
 
 
 class VcsBase(Module):
-    def __init__(self, settings, project_root):
-        super(VcsBase, self).__init__()
-        self.settings = settings
+    """
+    Abstract base class for VCS handlers
+    """
+
+    def __init__(self, project_root):
         self.project_root = project_root
         self.repo_status = u""
         self.sources_need_cleaning = False

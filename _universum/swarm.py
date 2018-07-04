@@ -46,9 +46,8 @@ class Swarm(ReportObserver, Module):
         parser.add_argument("--swarm-fail-link", "-sfl", dest="fail_link", metavar="FAIL",
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
-    def __init__(self, settings, user, password, **kwargs):
+    def __init__(self, user, password, **kwargs):
         self.super_init(Swarm, **kwargs)
-        self.settings = settings
         self.user = user
         self.password = password
         self.client_root = ""

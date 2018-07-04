@@ -8,11 +8,13 @@ from _universum.entry_points import run_main_for_module, run_with_settings
 from _universum.gravity import Module, Dependency
 from _universum.module_arguments import IncorrectParameterError
 from _universum.output import needs_output
+from _universum.structure_handler import needs_structure
 from _universum.perforce_vcs import catch_p4exception
 from _universum.utils import make_block
 
 
 @needs_output
+@needs_structure
 class Submit(Module):
     description = "Submitting module of Universum "
     files_factory = Dependency(file_manager.FileManager)
@@ -32,9 +34,7 @@ class Submit(Module):
                             help="List of files or directories to be reconciled for commit. "
                                  "Relative paths starting at client root are supported")
 
-    def __init__(self, settings):
-        self.settings = settings
-
+    def __init__(self):
         if getattr(self.settings, "commit_message") is None:
             raise IncorrectParameterError("Commit message is required. Please use '--commit-message' option "
                                           "or COMMIT_MESSAGE environment variable")

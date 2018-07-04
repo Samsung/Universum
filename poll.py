@@ -25,8 +25,7 @@ class Poller(Module):
         parser.add_argument('--num', '-n', dest='max_number', help='Maximum number of CLs processed, default is 10',
                             type=int, default=10)
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self):
         self.stored_cls = {}
         self.latest_cls = {}
         self.triggered_cls = set()

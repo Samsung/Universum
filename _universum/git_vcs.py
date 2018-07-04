@@ -8,6 +8,7 @@ from . import base_classes, utils
 from .ci_exception import CriticalCiException
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
+from .structure_handler import needs_structure
 from .utils import make_block
 
 __all__ = [
@@ -24,6 +25,7 @@ def catch_git_exception(ignore_if=None):
 
 
 @needs_output
+@needs_structure
 class GitVcs(base_classes.VcsBase):
     """
     This class contains CI functions for interaction with Git
@@ -55,8 +57,8 @@ class GitVcs(base_classes.VcsBase):
                                    help="List of commit IDs to be cherry-picked, separated by comma. "
                                         "'--git-cherry-pick-id' can be added to the command line several times")
 
-    def __init__(self, settings, project_root, report_to_review):
-        super(GitVcs, self).__init__(settings, project_root)
+    def __init__(self, project_root, report_to_review):
+        super(GitVcs, self).__init__(project_root)
 
         if report_to_review:
             raise IncorrectParameterError("You requested posting report to code review, but selected git as VCS."

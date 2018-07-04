@@ -7,13 +7,12 @@ from .gravity import Module, Dependency
 from .output import needs_output
 
 __all__ = [
-    "StructureHandler",
     "needs_structure"
 ]
 
 
 def needs_structure(klass):
-    klass.structure_factory = Dependency("StructureHandler")
+    klass.structure_factory = Dependency(StructureHandler)
     original_init = klass.__init__
 
     def new_init(self, *args, **kwargs):
