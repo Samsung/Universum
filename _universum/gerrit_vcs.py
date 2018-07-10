@@ -92,13 +92,15 @@ class GerritVcs(ReportObserver, GitVcs):
         text = "gerrit review --message '" + report_text + "' " + self.commit_id
         self.run_ssh_command(text)
 
-    def report_result(self, result, report_text=None):
+    def report_result(self, result, report_text=None, no_vote=False):
         if result:
             vote = "--label Verified=1 "
         else:
             vote = "--label Verified=-1 "
 
-        text = "gerrit review " + vote
+        text = "gerrit review "
+        if not no_vote:
+            text += vote
         if report_text:
             text += "--message '" + report_text + "' "
 

@@ -38,7 +38,7 @@ class ReportObserver(object):
     def report_start(self, report_text):
         raise NotImplementedError
 
-    def report_result(self, result, report_text=None):
+    def report_result(self, result, report_text=None, no_vote=False):
         raise NotImplementedError
 
     def code_report_to_review(self, report):
@@ -61,6 +61,8 @@ class Reporter(Module):
                             help="Send comment to review system on build success (in addition to vote up)")
         parser.add_argument("--report-only-fails", "-rof", action="store_true", dest="only_fails",
                             help="Include only the list of failed steps to reporting comments")
+        parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
+                            help="Do not vote up/down review depending on result")
 
     def __init__(self):
         self.observers = []
@@ -143,7 +145,7 @@ class Reporter(Module):
             text += "Please take a look."
 
         for observer in self.observers:
-            observer.report_result(is_successful, text)
+            observer.report_result(is_successful, text, no_vote=self.settings.no_vote)
 
         if self.code_report_comments:
             self.out.log("Reporting code report issues ")

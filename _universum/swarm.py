@@ -105,7 +105,7 @@ class Swarm(ReportObserver, Module):
                 for issue in issues:
                     self.post_comment(issue['message'], filename=self.mappings_dict[abs_path], line=issue['line'])
 
-    def report_result(self, result, report_text=None):
+    def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm
         # Does not require login to Swarm; changes "Automated Tests" icon
         if result:
@@ -132,6 +132,7 @@ class Swarm(ReportObserver, Module):
 
         # Voting up or down; posting comments if any
         # An addition to "Automated Tests" functionality, requires login to Swarm
-        self.vote_review(result)
+        if not no_vote:
+            self.vote_review(result)
         if report_text:
             self.post_comment(report_text)
