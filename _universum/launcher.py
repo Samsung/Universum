@@ -95,15 +95,12 @@ def finalize_execution(cmd, log, pass_tag, fail_tag):
                     text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
             else:
                 text = unicode(e) + "\n"
-        stderr = '\n'.join(log.error_lines)
         if text:
-            log.report_fail(text + stderr)
+            log.report_fail(text)
             if fail_tag:
                 log.add_tag(fail_tag)
             raise StepException()
         else:
-            if stderr:
-                log.report_warning(stderr)
             if pass_tag:
                 log.add_tag(pass_tag)
     finally:
@@ -153,9 +150,6 @@ class LogWriter(object):
             self.file.write("stderr: " + line + "\n")
         else:
             self.out.log_stderr(line)
-
-    def report_warning(self, line):
-        self.out.log_stderr(line)
 
     def report_fail(self, line):
         line = utils.trim_and_convert_to_unicode(line)

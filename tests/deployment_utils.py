@@ -85,7 +85,7 @@ class RunBaseConfig(object):
         assert "Successfully installed" in log
 
     def run_from_source(self, config_file):
-        cmd = "universum --vcs-type none -fsd {0} -lcp {1} -pr {2} -ad {3}". \
+        cmd = "universum -vt none -lo console -fsd {0} -lcp {1} -pr {2} -ad {3}". \
             format(self.source_dir, config_file, self.project_root, self.artifact_dir)
         log = self.command_runner.assert_success(cmd)
         return log
