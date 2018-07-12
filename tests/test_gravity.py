@@ -19,23 +19,6 @@ def mock_module():
         def __new__(cls, *args, **kwargs):
             return old_module.__new__(cls, *args, **kwargs)
 
-        def __init__(self):
-            self.__dict__['_mock_children'] = {}
-
-        def __getattr__(self, item):
-            # __getattr__() is called if __get__() caused AttributeError
-            if item == "settings":
-                text = "Getting " + self.__class__.__name__ + ".settings raised AttributeError"
-                raise AttributeError(text)
-
-            result = self._mock_children.get(item)
-
-            if result is None:
-                result = mock.MagicMock()
-                self._mock_children[item] = result
-
-            return result
-
         # calling 'old_module.add_settings(self, module_name)' is only allowed in python3
         def add_settings(self, module_name):
             new_settings = getattr(self._main_settings, module_name, None)
@@ -246,39 +229,39 @@ def test_define_arguments_mock_circular(mock_module):
 
 
 def test_settings_access(mock_module):
-    class R(mock_module):
-        dep = Dependency('S')
-
-        def __init__(self):
-            self.s = self.dep()
-
     class S(mock_module):
         @staticmethod
         def define_arguments(parser):
             parser.add_argument('--option')
 
+    class R(mock_module):
+        dep = Dependency(S)
+
+        def __init__(self):
+            self.s = self.dep()
+
     settings = _universum.module_arguments.ModuleNamespace()
     child_settings = _universum.module_arguments.ModuleNamespace()
     child_settings.option = "abc"
     setattr(settings, 'S', child_settings)
-    r1 = construct_component('R', settings)
+    r = construct_component(R, settings)
 
     # get existing settings
-    assert r1.s.settings.option == "abc"
+    assert r.s.settings.option == "abc"
 
     # get non-existing option
     with pytest.raises(AttributeError) as exception_info:
-        print r1.settings.option
-    assert "R.settings" in str(exception_info.value)
+        print r.settings.option
+    assert "No settings available for module 'R'" in str(exception_info.value)
 
     # set non-existing option
     with pytest.raises(AttributeError) as exception_info:
-        r1.settings.option = "def"
-    assert "R.settings" in str(exception_info.value)
+        r.settings.option = "def"
+    assert "No settings available for module 'R'" in str(exception_info.value)
 
     # set non-existing settings
-    r1.add_settings('S')
-    assert r1.settings.option == "abc"
+    r.add_settings('S')
+    assert r.settings.option == "abc"
 
 
 def make_settings(name, value):
@@ -479,3 +462,48 @@ def test_construct_component_multiple_inheritance(mock_module):
     assert derived.base2_param == "cd"
     assert derived.base3_param == "ef"
     assert derived.base4_param == "gh"
+
+
+def test_construct_component_multiple_instance(mock_module):
+    class W(mock_module):
+        dep = Dependency('Z')
+
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--wparam')
+
+        def __init__(self):
+            super(W, self).__init__()
+            if self.settings.wparam == "z":
+                self.z = self.dep()
+            else:
+                self.nz = self.dep()
+
+    class Z(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--zparam')
+
+    settings1 = parse_settings(W, ["--wparam=z", "--zparam=abc"])
+    w1 = construct_component('W', settings1)
+
+    settings2 = parse_settings(W, ["--wparam=not_z", "--zparam=def"])
+    w2 = construct_component('W', settings2)
+
+    assert w1.settings.wparam == "z"
+    assert w2.settings.wparam == "not_z"
+
+    assert w1.z.settings.zparam == "abc"
+    assert w2.nz.settings.zparam == "def"
+
+    with pytest.raises(AttributeError) as exception_info:
+        print w1.nz.settings.zparam
+    assert "'W' object has no attribute 'nz'" in str(exception_info.value)
+
+    with pytest.raises(AttributeError) as exception_info:
+        print w2.z.settings.zparam
+    assert "'W' object has no attribute 'z'" in str(exception_info.value)
+
+    w1.settings.wparam = "new_value"
+    assert w1.settings.wparam == "new_value"
+    assert w2.settings.wparam == "not_z"

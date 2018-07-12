@@ -12,7 +12,7 @@ class Settings(object):
     def __get__(self, obj, objtype=None):
         settings = getattr(obj._main_settings, obj.__class__.__name__, None)
         if not settings:
-            raise AttributeError("No settings available for module " + obj.__class__.__name__)
+            raise AttributeError("No settings available for module '" + obj.__class__.__name__ + "'")
         return settings
 
     def __set__(self, obj, settings):
