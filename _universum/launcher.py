@@ -148,9 +148,9 @@ class LogWriter(object):
 
     def handle_stderr(self, line):
         line = utils.trim_and_convert_to_unicode(line)
+        self.error_lines.append(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
-            self.error_lines.append(line)
         else:
             self.out.log_stderr(line)
 
@@ -198,6 +198,7 @@ class LogWriterCodeReport(LogWriter):
             self.report_comments(report)
             if report:
                 text = unicode(len(report)) + " issues"
+                self.error_lines.append(text)
                 self.structure.fail_current_block("Found " + text)
                 self.out.report_build_status(self.step_name + ": " + text)
         if not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
