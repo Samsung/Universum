@@ -47,7 +47,7 @@ class Swarm(ReportObserver, Module):
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
     def __init__(self, user, password, **kwargs):
-        self.super_init(Swarm, **kwargs)
+        super(Swarm, self).__init__(**kwargs)
         self.user = user
         self.password = password
         self.client_root = ""

@@ -109,11 +109,11 @@ def finalize_execution(cmd, log, pass_tag, fail_tag):
 
 class LogWriter(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, out, structure, artifacts, reporter, server, output_type, step_name, background=False):
+    def __init__(self, out, structure, artifacts, report, server, output_type, step_name, background=False):
         self.out = out
         self.structure = structure
         self.artifacts = artifacts
-        self.reporter = reporter
+        self.reporter = report
         self.background = background
         self.step_name = step_name
         self.error_lines = []
