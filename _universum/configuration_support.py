@@ -5,8 +5,6 @@ import os
 
 __all__ = [
     "Variations",
-    "code_style_cmd",
-    "code_style_type",
     "combine",
     "set_project_root",
     "get_project_root"
@@ -233,15 +231,6 @@ class Variations(list):
         return Variations(filtered_variations)
 
 
-def code_style_cmd(script_path):
-    return Variations([dict(name="Style", command=[script_path, "--continuous-integration"])])
-
-
-code_style_type = Variations([dict(name=" - DOS end of lines check", command=["--end"]),
-                              dict(name=" - tab check", command=["--tab"]),
-                              dict(name=" - trailing whitespaces check", command=["--space"]),
-                              dict(name=" - uncrustify Code Style check", command=["--uncrustify"])])
-
 global_project_root = os.getcwd()
 
 
@@ -265,4 +254,4 @@ def get_project_root():
 
     :return: actual project root
     """
-    return global_project_root
+    return os.path.abspath(global_project_root)

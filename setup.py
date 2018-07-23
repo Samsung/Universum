@@ -30,7 +30,6 @@ setup(
     install_requires=[
         'gitpython',
         'glob2',
-        'mechanize',
         'requests',
         'sh',
         'P4',

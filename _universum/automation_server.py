@@ -3,8 +3,8 @@
 from .jenkins.driver import JenkinsServer
 from .local.driver import LocalServer
 from .teamcity.driver import TeamCityServer
-from . import utils
 from .gravity import Dependency, Module
+from . import utils
 
 __all__ = [
     "AutomationServer"
@@ -24,12 +24,11 @@ class AutomationServer(Module):
                                  "local - user local terminal). TeamCity and Jenkins environment "
                                  "is detected automatically when launched on build agent")
 
-    def __init__(self, settings):
+    def __init__(self):
         self.driver = utils.create_driver(teamcity_factory=self.teamcity_server_factory,
                                           jenkins_factory=self.jenkins_server_factory,
                                           local_factory=self.local_server_factory,
-                                          default=settings.type)
-        self.settings = settings
+                                          default=self.settings.type)
 
     def trigger_build(self, revision):
         return self.driver.trigger_build(revision)

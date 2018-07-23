@@ -1,6 +1,22 @@
 Change log
 ==========
 
+0.14.1 (2018-07-23)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **report:** add '--report-no-vote' option for vote skipping
+
+Bug fixes
+~~~~~~~~~
+
+* **configs:** remove outdated code style functions, fix get_project_root
+* **code_report:** fix duplication of found issues message
+* **launcher:** remove stderr from console output for launcher output type 'file'
+
+
 0.14.0 (2018-06-25)
 -------------------
 

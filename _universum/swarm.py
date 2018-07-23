@@ -3,8 +3,8 @@
 import os
 import urllib
 import urllib3
+import requests
 
-from . import swarm_cli
 from .ci_exception import CiException
 from .gravity import Module, Dependency
 from .module_arguments import IncorrectParameterError
@@ -17,6 +17,14 @@ urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.ex
 __all__ = [
     "Swarm"
 ]
+
+
+def check_request_result(result):
+    if result.status_code != 200:
+        text = "Invalid return code " + result.status_code + ". Response is:\n"
+        text += result.text
+        raise CiException(text)
+
 
 @needs_output
 class Swarm(ReportObserver, Module):
@@ -38,12 +46,10 @@ class Swarm(ReportObserver, Module):
         parser.add_argument("--swarm-fail-link", "-sfl", dest="fail_link", metavar="FAIL",
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
-    def __init__(self, settings, user, password, **kwargs):
-        self.super_init(Swarm, **kwargs)
-        self.settings = settings
+    def __init__(self, user, password, **kwargs):
+        super(Swarm, self).__init__(**kwargs)
         self.user = user
         self.password = password
-        self.session = None
         self.client_root = ""
         self.mappings_dict = {}
 
@@ -62,29 +68,44 @@ class Swarm(ReportObserver, Module):
     def get_review_link(self):
         return self.settings.server_url + "/reviews/" + self.settings.review_id + "/"
 
-    def get_swarm_session(self):
-        if self.session is None:
-            self.session = swarm_cli.create_session(self.user,
-                                                    self.password,
-                                                    self.settings.server_url)
+    def post_comment(self, text, filename=None, line=None, version=None):
+        request = {"body": text,
+                   "topic": "reviews/" + self.settings.review_id}
+        if filename:
+            request["context[file]"] = filename
+        if line:
+            request["context[rightLine]"] = line
+        if version:
+            request["context[version]"] = version
+
+        result = requests.post(self.settings.server_url + "/api/v3/comments", data=request,
+                               auth=(self.user, self.password))
+        check_request_result(result)
+
+    def vote_review(self, result, version=None):
+        request = {}
+        if result:
+            request["vote[value]"] = "up"
+        else:
+            request["vote[value]"] = "down"
+        if version:
+            request["vote[version]"] = version
+
+        result = requests.patch(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id,
+                                data=request, auth=(self.user, self.password))
+        check_request_result(result)
 
     def report_start(self, report_text):
-        self.get_swarm_session()
-        self.session.post_comment(self.settings.review_id, report_text)
+        self.post_comment(report_text)
 
     def code_report_to_review(self, report):
-        # There is a possibility to make an independent call for the code report,
-        # so we should check if the session is alive
-        self.get_swarm_session()
         for path, issues in report.iteritems():
             abs_path = os.path.join(self.client_root, path)
             if abs_path in self.mappings_dict:
                 for issue in issues:
-                    self.session.post_comment(self.settings.review_id, issue['message'],
-                                              self.mappings_dict[abs_path], issue['line'])
+                    self.post_comment(issue['message'], filename=self.mappings_dict[abs_path], line=issue['line'])
 
-    def report_result(self, result, report_text=None):
-
+    def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm
         # Does not require login to Swarm; changes "Automated Tests" icon
         if result:
@@ -94,11 +115,11 @@ class Swarm(ReportObserver, Module):
 
         try:
             if link is not None:
-                self.out.log("Swarm will be informed about state of pass or fail tests by URL" + link)
+                self.out.log("Swarm will be informed about build status by URL" + link)
                 urllib.urlopen(link)
             else:
-                self.out.log("Swarm will not be informed about state of tests because " \
-                            "the \"{0}\" link was not provided".format("PASS" if result else "FAIL"))
+                self.out.log("Swarm will not be informed about build status because " + \
+                             "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         except IOError as e:
             if e.args[0] == "http error":
                 text = "HTTP error " + unicode(e.args[1]) + ": " + e.args[2]
@@ -106,12 +127,12 @@ class Swarm(ReportObserver, Module):
                 text = unicode(e)
             text += "\nPossible reasons of this error:" + \
                     "\n * Network errors" + \
-                    "\n * Swarm parameters ('pass'/'fail' links) retrieved or parsed incorrectly"
+                    "\n * Swarm parameters ('PASS'/'FAIL' links) retrieved or parsed incorrectly"
             raise CiException(text)
 
         # Voting up or down; posting comments if any
         # An addition to "Automated Tests" functionality, requires login to Swarm
-        self.get_swarm_session()
-        self.session.vote_review(self.settings.review_id, result)
+        if not no_vote:
+            self.vote_review(result)
         if report_text:
-            self.session.post_comment(self.settings.review_id, report_text)
+            self.post_comment(report_text)

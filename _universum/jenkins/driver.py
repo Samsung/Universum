@@ -24,9 +24,6 @@ class JenkinsServer(AutomationServerDriverBase):
                             help='Url to trigger, must include exactly one conversion specifier (%%s) to be '
                                  'replaced by CL number, for example: http://localhost/%%s', metavar="URL")
 
-    def __init__(self, settings):
-        self.settings = settings
-
     def check_required_option(self, name):
         if getattr(self.settings, name) is None:
             raise IncorrectParameterError("Unable to retrieve Jenkins variable '" + name + "'")

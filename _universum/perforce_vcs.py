@@ -6,13 +6,13 @@ import warnings
 import sh
 from P4 import P4, P4Exception
 
-from . import base_classes, swarm, utils, artifact_collector
+from . import artifact_collector, base_classes, swarm, utils
 from .ci_exception import CriticalCiException, SilentAbortException
 from .gravity import Dependency
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
 from .structure_handler import needs_structure
-from .utils import Uninterruptible, make_block
+from .utils import make_block, Uninterruptible
 
 __all__ = [
     "PerforceVcs",
@@ -27,12 +27,12 @@ def catch_p4exception(ignore_if=None):
 @needs_output
 @needs_structure
 class PerforceVcs(base_classes.VcsBase):
-    swarm_factory = Dependency(swarm.Swarm)
-    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
-
     """
     This class contains CI functions for interaction with Perforce
     """
+
+    swarm_factory = Dependency(swarm.Swarm)
+    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
     # TODO: split into several classes to remove hide_sync_options, which doesn't work anyway
     @staticmethod
@@ -88,8 +88,9 @@ class PerforceVcs(base_classes.VcsBase):
             raise IncorrectParameterError(env_var + " is not specified. Communication with perforce server "
                                           "requires setting P4PORT, P4USER and P4PASSWD")
 
-    def __init__(self, settings, project_root, report_to_review):
-        super(PerforceVcs, self).__init__(settings, project_root)
+    def __init__(self, project_root, report_to_review):
+        super(PerforceVcs, self).__init__(project_root)
+
         self.report_to_review = report_to_review
         self.artifacts = None
         self.swarm = None

@@ -31,8 +31,7 @@ class TeamCityServer(AutomationServerDriverBase):
         if getattr(self.settings, name) is None:
             raise IncorrectParameterError("Unable to retrieve TeamCity variable '" + env_var + "'")
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self):
         self.check_required_option("server_url", "TEAMCITY_SERVER")
         self.check_required_option("build_id", "BUILD_ID")
         self.check_required_option("configuration_id", "CONFIGURATION_ID")

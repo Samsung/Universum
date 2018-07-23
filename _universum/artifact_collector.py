@@ -39,8 +39,7 @@ class ArtifactCollector(Module):
                             help="By default all directories noted as artifacts are copied as .zip archives. "
                                  "This option turn archiving off to copy bare directories to artifact directory")
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self):
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
 
@@ -51,7 +50,7 @@ class ArtifactCollector(Module):
         self.collected_report_artifacts = set()
 
         self.file_list = set()
-        self.artifact_dir = settings.artifact_dir
+        self.artifact_dir = self.settings.artifact_dir
 
         if not self.artifact_dir:
             self.artifact_dir = os.path.join(os.getcwd(), "artifacts")

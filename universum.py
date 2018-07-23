@@ -33,8 +33,7 @@ class Main(Module):
                                         "Please make sure to move artifacts from working directory "
                                         "or pass different artifact folder")
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self):
         self.files = self.files_factory()
         self.project_root = self.files.project_root
         self.launcher = self.launcher_factory(self.project_root)

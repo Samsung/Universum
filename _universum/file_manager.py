@@ -10,6 +10,7 @@ from .gravity import Module, Dependency
 from .ci_exception import CriticalCiException
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
+from .structure_handler import needs_structure
 from .utils import make_block
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
 
 
 @needs_output
+@needs_structure
 class LocalVcs(base_classes.VcsBase):
     @staticmethod
     def define_arguments(argument_parser):
@@ -29,8 +31,8 @@ class LocalVcs(base_classes.VcsBase):
                             help="A local folder for project sources to be copied from. "
                                  "This option is only needed when '--vcs-type' is set to 'none'")
 
-    def __init__(self, settings, project_root, report_to_review):
-        super(LocalVcs, self).__init__(settings, project_root)
+    def __init__(self, project_root, report_to_review):
+        super(LocalVcs, self).__init__(project_root)
 
         if self.settings.source_dir is None:
             raise IncorrectParameterError("Please specify source directory if not using any VCS")
@@ -65,6 +67,7 @@ class LocalVcs(base_classes.VcsBase):
 
 
 @needs_output
+@needs_structure
 class FileManager(Module):
     local_vcs_factory = Dependency(LocalVcs)
     git_vcs_factory = Dependency(git_vcs.GitVcs)
@@ -91,22 +94,22 @@ class FileManager(Module):
         parser.add_argument("--report-to-review", action="store_true", dest="report_to_review", default=False,
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self):
         self.artifacts = None
 
-        self.project_root = settings.project_root
+        self.project_root = self.settings.project_root
         if not self.project_root:
             self.project_root = os.path.join(os.getcwd(), "temp")
 
+        args = [self.project_root, self.settings.report_to_review]
         if self.settings.vcs == "none":
-            self.vcs = self.local_vcs_factory(self.project_root, settings.report_to_review)
+            self.vcs = self.local_vcs_factory(*args)
         elif self.settings.vcs == "git":
-            self.vcs = self.git_vcs_factory(self.project_root, settings.report_to_review)
+            self.vcs = self.git_vcs_factory(*args)
         elif self.settings.vcs == "gerrit":
-            self.vcs = self.gerrit_vcs_factory(self.project_root, settings.report_to_review)
+            self.vcs = self.gerrit_vcs_factory(*args)
         else:
-            self.vcs = self.perforce_vcs_factory(self.project_root, settings.report_to_review)
+            self.vcs = self.perforce_vcs_factory(*args)
 
     @make_block("Preparing repository")
     def prepare_repository(self):

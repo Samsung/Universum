@@ -1,7 +1,8 @@
 __all__ = [
     "CiException",
     "CriticalCiException",
-    "SilentAbortException"
+    "SilentAbortException",
+    "StepException"
 ]
 
 

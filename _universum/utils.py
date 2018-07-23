@@ -6,7 +6,6 @@ import sys
 import codecs
 
 from .ci_exception import CriticalCiException, SilentAbortException
-from .gravity import construct_component
 
 __all__ = [
     "Colors",
@@ -15,11 +14,11 @@ __all__ = [
     "detect_environment",
     "create_driver",
     "format_traceback",
-    "make_block",
     "catch_exception",
     "trim_and_convert_to_unicode",
     "unify_argument_list",
-    "Uninterruptible"
+    "Uninterruptible",
+    "make_block"
 ]
 
 # For proper unicode symbols processing
@@ -85,15 +84,6 @@ def format_traceback(ex, trace):
     tb_lines = traceback.format_exception(ex.__class__, ex, trace)
     tb_text = ''.join(tb_lines)
     return tb_text
-
-
-def make_block(block_name, pass_errors=True):
-    def decorated_function(function):
-        def function_in_block(self, *args, **kwargs):
-            self.structure = construct_component('StructureHandler', self.main_settings)
-            return self.structure.run_in_block(function, block_name, pass_errors, self, *args, **kwargs)
-        return function_in_block
-    return decorated_function
 
 
 def catch_exception(exception, ignore_if=None):
@@ -174,3 +164,11 @@ class Uninterruptible(object):
                 sys.stderr.write(entry)
         if self.return_code != 0:
             raise SilentAbortException(application_exit_code=self.return_code)
+
+
+def make_block(block_name, pass_errors=True):
+    def decorated_function(func):
+        def function_in_block(self, *args, **kwargs):
+            return self.structure.run_in_block(func, block_name, pass_errors, self, *args, **kwargs)
+        return function_in_block
+    return decorated_function

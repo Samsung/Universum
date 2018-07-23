@@ -21,9 +21,10 @@ class PylintAnalyzer(object):
         parser.add_argument("--rcfile", dest="rcfile", help="Specify a configuration file.")
         return parser.parse_args(args)
 
-    def __init__(self, settings, static_analyzer):
+    def __init__(self, settings, static_analyzer, json_file):
         self.settings = settings
         self.settings.static_analyzer = static_analyzer
+        self.json_file = json_file
 
     def execute(self):
         if not self.settings.file_list:
@@ -63,7 +64,8 @@ class PylintAnalyzer(object):
                     # it uses cgi.escape lib and escapes symbols <>&
                     issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                     issues_loads.append(issue)
-                sys.stdout.write(json.dumps(issues_loads))
+                with open(self.json_file, "wb") as outfile:
+                    outfile.write(json.dumps(issues_loads))
             except ValueError as e:
                 sys.stderr.write(e.message)
                 sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")

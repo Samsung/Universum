@@ -5,8 +5,8 @@
 import mock
 import pytest
 
-from _universum.gravity import construct_component, define_arguments_recursive, \
-    Module, Dependency, get_name_to_module_map, get_dependencies
+from _universum.gravity import construct_component, define_arguments_recursive, Module, Dependency
+from _universum.gravity import get_name_to_module_map, get_dependencies, Settings
 import _universum.module_arguments
 import _universum.gravity
 
@@ -14,17 +14,23 @@ import _universum.gravity
 @pytest.fixture()
 def mock_module():
     class MockedModule(object):
-        def __init__(self):
-            self.__dict__['_mock_children'] = {}
+        settings = Settings()
 
-        def __getattr__(self, item):
-            result = self._mock_children.get(item)
+        def __new__(cls, *args, **kwargs):
+            return old_module.__new__(cls, *args, **kwargs)
 
-            if result is None:
-                result = mock.MagicMock()
-                self._mock_children[item] = result
-
-            return result
+        # calling 'old_module.add_settings(self, module_name)' is only allowed in python3
+        def add_settings(self, module_name):
+            new_settings = getattr(self._main_settings, module_name, None)
+            try:
+                old_settings = self.settings
+                for item in vars(new_settings):
+                    if not hasattr(old_settings, item):
+                        setattr(old_settings, item, getattr(new_settings, item))
+            except AttributeError:
+                setattr(self._main_settings, self.__class__.__name__, new_settings)
+            except TypeError:
+                return
 
     old_module = _universum.gravity.Module
     _universum.gravity.Module = MockedModule
@@ -222,6 +228,42 @@ def test_define_arguments_mock_circular(mock_module):
     assert_circular(O, "O->O")
 
 
+def test_settings_access(mock_module):
+    class S(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--option')
+
+    class R(mock_module):
+        dep = Dependency(S)
+
+        def __init__(self):
+            self.s = self.dep()
+
+    settings = _universum.module_arguments.ModuleNamespace()
+    child_settings = _universum.module_arguments.ModuleNamespace()
+    child_settings.option = "abc"
+    setattr(settings, 'S', child_settings)
+    r = construct_component(R, settings)
+
+    # get existing settings
+    assert r.s.settings.option == "abc"
+
+    # get non-existing option
+    with pytest.raises(AttributeError) as exception_info:
+        print r.settings.option
+    assert "No settings available for module 'R'" in str(exception_info.value)
+
+    # set non-existing option
+    with pytest.raises(AttributeError) as exception_info:
+        r.settings.option = "def"
+    assert "No settings available for module 'R'" in str(exception_info.value)
+
+    # set non-existing settings
+    r.add_settings('S')
+    assert r.settings.option == "abc"
+
+
 def make_settings(name, value):
     settings = _universum.module_arguments.ModuleNamespace()
     child_settings = _universum.module_arguments.ModuleNamespace()
@@ -248,10 +290,10 @@ def test_construct_component(mock_module):
         def define_arguments(parser):
             parser.add_argument('--option')
 
-        def __init__(self, settings):
-            self.member = settings.option
+        def __init__(self):
+            self.member = self.settings.option
 
-        def empty_init(self, settings):
+        def empty_init(self):
             pass
 
     # no reference to Q
@@ -272,48 +314,6 @@ def test_construct_component(mock_module):
     Q.__init__ = Q.empty_init
     p4 = construct_component('P', make_settings(Q, "jkl"))
     assert 'member' not in dir(p4.q)
-
-
-def test_construct_component_wrong_param(mock_module):
-    class R(mock_module):
-        dep = Dependency('S')
-
-        def __init__(self):
-            self.s = self.dep()
-
-        def init_wrong_param(self, settings):
-            pass
-
-    class S(mock_module):
-        @staticmethod
-        def define_arguments(parser):
-            parser.add_argument('--option')
-
-        def __init__(self, settings):
-            self.member = settings.option
-
-        def init_wrong_param(self):
-            pass
-
-    # no exception
-    r1 = construct_component('R', make_settings(S, "abc"))
-    assert r1.s.member == "abc"
-
-    # exception with missing parameter in __init__
-    old_init = S.__init__
-    S.__init__ = S.init_wrong_param
-    with pytest.raises(TypeError) as exception_info:
-        construct_component('R', make_settings(S, "abc"))
-
-    assert "S" in str(exception_info.value)
-
-    # exception with excessive parameter in __init__
-    S.__init__ = old_init
-    R.__init__ = R.init_wrong_param
-    with pytest.raises(TypeError) as exception_info:
-        construct_component('R', make_settings(S, "abc"))
-
-    assert "R" in str(exception_info.value)
 
 
 def test_construct_component_same_instance(mock_module):
@@ -354,8 +354,8 @@ def test_additional_init_parameters(mock_module):
         def define_arguments(parser):
             parser.add_argument('--option')
 
-        def __init__(self, settings, param, named_parm):
-            self.member1 = settings.option
+        def __init__(self, param, named_parm):
+            self.member1 = self.settings.option
             self.member2 = param
             self.member3 = named_parm
 
@@ -383,20 +383,21 @@ def test_construct_component_inheritance(mock_module):
         def define_arguments(parser):
             parser.add_argument('--base_option')
 
-        def __init__(self, settings, base_param, **kwargs):
-            self.base_option = settings.base_option
+        def __init__(self, base_param, **kwargs):
+            self.base_option = self.settings.base_option
             self.base_param = base_param
-            self.super_init(BaseModule, **kwargs)
+            super(BaseModule, self).__init__(**kwargs)
 
     class DerivedModule(BaseModule):
         @staticmethod
         def define_arguments(parser):
             parser.add_argument('--derived_option')
 
-        def __init__(self, settings, **kwargs):
-            self.derived_option = settings.derived_option
+        def __init__(self, **kwargs):
+            self.add_settings("BaseModule")
+            self.derived_option = self.settings.derived_option
             self.derived_member = 123
-            self.super_init(DerivedModule, 456, **kwargs)
+            super(DerivedModule, self).__init__(456, **kwargs)
 
     settings = parse_settings(DerivedModule, ["--base_option=abc", "--derived_option=def"])
     assert settings.BaseModule.base_option == "abc"
@@ -414,40 +415,43 @@ def test_construct_component_multiple_inheritance(mock_module):
         def define_arguments(parser):
             parser.add_argument('--base1_option')
 
-        def __init__(self, settings, base1_param, **kwargs):
-            self.base1_option = settings.base1_option
+        def __init__(self, base1_param, **kwargs):
+            self.base1_option = self.settings.base1_option
             self.base1_param = base1_param
-            self.super_init(Base1, **kwargs)
+            super(Base1, self).__init__(**kwargs)
 
     class Base2(object):
         def __init__(self, base2_param, **kwargs):
             self.base2_param = base2_param
-            self.super_init(Base2, **kwargs)
+            super(Base2, self).__init__(**kwargs)
 
     class Base3(mock_module):
         @staticmethod
         def define_arguments(parser):
             parser.add_argument('--base3_option')
 
-        def __init__(self, settings, base3_param, **kwargs):
-            self.base3_option = settings.base3_option
+        def __init__(self, base3_param, **kwargs):
+            self.base3_option = self.settings.base3_option
             self.base3_param = base3_param
-            self.super_init(Base3, **kwargs)
+            super(Base3, self).__init__(**kwargs)
 
     class Base4(mock_module):
         def __init__(self, base4_param, **kwargs):
             self.base4_param = base4_param
-            self.super_init(Base4, **kwargs)
+            super(Base4, self).__init__(**kwargs)
 
     class DerivedMulti(Base1, Base2, Base3, Base4):
         @staticmethod
         def define_arguments(parser):
             parser.add_argument('--derived_option')
 
-        def __init__(self, settings, **kwargs):
-            self.derived_option = settings.derived_option
+        def __init__(self, **kwargs):
+            self.add_settings("Base1")
+            self.add_settings("Base3")
+            self.add_settings("Base4")
+            self.derived_option = self.settings.derived_option
             self.derived_member = 123
-            self.super_init(DerivedMulti, base1_param="ab", base2_param="cd", base3_param="ef", base4_param="gh", **kwargs)
+            super(DerivedMulti, self).__init__(base1_param="ab", base2_param="cd", base3_param="ef", base4_param="gh", **kwargs)
 
     local_settings = parse_settings(DerivedMulti, ["--base1_option=abc", "--base3_option=def", "--derived_option=ghi"])
     derived = construct_component(DerivedMulti, local_settings)
@@ -458,3 +462,48 @@ def test_construct_component_multiple_inheritance(mock_module):
     assert derived.base2_param == "cd"
     assert derived.base3_param == "ef"
     assert derived.base4_param == "gh"
+
+
+def test_construct_component_multiple_instance(mock_module):
+    class W(mock_module):
+        dep = Dependency('Z')
+
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--wparam')
+
+        def __init__(self):
+            super(W, self).__init__()
+            if self.settings.wparam == "z":
+                self.z = self.dep()
+            else:
+                self.nz = self.dep()
+
+    class Z(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--zparam')
+
+    settings1 = parse_settings(W, ["--wparam=z", "--zparam=abc"])
+    w1 = construct_component('W', settings1)
+
+    settings2 = parse_settings(W, ["--wparam=not_z", "--zparam=def"])
+    w2 = construct_component('W', settings2)
+
+    assert w1.settings.wparam == "z"
+    assert w2.settings.wparam == "not_z"
+
+    assert w1.z.settings.zparam == "abc"
+    assert w2.nz.settings.zparam == "def"
+
+    with pytest.raises(AttributeError) as exception_info:
+        print w1.nz.settings.zparam
+    assert "'W' object has no attribute 'nz'" in str(exception_info.value)
+
+    with pytest.raises(AttributeError) as exception_info:
+        print w2.z.settings.zparam
+    assert "'W' object has no attribute 'z'" in str(exception_info.value)
+
+    w1.settings.wparam = "new_value"
+    assert w1.settings.wparam == "new_value"
+    assert w2.settings.wparam == "not_z"

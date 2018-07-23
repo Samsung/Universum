@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
-from .automation_server import AutomationServer
+
+from . import automation_server
 from .gravity import Module, Dependency
 from .output import needs_output
 from .structure_handler import needs_structure
@@ -28,11 +29,8 @@ def report_steps_recursively(block, text, indent, only_fails=False):
 
 class ReportObserver(object):
     """
-    Abstract base class for reporting modules.
+    Abstract base class for reporting modules
     """
-
-    def __init__(self, *args, **kwargs):
-        self.super_init(ReportObserver, *args, **kwargs)
 
     def get_review_link(self):
         raise NotImplementedError
@@ -40,7 +38,7 @@ class ReportObserver(object):
     def report_start(self, report_text):
         raise NotImplementedError
 
-    def report_result(self, result, report_text=None):
+    def report_result(self, result, report_text=None, no_vote=False):
         raise NotImplementedError
 
     def code_report_to_review(self, report):
@@ -50,7 +48,7 @@ class ReportObserver(object):
 @needs_output
 @needs_structure
 class Reporter(Module):
-    automation_server_factory = Dependency(AutomationServer)
+    automation_server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -63,10 +61,10 @@ class Reporter(Module):
                             help="Send comment to review system on build success (in addition to vote up)")
         parser.add_argument("--report-only-fails", "-rof", action="store_true", dest="only_fails",
                             help="Include only the list of failed steps to reporting comments")
+        parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
+                            help="Do not vote up/down review depending on result")
 
-    def __init__(self, settings):
-        self.settings = settings
-
+    def __init__(self):
         self.observers = []
         self.report_initialized = False
         self.blocks_to_report = []
@@ -147,7 +145,7 @@ class Reporter(Module):
             text += "Please take a look."
 
         for observer in self.observers:
-            observer.report_result(is_successful, text)
+            observer.report_result(is_successful, text, no_vote=self.settings.no_vote)
 
         if self.code_report_comments:
             self.out.log("Reporting code report issues ")

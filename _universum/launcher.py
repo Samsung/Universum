@@ -1,21 +1,18 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import os.path
 import re
 import sys
 import json
 import sh
 
-from . import configuration_support, utils, artifact_collector
+from . import configuration_support, utils, artifact_collector, automation_server, reporter
 from .ci_exception import CiException, CriticalCiException, StepException
 from .gravity import Module, Dependency
 from .module_arguments import IncorrectParameterError
 from .output import needs_output
-from .reporter import Reporter
 from .structure_handler import needs_structure
 from .utils import make_block
-from .automation_server import AutomationServer
 
 __all__ = [
     "Launcher",
@@ -98,15 +95,12 @@ def finalize_execution(cmd, log, pass_tag, fail_tag):
                     text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
             else:
                 text = unicode(e) + "\n"
-        stderr = '\n'.join(log.error_lines)
         if text:
-            log.report_fail(text + stderr)
+            log.report_fail(text)
             if fail_tag:
                 log.add_tag(fail_tag)
             raise StepException()
         else:
-            if stderr:
-                log.report_warning(stderr)
             if pass_tag:
                 log.add_tag(pass_tag)
     finally:
@@ -115,10 +109,11 @@ def finalize_execution(cmd, log, pass_tag, fail_tag):
 
 class LogWriter(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, out, structure, artifacts, reporter, server, output_type, step_name, background=False):
+    def __init__(self, out, structure, artifacts, report, server, output_type, step_name, background=False):
         self.out = out
         self.structure = structure
-        self.reporter = reporter
+        self.artifacts = artifacts
+        self.reporter = report
         self.background = background
         self.step_name = step_name
         self.error_lines = []
@@ -150,14 +145,11 @@ class LogWriter(object):
 
     def handle_stderr(self, line):
         line = utils.trim_and_convert_to_unicode(line)
+        self.error_lines.append(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
-            self.error_lines.append(line)
         else:
             self.out.log_stderr(line)
-
-    def report_warning(self, line):
-        self.out.log_stderr(line)
 
     def report_fail(self, line):
         line = utils.trim_and_convert_to_unicode(line)
@@ -180,34 +172,30 @@ class LogWriter(object):
 
 
 class LogWriterCodeReport(LogWriter):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, report_file, *args, **kwargs):
         super(LogWriterCodeReport, self).__init__(*args, **kwargs)
-        self.collect = ''
+        self.report_file = report_file
 
     def report_comments(self, report):
         for result in report:
             text = result["symbol"] + ": " + result["message"]
             self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
 
-    def handle_stdout(self, line=u""):
-        self.collect += utils.trim_and_convert_to_unicode(line)
-
     def end_log(self):
-        report = []
-        try:
-            report = json.loads(self.collect)
-        except (ValueError, TypeError) as e:
-            # skip error if self.collect is empty or consists of spaces
-            if e.message != "No JSON object could be decoded":
-                self.out.log_stderr(e.message)
+        if os.path.exists(self.report_file):
+            with open(self.report_file, "r") as f:
+                report = json.loads(f.read())
 
-        self.file.write(json.dumps(report, indent=4))
-        self.report_comments(report)
-        if report:
-            text = unicode(len(report)) + " issues"
-            self.structure.fail_current_block("Found " + text)
-            self.out.report_build_status(self.step_name + ": " + text)
-        elif not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
+            json_file = self.artifacts.create_text_file("Static_analysis_report.json")
+            json_file.write(json.dumps(report, indent=4))
+
+            self.report_comments(report)
+            if report:
+                text = unicode(len(report)) + " issues"
+                self.error_lines.append(text)
+                self.structure.fail_current_block("Found " + text)
+                self.out.report_build_status(self.step_name + ": " + text)
+        if not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
             self.out.log("Issues not found.")
 
 
@@ -215,8 +203,8 @@ class LogWriterCodeReport(LogWriter):
 @needs_structure
 class Launcher(Module):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
-    reporter_factory = Dependency(Reporter)
-    server_factory = Dependency(AutomationServer)
+    reporter_factory = Dependency(reporter.Reporter)
+    server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -232,18 +220,17 @@ class Launcher(Module):
         parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
 
-    def __init__(self, settings, project_root):
+    def __init__(self, project_root):
         self.project_root = project_root
-        self.settings = settings
         self.background_processes = []
         self.source_project_configs = None
         self.project_configs = None
 
-        if settings.output is None:
+        if self.settings.output is None:
             if utils.detect_environment() != "tc":
-                settings.output = "file"
+                self.settings.output = "file"
             else:
-                settings.output = "console"
+                self.settings.output = "console"
 
         if getattr(self.settings, "config_path") is None:
             raise IncorrectParameterError(
@@ -304,12 +291,13 @@ class Launcher(Module):
             self.structure.fail_current_block(unicode(ex))
             raise StepException()
 
+        init = [self.out, self.structure, self.artifacts, self.reporter, self.server, self.settings.output,
+                step_name, background]
         if code_report:
-            log_writer = LogWriterCodeReport(self.out, self.structure, self.artifacts, self.reporter, self.server,
-                                             "file", step_name, background)
+            report_file = os.path.join(working_directory, "temp_code_report.json")
+            log_writer = LogWriterCodeReport(report_file, *init)
         else:
-            log_writer = LogWriter(self.out, self.structure, self.artifacts, self.reporter, self.server,
-                                   self.settings.output, step_name, background)
+            log_writer = LogWriter(*init)
 
         ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
                   _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)
