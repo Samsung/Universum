@@ -27,8 +27,6 @@ class GerritVcs(ReportObserver, GitVcs):
         pass
 
     def __init__(self, project_root, report_to_review):
-        self.add_settings(GitVcs)
-
         super(GerritVcs, self).__init__(project_root, False)
         self.report_to_review = report_to_review
 

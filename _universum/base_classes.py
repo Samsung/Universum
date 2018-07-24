@@ -74,6 +74,7 @@ class VcsBase(Module):
     """
 
     def __init__(self, project_root):
+        super(VcsBase, self).__init__()
         self.project_root = project_root
         self.repo_status = u""
         self.sources_need_cleaning = False
