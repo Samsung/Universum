@@ -8,10 +8,6 @@ __all__ = [
 ]
 
 
-class AdditionalSettigns(object):
-    pass
-
-
 class ModuleSettings(object):
     def __init__(self, cls, main_settings):
         object.__setattr__(self, "cls", cls)
@@ -32,9 +28,16 @@ class ModuleSettings(object):
     def __setattr__(self, key, value):
         cls = object.__getattribute__(self, "cls")
         main_settings = object.__getattribute__(self, "main_settings")
-        settings = getattr(main_settings, cls.__name__, AdditionalSettigns())
-        setattr(settings, key, value)
-        setattr(main_settings, cls.__name__, settings)
+        for entry in cls.__mro__:
+            try:
+                settings = getattr(main_settings, entry.__name__)
+                getattr(settings, key)
+                setattr(settings, key, value)
+                return
+            except AttributeError:
+                continue
+
+        raise AttributeError("'" + cls.__name__ + "' object has no setting '" + key + "'")
 
 
 class Settings(object):

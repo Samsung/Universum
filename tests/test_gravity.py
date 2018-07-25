@@ -234,14 +234,25 @@ def test_settings_access(mock_module):
     # get existing settings
     assert r.s.settings.option == "abc"
 
-    # get non-existing option
+    # get non-existing settings
     with pytest.raises(AttributeError) as exception_info:
         print r.settings.option
     assert "'R' object has no setting 'option'" in str(exception_info.value)
 
+    # get non-existing option
+    with pytest.raises(AttributeError) as exception_info:
+        print r.s.settings.another_option
+    assert "'S' object has no setting 'another_option'" in str(exception_info.value)
+
     # set non-existing option
-    r.settings.option = "def"
-    assert r.settings.option == "def"
+    with pytest.raises(AttributeError) as exception_info:
+        r.s.settings.another_option = "def"
+    assert "'S' object has no setting 'another_option'" in str(exception_info.value)
+
+    # set non-existing settings
+    with pytest.raises(AttributeError) as exception_info:
+        r.settings.option = "hij"
+    assert "'R' object has no setting 'option'" in str(exception_info.value)
 
 
 def make_settings(name, value):
@@ -487,3 +498,60 @@ def test_construct_component_multiple_instance(mock_module):
     w1.settings.wparam = "new_value"
     assert w1.settings.wparam == "new_value"
     assert w2.settings.wparam == "not_z"
+
+
+def test_settings_access_multiple_inheritance(mock_module):
+    class BaseOne(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--baseone')
+
+        def set_baseone(self, value):
+            self.settings.baseone = value
+
+    class BaseTwo(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--basetwo')
+
+        def set_derived(self, value):
+            self.settings.derived = value
+
+    class Derived(BaseOne, BaseTwo):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--derived')
+
+    local_settings = parse_settings(Derived, ["--baseone=abc", "--basetwo=def", "--derived=ghi"])
+    b1 = construct_component(BaseOne, local_settings)
+    b2 = construct_component(BaseTwo, local_settings)
+    d = construct_component(Derived, local_settings)
+    assert d.settings.derived == "ghi"
+    assert d.settings.baseone == "abc"
+    assert d.settings.basetwo == "def"
+    assert b1.settings.baseone == "abc"
+    assert b2.settings.basetwo == "def"
+
+    with pytest.raises(AttributeError) as exception_info:
+        print b1.settings.derived
+    assert "'BaseOne' object has no setting 'derived'" in str(exception_info.value)
+
+    with pytest.raises(AttributeError) as exception_info:
+        print b2.settings.baseone
+    assert "'BaseTwo' object has no setting 'baseone'" in str(exception_info.value)
+
+    b1.settings.baseone = "zyx"
+    assert d.settings.baseone == "zyx"
+
+    d.settings.basetwo = "lmn"
+    assert b2.settings.basetwo == "lmn"
+
+    d.set_baseone("value1")
+    assert d.settings.baseone == "value1"
+
+    d.set_derived("value2")
+    assert d.settings.derived == "value2"
+
+    with pytest.raises(AttributeError) as exception_info:
+        b2.set_derived("value4")
+    assert "'BaseTwo' object has no setting 'derived'" in str(exception_info.value)
