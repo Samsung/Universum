@@ -278,6 +278,8 @@ class Launcher(Module):
             raise CriticalCiException(text)
         return self.project_configs
 
+    # pylint: disable = too-many-locals
+    # TODO: refactor this
     def run_cmd(self, name, step_name, working_directory, background, code_report, pass_tag, fail_tag, *args, **kwargs):
         try:
             try:
