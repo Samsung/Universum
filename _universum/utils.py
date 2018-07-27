@@ -6,6 +6,7 @@ import sys
 import codecs
 
 from .ci_exception import CriticalCiException, SilentAbortException
+from .module_arguments import IncorrectParameterError
 
 __all__ = [
     "Colors",
@@ -14,6 +15,7 @@ __all__ = [
     "detect_environment",
     "create_driver",
     "format_traceback",
+    "check_required_option",
     "catch_exception",
     "trim_and_convert_to_unicode",
     "unify_argument_list",
@@ -84,6 +86,13 @@ def format_traceback(ex, trace):
     tb_lines = traceback.format_exception(ex.__class__, ex, trace)
     tb_text = ''.join(tb_lines)
     return tb_text
+
+
+def check_required_option(settings, name, env_var):
+    if getattr(settings, name, None) is None:
+        text = "Variable '" + env_var + "' is not set. " + \
+               "Please set it or pass corresponding parameter via command line options"
+        raise IncorrectParameterError(text)
 
 
 def catch_exception(exception, ignore_if=None):

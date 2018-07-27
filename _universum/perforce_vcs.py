@@ -51,11 +51,11 @@ class PerforceVcs(base_classes.VcsBase):
                                         "or split them with comma")
 
         parser.add_hidden_argument("--p4-shelve", "-p4s", action="append", nargs='+', dest="shelve_cls",
-                                   is_hidden=hide_sync_options, metavar="SHELVE_CHANGELIST",
+                                   is_hidden=hide_sync_options, metavar="SHELVE_CHANGELIST_1",
                                    help="List of shelve CLs to be applied, separated by comma. "
                                         "--p4-shelve can be added to the command line several times. "
-                                        "Also, 5 additional shelve CLs can be specified via environment variables: "
-                                        "SHELVE_CHANGELIST_1..5.")
+                                        "5 shelve CLs can be specified via environment variables: "
+                                        "SHELVE_CHANGELIST_1..5")
 
         parser.add_argument("--p4-port", "-p4p", dest="port", help="P4 port (e.g. 'myhost.net:1666')",
                             metavar="P4PORT")
@@ -84,9 +84,7 @@ class PerforceVcs(base_classes.VcsBase):
                                         "Mandatory for CI environment, otherwise use with caution")
 
     def check_required_option(self, name, env_var):
-        if getattr(self.settings, name) is None:
-            raise IncorrectParameterError(env_var + " is not specified. Communication with perforce server "
-                                          "requires setting P4PORT, P4USER and P4PASSWD")
+        utils.check_required_option(self.settings, name, env_var)
 
     def __init__(self, project_root, report_to_review):
         super(PerforceVcs, self).__init__(project_root)
@@ -246,7 +244,9 @@ class PerforceVcs(base_classes.VcsBase):
 
         # Retrieve list of shelved CLs from "classic" environment variables
         cls = []
-        for x in range(1, 6):
+        if self.swarm:
+            cls.append(self.swarm.settings.change)
+        for x in range(2, 6):
             cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
 
