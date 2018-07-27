@@ -82,7 +82,7 @@ class Swarm(ReportObserver, Module):
         for index, entry in enumerate(result.json()["review"]["versions"]):
             if entry["change"] == int(self.settings.review_id) \
                     or entry["change"] == int(self.settings.change):
-                self.review_version = index + 1
+                self.review_version = unicode(index + 1)
 
     def post_comment(self, text, filename=None, line=None, version=None):
         request = {"body": text,
