@@ -76,7 +76,7 @@ class Swarm(ReportObserver, Module):
         if self.review_version:
             return
 
-        result = requests.get(self.settings.server_url + "/api/v2/reviews/" + self.settings.review_id,
+        result = requests.get(self.settings.server_url + "/api/v2/reviews/" + unicode(self.settings.review_id),
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
 
         for index, entry in enumerate(result.json()["review"]["versions"]):
