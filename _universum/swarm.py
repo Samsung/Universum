@@ -78,10 +78,10 @@ class Swarm(ReportObserver, Module):
 
         result = requests.get(self.settings.server_url + "/api/v2/reviews/" + self.settings.review_id,
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
-        change = int(self.settings.change)
 
         for index, entry in enumerate(result.json()["review"]["versions"]):
-            if entry["change"] == change:
+            if entry["change"] == int(self.settings.review_id) \
+                    or entry["change"] == int(self.settings.change):
                 self.review_version = index + 1
 
     def post_comment(self, text, filename=None, line=None, version=None):
