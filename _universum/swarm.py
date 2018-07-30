@@ -80,21 +80,21 @@ class Swarm(ReportObserver, Module):
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
 
         for index, entry in enumerate(result.json()["review"]["versions"]):
-            if entry["change"] == int(self.settings.review_id) \
-                    or entry["change"] == int(self.settings.change):
+            if int(entry["change"]) == int(self.settings.review_id) \
+                    or int(entry["change"]) == int(self.settings.change):
                 self.review_version = unicode(index + 1)
 
     def post_comment(self, text, filename=None, line=None, version=None):
         request = {"body": text,
-                   "topic": "reviews/" + self.settings.review_id}
+                   "topic": "reviews/" + unicode(self.settings.review_id)}
         if filename:
             request["context[file]"] = filename
-        if line:
-            request["context[rightLine]"] = line
-        if version:
-            request["context[version]"] = version
+            if line:
+                request["context[rightLine]"] = line
+            if version:
+                request["context[version]"] = version
 
-        result = requests.post(self.settings.server_url + "/api/v3/comments", data=request,
+        result = requests.post(self.settings.server_url + "/api/v5/comments", data=request,
                                auth=(self.user, self.password))
         check_request_result(result)
 
@@ -113,7 +113,8 @@ class Swarm(ReportObserver, Module):
 
     def report_start(self, report_text):
         self.check_review_version()
-        self.post_comment(report_text, version=self.review_version)
+        report_text += "\nStarted build for review revision #" + self.review_version
+        self.post_comment(report_text)
 
     def code_report_to_review(self, report):
         for path, issues in report.iteritems():
@@ -132,7 +133,7 @@ class Swarm(ReportObserver, Module):
 
         try:
             if link is not None:
-                self.out.log("Swarm will be informed about build status by URL" + link)
+                self.out.log("Swarm will be informed about build status by URL " + link)
                 urllib.urlopen(link)
             else:
                 self.out.log("Swarm will not be informed about build status because " + \
@@ -153,4 +154,5 @@ class Swarm(ReportObserver, Module):
         if not no_vote:
             self.vote_review(result, version=self.review_version)
         if report_text:
-            self.post_comment(report_text, version=self.review_version)
+            report_text = "This is a build result for review revision #" + self.review_version + "\n" + report_text
+            self.post_comment(report_text)
