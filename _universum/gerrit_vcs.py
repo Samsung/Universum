@@ -27,13 +27,17 @@ class GerritVcs(ReportObserver, GitVcs):
         pass
 
     def __init__(self, project_root, report_to_review):
-        self.add_settings(GitVcs)
-
         super(GerritVcs, self).__init__(project_root, False)
         self.report_to_review = report_to_review
 
         if not self.settings.repo.startswith("ssh://"):
             raise IncorrectParameterError("Right now Gerrit builds are only available via SSH access")
+
+        if report_to_review and not self.settings.refspec:
+            raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
+
+        if report_to_review and self.settings.checkout_id:
+            raise IncorrectParameterError("Please use --git-refspec instead of commit ID")
 
         parsed_repo = urlparse.urlparse(self.settings.repo)
         self.hostname = parsed_repo.hostname

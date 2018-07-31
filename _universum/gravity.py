@@ -8,15 +8,47 @@ __all__ = [
 ]
 
 
+class ModuleSettings(object):
+    def __init__(self, cls, main_settings):
+        object.__setattr__(self, "cls", cls)
+        object.__setattr__(self, "main_settings", main_settings)
+
+    def __getattribute__(self, item):
+        cls = object.__getattribute__(self, "cls")
+        main_settings = object.__getattribute__(self, "main_settings")
+        for entry in cls.__mro__:
+            try:
+                settings = getattr(main_settings, entry.__name__)
+                return getattr(settings, item)
+            except AttributeError:
+                continue
+
+        raise AttributeError("'" + cls.__name__ + "' object has no setting '" + item + "'")
+
+    def __setattr__(self, key, value):
+        cls = object.__getattribute__(self, "cls")
+        main_settings = object.__getattribute__(self, "main_settings")
+        for entry in cls.__mro__:
+            try:
+                settings = getattr(main_settings, entry.__name__)
+                getattr(settings, key)
+                setattr(settings, key, value)
+                return
+            except AttributeError:
+                continue
+
+        raise AttributeError("'" + cls.__name__ + "' object has no setting '" + key + "'")
+
+
 class Settings(object):
+    def __init__(self, cls):
+        self.cls = cls
+
     def __get__(self, obj, objtype=None):
-        settings = getattr(obj._main_settings, obj.__class__.__name__, None)
-        if not settings:
-            raise AttributeError("No settings available for module '" + obj.__class__.__name__ + "'")
-        return settings
+        return ModuleSettings(self.cls, obj.main_settings)
 
     def __set__(self, obj, settings):
-        setattr(obj._main_settings, obj.__class__.__name__, settings)
+        setattr(obj.main_settings, self.cls.__name__, settings)
 
 
 def get_string_name(name):
@@ -26,30 +58,13 @@ def get_string_name(name):
 
 
 class Module(object):
-    settings = Settings()
-
-    def __new__(cls, main_settings=None, *args, **kwargs):
+    def __new__(cls, main_settings, *args, **kwargs):
         instance = super(Module, cls).__new__(cls)
-        if main_settings:
-            instance._main_settings = main_settings
+        instance.main_settings = main_settings
         return instance
 
     def __init__(self, *args, **kwargs):
         pass
-
-    def add_settings(self, module_name):
-        new_settings = getattr(self._main_settings, get_string_name(module_name), None)
-        try:
-            current_settings = self.settings
-            for item in vars(new_settings):
-                if not hasattr(current_settings, item):
-                    setattr(current_settings, item, getattr(new_settings, item))
-        except AttributeError:
-            # current module has no own settings
-            setattr(self._main_settings, self.__class__.__name__, new_settings)
-        except TypeError:
-            # 'module_name' module has no own settings
-            return
 
 
 def construct_component(name, main_settings, *args, **kwargs):
@@ -75,8 +90,7 @@ class Dependency(object):
 
     def __get__(self, instance, owner):
         def constructor_function(*args, **kwargs):
-            return construct_component(self.name, instance._main_settings, *args, **kwargs)
-
+            return construct_component(self.name, instance.main_settings, *args, **kwargs)
         return constructor_function
 
 
@@ -86,6 +100,8 @@ def get_name_to_module_map():
 
     while stack:
         parent = stack.pop()
+        parent.settings = Settings(parent)
+
         for child in parent.__subclasses__():
             if child.__name__ not in result:
                 result[child.__name__] = child

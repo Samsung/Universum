@@ -1,6 +1,17 @@
 Change log
 ==========
 
+0.14.2 (2018-07-30)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **gerrit:** add exceptions on wrong Gerrit review parameters
+* **swarm:** return voting for specified review version
+* **swarm:** add review revision to comment text
+
+
 0.14.1 (2018-07-23)
 -------------------
 
