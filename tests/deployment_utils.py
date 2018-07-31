@@ -48,7 +48,7 @@ class CommandRunner(object):
 
 @pytest.fixture()
 def command_runner(request, docker_registry_params):
-    client = docker.from_env(timeout=600)
+    client = docker.from_env(timeout=1200)
     container = None
     runner = None
     bind_dir = "/host"
@@ -81,7 +81,7 @@ class RunBaseConfig(object):
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
     def install_env(self):
-        log = self.command_runner.assert_success("pip install " + self.working_dir)
+        log = self.command_runner.assert_success("pip --default-timeout=1200 install " + self.working_dir)
         assert "Successfully installed" in log
 
     def run_from_source(self, config_file):
