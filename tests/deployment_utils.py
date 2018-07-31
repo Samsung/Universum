@@ -48,7 +48,7 @@ class CommandRunner(object):
 
 @pytest.fixture()
 def command_runner(request, docker_registry_params):
-    client = docker.from_env()
+    client = docker.from_env(timeout=600)
     container = None
     runner = None
     bind_dir = "/host"
