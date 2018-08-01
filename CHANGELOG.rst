@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.14.3 (2018-08-01)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** fix latest Swarm review revision detection
+
+
 0.14.2 (2018-07-30)
 -------------------
 

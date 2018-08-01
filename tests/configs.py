@@ -8,12 +8,16 @@ def run_virtual(cmd):
 
 
 configs = Variations([dict(name="Create virtual environment", command=["virtualenv", env_name]),
-                      dict(name="Install development", command=run_virtual("pip install .[development]")),
+                      dict(name="Install development",
+                           command=run_virtual("pip --default-timeout=1200 install .[development]")),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
-                      dict(name="Install tests", command=run_virtual("pip install .[test]")),
-                      dict(name="Make tests", artifacts="htmlcov", command=run_virtual("PYTHONIOENCODING=utf-8 make test")),
-                      dict(name="Run static pylint", code_report=True, command=run_virtual(
-                          "universum_static --type pylint --rcfile pylintrc --files *.py _universum/ tests/"))])
+                      dict(name="Install tests",
+                           command=run_virtual("pip --default-timeout=1200 install .[test]")),
+                      dict(name="Make tests", artifacts="htmlcov",
+                           command=run_virtual("PYTHONIOENCODING=utf-8 make test")),
+                      dict(name="Run static pylint", code_report=True,
+                           command=run_virtual("universum_static --type pylint --rcfile pylintrc "
+                                               "--files *.py _universum/ tests/"))])
 
 if __name__ == '__main__':
     print configs.dump()

@@ -80,9 +80,17 @@ class Swarm(ReportObserver, Module):
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
 
         for index, entry in enumerate(result.json()["review"]["versions"]):
-            if int(entry["change"]) == int(self.settings.review_id) \
-                    or int(entry["change"]) == int(self.settings.change):
+            if int(entry["change"]) == int(self.settings.review_id):
                 self.review_version = unicode(index + 1)
+                return
+
+        version_number = len(result.json()["review"]["versions"])
+        try:
+            last_cl = int(result.json()["review"]["versions"][version_number - 1]["archiveChange"])
+            if last_cl == int(self.settings.review_id):
+                self.review_version = unicode(version_number)
+        except AttributeError:
+            pass
 
     def post_comment(self, text, filename=None, line=None, version=None):
         request = {"body": text,

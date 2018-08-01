@@ -44,7 +44,7 @@ setup(
             'docker',
             'httpretty<=0.8',
             'mock',
-            'pytest',
+            'pytest<3.7',
             'pylint',
             'pytest-pylint',
             'sphinx',
