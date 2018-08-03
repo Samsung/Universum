@@ -80,16 +80,16 @@ class Swarm(ReportObserver, Module):
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
 
         for index, entry in enumerate(result.json()["review"]["versions"]):
-            if int(entry["change"]) == int(self.settings.review_id):
+            if int(entry["change"]) == int(self.settings.change):
                 self.review_version = unicode(index + 1)
                 return
 
         version_number = len(result.json()["review"]["versions"])
         try:
             last_cl = int(result.json()["review"]["versions"][version_number - 1]["archiveChange"])
-            if last_cl == int(self.settings.review_id):
+            if last_cl == int(self.settings.change):
                 self.review_version = unicode(version_number)
-        except AttributeError:
+        except KeyError:
             pass
 
     def post_comment(self, text, filename=None, line=None, version=None):
@@ -121,7 +121,8 @@ class Swarm(ReportObserver, Module):
 
     def report_start(self, report_text):
         self.check_review_version()
-        report_text += "\nStarted build for review revision #" + self.review_version
+        if self.review_version:
+            report_text += "\nStarted build for review revision #" + self.review_version
         self.post_comment(report_text)
 
     def code_report_to_review(self, report):
@@ -162,5 +163,6 @@ class Swarm(ReportObserver, Module):
         if not no_vote:
             self.vote_review(result, version=self.review_version)
         if report_text:
-            report_text = "This is a build result for review revision #" + self.review_version + "\n" + report_text
+            if self.review_version:
+                report_text = "This is a build result for review revision #" + self.review_version + "\n" + report_text
             self.post_comment(report_text)
