@@ -4,12 +4,13 @@ import glob
 import os
 import git
 
-from . import base_classes, utils
-from .ci_exception import CriticalCiException
-from .module_arguments import IncorrectParameterError
-from .output import needs_output
-from .structure_handler import needs_structure
-from .utils import make_block
+from .base_vcs import BaseVcs
+from ..ci_exception import CriticalCiException
+from ..module_arguments import IncorrectParameterError
+from ..output import needs_output
+from ..structure_handler import needs_structure
+from ..utils import make_block
+from .. import utils
 
 __all__ = [
     "GitVcs"
@@ -26,7 +27,7 @@ def catch_git_exception(ignore_if=None):
 
 @needs_output
 @needs_structure
-class GitVcs(base_classes.VcsBase):
+class GitVcs(BaseVcs):
     """
     This class contains CI functions for interaction with Git
     """
@@ -137,8 +138,8 @@ class GitVcs(base_classes.VcsBase):
             R  old/path/file -> new/path/file
 
         And for '--edit-only' submit option we should filter the 'M' records
-        :param file_list: full list of files and directories to be reconciled
-        :return: list of corresponding modified files
+        :param file_list: full list of vcs and directories to be reconciled
+        :return: list of corresponding modified vcs
         """
         result = []
         all_changes = self.repo.git.status(porcelain=True).splitlines()

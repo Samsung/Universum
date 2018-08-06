@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-from .jenkins.driver import JenkinsServer
-from .local.driver import LocalServer
-from .teamcity.driver import TeamCityServer
-from .gravity import Dependency, Module
-from . import utils
+from .jenkins_server import JenkinsServer
+from .local_server import LocalServer
+from .teamcity_server import TeamcityServer
+from ..gravity import Dependency, Module
+from .. import utils
 
 __all__ = [
     "AutomationServer"
@@ -12,9 +12,9 @@ __all__ = [
 
 
 class AutomationServer(Module):
-    teamcity_server_factory = Dependency(TeamCityServer)
-    local_server_factory = Dependency(LocalServer)
-    jenkins_server_factory = Dependency(JenkinsServer)
+    teamcity_driver_factory = Dependency(TeamcityServer)
+    local_driver_factory = Dependency(LocalServer)
+    jenkins_driver_factory = Dependency(JenkinsServer)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -24,10 +24,11 @@ class AutomationServer(Module):
                                  "local - user local terminal). TeamCity and Jenkins environment "
                                  "is detected automatically when launched on build agent")
 
-    def __init__(self):
-        self.driver = utils.create_driver(teamcity_factory=self.teamcity_server_factory,
-                                          jenkins_factory=self.jenkins_server_factory,
-                                          local_factory=self.local_server_factory,
+    def __init__(self, *args, **kwargs):
+        super(AutomationServer, self).__init__(*args, **kwargs)
+        self.driver = utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
+                                          jenkins_factory=self.jenkins_driver_factory,
+                                          local_factory=self.local_driver_factory,
                                           default=self.settings.type)
 
     def trigger_build(self, revision):

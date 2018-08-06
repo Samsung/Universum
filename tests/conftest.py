@@ -62,14 +62,14 @@ class FuzzyCallChecker(object):
 
 @pytest.fixture()
 def stdout_checker(request):
-    with mock.patch('_universum.local.output.stdout') as logging_mock:
+    with mock.patch('_universum.output.local_output.stdout') as logging_mock:
         result = FuzzyCallChecker(logging_mock)
         yield result
 
 
 @pytest.fixture()
 def log_exception_checker(request):
-    with mock.patch('_universum.local.output.LocalOutput.log_exception') as logging_mock:
+    with mock.patch('_universum.output.local_output.LocalOutput.log_exception') as logging_mock:
         result = FuzzyCallChecker(logging_mock)
         yield result
 

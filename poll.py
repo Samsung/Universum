@@ -4,7 +4,8 @@
 import json
 import sys
 
-from _universum import automation_server, file_manager
+from _universum import automation_server
+from _universum.vcs import vcs
 from _universum.entry_points import run_main_for_module, run_with_settings
 from _universum.gravity import Module, Dependency
 from _universum.output import needs_output
@@ -16,7 +17,7 @@ from _universum.utils import make_block
 @needs_structure
 class Poller(Module):
     description = "Polling module of Universum "
-    files_factory = Dependency(file_manager.FileManager)
+    vcs_factory = Dependency(vcs.Vcs)
     server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod
@@ -25,12 +26,13 @@ class Poller(Module):
         parser.add_argument('--num', '-n', dest='max_number', help='Maximum number of CLs processed, default is 10',
                             type=int, default=10)
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Poller, self).__init__(*args, **kwargs)
         self.stored_cls = {}
         self.latest_cls = {}
         self.triggered_cls = set()
 
-        self.files = self.files_factory()
+        self.vcs = self.vcs_factory()
         self.server = self.server_factory()
 
     def process_single_mapping(self, depot):
@@ -65,7 +67,7 @@ class Poller(Module):
                 raise
 
         try:
-            self.latest_cls = self.files.vcs.get_changes(self.stored_cls, self.settings.max_number)
+            self.latest_cls = self.vcs.driver.get_changes(self.stored_cls, self.settings.max_number)
             for depot in self.latest_cls.keys():
                 self.structure.run_in_block(self.process_single_mapping, "Processing depot " + depot, True, depot)
         finally:
@@ -73,7 +75,7 @@ class Poller(Module):
                 json.dump(self.stored_cls, db_file, indent=4, sort_keys=True)
 
     def finalize(self):
-        self.files.finalize()
+        self.vcs.finalize()
 
 
 def run(settings):

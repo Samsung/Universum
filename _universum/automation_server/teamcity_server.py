@@ -2,15 +2,15 @@
 
 import requests
 
-from ..base_classes import AutomationServerDriverBase
+from .base_server import BaseServer
 from ..module_arguments import IncorrectParameterError
 
 __all__ = [
-    "TeamCityServer"
+    "TeamcityServer"
 ]
 
 
-class TeamCityServer(AutomationServerDriverBase):
+class TeamcityServer(BaseServer):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("TeamCity variables",
@@ -31,7 +31,8 @@ class TeamCityServer(AutomationServerDriverBase):
         if getattr(self.settings, name) is None:
             raise IncorrectParameterError("Unable to retrieve TeamCity variable '" + env_var + "'")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(TeamcityServer, self).__init__(*args, **kwargs)
         self.check_required_option("server_url", "TEAMCITY_SERVER")
         self.check_required_option("build_id", "BUILD_ID")
         self.check_required_option("configuration_id", "CONFIGURATION_ID")

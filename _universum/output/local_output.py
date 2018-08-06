@@ -2,12 +2,21 @@
 
 import sys
 
-from ..base_classes import OutputBase
-from ..utils import Colors
+from .base_output import BaseOutput
 
 __all__ = [
     "LocalOutput"
 ]
+
+
+class Colors(object):
+    red = "\033[1;31m"
+    dark_red = "\033[0;31m"
+    green = "\033[1;32m"
+    blue = "\033[1;34m"
+    dark_cyan = "\033[0;36m"
+    dark_yellow = "\033[0;33m"
+    reset = "\033[00m"
 
 
 def stdout(*args, **kwargs):
@@ -16,8 +25,9 @@ def stdout(*args, **kwargs):
         sys.stdout.write('\n')
 
 
-class LocalOutput(OutputBase):
-    def __init__(self):
+class LocalOutput(BaseOutput):
+    def __init__(self, *args, **kwargs):
+        super(LocalOutput, self).__init__(*args, **kwargs)
         self.block_level = 0
 
     def indent(self):

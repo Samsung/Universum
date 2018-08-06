@@ -3,7 +3,7 @@
 
 import sys
 
-from _universum import artifact_collector, file_manager, launcher, reporter
+from _universum import artifact_collector, launcher, reporter, vcs
 from _universum import utils, __title__, __version__
 from _universum.entry_points import run_main_for_module, run_with_settings, setup_arg_parser
 from _universum.gravity import Module, Dependency
@@ -13,7 +13,7 @@ from _universum.output import needs_output
 @needs_output
 class Main(Module):
     description = __title__
-    files_factory = Dependency(file_manager.FileManager)
+    vcs_factory = Dependency(vcs.Vcs)
     launcher_factory = Dependency(launcher.Launcher)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(reporter.Reporter)
@@ -24,29 +24,30 @@ class Main(Module):
 
         parser.add_hidden_argument("--no-finalize", action="store_true", dest="no_finalize", is_hidden=True,
                                    help="Skip 'Finalizing' step: "
-                                        "do not clear sources, do not revert workspace files, etc. "
+                                        "do not clear sources, do not revert workspace vcs, etc. "
                                         "Is applied automatically when using existing VCS client")
 
         parser.add_hidden_argument("--finalize-only", action="store_true", dest="finalize_only", is_hidden=True,
-                                   help="Perform only 'Finalizing' step: clear sources, revert workspace files, etc. "
+                                   help="Perform only 'Finalizing' step: clear sources, revert workspace vcs, etc. "
                                         "Recommended to use after '--no-finalize' runs. "
                                         "Please make sure to move artifacts from working directory "
                                         "or pass different artifact folder")
 
-    def __init__(self):
-        self.files = self.files_factory()
-        self.project_root = self.files.project_root
+    def __init__(self, *args, **kwargs):
+        super(Main, self).__init__(*args, **kwargs)
+        self.vcs = self.vcs_factory()
+        self.project_root = self.vcs.project_root
         self.launcher = self.launcher_factory(self.project_root)
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
 
     def execute(self):
         if self.settings.finalize_only:
-            self.files.vcs.sources_need_cleaning = True
+            self.vcs.driver.sources_need_cleaning = True
             self.out.log("Execution skipped because of '--finalize-only' option")
             return
 
-        self.files.prepare_repository()
+        self.vcs.prepare_repository()
         project_configs = self.launcher.process_project_configs()
 
         artifact_list = []
@@ -75,7 +76,7 @@ class Main(Module):
         if self.settings.no_finalize:
             self.out.log("Cleaning skipped because of '--no-finalize' option")
             return
-        self.files.finalize()
+        self.vcs.finalize()
 
 
 def define_arguments():

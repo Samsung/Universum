@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 
-from ..base_classes import AutomationServerDriverBase
+from .base_server import BaseServer
 
 __all__ = [
     "LocalServer"
 ]
 
 
-class LocalServer(AutomationServerDriverBase):
+class LocalServer(BaseServer):
 
     def report_build_location(self):
         return "Local build. No external logs provided"

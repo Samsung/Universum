@@ -18,7 +18,8 @@ disable = missing-docstring,
           no-name-in-module,
           no-member,
           unsupported-assignment-operation,
-          super-init-not-called
+          super-init-not-called,
+          wildcard-import
 
 [BASIC]
 no-docstring-rgx = .*

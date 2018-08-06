@@ -5,12 +5,12 @@ import urllib
 import urllib3
 import requests
 
-from .ci_exception import CiException
-from .gravity import Module, Dependency
-from .module_arguments import IncorrectParameterError
-from .reporter import ReportObserver, Reporter
-from .output import needs_output
-from . import utils
+from ..ci_exception import CiException
+from ..gravity import Module, Dependency
+from ..module_arguments import IncorrectParameterError
+from ..reporter import ReportObserver, Reporter
+from ..output import needs_output
+from .. import utils
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
 

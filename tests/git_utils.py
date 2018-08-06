@@ -90,7 +90,7 @@ class GitEnvironment(utils.TestEnvironment):
         self.repo.git.checkout(self.server.target_branch)
         self.repo_file = self.root_directory.join(self.server.target_file)
 
-        self.settings.FileManager.vcs = "git"
+        self.settings.Vcs.type = "git"
         self.settings.GitVcs.repo = server.url
         self.settings.GitVcs.refspec = server.target_branch
         self.settings.GitVcs.user = "Testing User"

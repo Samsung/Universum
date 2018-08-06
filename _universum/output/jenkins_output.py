@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from ..local.output import LocalOutput
+from .local_output import LocalOutput
 
 __all__ = [
     "JenkinsOutput"

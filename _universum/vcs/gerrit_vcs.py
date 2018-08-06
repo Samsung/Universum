@@ -4,12 +4,12 @@ import json
 import urlparse
 import sh
 
-from . import utils
-from .ci_exception import CiException
 from .git_vcs import GitVcs
-from .gravity import Dependency
-from .module_arguments import IncorrectParameterError
-from .reporter import ReportObserver, Reporter
+from ..ci_exception import CiException
+from ..gravity import Dependency
+from ..module_arguments import IncorrectParameterError
+from ..reporter import ReportObserver, Reporter
+from .. import utils
 
 __all__ = [
     "GerritVcs"

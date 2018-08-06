@@ -212,7 +212,7 @@ class Launcher(Module):
                                                      "External command launching and reporting parameters")
 
         parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
-                            help="Define whether to print build logs to console or store to files. "
+                            help="Define whether to print build logs to console or store to vcs. "
                                  "Log file names are generated based on the names of build steps. "
                                  "Possible values: 'console', 'file'. By default, logs are printed to console "
                                  "when the build is launched on TeamCity agent")

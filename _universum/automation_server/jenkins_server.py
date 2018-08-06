@@ -2,8 +2,8 @@
 
 import urllib2
 
+from .base_server import BaseServer
 from ..ci_exception import CriticalCiException
-from ..base_classes import AutomationServerDriverBase
 from ..module_arguments import IncorrectParameterError
 from ..output import needs_output
 
@@ -13,7 +13,7 @@ __all__ = [
 
 
 @needs_output
-class JenkinsServer(AutomationServerDriverBase):
+class JenkinsServer(BaseServer):
 
     @staticmethod
     def define_arguments(argument_parser):

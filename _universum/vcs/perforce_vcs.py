@@ -6,13 +6,15 @@ import warnings
 import sh
 from P4 import P4, P4Exception
 
-from . import artifact_collector, base_classes, swarm, utils
-from .ci_exception import CriticalCiException, SilentAbortException
-from .gravity import Dependency
-from .module_arguments import IncorrectParameterError
-from .output import needs_output
-from .structure_handler import needs_structure
-from .utils import make_block, Uninterruptible
+from . import swarm
+from .base_vcs import BaseVcs
+from ..ci_exception import CriticalCiException, SilentAbortException
+from ..gravity import Dependency
+from ..module_arguments import IncorrectParameterError
+from ..output import needs_output
+from ..structure_handler import needs_structure
+from ..utils import make_block, Uninterruptible
+from .. import artifact_collector, utils
 
 __all__ = [
     "PerforceVcs",
@@ -26,7 +28,7 @@ def catch_p4exception(ignore_if=None):
 
 @needs_output
 @needs_structure
-class PerforceVcs(base_classes.VcsBase):
+class PerforceVcs(BaseVcs):
     """
     This class contains CI functions for interaction with Perforce
     """
@@ -80,7 +82,7 @@ class PerforceVcs(base_classes.VcsBase):
                                         "Use '--p4-force-clean' option to make a disposable client")
         parser.add_hidden_argument("--p4-force-clean", action="store_true", dest="force_clean",
                                    is_hidden=hide_sync_options,
-                                   help="**Revert all files within '--p4-client' and delete the workspace.** "
+                                   help="**Revert all vcs within '--p4-client' and delete the workspace.** "
                                         "Mandatory for CI environment, otherwise use with caution")
 
     def check_required_option(self, name, env_var):
@@ -182,7 +184,7 @@ class PerforceVcs(base_classes.VcsBase):
         try: # Make sure default CL is empty.
             change = self.p4.fetch_change()
             if "Files" in change:
-                self.out.log("Default change list contains some files, though reconcile was not called yet."
+                self.out.log("Default change list contains some vcs, though reconcile was not called yet."
                              "Skipping Submit.")
                 return 0
         except P4Exception:
@@ -330,7 +332,7 @@ class PerforceVcs(base_classes.VcsBase):
                     raise CriticalCiException(unicode(e))
 
             self.append_repo_status("    " + line + "\n")
-            self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
+            self.out.log("Downloaded {} vcs.".format(result[0]["totalFileCount"]))
 
     def p4unshelve(self, *args, **kwargs):
         try:
