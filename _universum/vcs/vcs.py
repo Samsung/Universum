@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-import os
 import sh
 
 from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs
 from .. import artifact_collector, utils
-from ..gravity import Module, Dependency
+from ..gravity import Dependency
+from ..project_directory import ProjectDirectory
 from ..output import needs_output
 from ..structure_handler import needs_structure
 from ..utils import make_block
@@ -17,7 +17,7 @@ __all__ = [
 
 @needs_output
 @needs_structure
-class Vcs(Module):
+class Vcs(ProjectDirectory):
     local_driver_factory = Dependency(local_vcs.LocalVcs)
     git_driver_factory = Dependency(git_vcs.GitVcs)
     gerrit_driver_factory = Dependency(gerrit_vcs.GerritVcs)
@@ -28,17 +28,13 @@ class Vcs(Module):
 
     @staticmethod
     def define_arguments(argument_parser):
-        parser = argument_parser.get_or_create_group("Source vcs",
-                                                     "Parameters determining the processing of repository vcs")
+        parser = argument_parser.get_or_create_group("Source files")
 
         parser.add_argument("--vcs-type", "-vt", dest="type", default="p4",
                             choices=["none", "p4", "git", "gerrit"],
                             help="Select repository type to download sources from: Perforce ('p4', the default), "
                                  "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
                                  "Gerrit uses Git parameters. Each VCS type has its own settings.")
-
-        parser.add_argument("--project-root", "-pr", dest="project_root", metavar="PROJECT_ROOT",
-                            help="Temporary directory to copy sources to. Default is 'temp'")
 
         parser.add_argument("--report-to-review", action="store_true", dest="report_to_review", default=False,
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
@@ -47,19 +43,17 @@ class Vcs(Module):
         super(Vcs, self).__init__(*args, **kwargs)
         self.artifacts = None
 
-        self.project_root = self.settings.project_root
-        if not self.project_root:
-            self.project_root = os.path.join(os.getcwd(), "temp")
-
-        args = [self.project_root, self.settings.report_to_review]
         if self.settings.type == "none":
-            self.driver = self.local_driver_factory(*args)
+            self.driver = self.local_driver_factory()
         elif self.settings.type == "git":
-            self.driver = self.git_driver_factory(*args)
+            self.driver = self.git_driver_factory()
         elif self.settings.type == "gerrit":
-            self.driver = self.gerrit_driver_factory(*args)
+            self.driver = self.gerrit_driver_factory()
         else:
-            self.driver = self.perforce_driver_factory(*args)
+            self.driver = self.perforce_driver_factory()
+
+        if self.settings.report_to_review:
+            self.driver.initialize_code_review()
 
     @make_block("Preparing repository")
     def prepare_repository(self):
@@ -71,7 +65,7 @@ class Vcs(Module):
         status_file.write(self.driver.get_repo_status())
 
         status_file.write("\nFile list:\n\n")
-        status_file.write(utils.trim_and_convert_to_unicode(sh.ls("-lR", self.project_root)) + "\n")
+        status_file.write(utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root)) + "\n")
         status_file.close()
 
     @make_block("Finalizing")

@@ -3,7 +3,8 @@
 import shutil
 
 from ..ci_exception import CiException
-from ..gravity import Module
+from ..module_arguments import IncorrectParameterError
+from ..project_directory import ProjectDirectory
 from ..utils import make_block
 
 __all__ = [
@@ -11,14 +12,20 @@ __all__ = [
 ]
 
 
-class BaseVcs(Module):
+class BaseVcs(ProjectDirectory):
     """
     Base class for VCS drivers
     """
 
-    def __init__(self, project_root):
-        super(BaseVcs, self).__init__()
-        self.project_root = project_root
+    @staticmethod
+    def define_arguments(argument_parser):
+        pass
+
+    def initialize_code_review(self):  # pylint: disable=no-self-use
+        raise IncorrectParameterError("There is no code review system associated with this VCS type")
+
+    def __init__(self, *args, **kwargs):
+        super(BaseVcs, self).__init__(*args, **kwargs)
         self.repo_status = u""
         self.sources_need_cleaning = False
 
@@ -54,7 +61,7 @@ class BaseVcs(Module):
     @make_block("Cleaning copied sources")
     def clean_sources(self):
         try:
-            shutil.rmtree(self.project_root)
+            shutil.rmtree(self.settings.project_root)
         except OSError as e:
             text = unicode(e) + "\nPossible reasons of this error:" + \
                    "\n * Sources were not copied due to runtime errors" + \

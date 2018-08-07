@@ -88,7 +88,7 @@ class TestEnvironment(object):
         else:
             self.settings = create_settings(submit.Submit)
             self.settings.Submit.commit_message = "Test CL"
-            self.settings.Vcs.project_root = unicode(self.root_directory)
+            self.settings.ProjectDirectory.project_root = unicode(self.root_directory)
         self.settings.Output.type = "term"
 
     def get_last_change(self):

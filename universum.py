@@ -6,12 +6,13 @@ import sys
 from _universum import artifact_collector, launcher, reporter, vcs
 from _universum import utils, __title__, __version__
 from _universum.entry_points import run_main_for_module, run_with_settings, setup_arg_parser
-from _universum.gravity import Module, Dependency
+from _universum.gravity import Dependency
+from _universum.project_directory import ProjectDirectory
 from _universum.output import needs_output
 
 
 @needs_output
-class Main(Module):
+class Main(ProjectDirectory):
     description = __title__
     vcs_factory = Dependency(vcs.Vcs)
     launcher_factory = Dependency(launcher.Launcher)
@@ -19,25 +20,25 @@ class Main(Module):
     reporter_factory = Dependency(reporter.Reporter)
 
     @staticmethod
-    def define_arguments(parser):
-        parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
+    def define_arguments(argument_parser):
+        argument_parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
 
-        parser.add_hidden_argument("--no-finalize", action="store_true", dest="no_finalize", is_hidden=True,
-                                   help="Skip 'Finalizing' step: "
-                                        "do not clear sources, do not revert workspace vcs, etc. "
-                                        "Is applied automatically when using existing VCS client")
+        argument_parser.add_hidden_argument("--no-finalize", action="store_true", dest="no_finalize", is_hidden=True,
+                                            help="Skip 'Finalizing' step: "
+                                                 "do not clear sources, do not revert workspace vcs, etc. "
+                                                 "Is applied automatically when using existing VCS client")
 
-        parser.add_hidden_argument("--finalize-only", action="store_true", dest="finalize_only", is_hidden=True,
-                                   help="Perform only 'Finalizing' step: clear sources, revert workspace vcs, etc. "
-                                        "Recommended to use after '--no-finalize' runs. "
-                                        "Please make sure to move artifacts from working directory "
-                                        "or pass different artifact folder")
+        argument_parser.add_hidden_argument("--finalize-only", action="store_true", dest="finalize_only", is_hidden=True,
+                                            help="Perform only 'Finalizing' step: "
+                                                 "clear sources, revert workspace vcs, etc. "
+                                                 "Recommended to use after '--no-finalize' runs. "
+                                                 "Please make sure to move artifacts from working directory "
+                                                 "or pass different artifact folder")
 
     def __init__(self, *args, **kwargs):
         super(Main, self).__init__(*args, **kwargs)
         self.vcs = self.vcs_factory()
-        self.project_root = self.vcs.project_root
-        self.launcher = self.launcher_factory(self.project_root)
+        self.launcher = self.launcher_factory()
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
 
@@ -54,11 +55,11 @@ class Main(Module):
         report_artifact_list = []
         for configuration in project_configs.all():
             if "artifacts" in configuration:
-                path = utils.parse_path(configuration["artifacts"], self.project_root)
+                path = utils.parse_path(configuration["artifacts"], self.settings.project_root)
                 clean = configuration.get("artifact_prebuild_clean", False)
                 artifact_list.append(dict(path=path, clean=clean))
             if "report_artifacts" in configuration:
-                path = utils.parse_path(configuration["report_artifacts"], self.project_root)
+                path = utils.parse_path(configuration["report_artifacts"], self.settings.project_root)
                 clean = configuration.get("artifact_prebuild_clean", False)
                 report_artifact_list.append(dict(path=path, clean=clean))
 

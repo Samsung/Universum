@@ -52,8 +52,8 @@ class Swarm(ReportObserver, Module):
     def check_required_option(self, name, env_var):
         utils.check_required_option(self.settings, name, env_var)
 
-    def __init__(self, user, password, **kwargs):
-        super(Swarm, self).__init__(**kwargs)
+    def __init__(self, user, password, *args, **kwargs):
+        super(Swarm, self).__init__(*args, **kwargs)
         self.user = user
         self.password = password
         self.review_version = None
