@@ -29,4 +29,4 @@ doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	pytest --pylint -m pylint
+	pylint --rcfile=pylintrc *.py _universum/ tests/
