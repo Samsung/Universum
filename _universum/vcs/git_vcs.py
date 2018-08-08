@@ -32,7 +32,7 @@ class GitVcs(BaseVcs):
     This class contains CI functions for interaction with Git
     """
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):
+    def define_arguments(argument_parser, hide_sync_options=False):  # pylint: disable=arguments-differ
         parser = argument_parser.get_or_create_group("Git", "Git repository settings")
 
         parser.add_argument("--git-repo", "-gr", dest="repo", metavar="GIT_REPO",

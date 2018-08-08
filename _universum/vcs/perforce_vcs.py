@@ -39,7 +39,7 @@ class PerforceVcs(BaseVcs):
 
     # TODO: split into several classes to remove hide_sync_options, which doesn't work anyway
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):
+    def define_arguments(argument_parser, hide_sync_options=False):  # pylint: disable=arguments-differ
         parser = argument_parser.get_or_create_group("Perforce",
                                                      "Please read the details about P4 environment variables "
                                                      "in official Helix manual")
