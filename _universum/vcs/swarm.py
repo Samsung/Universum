@@ -42,7 +42,7 @@ class Swarm(ReportObserver, Module):
                             help="Swarm server URL; is used for additional interaction such as voting for the review")
         parser.add_argument("--swarm-review-id", "-sre", dest="review_id", metavar="REVIEW",
                             help="Swarm review number; is sent by Swarm triggering link as '{review}'")
-        parser.add_argument("--swarm-change", "-sch", dest="change", metavar="SHELVE_CHANGELIST",
+        parser.add_argument("--swarm-change", "-sch", dest="change", metavar="SWARM_CHANGELIST",
                             help="Swarm change list to unshelve; is sent by Swarm triggering link as '{change}'")
         parser.add_argument("--swarm-pass-link", "-spl", dest="pass_link", metavar="PASS",
                             help="Swarm 'success' link; is sent by Swarm triggering link as '{pass}'")
@@ -60,11 +60,13 @@ class Swarm(ReportObserver, Module):
         self.client_root = ""
         self.mappings_dict = {}
 
-        if not self.settings.server_url:
-            raise IncorrectParameterError("Please set up '--swarm-server-url' for correct interaction with Swarm")
-
         self.check_required_option("review_id", "REVIEW")
-        self.check_required_option("change", "SHELVE_CHANGELIST")
+        self.check_required_option("server_url", "SWARM_SERVER")
+
+        if not self.settings.change:
+            self.settings.change = os.getenv("SHELVE_CHANGELIST")
+        if not self.settings.change:
+            raise IncorrectParameterError("Please pass Swarm {change} value to SWARM_CHANGELIST or '--swarm-change'")
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
