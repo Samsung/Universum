@@ -4,15 +4,14 @@
 import sys
 
 from _universum import artifact_collector, launcher, reporter, vcs
-from _universum import utils, __title__, __version__
+from _universum import __title__, __version__
 from _universum.entry_points import run_main_for_module, run_with_settings, setup_arg_parser
-from _universum.gravity import Dependency
-from _universum.project_directory import ProjectDirectory
+from _universum.gravity import Module, Dependency
 from _universum.output import needs_output
 
 
 @needs_output
-class Main(ProjectDirectory):
+class Main(Module):
     description = __title__
     vcs_factory = Dependency(vcs.Vcs)
     launcher_factory = Dependency(launcher.Launcher)
@@ -50,23 +49,7 @@ class Main(ProjectDirectory):
 
         self.vcs.prepare_repository()
         project_configs = self.launcher.process_project_configs()
-
-        artifact_list = []
-        report_artifact_list = []
-        for configuration in project_configs.all():
-            if "artifacts" in configuration:
-                path = utils.parse_path(configuration["artifacts"], self.settings.project_root)
-                clean = configuration.get("artifact_prebuild_clean", False)
-                artifact_list.append(dict(path=path, clean=clean))
-            if "report_artifacts" in configuration:
-                path = utils.parse_path(configuration["report_artifacts"], self.settings.project_root)
-                clean = configuration.get("artifact_prebuild_clean", False)
-                report_artifact_list.append(dict(path=path, clean=clean))
-
-        if artifact_list:
-            self.artifacts.set_and_clean_artifacts(artifact_list)
-        if report_artifact_list:
-            self.artifacts.set_and_clean_report_artifacts(report_artifact_list)
+        self.artifacts.set_and_clean_artifacts(project_configs)
 
         self.reporter.report_build_started()
         self.launcher.launch_project()

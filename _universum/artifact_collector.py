@@ -10,11 +10,13 @@ import glob2
 
 from .automation_server import AutomationServer
 from .ci_exception import CriticalCiException, CiException
-from .gravity import Module, Dependency
+from .gravity import Dependency
+from .project_directory import ProjectDirectory
 from .output import needs_output
 from .reporter import Reporter
 from .structure_handler import needs_structure
 from .utils import make_block
+from . import utils
 
 __all__ = [
     "ArtifactCollector"
@@ -23,7 +25,7 @@ __all__ = [
 
 @needs_output
 @needs_structure
-class ArtifactCollector(Module):
+class ArtifactCollector(ProjectDirectory):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServer)
 
@@ -39,7 +41,8 @@ class ArtifactCollector(Module):
                             help="By default all directories noted as artifacts are copied as .zip archives. "
                                  "This option turn archiving off to copy bare directories to artifact directory")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(ArtifactCollector, self).__init__(*args, **kwargs)
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
 
@@ -128,13 +131,28 @@ class ArtifactCollector(Module):
         new_artifact_list.sort(key=len, reverse=True)
         return new_artifact_list
 
-    @make_block("Setting and preprocessing artifacts according to configs")
-    def set_and_clean_artifacts(self, path_list):
-        self.artifact_list = self.preprocess_artifact_list(path_list)
+    @make_block("Preprocessing artifact lists")
+    def set_and_clean_artifacts(self, project_configs):
+        artifact_list = []
+        report_artifact_list = []
+        for configuration in project_configs.all():
+            if "artifacts" in configuration:
+                path = utils.parse_path(configuration["artifacts"], self.settings.project_root)
+                clean = configuration.get("artifact_prebuild_clean", False)
+                artifact_list.append(dict(path=path, clean=clean))
+            if "report_artifacts" in configuration:
+                path = utils.parse_path(configuration["report_artifacts"], self.settings.project_root)
+                clean = configuration.get("artifact_prebuild_clean", False)
+                report_artifact_list.append(dict(path=path, clean=clean))
 
-    @make_block("Setting and preprocessing artifacts to be mentioned in report")
-    def set_and_clean_report_artifacts(self, path_list):
-        self.report_artifact_list = self.preprocess_artifact_list(path_list)
+        if artifact_list:
+            name = "Setting and preprocessing artifacts according to configs"
+            self.artifact_list = self.structure.run_in_block(self.preprocess_artifact_list,
+                                                             name, True, artifact_list)
+        if report_artifact_list:
+            name = "Setting and preprocessing artifacts to be mentioned in report"
+            self.report_artifact_list = self.structure.run_in_block(self.preprocess_artifact_list,
+                                                                    name, True, report_artifact_list)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
