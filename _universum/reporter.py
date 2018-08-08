@@ -64,7 +64,8 @@ class Reporter(Module):
         parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
                             help="Do not vote up/down review depending on result")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Reporter, self).__init__(*args, **kwargs)
         self.observers = []
         self.report_initialized = False
         self.blocks_to_report = []
