@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+
 import copy
 
 from . import configuration_support
@@ -61,7 +62,8 @@ def get_block_num_str(block):
 
 @needs_output
 class StructureHandler(Module):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(StructureHandler, self).__init__(*args, **kwargs)
         block_structure = Block("Universum")
         self.current_block = block_structure
         self.configs_current_number = 0

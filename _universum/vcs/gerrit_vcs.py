@@ -4,12 +4,12 @@ import json
 import urlparse
 import sh
 
-from . import utils
-from .ci_exception import CiException
 from .git_vcs import GitVcs
-from .gravity import Dependency
-from .module_arguments import IncorrectParameterError
-from .reporter import ReportObserver, Reporter
+from ..ci_exception import CiException
+from ..gravity import Dependency
+from ..module_arguments import IncorrectParameterError
+from ..reporter import ReportObserver, Reporter
+from .. import utils
 
 __all__ = [
     "GerritVcs"
@@ -26,27 +26,28 @@ class GerritVcs(ReportObserver, GitVcs):
     def define_arguments(argument_parser, hide_sync_options=False):
         pass
 
-    def __init__(self, project_root, report_to_review):
-        super(GerritVcs, self).__init__(project_root, False)
-        self.report_to_review = report_to_review
+    def initialize_code_review(self):
+        # Gerrit code review system is Gerrit itself
+        if not self.settings.refspec:
+            raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
+
+        if self.settings.checkout_id:
+            raise IncorrectParameterError("Please use --git-refspec instead of commit ID")
+
+        self.reporter = self.reporter_factory()
+        self.reporter.subscribe(self)
+
+    def __init__(self, *args, **kwargs):
+        super(GerritVcs, self).__init__(*args, **kwargs)
+        self.reporter = None
 
         if not self.settings.repo.startswith("ssh://"):
             raise IncorrectParameterError("Right now Gerrit builds are only available via SSH access")
-
-        if report_to_review and not self.settings.refspec:
-            raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
-
-        if report_to_review and self.settings.checkout_id:
-            raise IncorrectParameterError("Please use --git-refspec instead of commit ID")
 
         parsed_repo = urlparse.urlparse(self.settings.repo)
         self.hostname = parsed_repo.hostname
         self.ssh = sh.ssh.bake(parsed_repo.username+"@"+self.hostname, p=parsed_repo.port)
         self.commit_id = None
-
-        if self.report_to_review:
-            self.reporter = self.reporter_factory()
-            self.reporter.subscribe(self)
 
     def get_review_link(self):
         refspec = self.settings.refspec

@@ -328,7 +328,7 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
     parameters.assert_submit_success([unicode(tmp_dir) + "/"])
     assert parameters.file_present(unicode(tmp_file))
 
-    # Modify some files
+    # Modify some vcs
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
@@ -394,7 +394,7 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         file_path = tmp_dir.join(file_name)
         assert parameters.file_present(unicode(file_path))
 
-    # Modify some files
+    # Modify some vcs
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))

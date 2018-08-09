@@ -5,12 +5,12 @@ import urllib
 import urllib3
 import requests
 
-from .ci_exception import CiException
-from .gravity import Module, Dependency
-from .module_arguments import IncorrectParameterError
-from .reporter import ReportObserver, Reporter
-from .output import needs_output
-from . import utils
+from ..ci_exception import CiException
+from ..gravity import Module, Dependency
+from ..module_arguments import IncorrectParameterError
+from ..reporter import ReportObserver, Reporter
+from ..output import needs_output
+from .. import utils
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
 
@@ -42,7 +42,7 @@ class Swarm(ReportObserver, Module):
                             help="Swarm server URL; is used for additional interaction such as voting for the review")
         parser.add_argument("--swarm-review-id", "-sre", dest="review_id", metavar="REVIEW",
                             help="Swarm review number; is sent by Swarm triggering link as '{review}'")
-        parser.add_argument("--swarm-change", "-sch", dest="change", metavar="SHELVE_CHANGELIST",
+        parser.add_argument("--swarm-change", "-sch", dest="change", metavar="SWARM_CHANGELIST",
                             help="Swarm change list to unshelve; is sent by Swarm triggering link as '{change}'")
         parser.add_argument("--swarm-pass-link", "-spl", dest="pass_link", metavar="PASS",
                             help="Swarm 'success' link; is sent by Swarm triggering link as '{pass}'")
@@ -52,19 +52,24 @@ class Swarm(ReportObserver, Module):
     def check_required_option(self, name, env_var):
         utils.check_required_option(self.settings, name, env_var)
 
-    def __init__(self, user, password, **kwargs):
-        super(Swarm, self).__init__(**kwargs)
+    def __init__(self, user, password, *args, **kwargs):
+        super(Swarm, self).__init__(*args, **kwargs)
         self.user = user
         self.password = password
         self.review_version = None
         self.client_root = ""
         self.mappings_dict = {}
 
-        if not self.settings.server_url:
-            raise IncorrectParameterError("Please set up '--swarm-server-url' for correct interaction with Swarm")
-
         self.check_required_option("review_id", "REVIEW")
-        self.check_required_option("change", "SHELVE_CHANGELIST")
+        self.check_required_option("server_url", "SWARM_SERVER")
+
+        if not self.settings.change:
+            self.settings.change = os.getenv("SHELVE_CHANGELIST")
+        if not self.settings.change:
+            raise IncorrectParameterError("Please pass Swarm {change} value to SWARM_CHANGELIST or '--swarm-change'")
+
+        if " " in self.settings.change or "," in self.settings.change:
+            raise IncorrectParameterError("SWARM_CHANGELIST takes only one CL number")
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)

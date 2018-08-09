@@ -4,12 +4,13 @@ import glob
 import os
 import git
 
-from . import base_classes, utils
-from .ci_exception import CriticalCiException
-from .module_arguments import IncorrectParameterError
-from .output import needs_output
-from .structure_handler import needs_structure
-from .utils import make_block
+from .base_vcs import BaseVcs
+from ..ci_exception import CriticalCiException
+from ..module_arguments import IncorrectParameterError
+from ..output import needs_output
+from ..structure_handler import needs_structure
+from ..utils import make_block
+from .. import utils
 
 __all__ = [
     "GitVcs"
@@ -26,14 +27,13 @@ def catch_git_exception(ignore_if=None):
 
 @needs_output
 @needs_structure
-class GitVcs(base_classes.VcsBase):
+class GitVcs(BaseVcs):
     """
     This class contains CI functions for interaction with Git
     """
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):
-        parser = argument_parser.get_or_create_group("Git",
-                                                     "Git repository settings")
+    def define_arguments(argument_parser, hide_sync_options=False):  # pylint: disable=arguments-differ
+        parser = argument_parser.get_or_create_group("Git", "Git repository settings")
 
         parser.add_argument("--git-repo", "-gr", dest="repo", metavar="GIT_REPO",
                             help="See your project home page for exact repository identifier, passed to 'git clone'. "
@@ -57,12 +57,8 @@ class GitVcs(base_classes.VcsBase):
                                    help="List of commit IDs to be cherry-picked, separated by comma. "
                                         "'--git-cherry-pick-id' can be added to the command line several times")
 
-    def __init__(self, project_root, report_to_review):
-        super(GitVcs, self).__init__(project_root)
-
-        if report_to_review:
-            raise IncorrectParameterError("You requested posting report to code review, but selected git as VCS."
-                                          "Currently we only support gerrit as VCS for code review with git.")
+    def __init__(self, *args, **kwargs):
+        super(GitVcs, self).__init__(*args, **kwargs)
 
         class Progress(git.remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
@@ -91,10 +87,10 @@ class GitVcs(base_classes.VcsBase):
 
         self.out.log("Cloning '" + self.settings.repo + "'...")
         if history_depth:
-            self.repo = git.Repo.clone_from(self.settings.repo, self.project_root,
+            self.repo = git.Repo.clone_from(self.settings.repo, self.settings.project_root,
                                             depth=history_depth, no_single_branch=True, progress=self.logger)
         else:
-            self.repo = git.Repo.clone_from(self.settings.repo, self.project_root, progress=self.logger)
+            self.repo = git.Repo.clone_from(self.settings.repo, self.settings.project_root, progress=self.logger)
 
         self.sources_need_cleaning = True
         self.append_repo_status("Git repo: " + self.settings.repo + "\n\n")
@@ -137,8 +133,8 @@ class GitVcs(base_classes.VcsBase):
             R  old/path/file -> new/path/file
 
         And for '--edit-only' submit option we should filter the 'M' records
-        :param file_list: full list of files and directories to be reconciled
-        :return: list of corresponding modified files
+        :param file_list: full list of vcs and directories to be reconciled
+        :return: list of corresponding modified vcs
         """
         result = []
         all_changes = self.repo.git.status(porcelain=True).splitlines()
@@ -147,21 +143,21 @@ class GitVcs(base_classes.VcsBase):
         for file_record in all_changes:
             record_parameters = file_record.split(" ")
             if record_parameters[-2] == "M":
-                full_path = utils.parse_path(record_parameters[-1], self.project_root)
+                full_path = utils.parse_path(record_parameters[-1], self.settings.project_root)
                 modified_files.add(full_path)
 
         for file_path in file_list:
             all_matches = glob.glob(file_path)
-            relative_path = os.path.relpath(file_path, self.project_root)
+            relative_path = os.path.relpath(file_path, self.settings.project_root)
             if not all_matches:
                 self.out.log("Skipping '{}'...".format(relative_path))
                 continue
 
             for matching_path in all_matches:
-                relative_path = os.path.relpath(matching_path, self.project_root)
+                relative_path = os.path.relpath(matching_path, self.settings.project_root)
                 if os.path.isdir(matching_path):
-                    files_in_dir = [os.path.relpath(item, self.project_root) for item in modified_files
-                                    if item.startswith(file_path)]
+                    files_in_dir = [os.path.relpath(item, self.settings.project_root)
+                                    for item in modified_files if item.startswith(file_path)]
                     if not files_in_dir:
                         self.out.log("Skipping '{}'...".format(relative_path))
                     result.extend(files_in_dir)
@@ -174,11 +170,11 @@ class GitVcs(base_classes.VcsBase):
 
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
-            self.repo = git.Repo(self.project_root)
+            self.repo = git.Repo(self.settings.project_root)
         except git.exc.NoSuchPathError:
-            raise CriticalCiException("No such directory as '" + self.project_root + "'")
+            raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
         except git.exc.InvalidGitRepositoryError:
-            raise CriticalCiException("'" + self.project_root + "' does not contain a Git repository")
+            raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
         if not getattr(self.settings, "user") or not getattr(self.settings, "email"):
             raise CriticalCiException("Submitting changes to repository requires user name and email specified. "
@@ -187,8 +183,8 @@ class GitVcs(base_classes.VcsBase):
         configurator.set_value("user", "name", self.settings.user)
         configurator.set_value("user", "email", self.settings.email)
 
-        file_list = [utils.parse_path(item, self.project_root) for item in file_list]
-        relative_path_list = [os.path.relpath(item, self.project_root) for item in file_list]
+        file_list = [utils.parse_path(item, self.settings.project_root) for item in file_list]
+        relative_path_list = [os.path.relpath(item, self.settings.project_root) for item in file_list]
 
         if edit_only:
             self.repo.git.add(self.get_list_of_modified(file_list))

@@ -235,7 +235,7 @@ class P4Environment(utils.TestEnvironment):
         self.settings.PerforceVcs.project_depot_path = perforce_workspace.depot
         self.settings.PerforceVcs.client = perforce_workspace.client_name
 
-        self.settings.FileManager.vcs = "p4"
+        self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
         self.settings.PerforceVcs.password = perforce_workspace.p4.password

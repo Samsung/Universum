@@ -1,6 +1,16 @@
 Change log
 ==========
 
+0.14.5 (2018-08-09)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **swarm:** rename environment variable for Swarm CL ('SWARM_CHANGELIST')
+             old name is still supported though
+
+
 0.14.4 (2018-08-03)
 -------------------
 

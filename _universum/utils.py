@@ -9,7 +9,6 @@ from .ci_exception import CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
 
 __all__ = [
-    "Colors",
     "strip_path_start",
     "parse_path",
     "detect_environment",
@@ -25,16 +24,6 @@ __all__ = [
 
 # For proper unicode symbols processing
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
-
-
-class Colors(object):
-    red = "\033[1;31m"
-    dark_red = "\033[0;31m"
-    green = "\033[1;32m"
-    blue = "\033[1;34m"
-    dark_cyan = "\033[0;36m"
-    dark_yellow = "\033[0;33m"
-    reset = "\033[00m"
 
 
 def strip_path_start(line):

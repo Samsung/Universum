@@ -63,9 +63,6 @@ class Module(object):
         instance.main_settings = main_settings
         return instance
 
-    def __init__(self, *args, **kwargs):
-        pass
-
 
 def construct_component(name, main_settings, *args, **kwargs):
     if not getattr(main_settings, "name_to_module_map", None):
@@ -85,7 +82,8 @@ def construct_component(name, main_settings, *args, **kwargs):
 
 
 class Dependency(object):
-    def __init__(self, name):
+    def __init__(self, name, *args, **kwargs):
+        super(Dependency, self).__init__(*args, **kwargs)
         self.name = get_string_name(name)
 
     def __get__(self, instance, owner):

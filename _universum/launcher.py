@@ -8,8 +8,9 @@ import sh
 
 from . import configuration_support, utils, artifact_collector, automation_server, reporter
 from .ci_exception import CiException, CriticalCiException, StepException
-from .gravity import Module, Dependency
+from .gravity import Dependency
 from .module_arguments import IncorrectParameterError
+from .project_directory import ProjectDirectory
 from .output import needs_output
 from .structure_handler import needs_structure
 from .utils import make_block
@@ -201,7 +202,7 @@ class LogWriterCodeReport(LogWriter):
 
 @needs_output
 @needs_structure
-class Launcher(Module):
+class Launcher(ProjectDirectory):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(reporter.Reporter)
     server_factory = Dependency(automation_server.AutomationServer)
@@ -212,7 +213,7 @@ class Launcher(Module):
                                                      "External command launching and reporting parameters")
 
         parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
-                            help="Define whether to print build logs to console or store to files. "
+                            help="Define whether to print build logs to console or store to vcs. "
                                  "Log file names are generated based on the names of build steps. "
                                  "Possible values: 'console', 'file'. By default, logs are printed to console "
                                  "when the build is launched on TeamCity agent")
@@ -220,8 +221,8 @@ class Launcher(Module):
         parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
 
-    def __init__(self, project_root):
-        self.project_root = project_root
+    def __init__(self, *args, **kwargs):
+        super(Launcher, self).__init__(*args, **kwargs)
         self.background_processes = []
         self.source_project_configs = None
         self.project_configs = None
@@ -243,8 +244,8 @@ class Launcher(Module):
     @make_block("Processing project configs")
     def process_project_configs(self):
 
-        config_path = utils.parse_path(self.settings.config_path, self.project_root)
-        configuration_support.set_project_root(self.project_root)
+        config_path = utils.parse_path(self.settings.config_path, self.settings.project_root)
+        configuration_support.set_project_root(self.settings.project_root)
         config_globals = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.append(os.path.join(os.path.dirname(config_path)))
@@ -316,7 +317,7 @@ class Launcher(Module):
         try:
             command_path = utils.strip_path_start(item["command"][0])
             working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
-                                                 self.project_root)
+                                                 self.settings.project_root)
             self.run_cmd(command_path,
                          item.get("name", ''),
                          working_directory,

@@ -6,13 +6,16 @@ import warnings
 import sh
 from P4 import P4, P4Exception
 
-from . import artifact_collector, base_classes, swarm, utils
-from .ci_exception import CriticalCiException, SilentAbortException
-from .gravity import Dependency
-from .module_arguments import IncorrectParameterError
-from .output import needs_output
-from .structure_handler import needs_structure
-from .utils import make_block, Uninterruptible
+from .base_vcs import BaseVcs
+from .swarm import Swarm
+from ..artifact_collector import ArtifactCollector
+from ..ci_exception import CriticalCiException, SilentAbortException
+from ..gravity import Dependency
+from ..module_arguments import IncorrectParameterError
+from ..output import needs_output
+from ..structure_handler import needs_structure
+from ..utils import make_block, Uninterruptible
+from .. import utils
 
 __all__ = [
     "PerforceVcs",
@@ -26,17 +29,17 @@ def catch_p4exception(ignore_if=None):
 
 @needs_output
 @needs_structure
-class PerforceVcs(base_classes.VcsBase):
+class PerforceVcs(BaseVcs):
     """
     This class contains CI functions for interaction with Perforce
     """
 
-    swarm_factory = Dependency(swarm.Swarm)
-    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
+    swarm_factory = Dependency(Swarm)
+    artifacts_factory = Dependency(ArtifactCollector)
 
     # TODO: split into several classes to remove hide_sync_options, which doesn't work anyway
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):
+    def define_arguments(argument_parser, hide_sync_options=False):  # pylint: disable=arguments-differ
         parser = argument_parser.get_or_create_group("Perforce",
                                                      "Please read the details about P4 environment variables "
                                                      "in official Helix manual")
@@ -80,19 +83,20 @@ class PerforceVcs(base_classes.VcsBase):
                                         "Use '--p4-force-clean' option to make a disposable client")
         parser.add_hidden_argument("--p4-force-clean", action="store_true", dest="force_clean",
                                    is_hidden=hide_sync_options,
-                                   help="**Revert all files within '--p4-client' and delete the workspace.** "
+                                   help="**Revert all vcs within '--p4-client' and delete the workspace.** "
                                         "Mandatory for CI environment, otherwise use with caution")
 
     def check_required_option(self, name, env_var):
         utils.check_required_option(self.settings, name, env_var)
 
-    def __init__(self, project_root, report_to_review):
-        super(PerforceVcs, self).__init__(project_root)
+    def initialize_code_review(self):
+        self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
 
-        self.report_to_review = report_to_review
+    def __init__(self, *args, **kwargs):
+        super(PerforceVcs, self).__init__(*args, **kwargs)
+
         self.artifacts = None
         self.swarm = None
-
         self.p4 = P4()
 
         self.check_required_option("port", "P4PORT")
@@ -100,7 +104,7 @@ class PerforceVcs(base_classes.VcsBase):
         self.check_required_option("password", "P4PASSWD")
 
         self.client_name = self.settings.client
-        self.client_root = self.project_root
+        self.client_root = self.settings.project_root
         self.sync_cls = []
         self.shelve_cls = []
         self.depots = []
@@ -117,9 +121,6 @@ class PerforceVcs(base_classes.VcsBase):
             self.mappings = self.settings.mappings
 
         self.mappings = utils.unify_argument_list(self.mappings)
-
-        if self.report_to_review:
-            self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
 
     @make_block("Connecting")
     @catch_p4exception()
@@ -182,7 +183,7 @@ class PerforceVcs(base_classes.VcsBase):
         try: # Make sure default CL is empty.
             change = self.p4.fetch_change()
             if "Files" in change:
-                self.out.log("Default change list contains some files, though reconcile was not called yet."
+                self.out.log("Default change list contains some vcs, though reconcile was not called yet."
                              "Skipping Submit.")
                 return 0
         except P4Exception:
@@ -330,13 +331,13 @@ class PerforceVcs(base_classes.VcsBase):
                     raise CriticalCiException(unicode(e))
 
             self.append_repo_status("    " + line + "\n")
-            self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
+            self.out.log("Downloaded {} vcs.".format(result[0]["totalFileCount"]))
 
     def p4unshelve(self, *args, **kwargs):
         try:
             result = self.p4.run_unshelve(*args, **kwargs)
         except P4Exception as e:
-            if "already committed" in unicode(e) and self.report_to_review and len(self.shelve_cls) == 1:
+            if "already committed" in unicode(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
@@ -421,7 +422,7 @@ class PerforceVcs(base_classes.VcsBase):
         self.sync()
         self.unshelve()
         self.diff()
-        if self.report_to_review:
+        if self.swarm:
             self.swarm.client_root = self.client_root
             self.swarm.mappings_dict = self.mappings_dict
 
