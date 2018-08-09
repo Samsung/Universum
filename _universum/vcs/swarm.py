@@ -68,6 +68,9 @@ class Swarm(ReportObserver, Module):
         if not self.settings.change:
             raise IncorrectParameterError("Please pass Swarm {change} value to SWARM_CHANGELIST or '--swarm-change'")
 
+        if " " in self.settings.change or "," in self.settings.change:
+            raise IncorrectParameterError("SWARM_CHANGELIST takes only one CL number")
+
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
 
