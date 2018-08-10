@@ -57,6 +57,7 @@ class Swarm(ReportObserver, Module):
         self.user = user
         self.password = password
         self.review_version = None
+        self.review_latest_version = None
         self.client_root = ""
         self.mappings_dict = {}
 
@@ -77,25 +78,38 @@ class Swarm(ReportObserver, Module):
     def get_review_link(self):
         return self.settings.server_url + "/reviews/" + self.settings.review_id + "/"
 
-    def check_review_version(self):
+    def update_review_version(self):
         if self.review_version:
             return
 
         result = requests.get(self.settings.server_url + "/api/v2/reviews/" + unicode(self.settings.review_id),
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
+        try:
+            versions = result.json()["review"]["versions"]
+        except (KeyError, ValueError):
+            text = "Error parsing Swarm server response. Full response is the following:\n"
+            text += result.text
+            raise CiException(text)
 
-        for index, entry in enumerate(result.json()["review"]["versions"]):
+        self.review_latest_version = unicode(len(versions))
+
+        for index, entry in enumerate(versions):
             if int(entry["change"]) == int(self.settings.change):
                 self.review_version = unicode(index + 1)
                 return
 
-        version_number = len(result.json()["review"]["versions"])
         try:
-            last_cl = int(result.json()["review"]["versions"][version_number - 1]["archiveChange"])
+            last_cl = int(versions[int(self.review_latest_version) - 1]["archiveChange"])
             if last_cl == int(self.settings.change):
-                self.review_version = unicode(version_number)
+                self.review_version = self.review_latest_version
         except KeyError:
             pass
+
+    def is_latest_version(self):
+        self.update_review_version()
+        if self.review_latest_version == self.review_version:
+            return True
+        return False
 
     def post_comment(self, text, filename=None, line=None, version=None):
         request = {"body": text,
@@ -125,7 +139,7 @@ class Swarm(ReportObserver, Module):
         check_request_result(result)
 
     def report_start(self, report_text):
-        self.check_review_version()
+        self.update_review_version()
         if self.review_version:
             report_text += "\nStarted build for review revision #" + self.review_version
         self.post_comment(report_text)
@@ -164,7 +178,7 @@ class Swarm(ReportObserver, Module):
 
         # Voting up or down; posting comments if any
         # An addition to "Automated Tests" functionality, requires login to Swarm
-        self.check_review_version()
+        self.update_review_version()
         if not no_vote:
             self.vote_review(result, version=self.review_version)
         if report_text:

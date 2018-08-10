@@ -7,6 +7,7 @@ from _universum import artifact_collector, launcher, reporter, vcs
 from _universum import __title__, __version__
 from _universum.entry_points import run_main_for_module, run_with_settings, setup_arg_parser
 from _universum.gravity import Module, Dependency
+from _universum.ci_exception import SilentAbortException
 from _universum.output import needs_output
 
 
@@ -34,6 +35,9 @@ class Main(Module):
                                                  "Please make sure to move artifacts from working directory "
                                                  "or pass different artifact folder")
 
+        argument_parser.add_argument("--build-only-latest", action="store_true", dest="build_only_latest",
+                                     help="Skip build if review version isn't latest")
+
     def __init__(self, *args, **kwargs):
         super(Main, self).__init__(*args, **kwargs)
         self.vcs = self.vcs_factory()
@@ -47,6 +51,10 @@ class Main(Module):
             self.out.log("Execution skipped because of '--finalize-only' option")
             return
 
+        if self.settings.build_only_latest:
+            if not self.vcs.is_latest_review_version():
+                self.out.report_build_status("Build skipped because review revision is not latest")
+                raise SilentAbortException(application_exit_code=0)
         self.vcs.prepare_repository()
         project_configs = self.launcher.process_project_configs()
         self.artifacts.set_and_clean_artifacts(project_configs)

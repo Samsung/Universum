@@ -53,7 +53,12 @@ class Vcs(ProjectDirectory):
             self.driver = self.perforce_driver_factory()
 
         if self.settings.report_to_review:
-            self.driver.initialize_code_review()
+            self.code_review = self.driver.code_review()
+
+    def is_latest_review_version(self):
+        if self.settings.report_to_review:
+            return self.code_review.is_latest_version()
+        return True
 
     @make_block("Preparing repository")
     def prepare_repository(self):
