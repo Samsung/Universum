@@ -51,11 +51,13 @@ class Main(Module):
             self.out.log("Execution skipped because of '--finalize-only' option")
             return
 
+        self.reporter.report_review_link()
         if self.settings.build_only_latest:
             if not self.vcs.is_latest_review_version():
                 self.out.log("Build skipped because review revision is not latest")
                 self.out.report_build_status("Skipped - review revision is not latest")
                 raise SilentAbortException(application_exit_code=0)
+
         self.vcs.prepare_repository()
         project_configs = self.launcher.process_project_configs()
         self.artifacts.set_and_clean_artifacts(project_configs)
