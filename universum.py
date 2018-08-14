@@ -53,7 +53,8 @@ class Main(Module):
 
         if self.settings.build_only_latest:
             if not self.vcs.is_latest_review_version():
-                self.out.report_build_status("Build skipped because review revision is not latest")
+                self.out.log("Build skipped because review revision is not latest")
+                self.out.report_build_status("Skipped - review revision is not latest")
                 raise SilentAbortException(application_exit_code=0)
         self.vcs.prepare_repository()
         project_configs = self.launcher.process_project_configs()

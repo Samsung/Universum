@@ -107,8 +107,15 @@ class Swarm(ReportObserver, Module):
 
     def is_latest_version(self):
         self.update_review_version()
+
         if self.review_latest_version == self.review_version:
             return True
+
+        self.out.log("Current review is " + self.get_review_link())
+        text = "Current review version is " + self.review_version + \
+               ", while latest review version is already " + self.review_latest_version
+        self.out.log(text)
+
         return False
 
     def post_comment(self, text, filename=None, line=None, version=None):
