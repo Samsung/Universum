@@ -1,8 +1,15 @@
 Change log
 ==========
 
-0.14.6 (2018-08-??)
+0.14.6 (2018-08-15)
 -------------------
+
+New features
+~~~~~~~~~~~~
+
+* **review:** add '--build-only-latest' option for skipping
+  review builds of not latest review revisions
+* add hidden '--clean-build' option for repeated debugging
 
 
 0.14.5 (2018-08-09)
@@ -12,7 +19,7 @@ New features
 ~~~~~~~~~~~~
 
 * **swarm:** rename environment variable for Swarm CL ('SWARM_CHANGELIST')
-             old name is still supported though
+  old name is still supported though
 
 
 0.14.4 (2018-08-03)
@@ -101,7 +108,7 @@ BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
 * **p4:** remove ``allwrite`` option in p4 client;
-          please set '+w' modifier for files in VCS to be edited
+  please set '+w' modifier for files in VCS to be edited
 * **configs:** :ref:`if_env_set <filtering>` variables should now be splat with ``&&`` only
 
 New features
@@ -119,7 +126,7 @@ Bug fixes
 * **p4:** fix unhandled 'no file(s) to reconcile' P4Exception
 * **out:** fix bug with decoding non-ascii strings
 * **docs:** documentation fixed and updated; please pay special attention to
-            :ref:`prebuild artifact cleaning <clean_artifacts>` `Variations` key
+  :ref:`prebuild artifact cleaning <clean_artifacts>` `Variations` key
 
 
 0.13.4 (2018-04-13)
