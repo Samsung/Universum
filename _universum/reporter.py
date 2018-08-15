@@ -77,15 +77,16 @@ class Reporter(Module):
     def subscribe(self, observer):
         self.observers.append(observer)
 
+    def report_review_link(self):
+        for observer in self.observers:
+            self.out.log("Review can be found here: " + observer.get_review_link())
+
     @make_block("Reporting build start", pass_errors=False)
     def report_build_started(self):
         self.report_initialized = True
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
             return
-
-        for observer in self.observers:
-            self.out.log("Review can be found here: " + observer.get_review_link())
 
         if not self.settings.report_start:
             self.out.log("Reporting skipped. To report build start, use '--report-build-start' option")

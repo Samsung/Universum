@@ -89,8 +89,9 @@ class PerforceVcs(BaseVcs):
     def check_required_option(self, name, env_var):
         utils.check_required_option(self.settings, name, env_var)
 
-    def initialize_code_review(self):
+    def code_review(self):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
+        return self.swarm
 
     def __init__(self, *args, **kwargs):
         super(PerforceVcs, self).__init__(*args, **kwargs)
@@ -331,7 +332,7 @@ class PerforceVcs(BaseVcs):
                     raise CriticalCiException(unicode(e))
 
             self.append_repo_status("    " + line + "\n")
-            self.out.log("Downloaded {} vcs.".format(result[0]["totalFileCount"]))
+            self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
 
     def p4unshelve(self, *args, **kwargs):
         try:

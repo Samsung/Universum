@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+import os
+import shutil
 import sh
 
 from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs
@@ -53,7 +55,12 @@ class Vcs(ProjectDirectory):
             self.driver = self.perforce_driver_factory()
 
         if self.settings.report_to_review:
-            self.driver.initialize_code_review()
+            self.code_review = self.driver.code_review()
+
+    def is_latest_review_version(self):
+        if self.settings.report_to_review:
+            return self.code_review.is_latest_version()
+        return True
 
     @make_block("Preparing repository")
     def prepare_repository(self):
@@ -71,3 +78,10 @@ class Vcs(ProjectDirectory):
     @make_block("Finalizing")
     def finalize(self):
         self.driver.finalize()
+
+    def clean_sources_silently(self):
+        try:
+            shutil.rmtree(self.settings.project_root)
+        except OSError:
+            pass
+        os.makedirs(self.settings.project_root)

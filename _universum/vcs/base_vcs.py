@@ -21,7 +21,7 @@ class BaseVcs(ProjectDirectory):
     def define_arguments(argument_parser):
         pass
 
-    def initialize_code_review(self):  # pylint: disable=no-self-use
+    def code_review(self):  # pylint: disable=no-self-use
         raise IncorrectParameterError("There is no code review system associated with this VCS type")
 
     def __init__(self, *args, **kwargs):

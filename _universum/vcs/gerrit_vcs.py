@@ -26,7 +26,7 @@ class GerritVcs(ReportObserver, GitVcs):
     def define_arguments(argument_parser, hide_sync_options=False):
         pass
 
-    def initialize_code_review(self):
+    def code_review(self):
         # Gerrit code review system is Gerrit itself
         if not self.settings.refspec:
             raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
@@ -36,6 +36,7 @@ class GerritVcs(ReportObserver, GitVcs):
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
+        return self
 
     def __init__(self, *args, **kwargs):
         super(GerritVcs, self).__init__(*args, **kwargs)
@@ -48,13 +49,56 @@ class GerritVcs(ReportObserver, GitVcs):
         self.hostname = parsed_repo.hostname
         self.ssh = sh.ssh.bake(parsed_repo.username+"@"+self.hostname, p=parsed_repo.port)
         self.commit_id = None
+        self.review = None
+        self.review_version = None
 
-    def get_review_link(self):
+    def update_review_version(self):
         refspec = self.settings.refspec
         if refspec.startswith("refs/"):
             refspec = refspec[5:]
-        change = refspec.split("/")[2]
-        return "https://" + self.hostname + "/#/c/" + change + "/"
+        if not self.review:
+            self.review = refspec.split("/")[2]
+        if not self.review_version:
+            self.review_version = refspec.split("/")[3]
+
+    def get_review_link(self):
+        self.update_review_version()
+        return "https://" + self.hostname + "/#/c/" + self.review + "/"
+
+    def run_ssh_command(self, line, stdin=None, stdout=None):
+        try:
+            self.ssh(line, _in=stdin, _out=stdout)
+        except sh.ErrorReturnCode as e:
+            text = "Got exit code " + unicode(e.exit_code) + \
+                   " while executing the following command:\n" + unicode(e.full_cmd)
+            if e.stderr:
+                text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
+            raise CiException(text)
+
+    def is_latest_version(self):
+        self.update_review_version()
+        request = "gerrit query --current-patch-set --format json " + self.review
+        response = self.run_ssh_command(request)
+
+        # response is expected to consist of two json objects: patch set description and query summary
+        # JSONDecoder.raw_decode() decodes first json object and ignores all that follows
+        try:
+            decoder = json.JSONDecoder()
+            result = decoder.raw_decode(response)
+            latest_version = int(result[0]["currentPatchSet"]["number"])
+        except (KeyError, ValueError):
+            text = "Error parsing gerrit server response. Full response is the following:\n"
+            text += response
+            raise CiException(text)
+
+        if int(self.review_version) == latest_version:
+            return True
+
+        text = "Current review version is " + self.review_version + \
+               ", while latest review version is already " + self.review_latest_version
+        self.out.log(text)
+
+        return False
 
     def submit_new_change(self, description, file_list, review=False, edit_only=False):
         change = self.git_commit_locally(description, file_list, edit_only=edit_only)
@@ -71,16 +115,6 @@ class GerritVcs(ReportObserver, GitVcs):
     def prepare_repository(self):
         super(GerritVcs, self).prepare_repository()
         self.commit_id = unicode(self.repo.head.commit)
-
-    def run_ssh_command(self, line, stdin=None):
-        try:
-            self.ssh(line, _in=stdin)
-        except sh.ErrorReturnCode as e:
-            text = "Got exit code " + unicode(e.exit_code) + \
-                   " while executing the following command:\n" + unicode(e.full_cmd)
-            if e.stderr:
-                text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
-            raise CiException(text)
 
     def code_report_to_review(self, report):
         # git show returns string, each file separated by \n,

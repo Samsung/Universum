@@ -201,3 +201,10 @@ class ArtifactCollector(ProjectDirectory):
         for path in self.artifact_list:
             name = "Collecting '" + os.path.basename(path) + "'"
             self.structure.run_in_block(self.move_artifact, name, False, path)
+
+    def clean_artifacts_silently(self):
+        try:
+            shutil.rmtree(self.artifact_dir)
+        except OSError:
+            pass
+        os.makedirs(self.artifact_dir)
