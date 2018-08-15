@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+import os
+import shutil
 import sh
 
 from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs
@@ -76,3 +78,10 @@ class Vcs(ProjectDirectory):
     @make_block("Finalizing")
     def finalize(self):
         self.driver.finalize()
+
+    def clean_sources_silently(self):
+        try:
+            shutil.rmtree(self.settings.project_root)
+        except OSError:
+            pass
+        os.makedirs(self.settings.project_root)

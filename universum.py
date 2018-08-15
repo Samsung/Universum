@@ -35,6 +35,10 @@ class Main(Module):
                                                  "Please make sure to move artifacts from working directory "
                                                  "or pass different artifact folder")
 
+        argument_parser.add_hidden_argument("--clean-build", action="store_true", dest="clean_build", is_hidden=True,
+                                            help="Clean artifact and build directory before build "
+                                                 "instead of raising exception. Not recommended for CI configurations!")
+
         argument_parser.add_argument("--build-only-latest", action="store_true", dest="build_only_latest",
                                      help="Skip build if review version isn't latest")
 
@@ -46,6 +50,10 @@ class Main(Module):
         self.reporter = self.reporter_factory()
 
     def execute(self):
+        if self.settings.clean_build:
+            self.vcs.clean_sources_silently()
+            self.artifacts.clean_artifacts_silently()
+
         if self.settings.finalize_only:
             self.vcs.driver.sources_need_cleaning = True
             self.out.log("Execution skipped because of '--finalize-only' option")
