@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from .jenkins_output import JenkinsOutput
-from .local_output import LocalOutput
+from .terminal_based_output import JenkinsOutput, LocalOutput
 from .teamcity_output import TeamcityOutput
 from ..gravity import Module, Dependency
 from .. import utils
