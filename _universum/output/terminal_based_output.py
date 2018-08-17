@@ -5,7 +5,9 @@ import sys
 from .base_output import BaseOutput
 
 __all__ = [
-    "LocalOutput"
+    "JenkinsOutput",
+    "LocalOutput",
+    "TerminalBasedOutput"
 ]
 
 
@@ -25,14 +27,20 @@ def stdout(*args, **kwargs):
         sys.stdout.write('\n')
 
 
-class LocalOutput(BaseOutput):
+class TerminalBasedOutput(BaseOutput):
+    line_start = None
+    block_start = None
+    block_end = None
+
     def __init__(self, *args, **kwargs):
-        super(LocalOutput, self).__init__(*args, **kwargs)
+        super(TerminalBasedOutput, self).__init__(*args, **kwargs)
+        if None in [self.line_start, self.block_start, self.block_end]:
+            raise NotImplementedError()
         self.block_level = 0
 
     def indent(self):
         for x in range(0, self.block_level):
-            stdout("  " * x, " |   ", no_enter=True)
+            stdout("  " * x, self.line_start, no_enter=True)
 
     def print_lines(self, *args):
         result = ''.join(args)
@@ -43,7 +51,7 @@ class LocalOutput(BaseOutput):
 
     def open_block(self, num_str, name):
         self.indent()
-        stdout(num_str, ' ', Colors.blue, name, Colors.reset)
+        stdout(self.block_start, num_str, ' ', Colors.blue, name, Colors.reset)
         self.block_level += 1
 
     def close_block(self, num_str, name, status):
@@ -51,9 +59,9 @@ class LocalOutput(BaseOutput):
         self.indent()
 
         if status == "Failed":
-            stdout(self.block_level * "  ", u" \u2514 ", Colors.red, "[Failed]", Colors.reset)
+            stdout(self.block_level * "  ", self.block_end, Colors.red, "[Failed]", Colors.reset)
         else:
-            stdout(self.block_level * "  ", u" \u2514 ", Colors.green, "[Success]", Colors.reset)
+            stdout(self.block_level * "  ", self.block_end, Colors.green, "[Success]", Colors.reset)
         self.indent()
         stdout()
 
@@ -80,3 +88,15 @@ class LocalOutput(BaseOutput):
 
     def log_shell_output(self, line):
         self.print_lines(line)
+
+
+class JenkinsOutput(TerminalBasedOutput):
+    line_start = u" "
+    block_start = u"+++"
+    block_end = u"+++"
+
+
+class LocalOutput(TerminalBasedOutput):
+    line_start = u" |   "
+    block_start = u""
+    block_end = u" \u2514 "

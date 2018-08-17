@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.14.7 (2018-08-17)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **out:** add Jenkins plug-in specific labels for log collapsing
+
+
 0.14.6 (2018-08-15)
 -------------------
 
