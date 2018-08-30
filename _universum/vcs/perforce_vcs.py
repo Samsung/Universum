@@ -153,8 +153,13 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
                 reconcile_result = self.p4reconcile(file_path)
 
             for line in reconcile_result:
-                if line["action"] == "add":
-                    self.p4.run_reopen("-t", "+w", line["depotFile"])
+                # p4reconcile returns list of dicts AND strings if file is opened in another workspace
+                # so we catch TypeError if line is not dict
+                try:
+                    if line["action"] == "add":
+                        self.p4.run_reopen("-t", "+w", line["depotFile"])
+                except TypeError:
+                    self.out.log(line)
 
         current_cl = self.p4.fetch_change()
         current_cl['Description'] = description
