@@ -1,8 +1,19 @@
 Change log
 ==========
 
-0.14.8 (2018-09-??)
+0.15.0 (2018-09-04)
 -------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **swarm:** stop legacy support of 'SHELVE_CHANGELIST' environment variable
+  for Swarm CL number
+
+Bug fixes
+~~~~~~~~~
+
+* **jenkins:** fix Jenkins relative artifact paths/links
 
 
 0.14.7 (2018-08-17)
