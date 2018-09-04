@@ -6,28 +6,20 @@ import sh
 
 from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs
 from .. import artifact_collector, utils
-from ..gravity import Dependency
+from ..gravity import Dependency, Module
 from ..project_directory import ProjectDirectory
-from ..output import needs_output
 from ..structure_handler import needs_structure
 from ..utils import make_block
 
 __all__ = [
-    "Vcs"
+    "DownloadVcs",
+    "PollVcs",
+    "SubmitVcs"
 ]
 
 
-@needs_output
 @needs_structure
 class Vcs(ProjectDirectory):
-    local_driver_factory = Dependency(local_vcs.LocalVcs)
-    git_driver_factory = Dependency(git_vcs.GitVcs)
-    gerrit_driver_factory = Dependency(gerrit_vcs.GerritVcs)
-    perforce_driver_factory = Dependency(perforce_vcs.PerforceVcs)
-    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
-
-    # TODO: remove hide_sync_options and add_hidden_argument
-
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Source files")
@@ -38,21 +30,74 @@ class Vcs(ProjectDirectory):
                                  "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
                                  "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
+    def __init__(self, *args, **kwargs):
+        super(Vcs, self).__init__(*args, **kwargs)
+        try:
+            if self.settings.type == "none":
+                self.driver = self.local_driver_factory()
+            elif self.settings.type == "git":
+                self.driver = self.git_driver_factory()
+            elif self.settings.type == "gerrit":
+                self.driver = self.gerrit_driver_factory()
+            else:
+                self.driver = self.perforce_driver_factory()
+        except AttributeError:
+            raise NotImplementedError()
+
+    @make_block("Finalizing")
+    def finalize(self):
+        self.driver.finalize()
+
+
+def create_vcs(name=None):
+    if name == "DownloadVcs":
+        p4_driver_factory = perforce_vcs.PerforceDownloadVcs
+    elif name == "SubmitVcs":
+        p4_driver_factory = perforce_vcs.PerforceSubmitVcs
+    elif name == "PollVcs":
+        p4_driver_factory = perforce_vcs.PerforcePollVcs
+    else:
+        raise NotImplementedError()
+
+    class MixIn(Module):
+        local_driver_factory = Dependency(local_vcs.LocalVcs)
+        git_driver_factory = Dependency(git_vcs.GitVcs)
+        gerrit_driver_factory = Dependency(gerrit_vcs.GerritVcs)
+        perforce_driver_factory = Dependency(p4_driver_factory)
+
+        @staticmethod
+        def define_arguments(argument_parser):
+            pass  # TODO: refactor gravity to remove this
+
+    MixIn.__name__ = name + "Template"
+    return MixIn
+
+
+class PollVcs(Vcs, create_vcs("PollVcs")):
+    @staticmethod
+    def define_arguments(argument_parser):
+        pass # TODO: refactor gravity to remove this
+
+
+class SubmitVcs(Vcs, create_vcs("SubmitVcs")):
+    @staticmethod
+    def define_arguments(argument_parser):
+        pass  # TODO: refactor gravity to remove this
+
+
+class DownloadVcs(Vcs, create_vcs("DownloadVcs")):
+    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
+
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("Source files")
+
         parser.add_argument("--report-to-review", action="store_true", dest="report_to_review", default=False,
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
     def __init__(self, *args, **kwargs):
-        super(Vcs, self).__init__(*args, **kwargs)
-        self.artifacts = None
-
-        if self.settings.type == "none":
-            self.driver = self.local_driver_factory()
-        elif self.settings.type == "git":
-            self.driver = self.git_driver_factory()
-        elif self.settings.type == "gerrit":
-            self.driver = self.gerrit_driver_factory()
-        else:
-            self.driver = self.perforce_driver_factory()
+        super(DownloadVcs, self).__init__(*args, **kwargs)
+        self.artifacts = self.artifacts_factory()
 
         if self.settings.report_to_review:
             self.code_review = self.driver.code_review()
@@ -64,7 +109,6 @@ class Vcs(ProjectDirectory):
 
     @make_block("Preparing repository")
     def prepare_repository(self):
-        self.artifacts = self.artifacts_factory()
         status_file = self.artifacts.create_text_file("REPOSITORY_STATE.txt")
 
         self.driver.prepare_repository()
@@ -74,10 +118,6 @@ class Vcs(ProjectDirectory):
         status_file.write("\nFile list:\n\n")
         status_file.write(utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root)) + "\n")
         status_file.close()
-
-    @make_block("Finalizing")
-    def finalize(self):
-        self.driver.finalize()
 
     def clean_sources_silently(self):
         try:

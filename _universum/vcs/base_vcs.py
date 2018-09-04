@@ -21,9 +21,6 @@ class BaseVcs(ProjectDirectory):
     def define_arguments(argument_parser):
         pass
 
-    def code_review(self):  # pylint: disable=no-self-use
-        raise IncorrectParameterError("There is no code review system associated with this VCS type")
-
     def __init__(self, *args, **kwargs):
         super(BaseVcs, self).__init__(*args, **kwargs)
         self.repo_status = u""
@@ -34,29 +31,6 @@ class BaseVcs(ProjectDirectory):
 
     def get_repo_status(self):
         return self.repo_status
-
-    def get_changes(self, changes_reference=None, max_number='1'):
-        """
-        Get all (or last 'max_number' for a depot path) changes starting from reference state
-        :param changes_reference: Dictionary, where keys are depot paths and values are latest known changes
-        :param max_number: Maximum number of changes for every depot path to return
-        :return: Dictionary, where keys are depot paths and values are sets of changes
-        """
-        raise NotImplementedError
-
-    def submit_new_change(self, description, file_list, review=False, edit_only=False):
-        """
-        Create new change, add all reconciled vcs to index and submit to repository
-        :param description: Change description
-        :param file_list: List of full paths to vcs to be submitted
-        :param review: When set to True, create deletable review instead of submit
-        :param add_new: When set to True, add to submit vcs not yet present in repository
-        :return: Created change number
-        """
-        raise NotImplementedError
-
-    def prepare_repository(self):
-        raise NotImplementedError
 
     @make_block("Cleaning copied sources")
     def clean_sources(self):
@@ -72,3 +46,47 @@ class BaseVcs(ProjectDirectory):
     def finalize(self):
         if self.sources_need_cleaning:
             self.clean_sources()
+
+
+class BaseDownloadVcs(BaseVcs):
+    """
+    Base class for default CI build VCS drivers
+    """
+
+    def code_review(self):  # pylint: disable=no-self-use
+        raise IncorrectParameterError("There is no code review system associated with this VCS type")
+
+    def prepare_repository(self):
+        raise NotImplementedError
+
+
+class BaseSubmitVcs(BaseVcs):
+    """
+    Base class for submitter VCS drivers
+    """
+
+    def submit_new_change(self, description, file_list, review=False, edit_only=False):
+        """
+        Create new change, add all reconciled vcs to index and submit to repository
+        :param description: Change description
+        :param file_list: List of full paths to vcs to be submitted
+        :param review: When set to True, create deletable review instead of submit
+        :param add_new: When set to True, add to submit vcs not yet present in repository
+        :return: Created change number
+        """
+        raise NotImplementedError
+
+
+class BasePollVcs(BaseVcs):
+    """
+    Base class for poller VCS drivers
+    """
+
+    def get_changes(self, changes_reference=None, max_number='1'):
+        """
+        Get all (or last 'max_number' for a depot path) changes starting from reference state
+        :param changes_reference: Dictionary, where keys are depot paths and values are latest known changes
+        :param max_number: Maximum number of changes for every depot path to return
+        :return: Dictionary, where keys are depot paths and values are sets of changes
+        """
+        raise NotImplementedError

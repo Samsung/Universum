@@ -17,7 +17,7 @@ from _universum.utils import make_block
 @needs_structure
 class Poller(Module):
     description = "Polling module of Universum "
-    vcs_factory = Dependency(vcs.Vcs)
+    vcs_factory = Dependency(vcs.PollVcs)
     server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod

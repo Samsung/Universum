@@ -18,7 +18,7 @@ from _universum.utils import make_block
 @needs_structure
 class Submit(Module):
     description = "Submitting module of Universum "
-    vcs_factory = Dependency(vcs.Vcs)
+    vcs_factory = Dependency(vcs.SubmitVcs)
 
     @staticmethod
     def define_arguments(parser):

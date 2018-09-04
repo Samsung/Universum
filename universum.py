@@ -14,7 +14,7 @@ from _universum.output import needs_output
 @needs_output
 class Main(Module):
     description = __title__
-    vcs_factory = Dependency(vcs.Vcs)
+    vcs_factory = Dependency(vcs.DownloadVcs)
     launcher_factory = Dependency(launcher.Launcher)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(reporter.Reporter)
