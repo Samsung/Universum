@@ -29,11 +29,11 @@ def check_request_result(result):
 
 @needs_output
 class Swarm(ReportObserver, Module):
-    reporter_factory = Dependency(Reporter)
-
     """
     This class contains CI functions for interaction with Swarm via 'swarm_cli.py'
     """
+    reporter_factory = Dependency(Reporter)
+
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Swarm",
@@ -63,11 +63,7 @@ class Swarm(ReportObserver, Module):
 
         self.check_required_option("review_id", "REVIEW")
         self.check_required_option("server_url", "SWARM_SERVER")
-
-        if not self.settings.change:
-            self.settings.change = os.getenv("SHELVE_CHANGELIST")
-        if not self.settings.change:
-            raise IncorrectParameterError("Please pass Swarm {change} value to SWARM_CHANGELIST or '--swarm-change'")
+        self.check_required_option("change", "SWARM_CHANGELIST")
 
         if " " in self.settings.change or "," in self.settings.change:
             raise IncorrectParameterError("SWARM_CHANGELIST takes only one CL number")

@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+import os
 import urllib2
 
 from .base_server import BaseServer
@@ -49,5 +50,6 @@ class JenkinsServer(BaseServer):
 
     def artifact_path(self, local_artifacts_dir, item):
         self.check_required_option('build_url')
-        artifact_link = self.settings.build_url + "artifact/"
+        artifact_link = self.settings.build_url + "artifact/" + \
+                        os.path.relpath(local_artifacts_dir, os.getcwd()) + "/"
         return artifact_link + item
