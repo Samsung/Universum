@@ -126,11 +126,15 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         client = self.p4.fetch_client(self.settings.client)
         workspace_root = client['Root']
 
-        try: # Make sure default CL is empty.
+        # Make sure default CL is empty
+        try:
             change = self.p4.fetch_change()
             if "Files" in change:
-                self.out.log("Default change list contains some vcs, though reconcile was not called yet."
-                             "Skipping Submit.")
+                text = "Default CL already contains the following files before reconciling:\n"
+                for line in change["Files"]:
+                    text += " * " + line + "\n"
+                text += "Submitting skipped"
+                self.out.log(text)
                 return 0
         except P4Exception:
             pass
@@ -320,7 +324,7 @@ class PerforceDownloadVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     @make_block("Downloading")
     @catch_p4exception()
     def sync(self):
-        self.sources_need_cleaning = True
+        self.sources_need_cleaning = True        # pylint: disable=attribute-defined-outside-init
         self.append_repo_status("Sync CLs:\n")
 
         for idx, depot in enumerate(self.depots):

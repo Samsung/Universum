@@ -8,7 +8,9 @@ from ..project_directory import ProjectDirectory
 from ..utils import make_block
 
 __all__ = [
-    "BaseVcs"
+    "BaseDownloadVcs",
+    "BaseSubmitVcs",
+    "BasePollVcs"
 ]
 
 

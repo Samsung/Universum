@@ -93,8 +93,11 @@ class GitEnvironment(utils.TestEnvironment):
         self.settings.Vcs.type = "git"
         self.settings.GitVcs.repo = server.url
         self.settings.GitVcs.refspec = server.target_branch
-        self.settings.GitVcs.user = "Testing User"
-        self.settings.GitVcs.email = "some@email.com"
+        try:
+            self.settings.GitSubmitVcs.user = "Testing User"
+            self.settings.GitSubmitVcs.email = "some@email.com"
+        except AttributeError:
+            pass
 
     def get_last_change(self):
         changes = self.repo.git.log("origin/" + self.server.target_branch, pretty="oneline", max_count=1)

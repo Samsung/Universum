@@ -13,7 +13,9 @@ from ..utils import make_block
 from .. import utils
 
 __all__ = [
-    "GitVcs"
+    "GitDownloadVcs",
+    "GitSubmitVcs",
+    "GitPollVcs"
 ]
 
 
@@ -32,7 +34,7 @@ class GitVcs(BaseVcs):
     This class contains CI functions for interaction with Git
     """
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):  # pylint: disable=arguments-differ
+    def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git", "Git repository settings")
 
         parser.add_argument("--git-repo", "-gr", dest="repo", metavar="GIT_REPO",
@@ -40,22 +42,6 @@ class GitVcs(BaseVcs):
                                  "If using SSH, '--git-repo' format is 'ssh://user@server:port/detailed/path'")
         parser.add_argument("--git-refspec", "-grs", dest="refspec", metavar="GIT_REFSPEC",
                             help="Any additional refspec to be fetched")
-
-        parser.add_argument("--git-user", "-gu", dest="user", metavar="GITUSER",
-                            help="Git user name; right now is only used for submitting")
-        parser.add_argument("--git-email", "-ge", dest="email", metavar="GITEMAIL",
-                            help="Git user email; right now is only used for submitting")
-
-        parser.add_hidden_argument("--git-checkout-id", "-gco", dest="checkout_id",
-                                   is_hidden=hide_sync_options, metavar="GIT_CHECKOUT_ID",
-                                   help="A commit ID to checkout. "
-                                        "Could be exact commit hash, or branch name, or tag, etc.")
-
-        parser.add_hidden_argument("--git-cherry-pick-id", "-gcp", action="append", nargs='+',
-                                   metavar="GIT_CHERRYPICK_ID", dest="cherrypick_id",
-                                   is_hidden=hide_sync_options,
-                                   help="List of commit IDs to be cherry-picked, separated by comma. "
-                                        "'--git-cherry-pick-id' can be added to the command line several times")
 
     def __init__(self, *args, **kwargs):
         super(GitVcs, self).__init__(*args, **kwargs)
@@ -100,28 +86,65 @@ class GitVcs(BaseVcs):
             self.repo.remotes.origin.fetch(refspec=self.settings.refspec, progress=self.logger)
             self.append_repo_status("Fetched refspec: " + self.settings.refspec + "\n")
 
-    def get_changes(self, changes_reference=None, max_number='1'):
+
+@needs_output
+@needs_structure
+class GitDownloadVcs(GitVcs):
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("Git")
+
+        parser.add_argument("--git-checkout-id", "-gco", dest="checkout_id", metavar="GIT_CHECKOUT_ID",
+                            help="A commit ID to checkout. "
+                                 "Could be exact commit hash, or branch name, or tag, etc.")
+
+        parser.add_argument("--git-cherry-pick-id", "-gcp", action="append", nargs='+',
+                            metavar="GIT_CHERRYPICK_ID", dest="cherrypick_id",
+                            help="List of commit IDs to be cherry-picked, separated by comma. "
+                                 "'--git-cherry-pick-id' can be added to the command line several times")
+
+    @make_block("Checking out")
+    @catch_git_exception()
+    def check_out(self):
+        if self.settings.checkout_id:
+            checkout_id = self.settings.checkout_id
+        elif self.settings.refspec:
+            checkout_id = "FETCH_HEAD"
+        else:
+            checkout_id = "HEAD"
+        self.out.log("Checking out '" + checkout_id + "'...")
+        self.repo.git.checkout(checkout_id)
+        self.append_repo_status("Checked out: " + checkout_id + "\n")
+
+    @make_block("Cherry-picking")
+    @catch_git_exception()
+    def cherry_pick(self):
+        cherrypick_id_list = sorted(list(set(utils.unify_argument_list(self.settings.cherrypick_id))))
+        self.append_repo_status("Cherry-picked commits:")
+        for commit in cherrypick_id_list:
+            self.out.log("Cherry-picking '" + commit + "'...")
+            self.repo.git.cherry_pick(commit, "--no-commit")
+            self.append_repo_status(" " + commit)
+        self.append_repo_status("\n")
+
+    @catch_git_exception()
+    def prepare_repository(self):
         self.clone_and_fetch()
-        if not changes_reference:
-            changes_reference = {}
-        result = {}
+        self.check_out()
+        if self.settings.cherrypick_id:
+            self.cherry_pick()
 
-        branch_name = self.refspec
-        result[branch_name] = []
 
-        last_change = self.repo.git.log("origin/" + branch_name, pretty="oneline", max_count=1).split(" ")[0]
-        reference_change = changes_reference.get(branch_name, last_change)
+@needs_output
+class GitSubmitVcs(GitVcs):
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("Git")
 
-        # Ranges like "commit^.." do not work for single-commit branches, so reference change is processed manually
-        result[branch_name].append(reference_change)
-        submitted_changes = self.repo.git.log("--first-parent", "origin/" + branch_name, reference_change + "..",
-                                              pretty="oneline", max_count=max_number).splitlines()
-
-        submitted_changes.reverse()
-        for change in submitted_changes:
-            result[branch_name].append(change.split(" ")[0])
-
-        return result
+        parser.add_argument("--git-user", "-gu", dest="user", metavar="GITUSER",
+                            help="Git user name for submitting")
+        parser.add_argument("--git-email", "-ge", dest="email", metavar="GITEMAIL",
+                            help="Git user email for submitting")
 
     def get_list_of_modified(self, file_list):
         """
@@ -212,33 +235,31 @@ class GitVcs(BaseVcs):
         self.repo.remotes.origin.push(progress=self.logger)
         return change
 
-    @make_block("Checking out")
-    @catch_git_exception()
-    def check_out(self):
-        if self.settings.checkout_id:
-            checkout_id = self.settings.checkout_id
-        elif self.settings.refspec:
-            checkout_id = "FETCH_HEAD"
-        else:
-            checkout_id = "HEAD"
-        self.out.log("Checking out '" + checkout_id + "'...")
-        self.repo.git.checkout(checkout_id)
-        self.append_repo_status("Checked out: " + checkout_id + "\n")
 
-    @make_block("Cherry-picking")
-    @catch_git_exception()
-    def cherry_pick(self):
-        cherrypick_id_list = sorted(list(set(utils.unify_argument_list(self.settings.cherrypick_id))))
-        self.append_repo_status("Cherry-picked commits:")
-        for commit in cherrypick_id_list:
-            self.out.log("Cherry-picking '" + commit + "'...")
-            self.repo.git.cherry_pick(commit, "--no-commit")
-            self.append_repo_status(" " + commit)
-        self.append_repo_status("\n")
+class GitPollVcs(GitVcs):
+    @staticmethod
+    def define_arguments(argument_parser):
+        pass
 
-    @catch_git_exception()
-    def prepare_repository(self):
+    def get_changes(self, changes_reference=None, max_number='1'):
         self.clone_and_fetch()
-        self.check_out()
-        if self.settings.cherrypick_id:
-            self.cherry_pick()
+        if not changes_reference:
+            changes_reference = {}
+        result = {}
+
+        branch_name = self.refspec
+        result[branch_name] = []
+
+        last_change = self.repo.git.log("origin/" + branch_name, pretty="oneline", max_count=1).split(" ")[0]
+        reference_change = changes_reference.get(branch_name, last_change)
+
+        # Ranges like "commit^.." do not work for single-commit branches, so reference change is processed manually
+        result[branch_name].append(reference_change)
+        submitted_changes = self.repo.git.log("--first-parent", "origin/" + branch_name, reference_change + "..",
+                                              pretty="oneline", max_count=max_number).splitlines()
+
+        submitted_changes.reverse()
+        for change in submitted_changes:
+            result[branch_name].append(change.split(" ")[0])
+
+        return result

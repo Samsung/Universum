@@ -4,7 +4,7 @@ import os
 import shutil
 import sh
 
-from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs
+from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector, utils
 from ..gravity import Dependency, Module
 from ..project_directory import ProjectDirectory
@@ -51,19 +51,28 @@ class Vcs(ProjectDirectory):
 
 def create_vcs(name=None):
     if name == "DownloadVcs":
-        p4_driver_factory = perforce_vcs.PerforceDownloadVcs
+        p4_driver_factory_class = perforce_vcs.PerforceDownloadVcs
+        git_driver_factory_class = git_vcs.GitDownloadVcs
+        gerrit_driver_factory_class = gerrit_vcs.GerritDownloadVcs
+        local_driver_factory_class = local_vcs.LocalDownloadVcs
     elif name == "SubmitVcs":
-        p4_driver_factory = perforce_vcs.PerforceSubmitVcs
+        p4_driver_factory_class = perforce_vcs.PerforceSubmitVcs
+        git_driver_factory_class = git_vcs.GitSubmitVcs
+        gerrit_driver_factory_class = gerrit_vcs.GerritSubmitVcs
+        local_driver_factory_class = base_vcs.BaseSubmitVcs
     elif name == "PollVcs":
-        p4_driver_factory = perforce_vcs.PerforcePollVcs
+        p4_driver_factory_class = perforce_vcs.PerforcePollVcs
+        git_driver_factory_class = git_vcs.GitPollVcs
+        gerrit_driver_factory_class = git_vcs.GitPollVcs
+        local_driver_factory_class = base_vcs.BasePollVcs
     else:
         raise NotImplementedError()
 
     class MixIn(Module):
-        local_driver_factory = Dependency(local_vcs.LocalVcs)
-        git_driver_factory = Dependency(git_vcs.GitVcs)
-        gerrit_driver_factory = Dependency(gerrit_vcs.GerritVcs)
-        perforce_driver_factory = Dependency(p4_driver_factory)
+        local_driver_factory = Dependency(local_driver_factory_class)
+        git_driver_factory = Dependency(git_driver_factory_class)
+        gerrit_driver_factory = Dependency(gerrit_driver_factory_class)
+        perforce_driver_factory = Dependency(p4_driver_factory_class)
 
         @staticmethod
         def define_arguments(argument_parser):

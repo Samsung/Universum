@@ -4,7 +4,7 @@ import json
 import urlparse
 import sh
 
-from .git_vcs import GitVcs
+from . import git_vcs
 from ..ci_exception import CiException
 from ..gravity import Dependency
 from ..module_arguments import IncorrectParameterError
@@ -12,31 +12,20 @@ from ..reporter import ReportObserver, Reporter
 from .. import utils
 
 __all__ = [
-    "GerritVcs"
+    "GerritDownloadVcs",
+    "GerritSubmitVcs"
 ]
 
 
-class GerritVcs(ReportObserver, GitVcs):
+class GerritVcs(git_vcs.GitVcs):
     """
     This class contains encapsulates Gerrit VCS functions
     """
     reporter_factory = Dependency(Reporter)
 
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):
+    def define_arguments(argument_parser):
         pass
-
-    def code_review(self):
-        # Gerrit code review system is Gerrit itself
-        if not self.settings.refspec:
-            raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
-
-        if self.settings.checkout_id:
-            raise IncorrectParameterError("Please use --git-refspec instead of commit ID")
-
-        self.reporter = self.reporter_factory()
-        self.reporter.subscribe(self)
-        return self
 
     def __init__(self, *args, **kwargs):
         super(GerritVcs, self).__init__(*args, **kwargs)
@@ -52,6 +41,34 @@ class GerritVcs(ReportObserver, GitVcs):
         self.review = None
         self.review_version = None
 
+    def run_ssh_command(self, line, stdin=None, stdout=None):
+        try:
+            self.ssh(line, _in=stdin, _out=stdout)
+        except sh.ErrorReturnCode as e:
+            text = "Got exit code " + unicode(e.exit_code) + \
+                   " while executing the following command:\n" + unicode(e.full_cmd)
+            if e.stderr:
+                text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
+            raise CiException(text)
+
+
+class GerritDownloadVcs(ReportObserver, GerritVcs, git_vcs.GitDownloadVcs):
+    @staticmethod
+    def define_arguments(argument_parser):
+        pass
+
+    def code_review(self):
+        # Gerrit code review system is Gerrit itself
+        if not self.settings.refspec:
+            raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
+
+        if self.settings.checkout_id:
+            raise IncorrectParameterError("Please use --git-refspec instead of commit ID")
+
+        self.reporter = self.reporter_factory()
+        self.reporter.subscribe(self)
+        return self
+
     def update_review_version(self):
         refspec = self.settings.refspec
         if refspec.startswith("refs/"):
@@ -64,16 +81,6 @@ class GerritVcs(ReportObserver, GitVcs):
     def get_review_link(self):
         self.update_review_version()
         return "https://" + self.hostname + "/#/c/" + self.review + "/"
-
-    def run_ssh_command(self, line, stdin=None, stdout=None):
-        try:
-            self.ssh(line, _in=stdin, _out=stdout)
-        except sh.ErrorReturnCode as e:
-            text = "Got exit code " + unicode(e.exit_code) + \
-                   " while executing the following command:\n" + unicode(e.full_cmd)
-            if e.stderr:
-                text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
-            raise CiException(text)
 
     def is_latest_version(self):
         self.update_review_version()
@@ -99,22 +106,6 @@ class GerritVcs(ReportObserver, GitVcs):
         self.out.log(text)
 
         return False
-
-    def submit_new_change(self, description, file_list, review=False, edit_only=False):
-        change = self.git_commit_locally(description, file_list, edit_only=edit_only)
-
-        self.repo.remotes.origin.push(progress=self.logger, refspec="HEAD:refs/for/" + self.refspec)
-
-        if not review:
-            text = "gerrit review --submit --code-review +2 --label Verified=1 --message 'This is an automatic vote' "
-            text += change
-            self.run_ssh_command(text)
-
-        return change
-
-    def prepare_repository(self):
-        super(GerritVcs, self).prepare_repository()
-        self.commit_id = unicode(self.repo.head.commit)
 
     def code_report_to_review(self, report):
         # git show returns string, each file separated by \n,
@@ -145,3 +136,25 @@ class GerritVcs(ReportObserver, GitVcs):
 
         text += self.commit_id
         self.run_ssh_command(text)
+
+    def prepare_repository(self):
+        super(GerritDownloadVcs, self).prepare_repository()
+        self.commit_id = unicode(self.repo.head.commit)
+
+
+class GerritSubmitVcs(GerritVcs, git_vcs.GitSubmitVcs):
+    @staticmethod
+    def define_arguments(argument_parser):
+        pass
+
+    def submit_new_change(self, description, file_list, review=False, edit_only=False):
+        change = self.git_commit_locally(description, file_list, edit_only=edit_only)
+
+        self.repo.remotes.origin.push(progress=self.logger, refspec="HEAD:refs/for/" + self.refspec)
+
+        if not review:
+            text = "gerrit review --submit --code-review +2 --label Verified=1 --message 'This is an automatic vote' "
+            text += change
+            self.run_ssh_command(text)
+
+        return change
