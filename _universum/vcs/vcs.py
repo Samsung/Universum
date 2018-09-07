@@ -6,7 +6,7 @@ import sh
 
 from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector, utils
-from ..gravity import Dependency, Module
+from ..gravity import Dependency
 from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
 from ..utils import make_block
@@ -18,57 +18,25 @@ __all__ = [
 ]
 
 
-@needs_structure
-class Vcs(ProjectDirectory):
-    @staticmethod
-    def define_arguments(argument_parser):
-        parser = argument_parser.get_or_create_group("Source files")
-
-        parser.add_argument("--vcs-type", "-vt", dest="type", default="p4",
-                            choices=["none", "p4", "git", "gerrit"],
-                            help="Select repository type to download sources from: Perforce ('p4', the default), "
-                                 "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
-                                 "Gerrit uses Git parameters. Each VCS type has its own settings.")
-
-    def __init__(self, *args, **kwargs):
-        super(Vcs, self).__init__(*args, **kwargs)
-        try:
-            if self.settings.type == "none":
-                self.driver = self.local_driver_factory()
-            elif self.settings.type == "git":
-                self.driver = self.git_driver_factory()
-            elif self.settings.type == "gerrit":
-                self.driver = self.gerrit_driver_factory()
-            else:
-                self.driver = self.perforce_driver_factory()
-        except AttributeError:
-            raise NotImplementedError()
-
-    @make_block("Finalizing")
-    def finalize(self):
-        self.driver.finalize()
-
-
-def create_vcs(name=None):
-    if name == "DownloadVcs":
-        p4_driver_factory_class = perforce_vcs.PerforceDownloadVcs
-        git_driver_factory_class = git_vcs.GitDownloadVcs
-        gerrit_driver_factory_class = gerrit_vcs.GerritDownloadVcs
-        local_driver_factory_class = local_vcs.LocalDownloadVcs
-    elif name == "SubmitVcs":
+def create_vcs(class_type=None):
+    if class_type == "submit":
         p4_driver_factory_class = perforce_vcs.PerforceSubmitVcs
         git_driver_factory_class = git_vcs.GitSubmitVcs
         gerrit_driver_factory_class = gerrit_vcs.GerritSubmitVcs
         local_driver_factory_class = base_vcs.BaseSubmitVcs
-    elif name == "PollVcs":
+    elif class_type == "poll":
         p4_driver_factory_class = perforce_vcs.PerforcePollVcs
         git_driver_factory_class = git_vcs.GitPollVcs
         gerrit_driver_factory_class = git_vcs.GitPollVcs
         local_driver_factory_class = base_vcs.BasePollVcs
     else:
-        raise NotImplementedError()
+        p4_driver_factory_class = perforce_vcs.PerforceDownloadVcs
+        git_driver_factory_class = git_vcs.GitDownloadVcs
+        gerrit_driver_factory_class = gerrit_vcs.GerritDownloadVcs
+        local_driver_factory_class = local_vcs.LocalDownloadVcs
 
-    class MixIn(Module):
+    @needs_structure
+    class Vcs(ProjectDirectory):
         local_driver_factory = Dependency(local_driver_factory_class)
         git_driver_factory = Dependency(git_driver_factory_class)
         gerrit_driver_factory = Dependency(gerrit_driver_factory_class)
@@ -76,25 +44,48 @@ def create_vcs(name=None):
 
         @staticmethod
         def define_arguments(argument_parser):
-            pass  # TODO: refactor gravity to remove this
+            parser = argument_parser.get_or_create_group("Source files")
 
-    MixIn.__name__ = name + "Template"
-    return MixIn
+            parser.add_argument("--vcs-type", "-vt", dest="type", default="p4",
+                                choices=["none", "p4", "git", "gerrit"],
+                                help="Select repository type to download sources from: Perforce ('p4', the default), "
+                                     "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
+                                     "Gerrit uses Git parameters. Each VCS type has its own settings.")
+
+        def __init__(self, *args, **kwargs):
+            super(Vcs, self).__init__(*args, **kwargs)
+            try:
+                if self.settings.type == "none":
+                    self.driver = self.local_driver_factory()
+                elif self.settings.type == "git":
+                    self.driver = self.git_driver_factory()
+                elif self.settings.type == "gerrit":
+                    self.driver = self.gerrit_driver_factory()
+                else:
+                    self.driver = self.perforce_driver_factory()
+            except AttributeError:
+                raise NotImplementedError()
+
+        @make_block("Finalizing")
+        def finalize(self):
+            self.driver.finalize()
+
+    return Vcs
 
 
-class PollVcs(Vcs, create_vcs("PollVcs")):
+class PollVcs(create_vcs("poll")):
     @staticmethod
     def define_arguments(argument_parser):
         pass # TODO: refactor gravity to remove this
 
 
-class SubmitVcs(Vcs, create_vcs("SubmitVcs")):
+class SubmitVcs(create_vcs("submit")):
     @staticmethod
     def define_arguments(argument_parser):
         pass  # TODO: refactor gravity to remove this
 
 
-class DownloadVcs(Vcs, create_vcs("DownloadVcs")):
+class DownloadVcs(create_vcs()):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
     @staticmethod
