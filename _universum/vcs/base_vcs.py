@@ -19,10 +19,6 @@ class BaseVcs(ProjectDirectory):
     Base class for VCS drivers
     """
 
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass
-
     def __init__(self, *args, **kwargs):
         super(BaseVcs, self).__init__(*args, **kwargs)
         self.repo_status = u""

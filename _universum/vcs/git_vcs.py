@@ -237,10 +237,6 @@ class GitSubmitVcs(GitVcs):
 
 
 class GitPollVcs(GitVcs):
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass
-
     def get_changes(self, changes_reference=None, max_number='1'):
         self.clone_and_fetch()
         if not changes_reference:

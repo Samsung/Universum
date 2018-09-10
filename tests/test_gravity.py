@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, invalid-name
 
+from argparse import ArgumentError
 import mock
 import pytest
 
@@ -125,6 +126,51 @@ def test_define_arguments_3(mock_module):
     assert 'ChainStart' not in dir(settings)
     assert 'ChainSecond' not in dir(settings)
     assert settings.ChainEnd.option3 is None
+
+
+def test_define_arguments_inheritance(mock_module, capsys):
+    class ParentModule(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--parent')
+
+    class InheritedModule1(ParentModule):
+        pass
+
+    class InheritedModule2(ParentModule):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--child')
+
+    class WrongInheritedModule(ParentModule):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--parent')
+
+    parser = _universum.module_arguments.ModuleArgumentParser()
+    define_arguments_recursive(ParentModule, parser)
+    settings = parser.parse_args(["--parent=abc"])
+    assert settings.ParentModule.parent == "abc"
+    with pytest.raises(SystemExit) as exception_info:
+        parser.parse_args(["--child=def"])
+    assert exception_info.value.code == 2
+    assert "unrecognized arguments: --child=def" in capsys.readouterr()[1]
+
+    parser = _universum.module_arguments.ModuleArgumentParser()
+    define_arguments_recursive(InheritedModule1, parser)
+    settings = parser.parse_args(["--parent=abc"])
+    assert settings.ParentModule.parent == "abc"
+
+    parser = _universum.module_arguments.ModuleArgumentParser()
+    define_arguments_recursive(InheritedModule2, parser)
+    settings = parser.parse_args(["--parent=abc", "--child=def"])
+    assert settings.ParentModule.parent == "abc"
+    assert settings.InheritedModule2.child == "def"
+
+    parser = _universum.module_arguments.ModuleArgumentParser()
+    with pytest.raises(ArgumentError) as exception_info:
+        define_arguments_recursive(WrongInheritedModule, parser)
+    assert "conflicting option string(s): --parent" in str(exception_info.value)
 
 
 def test_settings_access(mock_module):

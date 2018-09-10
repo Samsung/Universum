@@ -23,10 +23,6 @@ class GerritVcs(git_vcs.GitVcs):
     """
     reporter_factory = Dependency(Reporter)
 
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass
-
     def __init__(self, *args, **kwargs):
         super(GerritVcs, self).__init__(*args, **kwargs)
         self.reporter = None
@@ -53,10 +49,6 @@ class GerritVcs(git_vcs.GitVcs):
 
 
 class GerritDownloadVcs(ReportObserver, GerritVcs, git_vcs.GitDownloadVcs):
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass
-
     def code_review(self):
         # Gerrit code review system is Gerrit itself
         if not self.settings.refspec:
@@ -143,10 +135,6 @@ class GerritDownloadVcs(ReportObserver, GerritVcs, git_vcs.GitDownloadVcs):
 
 
 class GerritSubmitVcs(GerritVcs, git_vcs.GitSubmitVcs):
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass
-
     def submit_new_change(self, description, file_list, review=False, edit_only=False):
         change = self.git_commit_locally(description, file_list, edit_only=edit_only)
 

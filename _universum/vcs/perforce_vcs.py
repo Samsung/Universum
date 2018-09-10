@@ -453,10 +453,6 @@ class PerforceDownloadVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
 
 class PerforcePollVcs(PerforceWithMappings, base_vcs.BasePollVcs):
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass
-
     def get_changes(self, changes_reference=None, max_number='1'):
         self.connect()
 

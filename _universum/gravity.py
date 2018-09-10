@@ -107,10 +107,8 @@ def define_arguments_recursive(klass, argument_parser):
     modules = get_dependencies(klass)
 
     for current_module in modules:
-        argument_parser.dest_prefix = current_module.__name__ + '.'
-        try:
+        if "define_arguments" in current_module.__dict__:
+            argument_parser.dest_prefix = current_module.__name__ + '.'
             current_module.define_arguments(argument_parser)
-        except AttributeError:
-            pass
 
     argument_parser.dest_prefix = ''

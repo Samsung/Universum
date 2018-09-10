@@ -73,16 +73,8 @@ def create_vcs(class_type=None):
     return Vcs
 
 
-class PollVcs(create_vcs("poll")):
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass # TODO: refactor gravity to remove this
-
-
-class SubmitVcs(create_vcs("submit")):
-    @staticmethod
-    def define_arguments(argument_parser):
-        pass  # TODO: refactor gravity to remove this
+PollVcs = create_vcs("poll")
+SubmitVcs = create_vcs("submit")
 
 
 class DownloadVcs(create_vcs()):
