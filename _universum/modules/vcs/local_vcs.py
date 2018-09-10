@@ -3,22 +3,22 @@
 import os
 import shutil
 
-from . import base_vcs
-from ..ci_exception import CriticalCiException
-from ..module_arguments import IncorrectParameterError
+from ...lib.ci_exception import CriticalCiException
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import make_block
+from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from ..utils import make_block
-from .. import utils
+from . import base_vcs
 
 __all__ = [
-    "LocalDownloadVcs"
+    "LocalMainVcs"
 ]
 
 
 @needs_output
 @needs_structure
-class LocalDownloadVcs(base_vcs.BaseDownloadVcs):
+class LocalMainVcs(base_vcs.BaseDownloadVcs):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Local files",
@@ -29,7 +29,7 @@ class LocalDownloadVcs(base_vcs.BaseDownloadVcs):
                                  "This option is only needed when '--driver-type' is set to 'none'")
 
     def __init__(self, *args, **kwargs):
-        super(LocalDownloadVcs, self).__init__(*args, **kwargs)
+        super(LocalMainVcs, self).__init__(*args, **kwargs)
 
         if self.settings.source_dir is None:
             raise IncorrectParameterError("Please specify source directory if not using any VCS")

@@ -2,8 +2,8 @@
 
 import os
 
-from . import utils
-from .gravity import Module
+from ..lib import utils
+from ..lib.gravity import Module
 
 
 class ProjectDirectory(Module):

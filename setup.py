@@ -10,6 +10,7 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+
 setup(
     name=_universum.__title__,
     version=_universum.__version__,
@@ -19,11 +20,9 @@ setup(
     author_email='k.dovgan@samsung.com',
     license='BSD',
     packages=find_packages(exclude='tests'),
-    py_modules=['universum', 'submit', 'poll', 'code_report'],
+    py_modules=['universum', 'code_report'],
     entry_points={'console_scripts': [
         'universum = universum:main',
-        'universum_submit = submit:main',
-        'universum_poll = poll:main',
         'universum_static = code_report:main'
     ]},
     setup_requires=['setuptools'],

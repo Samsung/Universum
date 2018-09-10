@@ -95,10 +95,7 @@ class ModuleArgumentParser(argparse.ArgumentParser):
         return argparse.ArgumentParser.parse_args(self, args, namespace)
 
     def add_hidden_argument(self, *args, **kwargs):
-        if kwargs.get("is_hidden", True):
-            kwargs["help"] = argparse.SUPPRESS
-
-        del kwargs["is_hidden"]
+        kwargs["help"] = argparse.SUPPRESS
         self.add_argument(*args, **kwargs)
 
     def prepend_dest(self, action):

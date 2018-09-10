@@ -1,97 +1,106 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import atexit
+import signal
 import sys
 
-from _universum import artifact_collector, launcher, reporter, vcs
-from _universum import __title__, __version__
-from _universum.entry_points import run_main_for_module, run_with_settings, setup_arg_parser
-from _universum.gravity import Module, Dependency
-from _universum.ci_exception import SilentAbortException
-from _universum.output import needs_output
+from _universum import __version__, __title__
+from _universum.main import Main
+from _universum.poll import Poll
+from _universum.submit import Submit
+from _universum.lib.ci_exception import SilentAbortException
+from _universum.lib.gravity import define_arguments_recursive, construct_component
+from _universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
+from _universum.lib.utils import Uninterruptible, format_traceback
 
 
-@needs_output
-class Main(Module):
-    description = __title__
-    vcs_factory = Dependency(vcs.DownloadVcs)
-    launcher_factory = Dependency(launcher.Launcher)
-    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
-    reporter_factory = Dependency(reporter.Reporter)
+def define_arguments(main_class=Main):
+    if main_class is Main:
+        epilog = "Available subcommands are 'poll' and 'submit'. Use 'universum <subcommand> --help' for more info"
+    else:
+        epilog = None
+    parser = ModuleArgumentParser(description=__title__ + " " + __version__, epilog=epilog)
+    parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
 
-    @staticmethod
-    def define_arguments(argument_parser):
-        argument_parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
-
-        argument_parser.add_hidden_argument("--no-finalize", action="store_true", dest="no_finalize", is_hidden=True,
-                                            help="Skip 'Finalizing' step: "
-                                                 "do not clear sources, do not revert workspace vcs, etc. "
-                                                 "Is applied automatically when using existing VCS client")
-
-        argument_parser.add_hidden_argument("--finalize-only", action="store_true", dest="finalize_only", is_hidden=True,
-                                            help="Perform only 'Finalizing' step: "
-                                                 "clear sources, revert workspace vcs, etc. "
-                                                 "Recommended to use after '--no-finalize' runs. "
-                                                 "Please make sure to move artifacts from working directory "
-                                                 "or pass different artifact folder")
-
-        argument_parser.add_hidden_argument("--clean-build", action="store_true", dest="clean_build", is_hidden=True,
-                                            help="Clean artifact and build directory before build "
-                                                 "instead of raising exception. Not recommended for CI configurations!")
-
-        argument_parser.add_argument("--build-only-latest", action="store_true", dest="build_only_latest",
-                                     help="Skip build if review version isn't latest")
-
-    def __init__(self, *args, **kwargs):
-        super(Main, self).__init__(*args, **kwargs)
-        self.vcs = self.vcs_factory()
-        self.launcher = self.launcher_factory()
-        self.artifacts = self.artifacts_factory()
-        self.reporter = self.reporter_factory()
-
-    def execute(self):
-        if self.settings.clean_build:
-            self.vcs.clean_sources_silently()
-            self.artifacts.clean_artifacts_silently()
-
-        if self.settings.finalize_only:
-            self.vcs.driver.sources_need_cleaning = True
-            self.out.log("Execution skipped because of '--finalize-only' option")
-            return
-
-        self.reporter.report_review_link()
-        if self.settings.build_only_latest:
-            if not self.vcs.is_latest_review_version():
-                self.out.log("Build skipped because review revision is not latest")
-                self.out.report_build_status("Skipped - review revision is not latest")
-                raise SilentAbortException(application_exit_code=0)
-
-        self.vcs.prepare_repository()
-        project_configs = self.launcher.process_project_configs()
-        self.artifacts.set_and_clean_artifacts(project_configs)
-
-        self.reporter.report_build_started()
-        self.launcher.launch_project()
-        self.artifacts.collect_artifacts()
-        self.reporter.report_build_result()
-
-    def finalize(self):
-        if self.settings.no_finalize:
-            self.out.log("Cleaning skipped because of '--no-finalize' option")
-            return
-        self.vcs.finalize()
+    define_arguments_recursive(main_class, parser)
+    return parser
 
 
-def define_arguments():
-    return setup_arg_parser(Main)
+def run(main_class, settings):
+    result = 0
 
+    main_module = construct_component(main_class, settings)
 
-def run(settings):
-    return run_with_settings(Main, settings)
+    finalized = False
+
+    def finalize():
+        if not finalized:
+            main_module.finalize()
+
+    try:
+        with Uninterruptible(main_module.out.log_exception) as run_function:
+            run_function(main_module.execute)
+            run_function(main_module.finalize)
+            finalized = True
+
+    except SilentAbortException as e:
+        result = e.application_exit_code
+
+    except Exception as e:
+        ex_traceback = sys.exc_info()[2]
+        main_module.out.log_exception("Unexpected error.\n" + format_traceback(e, ex_traceback))
+        main_module.out.report_build_problem("Unexpected error while executing script.")
+        result = 2
+
+    atexit.register(finalize)
+    signal.signal(signal.SIGTERM, finalize)
+    signal.signal(signal.SIGHUP, finalize)
+    signal.signal(signal.SIGINT, finalize)
+
+    return result
 
 
 def main(*args, **kwargs):
-    return run_main_for_module(Main, *args, **kwargs)
+    command = None
+    # 'command' may or may not be the first positional argument for this script
+    # if no command is passed to script, default 'Main' module is executed
+    # if any command is passed, it chould be parsed and excluded from parameters before calling argparse
+    # because argparse should parse different arguments depending on 'command' value
+    try:
+        # if main is called from another python script, *args and **kwargs are passed to arparse
+        # args is a tuple of up to three elements, where first one is a list of passed arguments
+        # if any 'command' is passed to main this way, it should be the first element of args[0]
+        if not args[0][0].startswith("-"):
+            command = args[0][0]
+            # if succeeded, removing command parameter from immutable tuple 'args':
+            arg_list = list(args)
+            arg_list[0] = args[0][1:]
+            args = tuple(arg_list)
+    except IndexError:
+        # IndexError means no parameters were passed via *args
+        # so we should check sys.argv for 'command'
+        try:
+            if not sys.argv[1].startswith("-"):
+                command = sys.argv[1]
+                # and also remove 'command' from parameters passed to argparse if succeeded
+                sys.argv.pop(1)
+        except IndexError:
+            # if no parameters were passed via *args or sys.argv, argparse will handle this situation
+            pass
+
+    if command == "submit":
+        main_class = Submit
+    elif command == "poll":
+        main_class = Poll
+    else:
+        main_class = Main
+    parser = define_arguments(main_class)
+    settings = parser.parse_args(*args, **kwargs)
+    try:
+        return run(main_class, settings)
+    except IncorrectParameterError as e:
+        parser.error(e.message)
 
 
 if __name__ == "__main__":

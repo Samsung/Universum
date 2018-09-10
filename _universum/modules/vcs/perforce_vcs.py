@@ -6,19 +6,19 @@ import warnings
 import sh
 from P4 import P4, P4Exception
 
-from . import base_vcs
-from .swarm import Swarm
-from ..artifact_collector import ArtifactCollector
-from ..ci_exception import CriticalCiException, SilentAbortException
-from ..gravity import Dependency
-from ..module_arguments import IncorrectParameterError
+from ...modules.artifact_collector import ArtifactCollector
+from ...lib.ci_exception import CriticalCiException, SilentAbortException
+from ...lib.gravity import Dependency
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import make_block, Uninterruptible
+from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from ..utils import make_block, Uninterruptible
-from .. import utils
+from . import base_vcs
+from .swarm import Swarm
 
 __all__ = [
-    "PerforceDownloadVcs",
+    "PerforceMainVcs",
     "PerforcePollVcs",
     "PerforceSubmitVcs",
     "catch_p4exception"
@@ -114,6 +114,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
                 raise
             return []
 
+    @catch_p4exception()
     def submit_new_change(self, description, file_list, review=False, edit_only=False):
         self.connect()
 
@@ -205,7 +206,7 @@ class PerforceWithMappings(PerforceVcs):
         self.mappings = utils.unify_argument_list(mappings)
 
 
-class PerforceDownloadVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
+class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     swarm_factory = Dependency(Swarm)
     artifacts_factory = Dependency(ArtifactCollector)
 
@@ -238,7 +239,7 @@ class PerforceDownloadVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                                  "Mandatory for CI environment, otherwise use with caution")
 
     def __init__(self, *args, **kwargs):
-        super(PerforceDownloadVcs, self).__init__(*args, **kwargs)
+        super(PerforceMainVcs, self).__init__(*args, **kwargs)
 
         self.artifacts = self.artifacts_factory()
         # self.swarm is initialized by self.code_review()

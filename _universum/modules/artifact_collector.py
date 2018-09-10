@@ -8,15 +8,15 @@ import shutil
 
 import glob2
 
+from ..lib.ci_exception import CriticalCiException, CiException
+from ..lib.gravity import Dependency
+from ..lib.utils import make_block
+from ..lib import utils
 from .automation_server import AutomationServer
-from .ci_exception import CriticalCiException, CiException
-from .gravity import Dependency
-from .project_directory import ProjectDirectory
 from .output import needs_output
+from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import needs_structure
-from .utils import make_block
-from . import utils
 
 __all__ = [
     "ArtifactCollector"

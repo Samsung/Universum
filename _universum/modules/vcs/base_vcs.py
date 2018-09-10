@@ -2,10 +2,10 @@
 
 import shutil
 
-from ..ci_exception import CiException
-from ..module_arguments import IncorrectParameterError
+from ...lib.ci_exception import CiException
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import make_block
 from ..project_directory import ProjectDirectory
-from ..utils import make_block
 
 __all__ = [
     "BaseDownloadVcs",

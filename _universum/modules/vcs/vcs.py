@@ -4,15 +4,16 @@ import os
 import shutil
 import sh
 
-from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
-from .. import artifact_collector, utils
-from ..gravity import Dependency
+from ...lib import utils
+from ...lib.gravity import Dependency
+from ...lib.utils import make_block
+from .. import artifact_collector
 from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
-from ..utils import make_block
+from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 
 __all__ = [
-    "DownloadVcs",
+    "MainVcs",
     "PollVcs",
     "SubmitVcs"
 ]
@@ -30,10 +31,10 @@ def create_vcs(class_type=None):
         gerrit_driver_factory_class = git_vcs.GitPollVcs
         local_driver_factory_class = base_vcs.BasePollVcs
     else:
-        p4_driver_factory_class = perforce_vcs.PerforceDownloadVcs
-        git_driver_factory_class = git_vcs.GitDownloadVcs
-        gerrit_driver_factory_class = gerrit_vcs.GerritDownloadVcs
-        local_driver_factory_class = local_vcs.LocalDownloadVcs
+        p4_driver_factory_class = perforce_vcs.PerforceMainVcs
+        git_driver_factory_class = git_vcs.GitMainVcs
+        gerrit_driver_factory_class = gerrit_vcs.GerritMainVcs
+        local_driver_factory_class = local_vcs.LocalMainVcs
 
     @needs_structure
     class Vcs(ProjectDirectory):
@@ -77,7 +78,7 @@ PollVcs = create_vcs("poll")
 SubmitVcs = create_vcs("submit")
 
 
-class DownloadVcs(create_vcs()):
+class MainVcs(create_vcs()):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
     @staticmethod
@@ -88,7 +89,7 @@ class DownloadVcs(create_vcs()):
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
     def __init__(self, *args, **kwargs):
-        super(DownloadVcs, self).__init__(*args, **kwargs)
+        super(MainVcs, self).__init__(*args, **kwargs)
         self.artifacts = self.artifacts_factory()
 
         if self.settings.report_to_review:

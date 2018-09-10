@@ -6,14 +6,16 @@ import sys
 import json
 import sh
 
-from . import configuration_support, utils, artifact_collector, automation_server, reporter
-from .ci_exception import CiException, CriticalCiException, StepException
-from .gravity import Dependency
-from .module_arguments import IncorrectParameterError
-from .project_directory import ProjectDirectory
+from .. import configuration_support
+from ..lib import utils
+from ..lib.ci_exception import CiException, CriticalCiException, StepException
+from ..lib.gravity import Dependency
+from ..lib.module_arguments import IncorrectParameterError
+from ..lib.utils import make_block
+from . import automation_server, artifact_collector, reporter
 from .output import needs_output
+from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
-from .utils import make_block
 
 __all__ = [
     "Launcher",

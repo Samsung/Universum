@@ -2,9 +2,9 @@
 
 import copy
 
-from . import configuration_support
-from .ci_exception import SilentAbortException, StepException, CriticalCiException
-from .gravity import Module, Dependency
+from .. import configuration_support
+from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
+from ..lib.gravity import Module, Dependency
 from .output import needs_output
 
 __all__ = [

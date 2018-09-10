@@ -2,8 +2,8 @@
 
 import requests
 
+from ...lib.module_arguments import IncorrectParameterError
 from .base_server import BaseServer
-from ..module_arguments import IncorrectParameterError
 
 __all__ = [
     "TeamcityServer"

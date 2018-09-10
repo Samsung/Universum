@@ -2,11 +2,11 @@
 
 from collections import defaultdict
 
+from ..lib.gravity import Module, Dependency
+from ..lib.utils import make_block
 from . import automation_server
-from .gravity import Module, Dependency
 from .output import needs_output
 from .structure_handler import needs_structure
-from .utils import make_block
 
 __all__ = [
     "ReportObserver",

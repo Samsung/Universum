@@ -4,16 +4,15 @@ import glob
 import os
 import git
 
-from .base_vcs import BaseVcs
-from ..ci_exception import CriticalCiException
-from ..module_arguments import IncorrectParameterError
+from ...lib.ci_exception import CriticalCiException
+from ...lib.utils import make_block
+from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from ..utils import make_block
-from .. import utils
+from .base_vcs import BaseVcs
 
 __all__ = [
-    "GitDownloadVcs",
+    "GitMainVcs",
     "GitSubmitVcs",
     "GitPollVcs"
 ]
@@ -89,7 +88,7 @@ class GitVcs(BaseVcs):
 
 @needs_output
 @needs_structure
-class GitDownloadVcs(GitVcs):
+class GitMainVcs(GitVcs):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git")

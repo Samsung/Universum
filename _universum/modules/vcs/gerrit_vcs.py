@@ -4,15 +4,15 @@ import json
 import urlparse
 import sh
 
-from . import git_vcs
-from ..ci_exception import CiException
-from ..gravity import Dependency
-from ..module_arguments import IncorrectParameterError
+from ...lib.ci_exception import CiException
+from ...lib.gravity import Dependency
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib import utils
 from ..reporter import ReportObserver, Reporter
-from .. import utils
+from . import git_vcs
 
 __all__ = [
-    "GerritDownloadVcs",
+    "GerritMainVcs",
     "GerritSubmitVcs"
 ]
 
@@ -21,7 +21,6 @@ class GerritVcs(git_vcs.GitVcs):
     """
     This class contains encapsulates Gerrit VCS functions
     """
-    reporter_factory = Dependency(Reporter)
 
     def __init__(self, *args, **kwargs):
         super(GerritVcs, self).__init__(*args, **kwargs)
@@ -48,7 +47,9 @@ class GerritVcs(git_vcs.GitVcs):
             raise CiException(text)
 
 
-class GerritDownloadVcs(ReportObserver, GerritVcs, git_vcs.GitDownloadVcs):
+class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
+    reporter_factory = Dependency(Reporter)
+
     def code_review(self):
         # Gerrit code review system is Gerrit itself
         if not self.settings.refspec:
@@ -130,7 +131,7 @@ class GerritDownloadVcs(ReportObserver, GerritVcs, git_vcs.GitDownloadVcs):
         self.run_ssh_command(text)
 
     def prepare_repository(self):
-        super(GerritDownloadVcs, self).prepare_repository()
+        super(GerritMainVcs, self).prepare_repository()
         self.commit_id = unicode(self.repo.head.commit)
 
 

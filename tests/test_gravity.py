@@ -6,10 +6,10 @@ from argparse import ArgumentError
 import mock
 import pytest
 
-from _universum.gravity import construct_component, define_arguments_recursive, Module, Dependency
-from _universum.gravity import get_dependencies
-import _universum.module_arguments
-import _universum.gravity
+from _universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
+from _universum.lib.gravity import get_dependencies
+import _universum.lib.module_arguments
+import _universum.lib.gravity
 
 
 @pytest.fixture()
@@ -18,12 +18,12 @@ def mock_module():
         def __new__(cls, *args, **kwargs):
             return old_module.__new__(cls, *args, **kwargs)
 
-    old_module = _universum.gravity.Module
-    _universum.gravity.Module = MockedModule
+    old_module = _universum.lib.gravity.Module
+    _universum.lib.gravity.Module = MockedModule
 
     yield MockedModule
 
-    _universum.gravity.Module = old_module
+    _universum.lib.gravity.Module = old_module
 
 
 def mock_define_arguments(klass):
@@ -106,21 +106,21 @@ def test_define_arguments_3(mock_module):
         def define_arguments(parser):
             parser.add_argument('--option1')
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainStart, parser)
     settings = parser.parse_args(["--option2=abc"])
     assert settings.ChainStart.option1 is None
     assert settings.ChainSecond.option2 == "abc"
     assert settings.ChainEnd.option3 is None
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainSecond, parser)
     settings = parser.parse_args(["--option2=def"])
     assert 'ChainStart' not in dir(settings)
     assert settings.ChainSecond.option2 == "def"
     assert settings.ChainEnd.option3 is None
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainEnd, parser)
     settings = parser.parse_args([])
     assert 'ChainStart' not in dir(settings)
@@ -147,7 +147,7 @@ def test_define_arguments_inheritance(mock_module, capsys):
         def define_arguments(parser):
             parser.add_argument('--parent')
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ParentModule, parser)
     settings = parser.parse_args(["--parent=abc"])
     assert settings.ParentModule.parent == "abc"
@@ -156,18 +156,18 @@ def test_define_arguments_inheritance(mock_module, capsys):
     assert exception_info.value.code == 2
     assert "unrecognized arguments: --child=def" in capsys.readouterr()[1]
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(InheritedModule1, parser)
     settings = parser.parse_args(["--parent=abc"])
     assert settings.ParentModule.parent == "abc"
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(InheritedModule2, parser)
     settings = parser.parse_args(["--parent=abc", "--child=def"])
     assert settings.ParentModule.parent == "abc"
     assert settings.InheritedModule2.child == "def"
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     with pytest.raises(ArgumentError) as exception_info:
         define_arguments_recursive(WrongInheritedModule, parser)
     assert "conflicting option string(s): --parent" in str(exception_info.value)
@@ -185,8 +185,8 @@ def test_settings_access(mock_module):
         def __init__(self):
             self.s = self.dep()
 
-    settings = _universum.module_arguments.ModuleNamespace()
-    child_settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
+    child_settings = _universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = "abc"
     setattr(settings, 'S', child_settings)
     r = construct_component(R, settings)
@@ -216,8 +216,8 @@ def test_settings_access(mock_module):
 
 
 def make_settings(name, value):
-    settings = _universum.module_arguments.ModuleNamespace()
-    child_settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
+    child_settings = _universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = value
 
     if not isinstance(name, basestring):
@@ -285,7 +285,7 @@ def test_construct_component_same_instance(mock_module):
             self.u = self.dep1()
             self.v = self.dep2()
 
-    settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
     t = construct_component(T, settings)
     assert t.v == t.u.v
     assert "T" in repr(t)
@@ -307,7 +307,7 @@ def test_construct_component_same_name(mock_module):
 
         return TheOnlyClass
 
-    settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
     first_object = construct_component(get_class("abc"), settings)
     second_object = construct_component(get_class("def"), settings)
 
@@ -339,7 +339,7 @@ def test_additional_init_parameters(mock_module):
 
 
 def parse_settings(klass, arguments):
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(klass, parser)
     return parser.parse_args(arguments)
 
