@@ -65,7 +65,7 @@ class PylintAnalyzer(object):
                     issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                     issues_loads.append(issue)
                 with open(self.json_file, "wb") as outfile:
-                    outfile.write(json.dumps(issues_loads))
+                    outfile.write(json.dumps(issues_loads, indent=4))
             except ValueError as e:
                 sys.stderr.write(e.message)
                 sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
