@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 
+import difflib
 import os
+import shutil
 import warnings
 
 import sh
@@ -254,6 +256,9 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.client_view = []
         self.mappings_dict = {}
 
+        self.unshelved_files = []
+        self.diff_in_files = {}
+
     def code_review(self):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
         return self.swarm
@@ -427,6 +432,41 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             if isinstance(line, dict):
                 abs_path = self.p4.run("where", line["depotFile"])[0]["path"]
                 self.mappings_dict[abs_path] = line["depotFile"]
+
+    @make_block("Revert workspace to depot state")
+    @catch_p4exception()
+    def copy_cl_files_and_revert(self):
+        self.unshelved_files = self.p4.run_opened()
+        unshelved_path = []
+
+        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
+
+        for item in unshelved_filtered:
+            relative = item["clientFile"].replace("//" + item["client"] + "/", "")
+            copied = os.path.join(self.client_root, "new_temp", relative)
+            absolute = os.path.join(self.client_root, relative)
+            unshelved_path.append((relative, copied, absolute))
+            try:
+                shutil.copy(absolute, copied)
+            except IOError:
+                os.makedirs(os.path.dirname(copied))
+                shutil.copy(absolute, copied)
+
+        if self.shelve_cls:
+            self.p4.run_revert("//...")
+
+            for item, path in zip(unshelved_filtered, unshelved_path):
+                relative, copied, absolute = path
+
+                if item["action"] == "move/add":
+                    for local, depot in self.mappings_dict.iteritems():
+                        if depot == item["movedFile"]:
+                            absolute = local
+
+                with open(absolute, "r") as a, open(copied, "r") as b:
+                    diff = difflib.SequenceMatcher(a=a.read().splitlines(), b=b.read().splitlines())
+                    self.diff_in_files.update({relative: diff.get_matching_blocks()})
+        return self.diff_in_files
 
     def prepare_repository(self):
         self.connect()
