@@ -117,4 +117,3 @@ class MainVcs(create_vcs()):
             shutil.rmtree(self.settings.project_root)
         except OSError:
             pass
-        os.makedirs(self.settings.project_root)
