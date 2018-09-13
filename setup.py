@@ -36,7 +36,7 @@ setup(
     ],
     extras_require={
         'development': [
-            'sphinx',
+            'sphinx<1.7',
             'sphinx-argparse'
         ],
         'test': [
