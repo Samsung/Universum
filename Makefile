@@ -20,7 +20,7 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	pytest --cov=_universum --cov=universum --cov=poll --cov=submit --cov-branch --cov-report=html -vv $(DOCKER_REGISTRY_ARGS)
+	pytest --cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch --cov-report=html -vv $(DOCKER_REGISTRY_ARGS)
 
 source_doctest:
 	pytest _universum/*.py --doctest-modules -vv
