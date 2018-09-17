@@ -1,8 +1,24 @@
 Change log
 ==========
 
-0.15.1 (2018-09-??)
+0.15.1 (2018-09-17)
 -------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **create unified entry point for all universum subcommands.**
+  New usage is ``universum poll`` and ``universum submit``
+
+New features
+~~~~~~~~~~~~
+
+* **launcher:** add :ref:`'finish_background' <finish_background>` key to Variations
+
+Bug fixes
+~~~~~~~~~
+
+* **submit:** fix p4 submit fails for files opened in another workspace
 
 
 0.15.0 (2018-09-04)
