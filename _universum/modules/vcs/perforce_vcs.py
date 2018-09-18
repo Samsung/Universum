@@ -439,7 +439,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.unshelved_files = self.p4.run_opened()
         unshelved_path = []
 
-        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
+        unshelved_filtered = [item for item in self.unshelved_files if item["action"] not in ["move/delete", "delete"]]
 
         for item in unshelved_filtered:
             relative = item["clientFile"].replace("//" + item["client"] + "/", "")
@@ -462,6 +462,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                     for local, depot in self.mappings_dict.iteritems():
                         if depot == item["movedFile"]:
                             absolute = local
+
+                if item["action"] == "branch":
+                    with open(absolute, "w+"):
+                        pass
 
                 with open(absolute, "r") as a, open(copied, "r") as b:
                     diff = difflib.SequenceMatcher(a=a.read().splitlines(), b=b.read().splitlines())
