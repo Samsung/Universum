@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import difflib
 import os
 import shutil
 import warnings
@@ -260,7 +259,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.mappings_dict = {}
 
         self.unshelved_files = []
-        self.diff_in_files = {}
+        self.diff_in_files = []
 
     def code_review(self):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
@@ -476,18 +475,22 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.unshelved_files = self.p4.run_opened()
         unshelved_path = []
 
-        unshelved_filtered = [item for item in self.unshelved_files if item["action"] not in ["move/delete", "delete"]]
+        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
 
         for item in unshelved_filtered:
-            relative = item["clientFile"].replace("//" + item["client"] + "/", "")
-            copied = os.path.join(self.client_root, "new_temp", relative)
-            absolute = os.path.join(self.client_root, relative)
-            unshelved_path.append((relative, copied, absolute))
-            try:
-                shutil.copy(absolute, copied)
-            except IOError:
-                os.makedirs(os.path.dirname(copied))
-                shutil.copy(absolute, copied)
+            if item["action"] != "delete":
+                relative = item["clientFile"].replace("//" + item["client"] + "/", "")
+                copied = os.path.join(self.client_root, "new_temp", relative)
+                absolute = os.path.join(self.client_root, relative)
+                unshelved_path.append((relative, copied, absolute))
+                try:
+                    shutil.copy(absolute, copied)
+                except IOError:
+                    os.makedirs(os.path.dirname(copied))
+                    shutil.copy(absolute, copied)
+            else:
+                absolute = os.path.join(self.client_root, item["clientFile"].replace("//" + item["client"] + "/", ""))
+                unshelved_path.append((None, None, absolute))
 
         if self.shelve_cls:
             self.p4.run_revert("//...")
@@ -500,13 +503,11 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                         if depot == item["movedFile"]:
                             absolute = local
 
-                if item["action"] == "branch":
-                    with open(absolute, "w+"):
-                        pass
+                if item["action"] in ["add", "branch"]:
+                    with open(absolute, "w+") as f:
+                        f.write("")
 
-                with open(absolute, "r") as a, open(copied, "r") as b:
-                    diff = difflib.SequenceMatcher(a=a.read().splitlines(), b=b.read().splitlines())
-                    self.diff_in_files.update({relative: diff.get_matching_blocks()})
+                self.diff_in_files.append((relative, copied, absolute))
         return self.diff_in_files
 
     def prepare_repository(self):
