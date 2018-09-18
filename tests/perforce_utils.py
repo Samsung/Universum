@@ -232,13 +232,18 @@ class P4Environment(utils.TestEnvironment):
         self.depot = perforce_workspace.depot
         super(P4Environment, self).__init__(test_type)
 
-        self.settings.PerforceVcs.project_depot_path = perforce_workspace.depot
-        self.settings.PerforceVcs.client = perforce_workspace.client_name
-
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
         self.settings.PerforceVcs.password = perforce_workspace.p4.password
+        try:
+            self.settings.PerforceWithMappings.project_depot_path = perforce_workspace.depot
+        except AttributeError:
+            pass
+        try:
+            self.settings.PerforceSubmitVcs.client = perforce_workspace.client_name
+        except AttributeError:
+            pass
 
     def get_last_change(self):
         changes = self.p4.run_changes("-s", "submitted", "-m1", self.depot)

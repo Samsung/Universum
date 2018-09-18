@@ -6,59 +6,60 @@ import os
 import shutil
 import pytest
 
-import poll
-import submit
+import universum
+from _universum.poll import Poll
+from _universum.submit import Submit
 from . import git_utils, perforce_utils, utils
 
 
 def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
-    result = poll.main(["-ot", "term",
-                        "-vt", "p4",
-                        "-f", unicode(db_file),
-                        "-p4p", perforce_workspace.p4.port,
-                        "-p4u", perforce_workspace.p4.user,
-                        "-p4P", perforce_workspace.p4.password,
-                        "-p4d", "//depot/...",
-                        "-jtu", "https://localhost/?%s"])
+    result = universum.main(["poll", "-ot", "term",
+                             "-vt", "p4",
+                             "-f", unicode(db_file),
+                             "-p4p", perforce_workspace.p4.port,
+                             "-p4u", perforce_workspace.p4.user,
+                             "-p4P", perforce_workspace.p4.password,
+                             "-p4d", "//depot/...",
+                             "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
 def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
-    result = poll.main(["-ot", "term",
-                        "-vt", "git",
-                        "-f", unicode(db_file),
-                        "-gr", git_server.url,
-                        "-grs", git_server.target_branch,
-                        "-jtu", "https://localhost/?%s"])
+    result = universum.main(["poll", "-ot", "term",
+                             "-vt", "git",
+                             "-f", unicode(db_file),
+                             "-gr", git_server.url,
+                             "-grs", git_server.target_branch,
+                             "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
 def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
-    result = poll.main(["-ot", "term",
-                        "-vt", "p4",
-                        "-f", unicode(db_file),
-                        "-p4p", "127.0.0.1:1024",
-                        "-p4u", perforce_workspace.p4.user,
-                        "-p4P", perforce_workspace.p4.password,
-                        "-p4d", "//depot/...",
-                        "-jtu", "https://localhost/?%s"])
+    result = universum.main(["poll", "-ot", "term",
+                             "-vt", "p4",
+                             "-f", unicode(db_file),
+                             "-p4p", "127.0.0.1:1024",
+                             "-p4u", perforce_workspace.p4.user,
+                             "-p4P", perforce_workspace.p4.password,
+                             "-p4d", "//depot/...",
+                             "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
 
 
 def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
-    result = poll.main(["-ot", "term",
-                        "-vt", "git",
-                        "-f", unicode(db_file),
-                        "-gr", "file:///non-existing-directory",
-                        "-grs", git_server.target_branch,
-                        "-jtu", "https://localhost/?%s"])
+    result = universum.main(["poll", "-ot", "term",
+                             "-vt", "git",
+                             "-f", unicode(db_file),
+                             "-gr", "file:///non-existing-directory",
+                             "-grs", git_server.target_branch,
+                             "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("Cmd('git') failed due to: exit code(128)")
 
@@ -96,7 +97,7 @@ def test_poll_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     # stop server
     parameters.http_request_checker.stop()
@@ -105,7 +106,7 @@ def test_poll_error_one_change(poll_parameters, poll_environment):
     change = parameters.make_a_change()
 
     # run poll again and fail triggering url because there is no server
-    assert poll.run(parameters.poll_settings) != 0
+    assert universum.run(Poll, parameters.poll_settings) != 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -117,13 +118,13 @@ def test_poll_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     # make change in workspace
     change = parameters.make_a_change()
 
     # run poll again and trigger the url
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
     parameters.http_request_checker.assert_request_was_made({"cl": [change]})
 
@@ -132,14 +133,14 @@ def test_poll_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll again and trigger the url twice
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -152,14 +153,14 @@ def test_poll_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll and trigger the urls
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -174,7 +175,7 @@ def test_poll_changes_several_times(poll_parameters, poll_environment):
     change4 = parameters.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    assert poll.run(parameters.poll_settings) == 0
+    assert universum.run(Poll, parameters.poll_settings) == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
@@ -203,7 +204,7 @@ class SubmitterParameters(object):
             for key in kwargs:
                 setattr(settings.Submit, key, kwargs[key])
 
-        return submit.run(settings)
+        return universum.run(Submit, settings)
 
     def assert_submit_success(self, path_list, **kwargs):
         result = self.submit_path_list(path_list, **kwargs)

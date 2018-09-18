@@ -2,9 +2,9 @@
 
 import copy
 
-from . import configuration_support
-from .ci_exception import SilentAbortException, StepException, CriticalCiException
-from .gravity import Module, Dependency
+from .. import configuration_support
+from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
+from ..lib.gravity import Module, Dependency
 from .output import needs_output
 
 __all__ = [
@@ -97,9 +97,13 @@ class StructureHandler(Module):
                                 " skipped because of critical step failure")
 
     def fail_current_block(self, error=None):
+        block = self.get_current_block()
+        self.fail_block(block, error)
+
+    def fail_block(self, block, error=None):
         if error:
             self.out.log_exception(error)
-        self.current_block.set_status("Failed")
+        block.set_status("Failed")
 
     def get_current_block(self):
         return self.current_block

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from ..gravity import Module
+from ...lib.gravity import Module
 
 
 class BaseOutput(Module):

@@ -1,24 +1,21 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import sys
+from .lib import utils
+from .lib.gravity import Module, Dependency
+from .lib.module_arguments import IncorrectParameterError
+from .lib.utils import make_block
+from .modules import vcs
+from .modules.output import needs_output
+from .modules.structure_handler import needs_structure
 
-from _universum import utils
-from _universum.vcs import vcs
-from _universum.entry_points import run_main_for_module, run_with_settings
-from _universum.gravity import Module, Dependency
-from _universum.module_arguments import IncorrectParameterError
-from _universum.output import needs_output
-from _universum.structure_handler import needs_structure
-from _universum.vcs.perforce_vcs import catch_p4exception
-from _universum.utils import make_block
+__all__ = ["Submit"]
 
 
 @needs_output
 @needs_structure
 class Submit(Module):
-    description = "Submitting module of Universum "
-    vcs_factory = Dependency(vcs.Vcs)
+    description = "Submitting module of Universum"
+    vcs_factory = Dependency(vcs.SubmitVcs)
 
     @staticmethod
     def define_arguments(parser):
@@ -45,7 +42,6 @@ class Submit(Module):
         self.client = None
 
     @make_block("Executing")
-    @catch_p4exception()
     def execute(self):
         path_list = utils.unify_argument_list(self.settings.reconcile_list)
         change = self.vcs.driver.submit_new_change(self.settings.commit_message,
@@ -63,16 +59,3 @@ class Submit(Module):
     @make_block("Finalizing", pass_errors=False)
     def finalize(self):
         self.vcs.finalize()
-
-
-def run(settings):
-    return run_with_settings(Submit, settings)
-
-
-def main(*args, **kwargs):
-    return run_main_for_module(Submit, *args, **kwargs)
-
-
-if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)

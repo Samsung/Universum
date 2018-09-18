@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+from ...lib.gravity import Module, Dependency
+from ...lib import utils
 from .terminal_based_output import JenkinsOutput, LocalOutput
 from .teamcity_output import TeamcityOutput
-from ..gravity import Module, Dependency
-from .. import utils
 
 __all__ = [
     "needs_output"

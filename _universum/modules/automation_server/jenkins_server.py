@@ -3,10 +3,10 @@
 import os
 import urllib2
 
-from .base_server import BaseServer
-from ..ci_exception import CriticalCiException
-from ..module_arguments import IncorrectParameterError
+from ...lib.ci_exception import CriticalCiException
+from ...lib.module_arguments import IncorrectParameterError
 from ..output import needs_output
+from .base_server import BaseServer
 
 __all__ = [
     "JenkinsServer"

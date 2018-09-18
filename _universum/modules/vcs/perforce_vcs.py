@@ -1,24 +1,28 @@
 # -*- coding: UTF-8 -*-
 
+import difflib
 import os
+import shutil
 import warnings
 
 import sh
 from P4 import P4, P4Exception
 
-from .base_vcs import BaseVcs
-from .swarm import Swarm
-from ..artifact_collector import ArtifactCollector
-from ..ci_exception import CriticalCiException, SilentAbortException
-from ..gravity import Dependency
-from ..module_arguments import IncorrectParameterError
+from ...modules.artifact_collector import ArtifactCollector
+from ...lib.ci_exception import CriticalCiException, SilentAbortException
+from ...lib.gravity import Dependency
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import make_block, Uninterruptible
+from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from ..utils import make_block, Uninterruptible
-from .. import utils
+from . import base_vcs
+from .swarm import Swarm
 
 __all__ = [
-    "PerforceVcs",
+    "PerforceMainVcs",
+    "PerforcePollVcs",
+    "PerforceSubmitVcs",
     "catch_p4exception"
 ]
 
@@ -29,99 +33,32 @@ def catch_p4exception(ignore_if=None):
 
 @needs_output
 @needs_structure
-class PerforceVcs(BaseVcs):
+class PerforceVcs(base_vcs.BaseVcs):
     """
-    This class contains CI functions for interaction with Perforce
+    This class contains global functions for interaction with Perforce
     """
 
-    swarm_factory = Dependency(Swarm)
-    artifacts_factory = Dependency(ArtifactCollector)
-
-    # TODO: split into several classes to remove hide_sync_options, which doesn't work anyway
     @staticmethod
-    def define_arguments(argument_parser, hide_sync_options=False):  # pylint: disable=arguments-differ
+    def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Perforce",
                                                      "Please read the details about P4 environment variables "
                                                      "in official Helix manual")
 
-        parser.add_hidden_argument("--p4-sync", "-p4h", action="append", nargs='+', dest="sync_cls",
-                                   is_hidden=hide_sync_options, metavar="SYNC_CHANGELIST",
-                                   help="Sync (head) CL(s). Just a number will be interpreted as united CL for "
-                                        "all added VCS roots. To add a sync CL for specific depot/workspace location, "
-                                        "write location in the same format as in P4_MAPPINGS with '@<CL number>' "
-                                        "in the end, e.g. '//DEV/Solution/MyProject/...@1234567'. To specify "
-                                        "more than one sync CL for several locations, add '--p4-sync' several times "
-                                        "or split them with comma")
-
-        parser.add_hidden_argument("--p4-shelve", "-p4s", action="append", nargs='+', dest="shelve_cls",
-                                   is_hidden=hide_sync_options, metavar="SHELVE_CHANGELIST_1",
-                                   help="List of shelve CLs to be applied, separated by comma. "
-                                        "--p4-shelve can be added to the command line several times. "
-                                        "5 shelve CLs can be specified via environment variables: "
-                                        "SHELVE_CHANGELIST_1..5")
-
-        parser.add_argument("--p4-port", "-p4p", dest="port", help="P4 port (e.g. 'myhost.net:1666')",
-                            metavar="P4PORT")
+        parser.add_argument("--p4-port", "-p4p", dest="port", help="P4 port (e.g. 'myhost.net:1666')", metavar="P4PORT")
         parser.add_argument("--p4-user", "-p4u", dest="user", help="P4 user name", metavar="P4USER")
         parser.add_argument("--p4-password", "-p4P", dest="password", help="P4 password", metavar="P4PASSWD")
-
-        parser.add_argument("--p4-project-depot-path", "-p4d", dest="project_depot_path", metavar="P4_PATH",
-                            help="Depot path to get sources from (starts with '//', ends with '/...'"
-                                 "Only supports one path. Cannot be used with '--p4-mappings' option")
-
-        parser.add_argument("--p4-mappings", "-p4m", dest="mappings", action="append", nargs='+',
-                            metavar="P4_MAPPINGS",
-                            help="P4 mappings. Cannot be used with '--p4-project-depot-path' option. "
-                                 "Use the following format: '//depot/path/... /local/path/...', "
-                                 "where the right half is the same as in real P4 mappings, "
-                                 "but without client name. Just start from client root with one slash. "
-                                 "For more than one add several times or split with ',' character")
-
-        parser.add_hidden_argument("--p4-client", "-p4c", dest="client", metavar="P4CLIENT",
-                                   is_hidden=hide_sync_options,
-                                   help="P4 client (workspace) name. "
-                                        "Use '--p4-force-clean' option to make a disposable client")
-        parser.add_hidden_argument("--p4-force-clean", action="store_true", dest="force_clean",
-                                   is_hidden=hide_sync_options,
-                                   help="**Revert all vcs within '--p4-client' and delete the workspace.** "
-                                        "Mandatory for CI environment, otherwise use with caution")
 
     def check_required_option(self, name, env_var):
         utils.check_required_option(self.settings, name, env_var)
 
-    def code_review(self):
-        self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
-        return self.swarm
-
     def __init__(self, *args, **kwargs):
         super(PerforceVcs, self).__init__(*args, **kwargs)
-
-        self.artifacts = None
-        self.swarm = None
-        self.p4 = P4()
 
         self.check_required_option("port", "P4PORT")
         self.check_required_option("user", "P4USER")
         self.check_required_option("password", "P4PASSWD")
 
-        self.client_name = self.settings.client
-        self.client_root = self.settings.project_root
-        self.sync_cls = []
-        self.shelve_cls = []
-        self.depots = []
-        self.client_view = []
-
-        self.mappings_dict = {}
-
-        # Convert old-style depot path into mappings
-        if self.settings.project_depot_path:
-            if self.settings.mappings:
-                raise IncorrectParameterError("Both 'P4_PATH' and 'P4_MAPPINGS' cannot be processed simultaneously")
-            self.mappings = [self.settings.project_depot_path + " /..."]
-        else:
-            self.mappings = self.settings.mappings
-
-        self.mappings = utils.unify_argument_list(self.mappings)
+        self.p4 = P4()
 
     @make_block("Connecting")
     @catch_p4exception()
@@ -134,30 +71,40 @@ class PerforceVcs(BaseVcs):
             self.p4.connect()
             self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
-    def get_changes(self, changes_reference=None, max_number='1'):
-        self.connect()
+    @make_block("Disconnecting")
+    def disconnect(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.p4.disconnect()
+            if not w:
+                return
+            if "Not connected" in w[0].message.message:
+                text = "Perforce client is not connected on disconnect. Something must have gone wrong"
+                self.structure.fail_current_block(text)
+            else:
+                text = ""
+                for line in w:
+                    text += "\n" + warnings.formatwarning(line.message, line.category, line.filename, line.lineno)
+                self.structure.fail_current_block("Unexpected warning(s): " + text)
+            raise SilentAbortException()
 
-        if not changes_reference:
-            changes_reference = {}
-        result = {}
+    def finalize(self):
+        with Uninterruptible(self.out.log_exception) as run:
+            run(self.disconnect)
+            run(super(PerforceVcs, self).finalize)
 
-        for depot in self.mappings:
-            depot_path = depot.split(" ")[0]
-            if depot_path not in result:
-                result[depot_path] = []
 
-            changes = self.p4.run_changes("-s", "submitted", "-m1", depot_path)
-            last_cl = changes[0]["change"]
-            reference_cl = changes_reference.get(depot_path, last_cl)
+class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("Perforce")
+        parser.add_argument("--p4-client", "-p4c", dest="client", metavar="P4CLIENT",
+                            help="Existing P4 client (workspace) name to use for submitting")
 
-            rev_range_string = depot_path + "@" + reference_cl + ",#head"
-            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + unicode(max_number), rev_range_string)
+    def __init__(self, *args, **kwargs):
+        super(PerforceSubmitVcs, self).__init__(*args, **kwargs)
 
-            submitted_cls.reverse()
-            for cl in submitted_cls:
-                result[depot_path].append(cl["change"])
-
-        return result
+        self.client_name = self.settings.client
+        self.client_root = self.settings.project_root
 
     def p4reconcile(self, *args, **kwargs):
         try:
@@ -169,6 +116,7 @@ class PerforceVcs(BaseVcs):
                 raise
             return []
 
+    @catch_p4exception()
     def submit_new_change(self, description, file_list, review=False, edit_only=False):
         self.connect()
 
@@ -181,11 +129,15 @@ class PerforceVcs(BaseVcs):
         client = self.p4.fetch_client(self.settings.client)
         workspace_root = client['Root']
 
-        try: # Make sure default CL is empty.
+        # Make sure default CL is empty
+        try:
             change = self.p4.fetch_change()
             if "Files" in change:
-                self.out.log("Default change list contains some vcs, though reconcile was not called yet."
-                             "Skipping Submit.")
+                text = "Default CL already contains the following files before reconciling:\n"
+                for line in change["Files"]:
+                    text += " * " + line + "\n"
+                text += "Submitting skipped"
+                self.out.log(text)
                 return 0
         except P4Exception:
             pass
@@ -204,8 +156,13 @@ class PerforceVcs(BaseVcs):
                 reconcile_result = self.p4reconcile(file_path)
 
             for line in reconcile_result:
-                if line["action"] == "add":
-                    self.p4.run_reopen("-t", "+w", line["depotFile"])
+                # p4reconcile returns list of dicts AND strings if file is opened in another workspace
+                # so we catch TypeError if line is not dict
+                try:
+                    if line["action"] == "add":
+                        self.p4.run_reopen("-t", "+w", line["depotFile"])
+                except TypeError:
+                    self.out.log(line)
 
         current_cl = self.p4.fetch_change()
         current_cl['Description'] = description
@@ -218,6 +175,93 @@ class PerforceVcs(BaseVcs):
         cl_number = result[-1]['submittedChange']
 
         return cl_number
+
+
+class PerforceWithMappings(PerforceVcs):
+
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("Perforce")
+
+        parser.add_argument("--p4-project-depot-path", "-p4d", dest="project_depot_path", metavar="P4_PATH",
+                            help="Depot path to get sources from (starts with '//', ends with '/...'"
+                                 "Only supports one path. Cannot be used with '--p4-mappings' option")
+
+        parser.add_argument("--p4-mappings", "-p4m", dest="mappings", action="append", nargs='+',
+                            metavar="P4_MAPPINGS",
+                            help="P4 mappings. Cannot be used with '--p4-project-depot-path' option. "
+                                 "Use the following format: '//depot/path/... /local/path/...', "
+                                 "where the right half is the same as in real P4 mappings, "
+                                 "but without client name. Just start from client root with one slash. "
+                                 "For more than one add several times or split with ',' character")
+
+    def __init__(self, *args, **kwargs):
+        super(PerforceWithMappings, self).__init__(*args, **kwargs)
+        # Convert old-style depot path into mappings
+        if self.settings.project_depot_path:
+            if self.settings.mappings:
+                raise IncorrectParameterError("Both 'P4_PATH' and 'P4_MAPPINGS' cannot be processed simultaneously")
+            mappings = [self.settings.project_depot_path + " /..."]
+        else:
+            mappings = self.settings.mappings
+
+        self.mappings = utils.unify_argument_list(mappings)
+
+
+class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
+    swarm_factory = Dependency(Swarm)
+    artifacts_factory = Dependency(ArtifactCollector)
+
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("Perforce")
+
+        parser.add_argument("--p4-client", "-p4c", dest="client", metavar="P4CLIENT",
+                            help="P4 client (workspace) name to be created. "
+                                 "Use '--p4-force-clean' option to delete this client while finalizing")
+
+        parser.add_argument("--p4-sync", "-p4h", action="append", nargs='+', dest="sync_cls",
+                            metavar="SYNC_CHANGELIST",
+                            help="Sync (head) CL(s). Just a number will be interpreted as united CL for "
+                                 "all added VCS roots. To add a sync CL for specific depot/workspace location, "
+                                 "write location in the same format as in P4_MAPPINGS with '@<CL number>' "
+                                 "in the end, e.g. '//DEV/Solution/MyProject/...@1234567'. To specify "
+                                 "more than one sync CL for several locations, add '--p4-sync' several times "
+                                 "or split them with comma")
+
+        parser.add_argument("--p4-shelve", "-p4s", action="append", nargs='+', dest="shelve_cls",
+                            metavar="SHELVE_CHANGELIST_1",
+                            help="List of shelve CLs to be applied, separated by comma. "
+                                 "--p4-shelve can be added to the command line several times. "
+                                 "5 shelve CLs can be specified via environment variables: "
+                                 "SHELVE_CHANGELIST_1..5")
+
+        parser.add_argument("--p4-force-clean", action="store_true", dest="force_clean",
+                            help="**Revert all vcs within '--p4-client' and delete the workspace.** "
+                                 "Mandatory for CI environment, otherwise use with caution")
+
+    def __init__(self, *args, **kwargs):
+        super(PerforceMainVcs, self).__init__(*args, **kwargs)
+
+        self.artifacts = self.artifacts_factory()
+        # self.swarm is initialized by self.code_review()
+        self.swarm = None
+
+        self.client_name = self.settings.client
+        self.client_root = self.settings.project_root
+
+        self.sync_cls = []
+        self.shelve_cls = []
+        self.depots = []
+        self.client_view = []
+        self.mappings_dict = {}
+
+        self.unshelved_files = []
+        self.diff_in_files = {}
+
+    def code_review(self):
+        self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
+        return self.swarm
 
     def expand_workspace_parameters(self):
         # Create a list of depots for sync
@@ -257,17 +301,6 @@ class PerforceVcs(BaseVcs):
             if isinstance(line, dict):
                 self.out.log(line["depotFile"] + " (" + line["action"] + ")")
 
-    @make_block("Cleaning workspace", pass_errors=False)
-    @catch_p4exception(ignore_if="doesn't exist")
-    def clean_workspace(self):
-        try:
-            self.p4.client = self.client_name
-            report = self.p4.run_revert("//...")
-            self.p4report(report)
-        except P4Exception:
-            pass
-        self.p4.delete_client(self.client_name)
-
     @make_block("Creating workspace")
     @catch_p4exception()
     def create_workspace(self):
@@ -302,7 +335,7 @@ class PerforceVcs(BaseVcs):
     @make_block("Downloading")
     @catch_p4exception()
     def sync(self):
-        self.sources_need_cleaning = True
+        self.sources_need_cleaning = True        # pylint: disable=attribute-defined-outside-init
         self.append_repo_status("Sync CLs:\n")
 
         for idx, depot in enumerate(self.depots):
@@ -378,7 +411,6 @@ class PerforceVcs(BaseVcs):
 
     @make_block("Checking diff")
     def diff(self):
-        self.artifacts = self.artifacts_factory()
         rep_diff = []
         for depot in self.depots:
             line = depot["path"] + '@' + depot["cl"]
@@ -395,27 +427,46 @@ class PerforceVcs(BaseVcs):
                 f.write(result)
             f.close()
 
-    @make_block("Disconnecting")
-    def disconnect(self):
-        with warnings.catch_warnings(record=True) as w:
-            self.p4.disconnect()
-            if not w:
-                return
-            if "Not connected" in w[0].message.message:
-                text = "Perforce client is not connected on disconnect. Something must have gone wrong"
-                self.structure.fail_current_block(text)
-            else:
-                text = ""
-                for line in w:
-                    text += "\n" + warnings.formatwarning(line.message, line.category, line.filename, line.lineno)
-                self.structure.fail_current_block("Unexpected warning(s): " + text)
-            raise SilentAbortException()
-
     def map_local_path_to_depot(self, report):
         for line in report:
             if isinstance(line, dict):
                 abs_path = self.p4.run("where", line["depotFile"])[0]["path"]
                 self.mappings_dict[abs_path] = line["depotFile"]
+
+    @make_block("Revert workspace to depot state")
+    @catch_p4exception()
+    def copy_cl_files_and_revert(self):
+        self.unshelved_files = self.p4.run_opened()
+        unshelved_path = []
+
+        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
+
+        for item in unshelved_filtered:
+            relative = item["clientFile"].replace("//" + item["client"] + "/", "")
+            copied = os.path.join(self.client_root, "new_temp", relative)
+            absolute = os.path.join(self.client_root, relative)
+            unshelved_path.append((relative, copied, absolute))
+            try:
+                shutil.copy(absolute, copied)
+            except IOError:
+                os.makedirs(os.path.dirname(copied))
+                shutil.copy(absolute, copied)
+
+        if self.shelve_cls:
+            self.p4.run_revert("//...")
+
+            for item, path in zip(unshelved_filtered, unshelved_path):
+                relative, copied, absolute = path
+
+                if item["action"] == "move/add":
+                    for local, depot in self.mappings_dict.iteritems():
+                        if depot == item["movedFile"]:
+                            absolute = local
+
+                with open(absolute, "r") as a, open(copied, "r") as b:
+                    diff = difflib.SequenceMatcher(a=a.read().splitlines(), b=b.read().splitlines())
+                    self.diff_in_files.update({relative: diff.get_matching_blocks()})
+        return self.diff_in_files
 
     def prepare_repository(self):
         self.connect()
@@ -427,6 +478,17 @@ class PerforceVcs(BaseVcs):
             self.swarm.client_root = self.client_root
             self.swarm.mappings_dict = self.mappings_dict
 
+    @make_block("Cleaning workspace", pass_errors=False)
+    @catch_p4exception(ignore_if="doesn't exist")
+    def clean_workspace(self):
+        try:
+            self.p4.client = self.client_name
+            report = self.p4.run_revert("//...")
+            self.p4report(report)
+        except P4Exception:
+            pass
+        self.p4.delete_client(self.client_name)
+
     def finalize(self):
         with Uninterruptible(self.out.log_exception) as run:
             if self.settings.force_clean:
@@ -434,3 +496,30 @@ class PerforceVcs(BaseVcs):
                 run(self.clean_workspace)
             run(self.disconnect)
             run(super(PerforceVcs, self).finalize)
+
+
+class PerforcePollVcs(PerforceWithMappings, base_vcs.BasePollVcs):
+    def get_changes(self, changes_reference=None, max_number='1'):
+        self.connect()
+
+        if not changes_reference:
+            changes_reference = {}
+        result = {}
+
+        for depot in self.mappings:
+            depot_path = depot.split(" ")[0]
+            if depot_path not in result:
+                result[depot_path] = []
+
+            changes = self.p4.run_changes("-s", "submitted", "-m1", depot_path)
+            last_cl = changes[0]["change"]
+            reference_cl = changes_reference.get(depot_path, last_cl)
+
+            rev_range_string = depot_path + "@" + reference_cl + ",#head"
+            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + unicode(max_number), rev_range_string)
+
+            submitted_cls.reverse()
+            for cl in submitted_cls:
+                result[depot_path].append(cl["change"])
+
+        return result

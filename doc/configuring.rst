@@ -263,6 +263,13 @@ background
     starting a background step, not waiting for it to be completed. Several background steps
     can be executed simultaneously.
 
+.. _finish_background:
+
+finish_background
+    Basic usage is adding ``finish_background=True`` to configuration description.
+    This parameter means that before executing this particular step all ongoing background steps
+    (if any) should be finished first.
+
 .. _tc_tags:
 
 pass_tag, fail_tag

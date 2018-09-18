@@ -2,13 +2,14 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, invalid-name
 
+from argparse import ArgumentError
 import mock
 import pytest
 
-from _universum.gravity import construct_component, define_arguments_recursive, Module, Dependency
-from _universum.gravity import get_name_to_module_map, get_dependencies
-import _universum.module_arguments
-import _universum.gravity
+from _universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
+from _universum.lib.gravity import get_dependencies
+import _universum.lib.module_arguments
+import _universum.lib.gravity
 
 
 @pytest.fixture()
@@ -17,12 +18,12 @@ def mock_module():
         def __new__(cls, *args, **kwargs):
             return old_module.__new__(cls, *args, **kwargs)
 
-    old_module = _universum.gravity.Module
-    _universum.gravity.Module = MockedModule
+    old_module = _universum.lib.gravity.Module
+    _universum.lib.gravity.Module = MockedModule
 
     yield MockedModule
 
-    _universum.gravity.Module = old_module
+    _universum.lib.gravity.Module = old_module
 
 
 def mock_define_arguments(klass):
@@ -31,97 +32,37 @@ def mock_define_arguments(klass):
     return klass
 
 
-class StaticallyDefinedModule1(Module):
-    pass
-
-
-class StaticallyDefinedModule2(Module):
-    pass
-
-
-def test_name_to_module_map_dynamic(mock_module):
-    class First(mock_module):
-        pass
-
-    class Second(mock_module):
-        pass
-
-    assert get_name_to_module_map() == {'First': First, 'Second': Second}
-
-
-def test_name_to_module_map_dynamic_another_context(mock_module):
-    class Third(mock_module):
-        pass
-
-    class Fourth(mock_module):
-        pass
-
-    assert get_name_to_module_map() == {'Third': Third, 'Fourth': Fourth}
-
-
-def test_name_to_module_map_static_context():
-    module_map = get_name_to_module_map()
-    assert module_map['StaticallyDefinedModule1'] == StaticallyDefinedModule1
-    assert module_map['StaticallyDefinedModule2'] == StaticallyDefinedModule2
-
-
-def test_name_to_module_map_inheritance(mock_module):
-    class Root(mock_module):
-        pass
-
-    class Root2(mock_module):
-        pass
-
-    class Child(Root):
-        pass
-
-    class Derived1(Root):
-        pass
-
-    class Derived2(Root):
-        pass
-
-    class Bottom(Derived1, Derived2):
-        pass
-
-    assert get_name_to_module_map() == {'Root': Root, 'Root2': Root2, 'Child': Child,
-                                        'Derived1': Derived1, 'Derived2': Derived2, 'Bottom': Bottom}
-
-
 def test_dependencies_simple(mock_module):
-    class RootOneUser(mock_module):
-        dep = Dependency("OnlyDep")
-
     class OnlyDep(mock_module):
         pass
 
-    assert get_dependencies(RootOneUser, get_name_to_module_map()) == [RootOneUser, OnlyDep]
-    assert get_dependencies(OnlyDep, get_name_to_module_map()) == [OnlyDep]
+    class RootOneUser(mock_module):
+        dep = Dependency(OnlyDep)
+
+    assert get_dependencies(RootOneUser) == [RootOneUser, OnlyDep]
+    assert get_dependencies(OnlyDep) == [OnlyDep]
 
 
 def test_dependencies_two_users(mock_module):
-    class RootTwoUsers(mock_module):
-        first = Dependency("FirstDep")
-        second = Dependency("SecondDep")
-
-    class FirstDep(mock_module):
-        dep = Dependency("Common")
-
-    class SecondDep(mock_module):
-        dep = Dependency("Common")
-
     class Common(mock_module):
         pass
 
-    dependencies = get_dependencies(RootTwoUsers, get_name_to_module_map())
+    class FirstDep(mock_module):
+        dep = Dependency(Common)
+
+    class SecondDep(mock_module):
+        dep = Dependency(Common)
+
+    class RootTwoUsers(mock_module):
+        first = Dependency(FirstDep)
+        second = Dependency(SecondDep)
+
+    dependencies = get_dependencies(RootTwoUsers)
     for x in (RootTwoUsers, FirstDep, SecondDep, Common):
         assert x in dependencies
 
 
 def test_define_arguments_mock_no_call(mock_module):
-    class RootDefineArgs(mock_module):
-        dep = Dependency("FirstDependency")
-
     @mock_define_arguments
     class FirstDependency(mock_module):
         pass
@@ -129,6 +70,9 @@ def test_define_arguments_mock_no_call(mock_module):
     @mock_define_arguments
     class NotADependency(mock_module):
         pass
+
+    class RootDefineArgs(mock_module):
+        dep = Dependency(FirstDependency)
 
     FirstDependency.define_arguments.assert_not_called()
     NotADependency.define_arguments.assert_not_called()
@@ -142,41 +86,41 @@ def test_define_arguments_mock_no_call(mock_module):
 
 
 def test_define_arguments_3(mock_module):
-    class ChainStart(mock_module):
-        dep = Dependency("ChainSecond")
-
-        @staticmethod
-        def define_arguments(parser):
-            parser.add_argument('--option1')
-
-    class ChainSecond(mock_module):
-        dep = Dependency("ChainEnd")
-
-        @staticmethod
-        def define_arguments(parser):
-            parser.add_argument('--option2')
-
     class ChainEnd(mock_module):
         @staticmethod
         def define_arguments(parser):
             group_parser = parser.get_or_create_group("ChainEnd group")
             group_parser.add_argument('--option3')
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    class ChainSecond(mock_module):
+        dep = Dependency(ChainEnd)
+
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--option2')
+
+    class ChainStart(mock_module):
+        dep = Dependency(ChainSecond)
+
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--option1')
+
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainStart, parser)
     settings = parser.parse_args(["--option2=abc"])
     assert settings.ChainStart.option1 is None
     assert settings.ChainSecond.option2 == "abc"
     assert settings.ChainEnd.option3 is None
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainSecond, parser)
     settings = parser.parse_args(["--option2=def"])
     assert 'ChainStart' not in dir(settings)
     assert settings.ChainSecond.option2 == "def"
     assert settings.ChainEnd.option3 is None
 
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainEnd, parser)
     settings = parser.parse_args([])
     assert 'ChainStart' not in dir(settings)
@@ -184,33 +128,49 @@ def test_define_arguments_3(mock_module):
     assert settings.ChainEnd.option3 is None
 
 
-def test_define_arguments_mock_circular(mock_module):
-    class M(mock_module):
-        dep = Dependency("N")
+def test_define_arguments_inheritance(mock_module, capsys):
+    class ParentModule(mock_module):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--parent')
 
-    class N(mock_module):
-        dep = Dependency('O')
+    class InheritedModule1(ParentModule):
+        pass
 
-    class O(mock_module):
-        dep = Dependency('M')
+    class InheritedModule2(ParentModule):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--child')
 
-    def assert_circular(start_module, cycle_string):
-        parser = mock.MagicMock()
-        with pytest.raises(LookupError) as exception_info:
-            define_arguments_recursive(start_module, parser)
-        assert 'Circular dependency' in str(exception_info.value)
-        assert cycle_string in str(exception_info.value)
+    class WrongInheritedModule(ParentModule):
+        @staticmethod
+        def define_arguments(parser):
+            parser.add_argument('--parent')
 
-    assert_circular(M, "M->N->O->M")
-    assert_circular(N, "N->O->M->N")
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    define_arguments_recursive(ParentModule, parser)
+    settings = parser.parse_args(["--parent=abc"])
+    assert settings.ParentModule.parent == "abc"
+    with pytest.raises(SystemExit) as exception_info:
+        parser.parse_args(["--child=def"])
+    assert exception_info.value.code == 2
+    assert "unrecognized arguments: --child=def" in capsys.readouterr()[1]
 
-    O.dep = Dependency('N')
-    assert_circular(M, "N->O->N")
-    assert_circular(N, "N->O->N")
-    assert_circular(O, "O->N->O")
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    define_arguments_recursive(InheritedModule1, parser)
+    settings = parser.parse_args(["--parent=abc"])
+    assert settings.ParentModule.parent == "abc"
 
-    O.dep = Dependency('O')
-    assert_circular(O, "O->O")
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    define_arguments_recursive(InheritedModule2, parser)
+    settings = parser.parse_args(["--parent=abc", "--child=def"])
+    assert settings.ParentModule.parent == "abc"
+    assert settings.InheritedModule2.child == "def"
+
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    with pytest.raises(ArgumentError) as exception_info:
+        define_arguments_recursive(WrongInheritedModule, parser)
+    assert "conflicting option string(s): --parent" in str(exception_info.value)
 
 
 def test_settings_access(mock_module):
@@ -225,8 +185,8 @@ def test_settings_access(mock_module):
         def __init__(self):
             self.s = self.dep()
 
-    settings = _universum.module_arguments.ModuleNamespace()
-    child_settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
+    child_settings = _universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = "abc"
     setattr(settings, 'S', child_settings)
     r = construct_component(R, settings)
@@ -256,8 +216,8 @@ def test_settings_access(mock_module):
 
 
 def make_settings(name, value):
-    settings = _universum.module_arguments.ModuleNamespace()
-    child_settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
+    child_settings = _universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = value
 
     if not isinstance(name, basestring):
@@ -267,15 +227,6 @@ def make_settings(name, value):
 
 
 def test_construct_component(mock_module):
-    class P(mock_module):
-        dep = Dependency('Q')
-
-        def __init__(self):
-            self.q = 123
-
-        def init_with_dependency(self):
-            self.q = self.dep()
-
     class Q(mock_module):
         @staticmethod
         def define_arguments(parser):
@@ -287,23 +238,32 @@ def test_construct_component(mock_module):
         def empty_init(self):
             pass
 
+    class P(mock_module):
+        dep = Dependency(Q)
+
+        def __init__(self):
+            self.q = 123
+
+        def init_with_dependency(self):
+            self.q = self.dep()
+
     # no reference to Q
-    p1 = construct_component('P', make_settings(Q, ""))
+    p1 = construct_component(P, make_settings(Q, ""))
     assert p1.q == 123
 
     # create dynamic reference to Q by calling method
-    p2 = construct_component('P', make_settings(Q, "def"))
+    p2 = construct_component(P, make_settings(Q, "def"))
     p2.init_with_dependency()
     assert p2.q.member == "def"
 
     # create static reference to Q by rewriting __init__
     P.__init__ = P.init_with_dependency
-    p3 = construct_component('P', make_settings(Q, "ghi"))
+    p3 = construct_component(P, make_settings(Q, "ghi"))
     assert p3.q.member == "ghi"
 
     # remove __init__ of Q to make sure "member" is present because of __init__ call
     Q.__init__ = Q.empty_init
-    p4 = construct_component('P', make_settings(Q, "jkl"))
+    p4 = construct_component(P, make_settings(Q, "jkl"))
     assert 'member' not in dir(p4.q)
 
 
@@ -325,7 +285,7 @@ def test_construct_component_same_instance(mock_module):
             self.u = self.dep1()
             self.v = self.dep2()
 
-    settings = _universum.module_arguments.ModuleNamespace()
+    settings = _universum.lib.module_arguments.ModuleNamespace()
     t = construct_component(T, settings)
     assert t.v == t.u.v
     assert "T" in repr(t)
@@ -337,6 +297,22 @@ def test_construct_component_same_instance(mock_module):
 
     v = construct_component(V, settings)
     assert t.v == v
+
+
+def test_construct_component_same_name(mock_module):
+
+    def get_class(parameter):
+        class TheOnlyClass(mock_module):
+            the_only_parameter = parameter
+
+        return TheOnlyClass
+
+    settings = _universum.lib.module_arguments.ModuleNamespace()
+    first_object = construct_component(get_class("abc"), settings)
+    second_object = construct_component(get_class("def"), settings)
+
+    assert first_object.the_only_parameter == "abc"
+    assert second_object.the_only_parameter == "def"
 
 
 def test_additional_init_parameters(mock_module):
@@ -363,7 +339,7 @@ def test_additional_init_parameters(mock_module):
 
 
 def parse_settings(klass, arguments):
-    parser = _universum.module_arguments.ModuleArgumentParser()
+    parser = _universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(klass, parser)
     return parser.parse_args(arguments)
 
@@ -476,10 +452,10 @@ def test_construct_component_multiple_instance(mock_module):
                 self.nz = self.dep()
 
     settings1 = parse_settings(W, ["--wparam=z", "--zparam=abc"])
-    w1 = construct_component('W', settings1)
+    w1 = construct_component(W, settings1)
 
     settings2 = parse_settings(W, ["--wparam=not_z", "--zparam=def"])
-    w2 = construct_component('W', settings2)
+    w2 = construct_component(W, settings2)
 
     assert w1.settings.wparam == "z"
     assert w2.settings.wparam == "not_z"

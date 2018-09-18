@@ -6,14 +6,16 @@ import sys
 import json
 import sh
 
-from . import configuration_support, utils, artifact_collector, automation_server, reporter
-from .ci_exception import CiException, CriticalCiException, StepException
-from .gravity import Dependency
-from .module_arguments import IncorrectParameterError
-from .project_directory import ProjectDirectory
+from .. import configuration_support
+from ..lib import utils
+from ..lib.ci_exception import CiException, CriticalCiException, StepException
+from ..lib.gravity import Dependency
+from ..lib.module_arguments import IncorrectParameterError
+from ..lib.utils import make_block
+from . import automation_server, artifact_collector, reporter
 from .output import needs_output
+from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
-from .utils import make_block
 
 __all__ = [
     "Launcher",
@@ -110,9 +112,9 @@ def finalize_execution(cmd, log, pass_tag, fail_tag):
 
 class LogWriter(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, out, structure, artifacts, report, server, output_type, step_name, background=False):
+    def __init__(self, out, artifacts, report, server, output_type, step_name, fail_block, background=False):
         self.out = out
-        self.structure = structure
+        self.fail_block = fail_block
         self.artifacts = artifacts
         self.reporter = report
         self.background = background
@@ -157,7 +159,7 @@ class LogWriter(object):
 
         if self.file:
             self.file.write(line + "\n")
-        self.structure.fail_current_block(line)
+        self.fail_block(line)
 
     def add_tag(self, tag):
         request = self.server.add_build_tag(tag)
@@ -194,7 +196,7 @@ class LogWriterCodeReport(LogWriter):
             if report:
                 text = unicode(len(report)) + " issues"
                 self.error_lines.append(text)
-                self.structure.fail_current_block("Found " + text)
+                self.fail_block("Found " + text)
                 self.out.report_build_status(self.step_name + ": " + text)
         if not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
             self.out.log("Issues not found.")
@@ -294,8 +296,14 @@ class Launcher(ProjectDirectory):
             self.structure.fail_current_block(unicode(ex))
             raise StepException()
 
-        init = [self.out, self.structure, self.artifacts, self.reporter, self.server, self.settings.output,
-                step_name, background]
+        # get_current_block() should be called while inside the required block, not afterwards
+        block = self.structure.get_current_block()
+
+        def fail_block(line=None):
+            self.structure.fail_block(block, line)
+
+        init = [self.out, self.artifacts, self.reporter, self.server, self.settings.output,
+                step_name, fail_block, background]
         if code_report:
             report_file = os.path.join(working_directory, "temp_code_report.json")
             log_writer = LogWriterCodeReport(report_file, *init)
@@ -318,6 +326,12 @@ class Launcher(ProjectDirectory):
             command_path = utils.strip_path_start(item["command"][0])
             working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
                                                  self.settings.project_root)
+
+            finish_background = item.get("finish_background", False)
+            if finish_background and self.background_processes:
+                self.out.log("All ongoing background steps should be finished before execution")
+                self.report_background_steps()
+
             self.run_cmd(command_path,
                          item.get("name", ''),
                          working_directory,
@@ -332,10 +346,15 @@ class Launcher(ProjectDirectory):
             else:
                 raise
 
-    @make_block("Reporting background steps")
     def report_background_steps(self):
         for process in self.background_processes:
-            self.structure.run_in_block(finalize_execution, process['log'].step_name, False, **process)
+            try:
+                self.out.log("Waiting for step '" + process['log'].step_name + "' to finish...")
+                finalize_execution(**process)
+            except StepException:  # background step cannot be critical
+                self.out.log_stderr("Reported this background step as failed")
+        self.out.log("All ongoing background steps completed")
+        self.background_processes = []
 
     @make_block("Executing build steps")
     def launch_project(self):
@@ -343,6 +362,7 @@ class Launcher(ProjectDirectory):
         try:
             self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
             if self.background_processes:
+                self.structure.run_in_block(self.report_background_steps, "Reporting background steps", False)
                 self.report_background_steps()
         except StepException:
             pass

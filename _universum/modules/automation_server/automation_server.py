@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+from ...lib.gravity import Dependency, Module
+from ...lib import utils
 from .jenkins_server import JenkinsServer
 from .local_server import LocalServer
 from .teamcity_server import TeamcityServer
-from ..gravity import Dependency, Module
-from .. import utils
 
 __all__ = [
     "AutomationServer"

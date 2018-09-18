@@ -53,13 +53,13 @@ class SvaceAnalyzer(object):
             issues_loads = []
             for info in warn_info:
                 issue = dict()
-                issue["symbol"] = info.attrib["warnClass"] + "\n"
-                issue["message"] = "Warning message: " + info.attrib["msg"]
+                issue["symbol"] = info.attrib["warnClass"]
+                issue["message"] = "\nWarning message: " + info.attrib["msg"]
                 issue["path"] = info.attrib["file"]
                 issue["line"] = info.attrib["line"]
                 issues_loads.append(issue)
             with open(self.json_file, "w") as outfile:
-                outfile.write(json.dumps(issues_loads))
+                outfile.write(json.dumps(issues_loads, indent=4))
         except etree.XMLSyntaxError as e:
             sys.stderr.write(e.error_log)
             return 1

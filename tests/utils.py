@@ -6,9 +6,8 @@ import string
 
 import docker
 
-from _universum import gravity
-import poll
-import submit
+from _universum import submit, poll
+from _universum.lib import gravity
 from . import default_args
 
 __all__ = [
@@ -81,12 +80,14 @@ def create_settings(class_name):
 class TestEnvironment(object):
     def __init__(self, test_type):
         if test_type == "poll":
-            self.settings = create_settings(poll.Poller)
-            self.settings.Poller.db_file = self.db_file
+            self.settings = create_settings(poll.Poll)
+            self.settings.subcommand = "poll"
+            self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
         else:
             self.settings = create_settings(submit.Submit)
+            self.settings.subcommand = "submit"
             self.settings.Submit.commit_message = "Test CL"
             self.settings.ProjectDirectory.project_root = unicode(self.root_directory)
         self.settings.Output.type = "term"

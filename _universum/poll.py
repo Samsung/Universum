@@ -1,23 +1,21 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import json
-import sys
 
-from _universum import automation_server
-from _universum.vcs import vcs
-from _universum.entry_points import run_main_for_module, run_with_settings
-from _universum.gravity import Module, Dependency
-from _universum.output import needs_output
-from _universum.structure_handler import needs_structure
-from _universum.utils import make_block
+from .lib.gravity import Module, Dependency
+from .lib.utils import make_block
+from .modules import automation_server, vcs
+from .modules.output import needs_output
+from .modules.structure_handler import needs_structure
+
+__all__ = ["Poll"]
 
 
 @needs_output
 @needs_structure
-class Poller(Module):
-    description = "Polling module of Universum "
-    vcs_factory = Dependency(vcs.Vcs)
+class Poll(Module):
+    description = "Polling module of Universum"
+    vcs_factory = Dependency(vcs.PollVcs)
     server_factory = Dependency(automation_server.AutomationServer)
 
     @staticmethod
@@ -27,7 +25,7 @@ class Poller(Module):
                             type=int, default=10)
 
     def __init__(self, *args, **kwargs):
-        super(Poller, self).__init__(*args, **kwargs)
+        super(Poll, self).__init__(*args, **kwargs)
         self.stored_cls = {}
         self.latest_cls = {}
         self.triggered_cls = set()
@@ -76,16 +74,3 @@ class Poller(Module):
 
     def finalize(self):
         self.vcs.finalize()
-
-
-def run(settings):
-    return run_with_settings(Poller, settings)
-
-
-def main(*args, **kwargs):
-    return run_main_for_module(Poller, *args, **kwargs)
-
-
-if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)
