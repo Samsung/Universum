@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.15.2 (2018-09-26)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **swarm:** add '[Related change IDs]' parsing for Swarm reviews
+
+
 0.15.1 (2018-09-17)
 -------------------
 

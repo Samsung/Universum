@@ -9,6 +9,7 @@ import sh
 from P4 import P4, P4Exception
 
 from ...modules.artifact_collector import ArtifactCollector
+from ...modules.reporter import Reporter
 from ...lib.ci_exception import CriticalCiException, SilentAbortException
 from ...lib.gravity import Dependency
 from ...lib.module_arguments import IncorrectParameterError
@@ -211,6 +212,7 @@ class PerforceWithMappings(PerforceVcs):
 class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     swarm_factory = Dependency(Swarm)
     artifacts_factory = Dependency(ArtifactCollector)
+    reporter_factory = Dependency(Reporter)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -244,6 +246,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         super(PerforceMainVcs, self).__init__(*args, **kwargs)
 
         self.artifacts = self.artifacts_factory()
+        self.reporter = self.reporter_factory()
         # self.swarm is initialized by self.code_review()
         self.swarm = None
 
@@ -262,6 +265,32 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def code_review(self):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
         return self.swarm
+
+    def parse_description(self, cl_number):
+        description = self.p4.run_describe(cl_number)[0]
+        for entry in description['desc'].splitlines():
+            if entry.startswith("[Related change IDs]"):
+                return [number.strip() for number in entry.strip("[Related change IDs]").split(",")]
+        return []
+
+    @make_block("Checking that current and master CLs related change IDs are the same", False)
+    def get_related_cls(self, cl_number):
+        cl_list = self.parse_description(cl_number)
+
+        master_cl = cl_list[-1]
+        if master_cl == cl_number:
+            return cl_list
+
+        master_list = self.parse_description(master_cl)
+        if cl_list != master_list:
+            self.reporter.add_block_to_report(self.structure.get_current_block())
+            self.structure.fail_current_block("Related CLs list doesn't match master CL related list!")
+            return cl_list
+
+        self.out.log("Not a master CL, no check needed")
+        self.out.report_build_status("Not a master CL")
+        self.swarm = None
+        raise SilentAbortException(application_exit_code=0)
 
     def expand_workspace_parameters(self):
         # Create a list of depots for sync
@@ -291,7 +320,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         # Retrieve list of shelved CLs from "classic" environment variables
         cls = []
         if self.swarm:
-            cls.append(self.swarm.settings.change)
+            swarm_cls = self.get_related_cls(self.swarm.settings.change)
+            cls.extend(swarm_cls)
         for x in range(2, 6):
             cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
@@ -439,7 +469,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.unshelved_files = self.p4.run_opened()
         unshelved_path = []
 
-        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
+        unshelved_filtered = [item for item in self.unshelved_files if item["action"] not in ["move/delete", "delete"]]
 
         for item in unshelved_filtered:
             relative = item["clientFile"].replace("//" + item["client"] + "/", "")
@@ -462,6 +492,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                     for local, depot in self.mappings_dict.iteritems():
                         if depot == item["movedFile"]:
                             absolute = local
+
+                if item["action"] == "branch":
+                    with open(absolute, "w+"):
+                        pass
 
                 with open(absolute, "r") as a, open(copied, "r") as b:
                     diff = difflib.SequenceMatcher(a=a.read().splitlines(), b=b.read().splitlines())
