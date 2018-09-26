@@ -276,6 +276,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     @make_block("Checking that current and master CLs related change IDs are the same", False)
     def get_related_cls(self, cl_number):
         cl_list = self.parse_description(cl_number)
+        if not cl_list:
+            return cl_list
 
         master_cl = cl_list[-1]
         if master_cl == cl_number:
