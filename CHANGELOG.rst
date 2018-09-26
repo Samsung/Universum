@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.15.4 (2018-09-26)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** fix not adding current Swarm CL number to list of CLs to unshelve
+
+
 0.15.3 (2018-09-26)
 -------------------
 

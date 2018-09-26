@@ -270,8 +270,13 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         description = self.p4.run_describe(cl_number)[0]
         for entry in description['desc'].splitlines():
             if entry.startswith("[Related change IDs]"):
-                return [number.strip() for number in entry.strip("[Related change IDs]").split(",")]
-        return []
+                cl_list = [number.strip() for number in entry.strip("[Related change IDs]").split(",")]
+                if cl_number in cl_list:
+                    return cl_list
+                self.reporter.add_block_to_report(self.structure.get_current_block())
+                self.structure.fail_current_block("Current CL is not in related list!")
+
+        return [cl_number]
 
     @make_block("Checking that current and master CLs related change IDs are the same", False)
     def get_related_cls(self, cl_number):
