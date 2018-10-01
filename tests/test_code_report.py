@@ -1,32 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import os
 import re
 
 
-def test_code_report(command_runner, universum_runner):
+def test_code_report(universum_runner):
 
-    log = universum_runner.run_from_source("config_static_issues.py")
+    # Test there's no result if no pylint is installed to system
+    log = universum_runner.run_with_coverage("config_static_issues.py")
     assert "No module named pylint" in log
 
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
-
-    log = command_runner.assert_success("pip install pylint")
+    # Install pylint
+    log = universum_runner.command_runner.assert_success("pip install pylint")
     assert "Successfully installed" in log
 
-    log = universum_runner.run_from_source("config_static_issues.py")
+    # Test configuration with issues
+    universum_runner.clean_artifacts()
+    log = universum_runner.run_with_coverage("config_static_issues.py")
     assert "Found 11 issues" in log
 
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
-
-    log = universum_runner.run_from_source("config_static_no_issues.py")
+    # Test configuration with no issues
+    universum_runner.clean_artifacts()
+    log = universum_runner.run_with_coverage("config_static_no_issues.py")
     assert "Issues not found." in log
 
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
-
-    log = universum_runner.run_from_source("basic_config.py")
+    # Test configuration with no code_report
+    universum_runner.clean_artifacts()
+    log = universum_runner.run_with_coverage("basic_config.py")
     string = re.compile("(Found [0-9]+ issues|Issues not found.)")
     assert not string.findall(log)
-
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
