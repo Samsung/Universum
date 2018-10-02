@@ -96,3 +96,4 @@ def universum_runner(command_runner):
     setup = RunBaseConfig(command_runner)
     setup.install_env()
     yield setup
+    command_runner.assert_success("rm -rf {}".format(setup.artifact_dir))
