@@ -116,12 +116,11 @@ def test_p4_c_and_revert(revert_parameters):  # pylint: disable = too-many-local
     new_test_dir = str(test_dir).replace("workspace", "new_workspace")
     new_temp = new_test_dir.replace("new_workspace", "new_workspace/new_temp")
     expected_path = [
-        ("test_files/add", new_temp + "/add", new_test_dir + "/add"),
+        ("test_files/add", new_temp + "/add", None),
         (None, None, new_test_dir + '/delete'),
         ("test_files/edit", new_temp + "/edit", new_test_dir + "/edit"),
         ("test_files/integrated", new_temp + "/integrated", new_test_dir + "/integrated"),
-        ("test_files/moved/branch_to", new_temp + "/moved/branch_to",
-         new_test_dir + "/moved/branch_to"),
+        ("test_files/moved/branch_to", new_temp + "/moved/branch_to", None),
         ("test_files/moved/move", new_temp + "/moved/move", new_test_dir + "/move"),
         ("test_files/renamed_rename", new_temp + "/renamed_rename", new_test_dir + "/rename")
     ]

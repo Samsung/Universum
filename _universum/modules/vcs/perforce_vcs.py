@@ -482,12 +482,20 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 relative = item["clientFile"].replace("//" + item["client"] + "/", "")
                 copied = os.path.join(self.client_root, "new_temp", relative)
                 absolute = os.path.join(self.client_root, relative)
-                unshelved_path.append((relative, copied, absolute))
+
                 try:
                     shutil.copy(absolute, copied)
                 except IOError:
                     os.makedirs(os.path.dirname(copied))
                     shutil.copy(absolute, copied)
+
+                # absolute = None to make sure content of 'add' and 'branch' won't participate in diff after revert
+                # for 'branch' diff we will assume it is a new file
+                # be careful, file for 'add' will be present in repo after revert
+                if item["action"] in ["add", "branch"]:
+                    absolute = None
+                unshelved_path.append((relative, copied, absolute))
+
             else:
                 absolute = os.path.join(self.client_root, item["clientFile"].replace("//" + item["client"] + "/", ""))
                 unshelved_path.append((None, None, absolute))
@@ -497,16 +505,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
             for item, path in zip(unshelved_filtered, unshelved_path):
                 relative, copied, absolute = path
-
                 if item["action"] == "move/add":
                     for local, depot in self.mappings_dict.iteritems():
                         if depot == item["movedFile"]:
                             absolute = local
-
-                if item["action"] in ["add", "branch"]:
-                    with open(absolute, "w+") as f:
-                        f.write("")
-
                 self.diff_in_files.append((relative, copied, absolute))
         return self.diff_in_files
 
