@@ -281,9 +281,30 @@ class Launcher(ProjectDirectory):
             raise CriticalCiException(text)
         return self.project_configs
 
-    # pylint: disable = too-many-locals
-    # TODO: refactor this
-    def run_cmd(self, name, step_name, working_directory, background, code_report, pass_tag, fail_tag, *args, **kwargs):
+    def execute_configuration(self, item, *args, **kwargs):  # pylint: disable = too-many-locals
+        finish_background = item.get("finish_background", False)
+        if finish_background and self.background_processes:
+            self.out.log("All ongoing background steps should be finished before execution")
+            self.report_background_steps()
+
+        try:
+            name = utils.strip_path_start(item["command"][0])
+            args = tuple(item["command"][1:]) + tuple(args)
+        except KeyError as e:
+            if e.message == "command":
+                self.out.log("No 'command' found. Nothing to execute")
+                return
+            else:
+                raise
+
+        working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
+                                             self.settings.project_root)
+        step_name = item.get("name", "")
+        background = item.get("background", False)
+        code_report = item.get("code_report", False)
+        pass_tag = item.get("pass_tag", False)
+        fail_tag = item.get("fail_tag", False)
+
         try:
             try:
                 cmd = make_command(name)
@@ -320,31 +341,6 @@ class Launcher(ProjectDirectory):
             self.out.log("Will continue in background")
         else:
             finalize_execution(ret, log_writer, pass_tag, fail_tag)
-
-    def execute_configuration(self, item):
-        try:
-            command_path = utils.strip_path_start(item["command"][0])
-            working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
-                                                 self.settings.project_root)
-
-            finish_background = item.get("finish_background", False)
-            if finish_background and self.background_processes:
-                self.out.log("All ongoing background steps should be finished before execution")
-                self.report_background_steps()
-
-            self.run_cmd(command_path,
-                         item.get("name", ''),
-                         working_directory,
-                         item.get("background", False),
-                         item.get("code_report", False),
-                         item.get("pass_tag", False),
-                         item.get("fail_tag", False),
-                         *(item["command"][1:]))
-        except KeyError as e:
-            if e.message == "command":
-                self.out.log("No 'command' found. Nothing to execute")
-            else:
-                raise
 
     def report_background_steps(self):
         for process in self.background_processes:
