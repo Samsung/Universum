@@ -86,9 +86,9 @@ def poll_parameters(log_exception_checker, stdout_checker, http_request_checker)
 
 
 @pytest.fixture(params=["git", "p4"])
-def poll_environment(request, perforce_workspace, git_server, tmpdir):
+def poll_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
-        yield git_utils.GitEnvironment(git_server, tmpdir, test_type="poll")
+        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="poll")
     else:
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="poll")
 
@@ -228,9 +228,9 @@ def submit_parameters(stdout_checker):
 
 
 @pytest.fixture(params=["git", "p4"])
-def submit_environment(request, perforce_workspace, git_server, tmpdir):
+def submit_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
-        yield git_utils.GitEnvironment(git_server, tmpdir, test_type="submit")
+        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="submit")
     else:
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 

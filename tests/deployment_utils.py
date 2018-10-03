@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from distutils import dir_util
 import getpass
 from pwd import getpwnam
 import os
@@ -77,22 +78,14 @@ def command_runner(request, docker_registry_params):
 
 
 class UniversumRunner(object):
-    def __init__(self, command_runner, perforce_workspace):
-        self.command_runner = command_runner
-        self.perforce_workspace = perforce_workspace
-        self.working_dir = command_runner.get_working_directory()
-        self.project_root = os.path.join(self.working_dir, "temp")
-        self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
-        self.source_dir = os.path.join(self.working_dir, "examples")
-
-        self.p4_path = "//depot/examples/..."
-        project_dir = unicode(perforce_workspace.root_directory.join("examples"))
+    def _init_p4(self):
+        p4_dir = unicode(self.perforce_workspace.root_directory.join("examples"))
         try:
-            shutil.copytree(self.source_dir, project_dir)
+            shutil.copytree(self.source_dir, p4_dir)
         except OSError:
-            shutil.rmtree(project_dir)
-            shutil.copytree(self.source_dir, project_dir)
+            shutil.rmtree(p4_dir)
+            shutil.copytree(self.source_dir, p4_dir)
 
         def update_directory(workspace, directory):
             workspace.p4.run_reconcile("-a", "-e", "-d", directory)
@@ -101,7 +94,43 @@ class UniversumRunner(object):
             workspace.p4.run_submit(change)
 
         ignore_p4_exception("no file(s) to reconcile", update_directory,
-                            perforce_workspace, project_dir + "/...")
+                            self.perforce_workspace, p4_dir + "/...")
+
+    def _init_git(self):
+        configurator = self.git_client.repo.config_writer()
+        configurator.set_value("user", "name", "Testing user")
+        configurator.set_value("user", "email", "some@email.com")
+        configurator.set_value("push", "default", "matching")
+
+        self.git_client.repo.git.checkout(b=self.git_branch)
+        git_dir = unicode(self.git_client.root_directory)
+        dir_util.copy_tree(self.source_dir, git_dir)
+
+        self.git_client.repo.git.add(all=True)
+        description = "Update 'examples'"
+        self.git_client.repo.git.commit(m=description)
+        self.git_client.repo.remotes.origin.push(self.git_branch, progress=self.git_client.logger)
+
+    def __init__(self, command_runner, perforce_workspace, git_client):
+        self.command_runner = command_runner
+        self.perforce_workspace = perforce_workspace
+        self.git_client = git_client
+        self.working_dir = command_runner.get_working_directory()
+        self.project_root = os.path.join(self.working_dir, "temp")
+        self.artifact_dir = os.path.join(self.working_dir, "artifacts")
+
+        self.source_dir = os.path.join(self.working_dir, "examples")
+
+        self.p4_path = "//depot/examples/..."
+        self._init_p4()
+
+        # TODO: remove copying the server to workdir
+        self._local_git_server = os.path.join(os.getcwd(), "local_git_server")
+        self.git_server = "file://" + unicode(self._local_git_server)
+        self.git_branch = "examples"
+        self._init_git()
+        shutil.copytree(unicode(self.git_client.server._working_directory),  # pylint: disable=protected-access
+                        self._local_git_server)
 
     def install_env(self):
         log = self.command_runner.assert_success("pip --default-timeout=1200 install " + self.working_dir)
@@ -113,6 +142,9 @@ class UniversumRunner(object):
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
             return " -vt none -fsd {}".format(self.source_dir)
+
+        if vcs_type == "git":
+            return " -vt git -gr {} -grs {}".format(self.git_server, self.git_branch)
 
         return " -vt p4 --p4-force-clean -p4p {} -p4u {} -p4P {} -p4d {} -p4c {}" \
             .format(self.perforce_workspace.p4.port,
@@ -134,10 +166,14 @@ class UniversumRunner(object):
     def clean_artifacts(self):
         self.command_runner.assert_success("rm -rf {}".format(self.artifact_dir))
 
+    def clean_git_server(self):
+        shutil.rmtree(self._local_git_server)
+
 
 @pytest.fixture()
-def universum_runner(command_runner, perforce_workspace):
-    runner = UniversumRunner(command_runner, perforce_workspace)
+def universum_runner(command_runner, perforce_workspace, git_client):
+    runner = UniversumRunner(command_runner, perforce_workspace, git_client)
     runner.install_env()
     yield runner
     runner.clean_artifacts()
+    runner.clean_git_server()
