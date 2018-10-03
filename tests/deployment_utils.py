@@ -126,7 +126,7 @@ class UniversumRunner(object):
         return self.command_runner.assert_success(cmd)
 
     def run_with_coverage(self, config_file, vcs_type="none"):
-        cmd = "coverage run --branch --source={} {}/universum.py -lcp {}"\
+        cmd = "coverage run --branch --append --source={} {}/universum.py -lcp {}"\
             .format(self.working_dir, self.working_dir, config_file)
         cmd += self._basic_args() + self._vcs_args(vcs_type)
         return self.command_runner.assert_success(cmd)
