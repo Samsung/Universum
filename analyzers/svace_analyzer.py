@@ -2,8 +2,8 @@
 
 import json
 import os
-import sh
 import sys
+import sh
 from lxml import etree
 
 __all__ = ["SvaceAnalyzer"]
@@ -60,18 +60,20 @@ class SvaceAnalyzer(object):
                 issues_loads.append(issue)
             with open(self.json_file, "w") as outfile:
                 outfile.write(json.dumps(issues_loads, indent=4))
+            if issues_loads:
+                return 1
         except etree.XMLSyntaxError as e:
             sys.stderr.write(e.error_log)
-            return 1
+            return 2
         except Exception as e:
             sys.stderr.write(unicode(e))
-            return 1
+            return 2
         return 0
 
     def execute(self):
         if not os.path.exists(self.settings.svace_home):
             sys.stderr.write("SVACE_HOME=" + self.settings.svace_home + " folder doesn't exist.")
-            return 1
+            return 2
 
         try:
             cmd_init = sh.Command(self.settings.svace_home + "/bin/svace")
@@ -83,8 +85,8 @@ class SvaceAnalyzer(object):
                                   _err=sys.stderr, _out=sys.stdout)
         except sh.ErrorReturnCode_255:
             sys.stderr.write("Svace exited with error code 255. No build object found.\n")
-            return 1
+            return 2
         except Exception as e:
             sys.stderr.write(unicode(e))
-            return 1
+            return 2
         return self.analyze()

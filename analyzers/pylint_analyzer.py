@@ -30,7 +30,7 @@ class PylintAnalyzer(object):
         if not self.settings.file_list:
             sys.stderr.write("Please, specify [--files] option. Files could be defined as a single python file,"
                              " *.py or directories with __init__.py file in the directory.")
-            return 1
+            return 2
 
         issues = []
         files = []
@@ -51,7 +51,7 @@ class PylintAnalyzer(object):
         except Exception as e:
             if e.stderr and not e.stdout:
                 sys.stderr.write(e.stderr)
-                return 1
+                return 2
             elif e.stdout:
                 issues = e.stdout
 
@@ -62,12 +62,15 @@ class PylintAnalyzer(object):
                 for issue in loads:
                     # pylint has its own escape rules for json output of "message" values.
                     # it uses cgi.escape lib and escapes symbols <>&
+                    print(issue)
                     issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                     issues_loads.append(issue)
                 with open(self.json_file, "wb") as outfile:
                     outfile.write(json.dumps(issues_loads, indent=4))
+                return 1
             except ValueError as e:
                 sys.stderr.write(e.message)
                 sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
                 sys.stderr.write(issues)
+                return 2
         return 0

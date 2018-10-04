@@ -3,7 +3,7 @@
 from . import __title__
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import Module, Dependency
-from .modules import vcs, artifact_collector, reporter, launcher
+from .modules import vcs, artifact_collector, reporter, launcher, code_report_collector
 from .modules.output import needs_output
 
 __all__ = ["Main"]
@@ -16,6 +16,7 @@ class Main(Module):
     launcher_factory = Dependency(launcher.Launcher)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(reporter.Reporter)
+    code_report_collector = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -44,6 +45,7 @@ class Main(Module):
         self.launcher = self.launcher_factory()
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
+        self.code_report_collector = self.code_report_collector()
 
     def execute(self):
         if self.settings.clean_build:
@@ -68,6 +70,7 @@ class Main(Module):
 
         self.reporter.report_build_started()
         self.launcher.launch_project()
+        self.code_report_collector.report_code_report_results()
         self.artifacts.collect_artifacts()
         self.reporter.report_build_result()
 

@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import json
 import sh
 
 from .. import configuration_support
@@ -12,7 +11,7 @@ from ..lib.ci_exception import CiException, CriticalCiException, StepException
 from ..lib.gravity import Dependency
 from ..lib.module_arguments import IncorrectParameterError
 from ..lib.utils import make_block
-from . import automation_server, artifact_collector, reporter
+from . import automation_server, artifact_collector, reporter, code_report_collector
 from .output import needs_output
 from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
@@ -119,7 +118,6 @@ class LogWriter(object):
         self.reporter = report
         self.background = background
         self.step_name = step_name
-        self.error_lines = []
         self.server = server
 
         if self.background:
@@ -148,7 +146,6 @@ class LogWriter(object):
 
     def handle_stderr(self, line):
         line = utils.trim_and_convert_to_unicode(line)
-        self.error_lines.append(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
         else:
@@ -174,40 +171,13 @@ class LogWriter(object):
             self.file.close()
 
 
-class LogWriterCodeReport(LogWriter):
-    def __init__(self, report_file, *args, **kwargs):
-        super(LogWriterCodeReport, self).__init__(*args, **kwargs)
-        self.report_file = report_file
-
-    def report_comments(self, report):
-        for result in report:
-            text = result["symbol"] + ": " + result["message"]
-            self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
-
-    def end_log(self):
-        if os.path.exists(self.report_file):
-            with open(self.report_file, "r") as f:
-                report = json.loads(f.read())
-
-            json_file = self.artifacts.create_text_file("Static_analysis_report.json")
-            json_file.write(json.dumps(report, indent=4))
-
-            self.report_comments(report)
-            if report:
-                text = unicode(len(report)) + " issues"
-                self.error_lines.append(text)
-                self.fail_block("Found " + text)
-                self.out.report_build_status(self.step_name + ": " + text)
-        if not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
-            self.out.log("Issues not found.")
-
-
 @needs_output
 @needs_structure
 class Launcher(ProjectDirectory):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(reporter.Reporter)
     server_factory = Dependency(automation_server.AutomationServer)
+    code_report_collector = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -242,6 +212,7 @@ class Launcher(ProjectDirectory):
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
+        self.code_report_collector = self.code_report_collector()
 
     @make_block("Processing project configs")
     def process_project_configs(self):
@@ -281,7 +252,7 @@ class Launcher(ProjectDirectory):
             raise CriticalCiException(text)
         return self.project_configs
 
-    def execute_configuration(self, item, *args, **kwargs):  # pylint: disable = too-many-locals
+    def execute_configuration(self, item, *args, **kwargs):  # pylint: disable=too-many-locals
         finish_background = item.get("finish_background", False)
         if finish_background and self.background_processes:
             self.out.log("All ongoing background steps should be finished before execution")
@@ -301,9 +272,9 @@ class Launcher(ProjectDirectory):
                                              self.settings.project_root)
         step_name = item.get("name", "")
         background = item.get("background", False)
-        code_report = item.get("code_report", False)
         pass_tag = item.get("pass_tag", False)
         fail_tag = item.get("fail_tag", False)
+        args = self.code_report_collector.prepare_env_for_code_report(item, self.settings.project_root, *args)
 
         try:
             try:
@@ -323,14 +294,8 @@ class Launcher(ProjectDirectory):
         def fail_block(line=None):
             self.structure.fail_block(block, line)
 
-        init = [self.out, self.artifacts, self.reporter, self.server, self.settings.output,
-                step_name, fail_block, background]
-        if code_report:
-            report_file = os.path.join(working_directory, "temp_code_report.json")
-            log_writer = LogWriterCodeReport(report_file, *init)
-        else:
-            log_writer = LogWriter(*init)
-
+        log_writer = LogWriter(self.out, self.artifacts, self.reporter, self.server, self.settings.output,
+                               step_name, fail_block, background)
         ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
                   _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)
         log_writer.print_cmd(ret.ran)
