@@ -28,8 +28,10 @@ class CommandRunner(object):
         self._container.exec_run("chown -R {} {}".format(user_id, self._bound_dir))
         self._container.stop(timeout=0)
 
-    def _run_and_check(self, cmd, result):
-        process_id = self._client.api.exec_create(self._container.id, cmd)
+    def _run_and_check(self, cmd, result, environment=None):
+        if not environment:
+            environment = []
+        process_id = self._client.api.exec_create(self._container.id, cmd, environment=environment)
         print "$ " + cmd
         log = self._client.api.exec_start(process_id)
         print log
@@ -42,11 +44,11 @@ class CommandRunner(object):
 
         return log
 
-    def assert_success(self, cmd):
-        return self._run_and_check(cmd, True)
+    def assert_success(self, cmd, environment=None):
+        return self._run_and_check(cmd, True, environment=environment)
 
-    def assert_failure(self, cmd):
-        return self._run_and_check(cmd, False)
+    def assert_failure(self, cmd, environment=None):
+        return self._run_and_check(cmd, False, environment=environment)
 
 
 @pytest.fixture()
@@ -153,15 +155,22 @@ class UniversumRunner(object):
                     self.p4_path,
                     "my_disposable_p4_client")
 
-    def run_installed(self, config_file, vcs_type="none"):
-        cmd = "universum -lcp {}".format(config_file) + self._basic_args() + self._vcs_args(vcs_type)
-        return self.command_runner.assert_success(cmd)
+    def run(self, config_file, force_installed=False, vcs_type="none",
+            additional_parameters="", environment=None, expected_to_fail=False):
 
-    def run_with_coverage(self, config_file, vcs_type="none"):
-        cmd = "coverage run --branch --append --source={} {}/universum.py -lcp {}"\
-            .format(self.working_dir, self.working_dir, config_file)
-        cmd += self._basic_args() + self._vcs_args(vcs_type)
-        return self.command_runner.assert_success(cmd)
+        cmd = "coverage run --branch --append --source={} {}/universum.py" \
+            .format(self.working_dir, self.working_dir)
+
+        # We cannot collect coverage from installed module, so we run it only if specifically told so
+        if force_installed:
+            cmd = "universum"
+
+        cmd += " -lcp {}".format(config_file) \
+               + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
+
+        if expected_to_fail:
+            return self.command_runner.assert_failure(cmd, environment=environment)
+        return self.command_runner.assert_success(cmd, environment=environment)
 
     def clean_artifacts(self):
         self.command_runner.assert_success("rm -rf {}".format(self.artifact_dir))
