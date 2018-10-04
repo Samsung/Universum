@@ -10,6 +10,20 @@ def test_minimal_execution(universum_runner):
     assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "out.zip"))
 
 
+def test_background_steps(universum_runner):
+    log = universum_runner.run_with_coverage("configs_background.py")
+    assert "Will continue in background" in log
+    assert "All ongoing background steps should be finished before execution" in log
+    assert "Reported this background step as failed" in log
+    assert "All ongoing background steps completed" in log
+
+
+def test_critical_steps(universum_runner):
+    log = universum_runner.run_with_coverage("configs_critical.py")
+    assert "Critical step failed. All further configurations will be skipped" in log
+    assert "skipped because of critical step failure" in log
+
+
 def test_minimal_git(universum_runner):
     log = universum_runner.run_with_coverage("basic_config.py", vcs_type="git")
     assert "Build for platform B 32 bits" in log
