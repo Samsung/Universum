@@ -10,6 +10,16 @@ def test_minimal_execution(universum_runner):
     assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "out.zip"))
 
 
+def test_artifacts(universum_runner):
+    log = universum_runner.run_with_coverage("configs_artifacts.py")
+    assert "Collecting 'something' - Failed" in log
+    assert "Collecting 'something_else' for report - Success" in log
+    assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "three.zip"))
+    assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "two2.zip"))
+    assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "file1.txt"))
+    assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "file.sh"))
+
+
 def test_background_steps(universum_runner):
     log = universum_runner.run_with_coverage("configs_background.py")
     assert "Will continue in background" in log
