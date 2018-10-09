@@ -44,7 +44,7 @@ setup(
             'httpretty<=0.8',
             'mock',
             'pytest<3.7',
-            'pylint',
+            'pylint<2',
             'pytest-pylint',
             'sphinx',
             'sphinx-argparse',
