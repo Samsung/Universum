@@ -30,14 +30,14 @@ class CodeReportCollector(Module):
         if not os.path.exists(self.report_path):
             os.makedirs(self.report_path)
 
-    def prepare_env_for_code_report(self, item, project_root, *args):
+    def prepare_env_for_code_report(self, item, project_root):
         if not item.get("code_report", False):
-            return args
+            return item
 
         self.set_code_report_directory(project_root)
-        result_file = os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json")
-        args += ("--result-file", result_file)
-        return args
+        item["command"] += ["--result-file",
+                            os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json")]
+        return item
 
     @make_block("Processing code report results")
     def report(self):

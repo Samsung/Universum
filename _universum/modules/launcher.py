@@ -252,7 +252,7 @@ class Launcher(ProjectDirectory):
             raise CriticalCiException(text)
         return self.project_configs
 
-    def execute_configuration(self, item, *args, **kwargs):  # pylint: disable=too-many-locals
+    def execute_configuration(self, item):  # pylint: disable=too-many-locals
         finish_background = item.get("finish_background", False)
         if finish_background and self.background_processes:
             self.out.log("All ongoing background steps should be finished before execution")
@@ -260,7 +260,6 @@ class Launcher(ProjectDirectory):
 
         try:
             name = utils.strip_path_start(item["command"][0])
-            args = tuple(item["command"][1:]) + tuple(args)
         except KeyError as e:
             if e.message == "command":
                 self.out.log("No 'command' found. Nothing to execute")
@@ -274,7 +273,7 @@ class Launcher(ProjectDirectory):
         background = item.get("background", False)
         pass_tag = item.get("pass_tag", False)
         fail_tag = item.get("fail_tag", False)
-        args = self.code_report_collector.prepare_env_for_code_report(item, self.settings.project_root, *args)
+        item = self.code_report_collector.prepare_env_for_code_report(item, self.settings.project_root)
 
         try:
             try:
@@ -296,8 +295,8 @@ class Launcher(ProjectDirectory):
 
         log_writer = LogWriter(self.out, self.artifacts, self.reporter, self.server, self.settings.output,
                                step_name, fail_block, background)
-        ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
-                  _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)
+        ret = cmd(*item["command"][1:], _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
+                  _out=log_writer.handle_stdout, _err=log_writer.handle_stderr)
         log_writer.print_cmd(ret.ran)
 
         if background:
