@@ -231,10 +231,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                                  "or split them with comma")
 
         parser.add_argument("--p4-shelve", "-p4s", action="append", nargs='+', dest="shelve_cls",
-                            metavar="SHELVE_CHANGELIST_1",
+                            metavar="SHELVE_CHANGELIST",
                             help="List of shelve CLs to be applied, separated by comma. "
                                  "--p4-shelve can be added to the command line several times. "
-                                 "5 shelve CLs can be specified via environment variables: "
+                                 "Also shelve CLs can be specified via additional environment variables: "
                                  "SHELVE_CHANGELIST_1..5")
 
         parser.add_argument("--p4-force-clean", action="store_true", dest="force_clean",
@@ -328,7 +328,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         if self.swarm:
             swarm_cls = self.get_related_cls(self.swarm.settings.change)
             cls.extend(swarm_cls)
-        for x in range(2, 6):
+        for x in range(1, 6):
             cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
 
