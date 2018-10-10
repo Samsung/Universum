@@ -78,7 +78,7 @@ def format_traceback(ex, trace):
 
 
 def check_required_option(settings, name, env_var):
-    if getattr(settings, name, None) is None:
+    if not getattr(settings, name, None):
         text = "Variable '" + env_var + "' is not set. " + \
                "Please set it or pass corresponding parameter via command line options"
         raise IncorrectParameterError(text)

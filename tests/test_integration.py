@@ -87,3 +87,22 @@ def test_p4_params(universum_runner):
     log = universum_runner.run("integration_config.py", vcs_type="p4",
                                environment=["SYNC_CHANGELIST=" + sync_cl, "SHELVE_CHANGELIST_1=" + shelve_cl])
     assert "No such file or command" not in log
+
+
+def test_empty_required_params(universum_runner):
+    log = universum_runner.run("basic_config.py", vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review")
+    assert "Variable 'REVIEW' is not set" in log
+
+    log = universum_runner.run("basic_config.py", vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review -sre=''")
+    assert "Variable 'REVIEW' is not set" in log
+
+    log = universum_runner.run("basic_config.py", vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review",
+                               environment=["SWARM_REVIEW=''"])
+    assert "Variable 'REVIEW' is not set" in log
+
+    log = universum_runner.run("basic_config.py", vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review --build-only-latest -sre=''")
+    assert "Variable 'REVIEW' is not set" in log
