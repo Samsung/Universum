@@ -137,6 +137,7 @@ class StructureHandler(Module):
         if parent is None:
             parent = dict()
 
+        step_num_len = len(unicode(self.configs_total_count))
         child_step_failed = False
         for obj_a in variations:
             try:
@@ -146,12 +147,19 @@ class StructureHandler(Module):
                     # Here pass_errors=True, because any exception outside executing build step
                     # is not step-related and should stop script executing
 
-                    self.run_in_block(self.execute_steps_recursively, item.get("name", ' '), True,
+                    numbering = " [ {:{}}+{:{}} ] ".format("", step_num_len,
+                                                           "", step_num_len)
+                    step_name = numbering + item.get("name", ' ')
+                    self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a["children"], step_executor, skipped)
                 else:
                     self.configs_current_number += 1
-                    step_name = " [ " + unicode(self.configs_current_number) + "/" + \
-                                unicode(self.configs_total_count) + " ] " + item.get("name", ' ')
+                    numbering = " [ {:>{}}/{} ] ".format(
+                        unicode(self.configs_current_number),
+                        step_num_len,
+                        unicode(self.configs_total_count)
+                    )
+                    step_name = numbering + item.get("name", ' ')
                     # Here pass_errors=False, because any exception while executing build step
                     # can be step-related and may not affect other steps
 
