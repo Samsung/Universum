@@ -15,18 +15,52 @@ from .perforce_utils import ignore_p4_exception
 
 
 class CommandRunner(object):
-    def __init__(self, client, container, bound_dir):
+    def __init__(self, client, image, work_dir):
+        self._image = image
+
         self._client = client
-        self._container = container
-        self._bound_dir = bound_dir
+        self._work_dir = work_dir
+        self._container = None
+
+        self._volumes = {work_dir: {'bind': work_dir, 'mode': 'rw'}}
+        self._environment = []
+
+    def add_bind_dirs(self, directories):
+        if self._container:
+            raise Exception("Container is already running, no dirs can be bound!")
+        for directory in directories:
+            self._volumes[directory] = {'bind': directory, 'mode': 'rw'}
+
+    def add_environment_variables(self, variables):
+        if self._container:
+            raise Exception("Container is already running, default environment cannot be changed!")
+        self._environment.extend(variables)
+
+    def start_container(self):
+        if self._container:
+            raise Exception("Docker container already running!")
+
+        self._container = self._client.containers.run(self._image,
+                                                      command="sleep infinity",
+                                                      network_mode='host',
+                                                      volumes=self._volumes,
+                                                      environment=self._environment,
+                                                      auto_remove=True,
+                                                      detach=True)
 
     def get_working_directory(self):
-        return self._bound_dir
+        return self._work_dir
 
     def exit(self):
-        user_id = getpwnam(getpass.getuser()).pw_uid
-        self._container.exec_run("chown -R {} {}".format(user_id, self._bound_dir))
-        self._container.stop(timeout=0)
+        try:
+            user_id = getpwnam(getpass.getuser()).pw_uid
+            for path in self._volumes:
+                self._container.exec_run("chown -R {} {}".format(user_id, path))
+            self._container.stop(timeout=0)
+        except:
+            if self._container:
+                self._container.remove(force=True)
+            raise
 
     def _run_and_check(self, cmd, result, environment=None):
         if not environment:
@@ -54,29 +88,14 @@ class CommandRunner(object):
 @pytest.fixture()
 def command_runner(request, docker_registry_params):
     client = docker.from_env(timeout=1200)
-    container = None
     runner = None
-    bind_dir = os.getcwd()
     try:
-        try:
-            image = utils.get_image(request, client, docker_registry_params, "pythonp4")
-            container = client.containers.run(image,
-                                              command="sleep infinity",
-                                              volumes={os.getcwd(): {'bind': bind_dir, 'mode': 'rw'}},
-                                              network_mode='host',
-                                              environment=["COVERAGE_FILE=" + bind_dir + "/.coverage.docker"],
-                                              auto_remove=True,
-                                              detach=True)
-            runner = CommandRunner(client, container, bind_dir)
-            runner.assert_success("pip install coverage")
-            yield runner
-        finally:
-            if runner is not None:
-                runner.exit()
-    except:
-        if container is not None:
-            container.remove(force=True)
-        raise
+        image = utils.get_image(request, client, docker_registry_params, "pythonp4")
+        runner = CommandRunner(client, image, os.getcwd())
+        yield runner
+    finally:
+        if runner:
+            runner.exit()
 
 
 class UniversumRunner(object):
@@ -117,7 +136,7 @@ class UniversumRunner(object):
         self.command_runner = command_runner
         self.perforce_workspace = perforce_workspace
         self.git_client = git_client
-        self.working_dir = command_runner.get_working_directory()
+        self.working_dir = self.command_runner.get_working_directory()
         self.project_root = os.path.join(self.working_dir, "temp")
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
@@ -126,15 +145,20 @@ class UniversumRunner(object):
         self.p4_path = "//depot/examples/..."
         self._init_p4()
 
-        # TODO: remove copying the server to workdir
-        self._local_git_server = os.path.join(os.getcwd(), "local_git_server")
-        self.git_server = "file://" + unicode(self._local_git_server)
+        self.git_server = git_client.server.url
         self.git_branch = "examples"
         self._init_git()
-        shutil.copytree(unicode(self.git_client.server._working_directory),  # pylint: disable=protected-access
-                        self._local_git_server)
 
-    def install_env(self):
+        self.command_runner.add_environment_variables([
+            "COVERAGE_FILE=" + self.command_runner.get_working_directory() + "/.coverage.docker"
+        ])
+        self.command_runner.add_bind_dirs([unicode(git_client.root_directory),
+                                           git_client.server.get_location()])
+
+        self.command_runner.start_container()
+        log = self.command_runner.assert_success("pip install coverage")
+        assert "Successfully installed" in log
+
         log = self.command_runner.assert_success("pip --default-timeout=1200 install " + self.working_dir)
         assert "Successfully installed" in log
 
@@ -175,14 +199,9 @@ class UniversumRunner(object):
     def clean_artifacts(self):
         self.command_runner.assert_success("rm -rf {}".format(self.artifact_dir))
 
-    def clean_git_server(self):
-        shutil.rmtree(self._local_git_server)
-
 
 @pytest.fixture()
 def universum_runner(command_runner, perforce_workspace, git_client):
     runner = UniversumRunner(command_runner, perforce_workspace, git_client)
-    runner.install_env()
     yield runner
     runner.clean_artifacts()
-    runner.clean_git_server()

@@ -29,6 +29,9 @@ class GitServer(object):
 
         self._branch = self._repo.create_head(branch_name)
 
+    def get_location(self):
+        return unicode(self._working_directory)
+
     def make_a_change(self):
         self._branch.checkout()
 
