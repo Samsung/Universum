@@ -62,7 +62,6 @@ class PylintAnalyzer(object):
                 for issue in loads:
                     # pylint has its own escape rules for json output of "message" values.
                     # it uses cgi.escape lib and escapes symbols <>&
-                    print(issue)
                     issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                     issues_loads.append(issue)
                 with open(self.json_file, "wb") as outfile:
