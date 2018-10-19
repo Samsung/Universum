@@ -179,8 +179,16 @@ class UniversumRunner(object):
                     self.p4_path,
                     "my_disposable_p4_client")
 
-    def run(self, config_file, force_installed=False, vcs_type="none",
+    def run(self, config=None, force_installed=False, vcs_type="none",
             additional_parameters="", environment=None, expected_to_fail=False):
+
+        if not config:
+            config_file = "basic_config.py"
+        else:
+            config_file = os.path.join(self.working_dir, "temp_config.py")
+            with open(config_file, 'wb+') as f:
+                f.write(config)
+                f.close()
 
         cmd = "coverage run --branch --append --source={} {}/universum.py" \
             .format(self.working_dir, self.working_dir)
