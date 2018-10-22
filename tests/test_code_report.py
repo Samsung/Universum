@@ -24,7 +24,7 @@ print "Hello world."
     assert "Successfully installed" in log
 
     # Test configuration with issues
-    source_file = os.path.join(universum_runner.source_dir, "source_file.py")
+    source_file = os.path.join(universum_runner.local_sources, "source_file.py")
     with open(source_file, 'wb+') as f:
         f.write(source_code + "\n")
         f.close()
@@ -33,7 +33,7 @@ print "Hello world."
     assert "Found 1 issues" in log
 
     # Test configuration with no issues
-    source_file = os.path.join(universum_runner.source_dir, "source_file.py")
+    source_file = os.path.join(universum_runner.local_sources, "source_file.py")
     with open(source_file, 'wb+') as f:
         f.write(source_code)
         f.close()
@@ -43,6 +43,10 @@ print "Hello world."
 
     # Test configuration with no code_report
     universum_runner.clean_artifacts()
-    log = universum_runner.run()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Run usual command", command=["ls", "-la"])])
+    """)
     string = re.compile("(Found [0-9]+ issues|Issues not found.)")
     assert not string.findall(log)
