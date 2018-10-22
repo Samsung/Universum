@@ -1,37 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import os
 import re
 
 
 def test_code_report(universum_runner):
-
-    # Test there's no result if no pylint is installed to system
     config = """
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run static pylint", code_report=True,
-                           command=["universum_static", "--type", "pylint", "--files", "static_issues.py"])])
-    """
-    log = universum_runner.run(config)
-    assert "No module named pylint" in log
+                           command=["universum_static", "--type", "pylint", "--files", "source_file.py"])])
+"""
+
+    source_code = """
+"Docstring."
+
+print "Hello world."
+"""
 
     # Install pylint
     log = universum_runner.command_runner.assert_success("pip install pylint")
     assert "Successfully installed" in log
 
     # Test configuration with issues
+    source_file = os.path.join(universum_runner.source_dir, "source_file.py")
+    with open(source_file, 'wb+') as f:
+        f.write(source_code + "\n")
+        f.close()
     universum_runner.clean_artifacts()
     log = universum_runner.run(config)
-    assert "Found 11 issues" in log
+    assert "Found 1 issues" in log
 
     # Test configuration with no issues
-    config = """
-from _universum.configuration_support import Variations
-
-configs = Variations([dict(name="Run static pylint", code_report=True,
-                           command=["universum_static", "--type", "pylint", "--files", "static_no_issues.py"])])
-    """
+    source_file = os.path.join(universum_runner.source_dir, "source_file.py")
+    with open(source_file, 'wb+') as f:
+        f.write(source_code)
+        f.close()
     universum_runner.clean_artifacts()
     log = universum_runner.run(config)
     assert "Issues not found." in log
