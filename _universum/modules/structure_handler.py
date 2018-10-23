@@ -131,7 +131,13 @@ class StructureHandler(Module):
 
     def execute_step_structure(self, configs, step_executor):
         self.configs_total_count = sum(1 for _ in configs.all())
-        self.execute_steps_recursively(None, configs, step_executor)
+        try:
+            self.execute_steps_recursively(None, configs, step_executor)
+        except StepException:
+            pass
+            # StepException only stops build step execution,
+            # not affecting other Universum functions, e.g. artifact collecting or finalizing
+
 
     def execute_steps_recursively(self, parent, variations, step_executor, skipped=False):
         if parent is None:

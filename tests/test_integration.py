@@ -43,7 +43,7 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
 
 
 def test_background_steps(universum_runner):
-    config = """
+    log = universum_runner.run("""
 from _universum.configuration_support import Variations
 
 background = Variations([dict(name="Background", background=True)])
@@ -55,12 +55,23 @@ wait = Variations([dict(name='Step requiring background results',
 script = Variations([dict(name=" unsuccessful step", command=["ls", "non-existent-file"])])
 
 configs = background * (script + sleep * multiply) + wait + background * (sleep + script)
-    """
-    log = universum_runner.run(config)
+""")
     assert "Will continue in background" in log
     assert "All ongoing background steps should be finished before execution" in log
     assert "Reported this background step as failed" in log
     assert "All ongoing background steps completed" in log
+
+    # Test background after failed foreground (regression)
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
+                      dict(name="Good bg step", command=["touch", "file"],
+                      background=True, artifacts="file")])
+""")
+    assert "All ongoing background steps completed" in log
+    assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "file"))
 
 
 def test_critical_steps(universum_runner):

@@ -319,12 +319,6 @@ class Launcher(ProjectDirectory):
     @make_block("Executing build steps")
     def launch_project(self):
         self.reporter.add_block_to_report(self.structure.get_current_block())
-        try:
-            self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
-            if self.background_processes:
-                self.structure.run_in_block(self.report_background_steps, "Reporting background steps", False)
-                self.report_background_steps()
-        except StepException:
-            pass
-            # StepException only stops build step execution,
-            # not affecting other Universum functions, e.g. artifact collecting or finalizing
+        self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
+        if self.background_processes:
+            self.structure.run_in_block(self.report_background_steps, "Reporting background steps", False)
