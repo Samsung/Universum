@@ -64,23 +64,67 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
 
 
 def test_critical_steps(universum_runner):
-    config = """
+    # Test linear
+    log = universum_runner.run("""
 from _universum.configuration_support import Variations
 
-not_script = Variations([dict(name='Not script', command=["not_run.sh"], critical=True)])
+configs = Variations([dict(name="Good step", command=["echo", "step succeeded"]),
+                      dict(name="Bad step", command=["ls", "not_a_file"], critical=True),
+                      dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
+""")
+    assert "Extra step skipped because of critical step failure" in log
+    assert "This shouldn't be in log." not in log
 
-script = Variations([dict(command=["run.sh"])])
+    # Test embedded: critical step, critical substep
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
 
-step = Variations([dict(name='Step 1', critical=True), dict(name='Step 2')])
+upper = Variations([dict(name="Group 1"),
+                    dict(name="Group 2", critical=True),
+                    dict(name="Group 3")])
 
-substep = Variations([dict(name=', failed substep', command=["fail"]),
-                      dict(name=', successful substep', command=["pass"])])
+lower = Variations([dict(name=", step 1", command=["echo", "step succeeded"]),
+                    dict(name=", step 2", command=["ls", "not_a_file"], critical=True),
+                    dict(name=", step 3", command=["echo", "This shouldn't be in log."])])
 
-configs = script * step * substep + not_script + script
-    """
-    log = universum_runner.run(config)
-    assert "Critical step failed. All further configurations will be skipped" in log
-    assert "skipped because of critical step failure" in log
+configs = upper * lower
+""")
+    assert "Group 3, step 1 skipped because of critical step failure" in log
+    assert "Group 2, step 1 skipped because of critical step failure" not in log
+
+    # Test embedded: critical step, non-critical substep
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+upper = Variations([dict(name="Group 1", critical=True),
+                    dict(name="Group 2")])
+
+lower = Variations([dict(name=", step 1", command=["echo", "step succeeded"]),
+                    dict(name=", step 2", command=["ls", "not_a_file"]),
+                    dict(name=", step 3", command=["echo", "This should be in log."])])
+
+configs = upper * lower
+""")
+    assert "Group 2, step 1 skipped because of critical step failure" in log
+    assert "This should be in log." in log
+
+    # Test critical non-commands
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Group 1")])
+
+configs *= Variations([dict(name=", step 1", command=["echo", "step succeeded"]),
+                       dict(name=", step 2", command=["this-is-not-a-command"], critical=True),
+                       dict(name=", step 3", command=["echo", "This shouldn't be in log."])])
+
+configs += Variations([dict(name="Linear non-command", command=["this-is-not-a-command"], critical=True),
+                       dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
+""")
+    assert "This shouldn't be in log." not in log
 
 
 def test_minimal_git(universum_runner):
