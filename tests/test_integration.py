@@ -73,6 +73,15 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
     assert "All ongoing background steps completed" in log
     assert os.path.exists(os.path.join(os.getcwd(), universum_runner.artifact_dir, "file"))
 
+    # Test TC step failing
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
+""", additional_parameters=" -ot tc")
+    assert "##teamcity[buildProblem description" in log
+
 
 def test_critical_steps(universum_runner):
     # Test linear

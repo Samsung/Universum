@@ -80,9 +80,6 @@ class StructureHandler(Module):
         block = self.current_block
         self.current_block = self.current_block.parent
 
-        if block.get_status() == "Failed":
-            self.out.report_build_problem(block.name + " " + block.status)
-
         self.out.close_block(get_block_num_str(block), block.name, block.status)
 
     def report_critical_block_failure(self):
@@ -104,6 +101,7 @@ class StructureHandler(Module):
         if error:
             self.out.log_exception(error)
         block.set_status("Failed")
+        self.out.report_build_problem(block.name + " " + block.status)
 
     def get_current_block(self):
         return self.current_block
