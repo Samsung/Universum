@@ -56,10 +56,8 @@ script = Variations([dict(name=" unsuccessful step", command=["ls", "non-existen
 
 configs = background * (script + sleep * multiply) + wait + background * (sleep + script)
 """)
-    assert "Will continue in background" in log
-    assert "All ongoing background steps should be finished before execution" in log
-    assert "Reported this background step as failed" in log
-    assert "All ongoing background steps completed" in log
+    assert "All ongoing background steps should be finished before next step execution" in log
+    assert "Background unsuccessful step - Failed" in log
 
     # Test background after failed foreground (regression)
     universum_runner.clean_artifacts()
@@ -81,6 +79,16 @@ from _universum.configuration_support import Variations
 configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
 """, additional_parameters=" -ot tc")
     assert "##teamcity[buildProblem description" in log
+
+    # Test multiple failing background steps
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
+                      dict(name="Bad step 2", command=["ls", "not_a_file"], background=True)])
+""")
+    assert "Bad step 2 - Failed" in log
 
 
 def test_critical_steps(universum_runner):
@@ -145,6 +153,33 @@ configs += Variations([dict(name="Linear non-command", command=["this-is-not-a-c
                        dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
 """)
     assert "This shouldn't be in log." not in log
+
+    # Test background
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+group = Variations([dict(name="Group")])
+
+subgroup1 = Variations([dict(name=" 1, step 1", command=["ls", "not_a_file"], background=True),
+                        dict(name=" 1, step 2", command=["echo", "This should be in log - 1"],
+                             finish_background=True)])
+
+subgroup2 = Variations([dict(name=" 2, step 1", command=["ls", "not_a_file"], critical=True,
+                             background=True),
+                        dict(name=" 2, step 2", command=["echo", "This should be in log - 2"])])
+
+subgroup3 = Variations([dict(name=" 3, step 1", command=["echo", "This shouldn't be in log."],
+                             finish_background=True),
+                        dict(name=" 3, step 2", command=["echo", "This shouldn't be in log."])])
+
+configs = group * subgroup1 + group * subgroup2 + group * subgroup3
+configs += Variations([dict(name="Additional step", command=["echo", "This should be in log - 3"])])
+""")
+    assert "This shouldn't be in log." not in log
+    assert "This should be in log - 1" in log
+    assert "This should be in log - 2" in log
+    assert "This should be in log - 3" in log
 
 
 def test_minimal_git(universum_runner):
