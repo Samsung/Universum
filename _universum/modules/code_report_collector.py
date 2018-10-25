@@ -35,8 +35,11 @@ class CodeReportCollector(Module):
             return item
 
         self.set_code_report_directory(project_root)
-        item["command"] += ["--result-file",
-                            os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json")]
+        temp_filename = "${CODE_REPORT_FILE}"
+        for enum, i in enumerate(item["command"]):
+            if temp_filename in i:
+                item["command"][enum] = item["command"][enum].replace(temp_filename,
+                                        os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json"))
         return item
 
     @make_block("Processing code report results")

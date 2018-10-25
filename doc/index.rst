@@ -8,6 +8,7 @@ Further reading
 
     prerequisites.rst
     args.rst
+    code_report.rst
     configuring.rst
     configuration_support.rst
     universum_docs.rst

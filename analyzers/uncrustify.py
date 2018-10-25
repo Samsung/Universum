@@ -1,13 +1,13 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import argparse
 import json
 import sys
 import sh
 import os
 import difflib
 import glob2
-
-__all__ = ["UncrustifyAnalyzer"]
 
 
 class UncrustifyAnalyzer(object):
@@ -18,16 +18,22 @@ class UncrustifyAnalyzer(object):
     Output: json of the found issues in the code.
     """
     @staticmethod
-    def define_arguments(parser):
-        parser.add_argument("--file_names", "-fn", dest="file_names", nargs="+",
-                            help="Expression *.c, *.cpp, *.h, *.java or C/C++/C header/java files for analazer")
-        parser.add_argument("--file_list", "-fl", dest="file_list", nargs=1,
+    def define_arguments():
+        parser = argparse.ArgumentParser(description="Uncrustify analyzer")
+        parser.add_argument("--file-names", "-fn", dest="file_names", nargs="+",
+                            help=r"Expression *.c, *.cpp, *.h, *.java or C/C++/C header/java files for analazer")
+        parser.add_argument("--file-list", "-fl", dest="file_list", nargs=1,
                             help="File with list of file for analyzer")
-        parser.add_argument("--cfg_file", "-cf", dest="cfg_file", nargs=1,
+        parser.add_argument("--cfg-file", "-cf", dest="cfg_file", nargs=1,
                             help="Specify a configuration file or UNCRUSTIFY_CONFIG")
-        parser.add_argument("--pattern_form", "-pf", dest="pattern_form", type=str,
+        parser.add_argument("--pattern-form", "-pf", dest="pattern_form", type=str,
                             help="Specify pattern which apply "
                                  "to the total file list from [--file_names] and [--file_list]")
+        parser.add_argument("--result-file", dest="result_file",
+                            help="File for storing json results of Universum run. "
+                            "Set it to \"${CODE_REPORT_FILE}\" for running from Universum, variable will be "
+                            "handled during run. If you run this script separately from Universum, just "
+                            "name the result file or leave it empty.")
         return parser
 
     def parse_files(self):
@@ -47,18 +53,19 @@ class UncrustifyAnalyzer(object):
             sum_files = files
         return sum_files
 
-    def __init__(self, analyzer_settings, json_file):
-        self.json_file = json_file
-        self.cfg_file = analyzer_settings.cfg_file
-        self.file_names = analyzer_settings.file_names
-        self.file_list = analyzer_settings.file_list
-        self.pattern_form = analyzer_settings.pattern_form
+    def __init__(self, settings):
+        self.settings = settings
+        self.cfg_file = settings.cfg_file
+        self.file_names = settings.file_names
+        self.file_list = settings.file_list
+        self.pattern_form = settings.pattern_form
         if not (self.file_names or self.file_list):
             sys.stderr.write("Please, specify at least one option [--file_names] or [--file_list].")
             return 2
         if not self.cfg_file:
             sys.stderr.write("Please, specify [--cfg_file] option.")
             return 2
+        self.json_file = settings.result_file
 
     def execute(self):
         analyze_files = self.parse_files()
@@ -118,9 +125,26 @@ class UncrustifyAnalyzer(object):
                     issue["line"] = match.a
                     issues_loads.append(issue)
                     prev_match = match
-            if len(issues_loads) != 0:
-                with open(self.json_file, "w") as outfile:
-                    outfile.write(json.dumps(issues_loads, indent=4))
+            if issues_loads:
+                if not self.settings.result_file:
+                    sys.stdout.write(json.dumps(issues_loads, indent=4))
+                else:
+                    with open(self.json_file, "w") as outfile:
+                        outfile.write(json.dumps(issues_loads, indent=4))
                 return 1
         return 0
 
+
+def form_arguments_for_documentation():
+    return UncrustifyAnalyzer.define_arguments()
+
+
+def main():
+    analyzer_namespace = UncrustifyAnalyzer.define_arguments().parse_args()
+    analyze = UncrustifyAnalyzer(analyzer_namespace)
+    return analyze.execute()
+
+
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)

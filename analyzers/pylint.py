@@ -1,11 +1,11 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import argparse
 import glob
 import json
 import sys
 import sh
-
-__all__ = ["PylintAnalyzer"]
 
 
 class PylintAnalyzer(object):
@@ -15,21 +15,29 @@ class PylintAnalyzer(object):
     For example: ./code_report.py --type=pylint --files *.py tests/
     Output: json of the found issues in the code.
     """
+
     @staticmethod
-    def define_arguments(parser, args):
+    def define_arguments():
+        parser = argparse.ArgumentParser(description="Pylint analyzer")
         parser.add_argument("--files", dest="file_list", nargs='+', help="Python files and Python packages for Pylint.")
         parser.add_argument("--rcfile", dest="rcfile", help="Specify a configuration file.")
-        return parser.parse_args(args)
+        parser.add_argument("--python-version", dest="version", default="3", choices=["2", "3"],
+                            help="Version of Python")
+        parser.add_argument("--result-file", dest="result_file",
+                            help="File for storing json results of Pylint run. "
+                                 "Set it to \"${CODE_REPORT_FILE}\" for running from Universum, variable will be "
+                                 "handled during run. If you run this script separately from Universum, just "
+                                 "name the result file.")
+        return parser
 
-    def __init__(self, settings, static_analyzer, json_file):
+    def __init__(self, settings):
         self.settings = settings
-        self.settings.static_analyzer = static_analyzer
-        self.json_file = json_file
+        self.json_file = settings.result_file
 
     def execute(self):
         if not self.settings.file_list:
             sys.stderr.write("Please, specify [--files] option. Files could be defined as a single python file,"
-                             " *.py or directories with __init__.py file in the directory.")
+                             " *.py or directories with __init__.py file in the directory.\n")
             return 2
 
         issues = []
@@ -40,10 +48,10 @@ class PylintAnalyzer(object):
         for pattern in self.settings.file_list:
             files.extend(glob.glob(pattern))
         try:
-            if self.settings.static_analyzer == "pylint3":
+            if self.settings.version == "3":
                 cmd = sh.Command("python3")
             else:
-                cmd = sh.Command("python")
+                cmd = sh.Command("python2")
             issues = cmd("-m", "pylint", "-f", "json", "--rcfile=" + self.settings.rcfile, *files).stdout
         except sh.CommandNotFound as e:
             sys.stderr.write("No such file or command as '" + str(e) + "'. "
@@ -64,8 +72,11 @@ class PylintAnalyzer(object):
                     # it uses cgi.escape lib and escapes symbols <>&
                     issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                     issues_loads.append(issue)
-                with open(self.json_file, "wb") as outfile:
-                    outfile.write(json.dumps(issues_loads, indent=4))
+                if not self.settings.result_file:
+                    sys.stdout.write(json.dumps(issues_loads, indent=4))
+                else:
+                    with open(self.json_file, "wb") as outfile:
+                        outfile.write(json.dumps(issues_loads, indent=4))
                 return 1
             except ValueError as e:
                 sys.stderr.write(e.message)
@@ -73,3 +84,18 @@ class PylintAnalyzer(object):
                 sys.stderr.write(issues)
                 return 2
         return 0
+
+
+def form_arguments_for_documentation():
+    return PylintAnalyzer.define_arguments()
+
+
+def main():
+    analyzer_namespace = PylintAnalyzer.define_arguments().parse_args()
+    analyze = PylintAnalyzer(analyzer_namespace)
+    return analyze.execute()
+
+
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)
