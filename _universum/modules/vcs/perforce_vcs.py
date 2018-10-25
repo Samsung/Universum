@@ -5,7 +5,6 @@ import shutil
 import warnings
 
 import sh
-from P4 import P4, P4Exception
 
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
@@ -26,9 +25,11 @@ __all__ = [
     "catch_p4exception"
 ]
 
+P4Exception = None
+
 
 def catch_p4exception(ignore_if=None):
-    return utils.catch_exception(P4Exception, ignore_if)
+    return utils.catch_exception("P4Exception", ignore_if)
 
 
 @needs_output
@@ -58,7 +59,10 @@ class PerforceVcs(base_vcs.BaseVcs):
         self.check_required_option("user", "P4USER")
         self.check_required_option("password", "P4PASSWD")
 
-        self.p4 = P4()
+        p4_module = utils.import_module("P4")
+        self.p4 = p4_module.P4()
+        global P4Exception
+        P4Exception = p4_module.P4Exception
 
     @make_block("Connecting")
     @catch_p4exception()

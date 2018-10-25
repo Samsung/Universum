@@ -7,8 +7,19 @@ Prerequisites
 Preinstalled packages
 ---------------------
 
-Need to be installed manually
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Included to module installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* :mod:`sh` module for Python
+* :mod:`mechanize` module for Python
+* :mod:`requests` module for Python
+
+
+Optional (used for special VCS types)
+-------------------------------------
+
+Perforce
+~~~~~~~~
 
 * p4 CLI (see `official installation manual
   <https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.install.html#install.linux.packages>`__
@@ -16,13 +27,10 @@ Need to be installed manually
 * P4Python (see `official installation manual
   <https://www.perforce.com/helix-p4python-package-repositories-overview>`__ for details)
 
+Git
+~~~
 
-Included to module installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* :mod:`sh` module for Python
-* :mod:`mechanize` module for Python
-* :mod:`requests` module for Python
+* :mod:`gitpython` module for Python (use ``sudo pip install gitpython``)
 
 
 Optional (used for internal tests)

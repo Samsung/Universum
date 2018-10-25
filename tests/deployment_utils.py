@@ -1,17 +1,14 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
-from distutils import dir_util
 import getpass
 from pwd import getpwnam
 import os
-import shutil
 
 import docker
 
 import pytest
 from . import utils
-from .perforce_utils import ignore_p4_exception
 
 
 class CommandRunner(object):
@@ -125,8 +122,11 @@ class UniversumRunner(object):
         self.command_runner.start_container()
         log = self.command_runner.assert_success("pip install coverage")
         assert "Successfully installed" in log
+        log = self.command_runner.assert_success("pip install gitpython")
+        assert "Successfully installed" in log
 
-        log = self.command_runner.assert_success("pip --default-timeout=1200 install " + self.working_dir)
+        cmd = "pip --default-timeout=1200 install " + self.working_dir
+        log = self.command_runner.assert_success(cmd)
         assert "Successfully installed" in log
 
     def _basic_args(self):

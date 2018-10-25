@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import os
+# TODO: add test on clean ubuntu, without git or p4
 
 
 def test_minimal_install(universum_runner):

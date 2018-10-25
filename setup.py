@@ -27,22 +27,24 @@ setup(
     ]},
     setup_requires=['setuptools'],
     install_requires=[
-        'gitpython',
         'glob2',
         'requests',
         'sh',
-        'P4',
         'lxml'
     ],
     extras_require={
         'development': [
+            'gitpython',
+            'P4',
             'sphinx',
             'sphinx-argparse'
         ],
         'test': [
             'docker',
+            'gitpython',
             'httpretty<=0.8',
             'mock',
+            'P4',
             'pytest<3.7',
             'pylint<2',
             'pytest-pylint',

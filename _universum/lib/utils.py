@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-import os
-import traceback
-import sys
 import codecs
+import imp
+import os
+import sys
+import traceback
 
 from .ci_exception import CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
@@ -16,6 +17,7 @@ __all__ = [
     "format_traceback",
     "check_required_option",
     "catch_exception",
+    "import_module",
     "trim_and_convert_to_unicode",
     "unify_argument_list",
     "Uninterruptible",
@@ -84,20 +86,39 @@ def check_required_option(settings, name, env_var):
         raise IncorrectParameterError(text)
 
 
-def catch_exception(exception, ignore_if=None):
+def catch_exception(exception_name, ignore_if=None):
     def decorated_function(function):
         def function_to_run(*args, **kwargs):
             result = None
             try:
                 result = function(*args, **kwargs)
                 return result
-            except exception as e:
+            except Exception as e:
+                if not type(e).__name__ == exception_name:
+                    raise
                 if ignore_if is not None:
                     if ignore_if in unicode(e):
                         return result
                 raise CriticalCiException(unicode(e))
         return function_to_run
     return decorated_function
+
+
+def import_module(name, path=None, target_name=None):
+    try:
+        return sys.modules[name]
+    except KeyError:
+        if not target_name:
+            target_name = name
+        try:
+            filename, pathname, description = imp.find_module(name, path)
+        except ImportError:
+            raise CriticalCiException("Failed to import '" + name + "' module")
+        try:
+            return imp.load_module(target_name, filename, pathname, description)
+        finally:
+            if filename:
+                filename.close()
 
 
 def trim_and_convert_to_unicode(line):

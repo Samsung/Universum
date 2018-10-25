@@ -4,6 +4,7 @@
 import os
 
 import git
+from git.remote import RemoteProgress
 import pytest
 
 from . import utils
@@ -85,7 +86,7 @@ def git_client(tmpdir, git_server):
     workdir = tmpdir.mkdir("client")
     repo = git.Repo.clone_from(git_server.url, unicode(workdir))
 
-    class Progress(git.remote.RemoteProgress):
+    class Progress(RemoteProgress):
         def line_dropped(self, line):
             print line
 
