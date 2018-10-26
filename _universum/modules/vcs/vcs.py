@@ -57,15 +57,16 @@ def create_vcs(class_type=None):
             super(Vcs, self).__init__(*args, **kwargs)
             try:
                 if self.settings.type == "none":
-                    self.driver = self.local_driver_factory()
+                    driver_factory = self.local_driver_factory
                 elif self.settings.type == "git":
-                    self.driver = self.git_driver_factory()
+                    driver_factory = self.git_driver_factory
                 elif self.settings.type == "gerrit":
-                    self.driver = self.gerrit_driver_factory()
+                    driver_factory = self.gerrit_driver_factory
                 else:
-                    self.driver = self.perforce_driver_factory()
+                    driver_factory = self.perforce_driver_factory
             except AttributeError:
                 raise NotImplementedError()
+            self.driver = driver_factory()
 
         @make_block("Finalizing")
         def finalize(self):
