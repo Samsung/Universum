@@ -108,14 +108,14 @@ def import_module(name, path=None, target_name=None):
     try:
         return sys.modules[name]
     except KeyError:
+        filename = None
         if not target_name:
             target_name = name
         try:
             filename, pathname, description = imp.find_module(name, path)
+            return imp.load_module(target_name, filename, pathname, description)
         except ImportError:
             raise CriticalCiException("Failed to import '" + name + "' module")
-        try:
-            return imp.load_module(target_name, filename, pathname, description)
         finally:
             if filename:
                 filename.close()

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import os
 import re
 
 
@@ -19,25 +18,18 @@ configs = Variations([dict(name="Run static pylint", code_report=True,
 print "Hello world."
 """
 
-    # Install pylint
-    log = universum_runner.command_runner.assert_success("pip install pylint")
-    assert "Successfully installed" in log
+    universum_runner.environment.install_python_module("pylint")
+    source_file = universum_runner.local.root_directory.join("source_file.py")
 
     # Test configuration with issues
-    source_file = os.path.join(universum_runner.local_sources, "source_file.py")
-    with open(source_file, 'wb+') as f:
-        f.write(source_code + "\n")
-        f.close()
     universum_runner.clean_artifacts()
+    source_file.write(source_code + "\n")
     log = universum_runner.run(config)
     assert "Found 1 issues" in log
 
     # Test configuration with no issues
-    source_file = os.path.join(universum_runner.local_sources, "source_file.py")
-    with open(source_file, 'wb+') as f:
-        f.write(source_code)
-        f.close()
     universum_runner.clean_artifacts()
+    source_file.write(source_code)
     log = universum_runner.run(config)
     assert "Issues not found." in log
 

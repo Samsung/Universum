@@ -43,8 +43,16 @@ class GitVcs(BaseVcs):
         super(GitVcs, self).__init__(*args, **kwargs)
 
         global git
-        git = utils.import_module("git")
-        remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
+        try:
+            git = utils.import_module("git")
+            remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
+        except CriticalCiException as e:
+            if "Failed to import" in unicode(e):
+                text = "Using VCS type 'git' requires official Git CLI and Pyhton package 'gitpython' " \
+                       "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
+                       "documentation for detailed instructions"
+                raise CriticalCiException(text)
+            raise
 
         class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):

@@ -62,11 +62,15 @@ def get_image(request, client, params, name):
     try:
         image = client.images.get(name)
     except docker.errors.ImageNotFound:
-        print "'%s' image is not found locally,  trying to pull from registry" % name
+        print "'%s' image not found locally, trying to pull from registry" % name
         image = pull_image(client, params, name)
 
     if image is None:
-        request.raiseerror("Cannot find docker image '%s'. Try building it manually\n" % name)
+        try:
+            print "'%s' image not found in registry, trying to pull by name" % name
+            image = client.images.pull(name)
+        except docker.errors.ImageNotFound:
+            request.raiseerror("Cannot find docker image '%s'. Try building it manually\n" % name)
 
     return image
 

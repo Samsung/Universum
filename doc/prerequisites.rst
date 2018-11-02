@@ -30,6 +30,7 @@ Perforce
 Git
 ~~~
 
+* `Git` client (use ``sudo apt-get install git``)
 * :mod:`gitpython` module for Python (use ``sudo pip install gitpython``)
 
 
