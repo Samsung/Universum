@@ -10,8 +10,8 @@ from .git_utils import GitEnvironment
 
 
 @pytest.fixture()
-def git_poll_environment(git_server, tmpdir):
-    yield GitEnvironment(git_server, tmpdir, test_type="poll")
+def git_poll_environment(git_client, tmpdir):
+    yield GitEnvironment(git_client, tmpdir, test_type="poll")
 
 
 def make_branch_with_changes(git_server, branch_name, commits_number, branch_from=None):

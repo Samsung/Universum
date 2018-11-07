@@ -1,32 +1,45 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import os
 import re
 
 
-def test_code_report(command_runner, universum_runner):
+def test_code_report(universum_runner):
+    config = """
+from _universum.configuration_support import Variations
 
-    log = universum_runner.run_from_source("config_static_issues.py")
-    assert "No module named pylint" in log
+configs = Variations([dict(name="Run static pylint", code_report=True,
+                           command=["universum_pylint", "--python-version=2", "--files", "source_file.py",
+                           "--result-file", "${CODE_REPORT_FILE}"])])
+"""
 
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
+    source_code = """
+"Docstring."
 
-    log = command_runner.assert_success("pip install pylint")
-    assert "Successfully installed" in log
+print "Hello world."
+"""
 
-    log = universum_runner.run_from_source("config_static_issues.py")
-    assert "Found 11 issues" in log
+    universum_runner.environment.install_python_module("pylint")
+    source_file = universum_runner.local.root_directory.join("source_file.py")
 
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
+    # Test configuration with issues
+    universum_runner.clean_artifacts()
+    source_file.write(source_code + "\n")
+    log = universum_runner.run(config)
+    assert "Found 1 issues" in log
 
-    log = universum_runner.run_from_source("config_static_no_issues.py")
+    # Test configuration with no issues
+    universum_runner.clean_artifacts()
+    source_file.write(source_code)
+    log = universum_runner.run(config)
     assert "Issues not found." in log
 
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
+    # Test configuration with no code_report
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
 
-    log = universum_runner.run_from_source("basic_config.py")
+configs = Variations([dict(name="Run usual command", command=["ls", "-la"])])
+    """)
     string = re.compile("(Found [0-9]+ issues|Issues not found.)")
     assert not string.findall(log)
-
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))

@@ -1,31 +1,37 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import argparse
 import json
 import os
-import sh
 import sys
-from lxml import etree
 
-__all__ = ["SvaceAnalyzer"]
+import sh
+from lxml import etree
 
 
 class SvaceAnalyzer(object):
 
     @staticmethod
-    def define_arguments(parser, args):
+    def define_arguments():
+        parser = argparse.ArgumentParser(description="Svace analyzer")
         parser.add_argument("--build-cmd", dest="build_cmd", nargs='+',
                             help="Relative path to build script or command itself.")
         parser.add_argument("--lang", dest="lang", choices=["JAVA", "CXX"], help="Language to analyze.")
-        return parser.parse_args(args)
+        parser.add_argument("--result-file", dest="result_file",
+                            help="File for storing json results of Svace run. "
+                            "Set it to \"${CODE_REPORT_FILE}\" for running from Universum, variable will be "
+                            "handled during run. If you run this script separately from Universum, just "
+                            "name the result file.")
+        return parser
 
-    def __init__(self, settings, static_analyzer, json_file):
+    def __init__(self, settings):
         self.settings = settings
-        self.settings.static_analyzer = static_analyzer
 
         self.settings.svace_home = "/opt/svace-x64-linux"
-        self.settings.product = "Svace_build_home"
+        self.project_name = self.settings.project_name + "_" + self.settings.lang
 
-        self.work_folder = os.path.join(os.getcwd(), self.settings.product)
+        self.work_folder = os.path.join(os.getcwd(), self.settings.project_name)
         self.settings.jack_option = "--enable-jack-interception"
         self.settings.hash_server_memory = "2048"
         self.settings.verbose = "--verbose"
@@ -36,8 +42,7 @@ class SvaceAnalyzer(object):
         elif self.settings.lang.upper() == "CXX":
             self.disabled_language = "java"
             self.enabled_language = "cxx"
-
-        self.json_file = json_file
+        self.json_file = settings.result_file
 
     def analyze(self):
         try:
@@ -46,7 +51,7 @@ class SvaceAnalyzer(object):
                                       self.disabled_language, "--enable-language", self.enabled_language,
                                       "--preset", self.enabled_language)
 
-            svres_full = os.path.join(self.work_folder, "analyze-res", self.settings.product + ".svres")
+            svres_full = os.path.join(self.work_folder, "analyze-res", self.project_name + ".svres")
             root = etree.parse(svres_full)
 
             warn_info = root.xpath('//WarnInfo')
@@ -58,20 +63,25 @@ class SvaceAnalyzer(object):
                 issue["path"] = info.attrib["file"]
                 issue["line"] = info.attrib["line"]
                 issues_loads.append(issue)
-            with open(self.json_file, "w") as outfile:
-                outfile.write(json.dumps(issues_loads, indent=4))
+            if not self.settings.result_file:
+                sys.stdout.write(json.dumps(issues_loads, indent=4))
+            else:
+                with open(self.json_file, "w") as outfile:
+                    outfile.write(json.dumps(issues_loads, indent=4))
+            if issues_loads:
+                return 1
         except etree.XMLSyntaxError as e:
             sys.stderr.write(e.error_log)
-            return 1
+            return 2
         except Exception as e:
             sys.stderr.write(unicode(e))
-            return 1
+            return 2
         return 0
 
     def execute(self):
         if not os.path.exists(self.settings.svace_home):
             sys.stderr.write("SVACE_HOME=" + self.settings.svace_home + " folder doesn't exist.")
-            return 1
+            return 2
 
         try:
             cmd_init = sh.Command(self.settings.svace_home + "/bin/svace")
@@ -83,8 +93,23 @@ class SvaceAnalyzer(object):
                                   _err=sys.stderr, _out=sys.stdout)
         except sh.ErrorReturnCode_255:
             sys.stderr.write("Svace exited with error code 255. No build object found.\n")
-            return 1
+            return 2
         except Exception as e:
             sys.stderr.write(unicode(e))
-            return 1
+            return 2
         return self.analyze()
+
+
+def form_arguments_for_documentation():
+    return SvaceAnalyzer.define_arguments()
+
+
+def main():
+    analyzer_namespace = SvaceAnalyzer.define_arguments().parse_args()
+    analyze = SvaceAnalyzer(analyzer_namespace)
+    return analyze.execute()
+
+
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)

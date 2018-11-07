@@ -270,6 +270,15 @@ finish_background
     This parameter means that before executing this particular step all ongoing background steps
     (if any) should be finished first.
 
+..
+
+code_report
+    Basic usage is adding ``code_report=True`` to configuration description and ``--result-file="${CODE_REPORT_FILE}"``
+    to 'command' arguments.
+    Specifies step that performs static or syntax analysis of code.
+    Analyzers currently provided by Universum: ``universum_pylint``, ``universum_svace`` and ``universum_uncrustify``
+    (see `code_report parameter <code_report.html>`__ for details).
+
 .. _tc_tags:
 
 pass_tag, fail_tag

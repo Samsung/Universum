@@ -2,7 +2,6 @@
 
 import glob
 import os
-import git
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.utils import make_block
@@ -17,13 +16,11 @@ __all__ = [
     "GitPollVcs"
 ]
 
+git = None
+
 
 def catch_git_exception(ignore_if=None):
-    try:
-        exception = git.exc.GitCommandError
-    except NameError:
-        exception = Exception
-    return utils.catch_exception(exception, ignore_if)
+    return utils.catch_exception("GitCommandError", ignore_if)
 
 
 @needs_output
@@ -45,7 +42,19 @@ class GitVcs(BaseVcs):
     def __init__(self, *args, **kwargs):
         super(GitVcs, self).__init__(*args, **kwargs)
 
-        class Progress(git.remote.RemoteProgress):
+        global git
+        try:
+            git = utils.import_module("git")
+            remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
+        except CriticalCiException as e:
+            if "Failed to import" in unicode(e):
+                text = "Using VCS type 'git' requires official Git CLI and Pyhton package 'gitpython' " \
+                       "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
+                       "documentation for detailed instructions"
+                raise CriticalCiException(text)
+            raise
+
+        class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
                 super(Progress, self).__init__(*args, **kwargs)
                 self.out = out

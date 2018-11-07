@@ -20,31 +20,35 @@ setup(
     author_email='k.dovgan@samsung.com',
     license='BSD',
     packages=find_packages(exclude='tests'),
-    py_modules=['universum', 'code_report'],
+    py_modules=['universum', 'analyzers.pylint', 'analyzers.svace', 'analyzers.uncrustify'],
     entry_points={'console_scripts': [
         'universum = universum:main',
-        'universum_static = code_report:main'
+        'universum_pylint = analyzers.pylint:main',
+        'universum_svace = analyzers.svace:main',
+        'universum_uncrustify = analyzers.uncrustify:main'
     ]},
     setup_requires=['setuptools'],
     install_requires=[
-        'gitpython',
         'glob2',
         'requests',
         'sh',
-        'P4',
         'lxml'
     ],
     extras_require={
         'development': [
-            'sphinx<1.7',
+            'gitpython',
+            'P4',
+            'sphinx',
             'sphinx-argparse'
         ],
         'test': [
             'docker',
+            'gitpython',
             'httpretty<=0.8',
             'mock',
+            'P4',
             'pytest<3.7',
-            'pylint',
+            'pylint<2',
             'pytest-pylint',
             'sphinx',
             'sphinx-argparse',

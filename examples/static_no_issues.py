@@ -1,5 +1,0 @@
-"""
-Docstring.
-"""
-
-print "Hello world."

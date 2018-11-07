@@ -68,6 +68,7 @@ class StructureHandler(Module):
         self.current_block = block_structure
         self.configs_current_number = 0
         self.configs_total_count = 0
+        self.active_background_steps = []
 
     def open_block(self, name):
         new_block = Block(name, self.current_block)
@@ -79,10 +80,6 @@ class StructureHandler(Module):
     def close_block(self):
         block = self.current_block
         self.current_block = self.current_block.parent
-
-        if block.get_status() == "Failed":
-            self.out.report_build_problem(block.name + " " + block.status)
-
         self.out.close_block(get_block_num_str(block), block.name, block.status)
 
     def report_critical_block_failure(self):
@@ -104,6 +101,7 @@ class StructureHandler(Module):
         if error:
             self.out.log_exception(error)
         block.set_status("Failed")
+        self.out.report_build_problem(block.name + " " + block.status)
 
     def get_current_block(self):
         return self.current_block
@@ -129,14 +127,36 @@ class StructureHandler(Module):
             self.close_block()
         return result
 
-    def execute_step_structure(self, configs, step_executor):
-        self.configs_total_count = sum(1 for _ in configs.all())
-        self.execute_steps_recursively(None, configs, step_executor)
+    def execute_one_step(self, configuration, executor, is_critical):
+        background = configuration.get("background", False)
+        process = executor(configuration, redirect_to_file=background)
+        process.start(is_background=background)
+        if not background:
+            process.finalize()
+            return
+
+        self.out.log("Will continue in background")
+        self.active_background_steps.append({'name': configuration.get("name", ""),
+                                             'finalizer': process.finalize,
+                                             'is_critical': is_critical})
+
+    def finalize_background_step(self, step):
+        try:
+            step['finalizer']()
+            self.out.log("This background step finished successfully")
+        except StepException:
+            if step['is_critical']:
+                self.out.log_stderr("This background step failed, and as it was critical, "
+                                    "all further steps will be skipped")
+                return False
+            self.out.log_stderr("This background step failed")
+        return True
 
     def execute_steps_recursively(self, parent, variations, step_executor, skipped=False):
         if parent is None:
             parent = dict()
 
+        step_num_len = len(unicode(self.configs_total_count))
         child_step_failed = False
         for obj_a in variations:
             try:
@@ -146,23 +166,60 @@ class StructureHandler(Module):
                     # Here pass_errors=True, because any exception outside executing build step
                     # is not step-related and should stop script executing
 
-                    self.run_in_block(self.execute_steps_recursively, item.get("name", ' '), True,
+                    numbering = " [ {:{}}+{:{}} ] ".format("", step_num_len,
+                                                           "", step_num_len)
+                    step_name = numbering + item.get("name", ' ')
+                    self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a["children"], step_executor, skipped)
                 else:
                     self.configs_current_number += 1
-                    step_name = " [ " + unicode(self.configs_current_number) + "/" + \
-                                unicode(self.configs_total_count) + " ] " + item.get("name", ' ')
+                    numbering = " [ {:>{}}/{} ] ".format(
+                        unicode(self.configs_current_number),
+                        step_num_len,
+                        unicode(self.configs_total_count)
+                    )
+                    step_name = numbering + item.get("name", ' ')
+                    if skipped:
+                        self.report_skipped_block(step_name)
+                        continue
+
+                    if item.get("finish_background", False) and self.active_background_steps:
+                        self.out.log("All ongoing background steps should be finished before next step execution")
+                        if not self.report_background_steps():
+                            self.report_skipped_block(step_name)
+                            skipped = True
+                            raise StepException()
+
                     # Here pass_errors=False, because any exception while executing build step
                     # can be step-related and may not affect other steps
-
-                    if not skipped:
-                        self.run_in_block(step_executor, step_name, False, item)
-                    else:
-                        self.report_skipped_block(step_name)
+                    self.run_in_block(self.execute_one_step, step_name, False,
+                                      item, step_executor, obj_a.get("critical", False))
             except StepException:
                 child_step_failed = True
                 if obj_a.get("critical", False):
                     self.report_critical_block_failure()
                     skipped = True
         if child_step_failed:
-            raise StepException
+            raise StepException()
+
+    def report_background_steps(self):
+        result = True
+        for item in self.active_background_steps:
+            if not self.run_in_block(self.finalize_background_step,
+                                     "Waiting for background step '" + item['name'] + "' to finish...",
+                                     True, item):
+                result = False
+        self.out.log("All ongoing background steps completed")
+        self.active_background_steps = []
+        return result
+
+    def execute_step_structure(self, configs, step_executor):
+        self.configs_total_count = sum(1 for _ in configs.all())
+
+        try:
+            self.execute_steps_recursively(None, configs, step_executor)
+        except StepException:
+            pass
+
+        if self.active_background_steps:
+            self.run_in_block(self.report_background_steps, "Reporting background steps", False)

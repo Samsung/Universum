@@ -1,12 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-import difflib
 import os
 import shutil
 import warnings
 
 import sh
-from P4 import P4, P4Exception
 
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
@@ -27,9 +25,11 @@ __all__ = [
     "catch_p4exception"
 ]
 
+P4Exception = None
+
 
 def catch_p4exception(ignore_if=None):
-    return utils.catch_exception(P4Exception, ignore_if)
+    return utils.catch_exception("P4Exception", ignore_if)
 
 
 @needs_output
@@ -59,7 +59,18 @@ class PerforceVcs(base_vcs.BaseVcs):
         self.check_required_option("user", "P4USER")
         self.check_required_option("password", "P4PASSWD")
 
-        self.p4 = P4()
+        try:
+            p4_module = utils.import_module("P4")
+        except CriticalCiException as e:
+            if "Failed to import" in unicode(e):
+                text = "Using VCS type 'p4' requires official Helix CLI and Pyhton package 'perforce-p4python' " \
+                       "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
+                       "documentation for detailed instructions"
+                raise CriticalCiException(text)
+            raise
+        self.p4 = p4_module.P4()
+        global P4Exception
+        P4Exception = p4_module.P4Exception
 
     @make_block("Connecting")
     @catch_p4exception()
@@ -232,10 +243,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                                  "or split them with comma")
 
         parser.add_argument("--p4-shelve", "-p4s", action="append", nargs='+', dest="shelve_cls",
-                            metavar="SHELVE_CHANGELIST_1",
+                            metavar="SHELVE_CHANGELIST",
                             help="List of shelve CLs to be applied, separated by comma. "
                                  "--p4-shelve can be added to the command line several times. "
-                                 "5 shelve CLs can be specified via environment variables: "
+                                 "Also shelve CLs can be specified via additional environment variables: "
                                  "SHELVE_CHANGELIST_1..5")
 
         parser.add_argument("--p4-force-clean", action="store_true", dest="force_clean",
@@ -260,7 +271,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.mappings_dict = {}
 
         self.unshelved_files = []
-        self.diff_in_files = {}
+        self.diff_in_files = []
 
     def code_review(self):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
@@ -329,7 +340,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         if self.swarm:
             swarm_cls = self.get_related_cls(self.swarm.settings.change)
             cls.extend(swarm_cls)
-        for x in range(2, 6):
+        for x in range(1, 6):
             cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
 
@@ -476,37 +487,41 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.unshelved_files = self.p4.run_opened()
         unshelved_path = []
 
-        unshelved_filtered = [item for item in self.unshelved_files if item["action"] not in ["move/delete", "delete"]]
+        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
 
         for item in unshelved_filtered:
-            relative = item["clientFile"].replace("//" + item["client"] + "/", "")
-            copied = os.path.join(self.client_root, "new_temp", relative)
-            absolute = os.path.join(self.client_root, relative)
-            unshelved_path.append((relative, copied, absolute))
-            try:
-                shutil.copy(absolute, copied)
-            except IOError:
-                os.makedirs(os.path.dirname(copied))
-                shutil.copy(absolute, copied)
+            if item["action"] != "delete":
+                relative = item["clientFile"].replace("//" + item["client"] + "/", "")
+                copied = os.path.join(self.client_root, "new_temp", relative)
+                absolute = os.path.join(self.client_root, relative)
+
+                try:
+                    shutil.copy(absolute, copied)
+                except IOError:
+                    os.makedirs(os.path.dirname(copied))
+                    shutil.copy(absolute, copied)
+
+                # absolute = None to make sure content of 'add' and 'branch' won't participate in diff after revert
+                # for 'branch' diff we will assume it is a new file
+                # be careful, file for 'add' will be present in repo after revert
+                if item["action"] in ["add", "branch"]:
+                    absolute = None
+                unshelved_path.append((relative, copied, absolute))
+
+            else:
+                absolute = os.path.join(self.client_root, item["clientFile"].replace("//" + item["client"] + "/", ""))
+                unshelved_path.append((None, None, absolute))
 
         if self.shelve_cls:
             self.p4.run_revert("//...")
 
             for item, path in zip(unshelved_filtered, unshelved_path):
                 relative, copied, absolute = path
-
                 if item["action"] == "move/add":
                     for local, depot in self.mappings_dict.iteritems():
                         if depot == item["movedFile"]:
                             absolute = local
-
-                if item["action"] == "branch":
-                    with open(absolute, "w+"):
-                        pass
-
-                with open(absolute, "r") as a, open(copied, "r") as b:
-                    diff = difflib.SequenceMatcher(a=a.read().splitlines(), b=b.read().splitlines())
-                    self.diff_in_files.update({relative: diff.get_matching_blocks()})
+                self.diff_in_files.append((relative, copied, absolute))
         return self.diff_in_files
 
     def prepare_repository(self):

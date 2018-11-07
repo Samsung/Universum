@@ -24,7 +24,7 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs):
         parser = argument_parser.get_or_create_group("Local files",
                                                      "Parameters for file settings in case of no VCS used")
 
-        parser.add_argument('--vcs-source-dir', '-fsd', dest="source_dir", metavar='SOURCE_DIR',
+        parser.add_argument('--file-source-dir', '-fsd', dest="source_dir", metavar='SOURCE_DIR',
                             help="A local folder for project sources to be copied from. "
                                  "This option is only needed when '--driver-type' is set to 'none'")
 

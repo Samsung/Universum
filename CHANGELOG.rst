@@ -1,6 +1,26 @@
 Change log
 ==========
 
+0.16.0 (2018-11-07)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **launch:** add critical background steps
+* **vcs:** make VCS-related packages (e.g. :mod:`gitpython`) not reqired if not used
+* **code_report:** add separate entry points for all :doc:`static analysers <code_report>`
+* **code_report:** add :ref:`Uncrustify <code_report#uncrustify>` static analyser
+* **out:** add pretty step numbering padding
+
+Bug fixes
+~~~~~~~~~
+
+* **args:** fix required argument check to not accept empty values as valid
+* **launcher:** finish background steps after foreground steps failing
+* **out:** add reporting failed background steps to TC
+
+
 0.15.4 (2018-09-26)
 -------------------
 

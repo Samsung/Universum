@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import json
 import sh
 
 from .. import configuration_support
@@ -12,7 +11,7 @@ from ..lib.ci_exception import CiException, CriticalCiException, StepException
 from ..lib.gravity import Dependency
 from ..lib.module_arguments import IncorrectParameterError
 from ..lib.utils import make_block
-from . import automation_server, artifact_collector, reporter
+from . import automation_server, artifact_collector, reporter, code_report_collector
 from .output import needs_output
 from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
@@ -86,57 +85,57 @@ def check_if_env_set(configuration):
     return True
 
 
-def finalize_execution(cmd, log, pass_tag, fail_tag):
-    try:
-        text = ""
-        try:
-            cmd.wait()
-        except Exception as e:
-            if isinstance(e, sh.ErrorReturnCode):
-                text = "Module sh got exit code " + unicode(e.exit_code) + "\n"
-                if e.stderr:
-                    text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
-            else:
-                text = unicode(e) + "\n"
-        if text:
-            log.report_fail(text)
-            if fail_tag:
-                log.add_tag(fail_tag)
-            raise StepException()
-        else:
-            if pass_tag:
-                log.add_tag(pass_tag)
-    finally:
-        log.end_log()
-
-
-class LogWriter(object):
+class Step(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, out, artifacts, report, server, output_type, step_name, fail_block, background=False):
+    def __init__(self, item, out, fail_block, send_tag, log_file, working_directory):
+        super(Step, self).__init__()
+        self.configuration = item
         self.out = out
         self.fail_block = fail_block
-        self.artifacts = artifacts
-        self.reporter = report
-        self.background = background
-        self.step_name = step_name
-        self.error_lines = []
-        self.server = server
+        self.send_tag = send_tag
+        self.file = log_file
+        self.working_directory = working_directory
+        self.cmd = None
+        self.process = None
 
-        if self.background:
-            output_type = "file"
+    def prepare_command(self):
+        try:
+            command_name = utils.strip_path_start(self.configuration["command"][0])
+        except KeyError as e:
+            if e.message == "command":
+                self.out.log("No 'command' found. Nothing to execute")
+                return False
+            else:
+                raise
+        try:
+            try:
+                self.cmd = make_command(command_name)
+            except CiException:
+                if self.working_directory is None:
+                    raise
+                command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
+                self.cmd = make_command(command_name)
+        except CiException as ex:
+            self.fail_block(unicode(ex))
+            raise StepException()
+        return True
 
-        if output_type == "file":
-            self.file = artifacts.create_text_file(step_name + "_log.txt")
-            self.out.log("Execution log is redirected to file")
-        else:
-            self.file = None
+    def start(self, is_background):
+        if not self.prepare_command():
+            return
 
-    def print_cmd(self, line):
-        line = utils.trim_and_convert_to_unicode(line)
+        self.process = self.cmd(*self.configuration["command"][1:],
+                                _iter=True,
+                                _bg_exc=False,
+                                _cwd=self.working_directory,
+                                _bg=is_background,
+                                _out=self.handle_stdout,
+                                _err=self.handle_stderr)
 
-        self.out.log_external_command(line)
+        log_cmd = utils.trim_and_convert_to_unicode(self.process.ran)
+        self.out.log_external_command(log_cmd)
         if self.file:
-            self.file.write("$ " + line + "\n")
+            self.file.write("$ " + log_cmd + "\n")
 
     def handle_stdout(self, line=u""):
         line = utils.trim_and_convert_to_unicode(line)
@@ -148,58 +147,46 @@ class LogWriter(object):
 
     def handle_stderr(self, line):
         line = utils.trim_and_convert_to_unicode(line)
-        self.error_lines.append(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
         else:
             self.out.log_stderr(line)
 
-    def report_fail(self, line):
-        line = utils.trim_and_convert_to_unicode(line)
-
-        if self.file:
-            self.file.write(line + "\n")
-        self.fail_block(line)
-
     def add_tag(self, tag):
-        request = self.server.add_build_tag(tag)
+        if not tag:
+            return
+
+        request = self.send_tag(tag)
         if request.status_code != 200:
             self.out.log_stderr(request.text)
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
-    def end_log(self):
-        self.handle_stdout()
-        if self.file:
-            self.file.close()
-
-
-class LogWriterCodeReport(LogWriter):
-    def __init__(self, report_file, *args, **kwargs):
-        super(LogWriterCodeReport, self).__init__(*args, **kwargs)
-        self.report_file = report_file
-
-    def report_comments(self, report):
-        for result in report:
-            text = result["symbol"] + ": " + result["message"]
-            self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
-
-    def end_log(self):
-        if os.path.exists(self.report_file):
-            with open(self.report_file, "r") as f:
-                report = json.loads(f.read())
-
-            json_file = self.artifacts.create_text_file("Static_analysis_report.json")
-            json_file.write(json.dumps(report, indent=4))
-
-            self.report_comments(report)
-            if report:
-                text = unicode(len(report)) + " issues"
-                self.error_lines.append(text)
-                self.fail_block("Found " + text)
-                self.out.report_build_status(self.step_name + ": " + text)
-        if not self.error_lines:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
-            self.out.log("Issues not found.")
+    def finalize(self):
+        try:
+            text = ""
+            try:
+                self.process.wait()
+            except Exception as e:
+                if isinstance(e, sh.ErrorReturnCode):
+                    text = "Module sh got exit code " + unicode(e.exit_code) + "\n"
+                    if e.stderr:
+                        text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
+                else:
+                    text = unicode(e) + "\n"
+            if text:
+                text = utils.trim_and_convert_to_unicode(text)
+                if self.file:
+                    self.file.write(text + "\n")
+                self.fail_block(text)
+                self.add_tag(self.configuration.get("fail_tag", False))
+                raise StepException()
+            else:
+                self.add_tag(self.configuration.get("pass_tag", False))
+        finally:
+            self.handle_stdout()
+            if self.file:
+                self.file.close()
 
 
 @needs_output
@@ -208,6 +195,7 @@ class Launcher(ProjectDirectory):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     reporter_factory = Dependency(reporter.Reporter)
     server_factory = Dependency(automation_server.AutomationServer)
+    code_report_collector = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -225,7 +213,6 @@ class Launcher(ProjectDirectory):
 
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)
-        self.background_processes = []
         self.source_project_configs = None
         self.project_configs = None
 
@@ -242,6 +229,7 @@ class Launcher(ProjectDirectory):
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
+        self.code_report_collector = self.code_report_collector()
 
     @make_block("Processing project configs")
     def process_project_configs(self):
@@ -281,20 +269,10 @@ class Launcher(ProjectDirectory):
             raise CriticalCiException(text)
         return self.project_configs
 
-    # pylint: disable = too-many-locals
-    # TODO: refactor this
-    def run_cmd(self, name, step_name, working_directory, background, code_report, pass_tag, fail_tag, *args, **kwargs):
-        try:
-            try:
-                cmd = make_command(name)
-            except CiException:
-                if working_directory is None:
-                    raise
-                name = os.path.abspath(os.path.join(working_directory, name))
-                cmd = make_command(name)
-        except CiException as ex:
-            self.structure.fail_current_block(unicode(ex))
-            raise StepException()
+    def create_process(self, item, redirect_to_file=False):
+        item = self.code_report_collector.prepare_env_for_code_report(item, self.settings.project_root)
+        working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
+                                             self.settings.project_root)
 
         # get_current_block() should be called while inside the required block, not afterwards
         block = self.structure.get_current_block()
@@ -302,69 +280,15 @@ class Launcher(ProjectDirectory):
         def fail_block(line=None):
             self.structure.fail_block(block, line)
 
-        init = [self.out, self.artifacts, self.reporter, self.server, self.settings.output,
-                step_name, fail_block, background]
-        if code_report:
-            report_file = os.path.join(working_directory, "temp_code_report.json")
-            log_writer = LogWriterCodeReport(report_file, *init)
+        if redirect_to_file or (self.settings.output == "file"):
+            log_file = self.artifacts.create_text_file(item.get("name", "") + "_log.txt")
+            self.out.log("Execution log is redirected to file")
         else:
-            log_writer = LogWriter(*init)
+            log_file = None
 
-        ret = cmd(*args, _iter=True, _cwd=working_directory, _bg_exc=False, _bg=background,
-                  _out=log_writer.handle_stdout, _err=log_writer.handle_stderr, **kwargs)
-        log_writer.print_cmd(ret.ran)
-
-        if background:
-            self.background_processes.append({'cmd': ret, 'log': log_writer,
-                                              'pass_tag': pass_tag, 'fail_tag': fail_tag})
-            self.out.log("Will continue in background")
-        else:
-            finalize_execution(ret, log_writer, pass_tag, fail_tag)
-
-    def execute_configuration(self, item):
-        try:
-            command_path = utils.strip_path_start(item["command"][0])
-            working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
-                                                 self.settings.project_root)
-
-            finish_background = item.get("finish_background", False)
-            if finish_background and self.background_processes:
-                self.out.log("All ongoing background steps should be finished before execution")
-                self.report_background_steps()
-
-            self.run_cmd(command_path,
-                         item.get("name", ''),
-                         working_directory,
-                         item.get("background", False),
-                         item.get("code_report", False),
-                         item.get("pass_tag", False),
-                         item.get("fail_tag", False),
-                         *(item["command"][1:]))
-        except KeyError as e:
-            if e.message == "command":
-                self.out.log("No 'command' found. Nothing to execute")
-            else:
-                raise
-
-    def report_background_steps(self):
-        for process in self.background_processes:
-            try:
-                self.out.log("Waiting for step '" + process['log'].step_name + "' to finish...")
-                finalize_execution(**process)
-            except StepException:  # background step cannot be critical
-                self.out.log_stderr("Reported this background step as failed")
-        self.out.log("All ongoing background steps completed")
-        self.background_processes = []
+        return Step(item, self.out, fail_block, self.server.add_build_tag, log_file, working_directory)
 
     @make_block("Executing build steps")
     def launch_project(self):
         self.reporter.add_block_to_report(self.structure.get_current_block())
-        try:
-            self.structure.execute_step_structure(self.project_configs, self.execute_configuration)
-            if self.background_processes:
-                self.structure.run_in_block(self.report_background_steps, "Reporting background steps", False)
-                self.report_background_steps()
-        except StepException:
-            pass
-            # StepException only stops build step execution,
-            # not affecting other Universum functions, e.g. artifact collecting or finalizing
+        self.structure.execute_step_structure(self.project_configs, self.create_process)

@@ -4,6 +4,7 @@
 import os
 
 import git
+from git.remote import RemoteProgress
 import pytest
 
 from . import utils
@@ -28,6 +29,9 @@ class GitServer(object):
         self._commit_count = 0
 
         self._branch = self._repo.create_head(branch_name)
+
+    def get_location(self):
+        return unicode(self._working_directory)
 
     def make_a_change(self):
         self._branch.checkout()
@@ -77,22 +81,38 @@ def git_server(tmpdir):
     yield GitServer(directory, "testing")
 
 
+@pytest.fixture()
+def git_client(tmpdir, git_server):
+    workdir = tmpdir.mkdir("client")
+    repo = git.Repo.clone_from(git_server.url, unicode(workdir))
+
+    class Progress(RemoteProgress):
+        def line_dropped(self, line):
+            print line
+
+    yield utils.Params(server=git_server,
+                       logger=Progress(),
+                       repo=repo,
+                       root_directory=workdir,
+                       repo_file=workdir.join(git_server.target_file))
+
+
 class GitEnvironment(utils.TestEnvironment):
-    def __init__(self, server, directory, test_type):
+    def __init__(self, client, directory, test_type):
         db_file = directory.join("gitpoll.json")
         self.db_file = unicode(db_file)
-        self.root_directory = directory.mkdir("client")
+        self.root_directory = client.root_directory
 
         super(GitEnvironment, self).__init__(test_type)
 
-        self.server = server
-        self.repo = git.Repo.clone_from(self.server.url, unicode(self.root_directory))
+        self.server = client.server
+        self.repo = client.repo
         self.repo.git.checkout(self.server.target_branch)
-        self.repo_file = self.root_directory.join(self.server.target_file)
+        self.repo_file = client.repo_file
 
         self.settings.Vcs.type = "git"
-        self.settings.GitVcs.repo = server.url
-        self.settings.GitVcs.refspec = server.target_branch
+        self.settings.GitVcs.repo = client.server.url
+        self.settings.GitVcs.refspec = client.server.target_branch
         try:
             self.settings.GitSubmitVcs.user = "Testing User"
             self.settings.GitSubmitVcs.email = "some@email.com"

@@ -86,9 +86,9 @@ def poll_parameters(log_exception_checker, stdout_checker, http_request_checker)
 
 
 @pytest.fixture(params=["git", "p4"])
-def poll_environment(request, perforce_workspace, git_server, tmpdir):
+def poll_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
-        yield git_utils.GitEnvironment(git_server, tmpdir, test_type="poll")
+        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="poll")
     else:
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="poll")
 
@@ -190,6 +190,18 @@ def test_poll_changes_several_times(poll_parameters, poll_environment):
 # ----------------------------------------------------------------------------------------------
 
 
+def test_submit_error_no_repo(submit_environment, stdout_checker):
+    settings = copy.deepcopy(submit_environment.settings)
+    if settings.Vcs.type == "git":
+        settings.ProjectDirectory.project_root = "non_existing_repo"
+        universum.run(Submit, settings)
+        stdout_checker.assert_has_calls_with_param("No such directory")
+    else:
+        settings.PerforceSubmitVcs.client = "non_existing_client"
+        universum.run(Submit, settings)
+        stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
+
+
 class SubmitterParameters(object):
     def __init__(self, stdout_checker, environment):
         self.stdout_checker = stdout_checker
@@ -228,9 +240,9 @@ def submit_parameters(stdout_checker):
 
 
 @pytest.fixture(params=["git", "p4"])
-def submit_environment(request, perforce_workspace, git_server, tmpdir):
+def submit_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
-        yield git_utils.GitEnvironment(git_server, tmpdir, test_type="submit")
+        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="submit")
     else:
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 

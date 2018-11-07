@@ -1,54 +1,69 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import os
-import shutil
 
-from .perforce_utils import ignore_p4_exception
-
-
-def update_directory(workspace, directory):
-    workspace.p4.run_reconcile("-a", "-e", "-d", directory)
-    change = workspace.p4.run_change("-o")[0]
-    change["Description"] = "Update directory " + str(os.path.basename(directory))
-    workspace.p4.run_submit(change)
-
-
-def test_minimal_install(command_runner, perforce_workspace, universum_runner):
+def test_minimal_install(universum_runner):
 
     # Run without parameters
-    log = command_runner.assert_failure("universum")
+    log = universum_runner.environment.assert_unsuccessful_execution("universum")
     assert "command not found" not in log
 
-    # Run with parameters
-    log = universum_runner.run_from_source("basic_config.py")
-    assert "Build for platform B 32 bits" in log
+    config = """
+from _universum.configuration_support import Variations
 
-    assert os.path.exists(os.path.join(os.getcwd(), "artifacts/out.zip"))
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
+configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+"""
+
+    # Run locally
+    log = universum_runner.run(config, force_installed=True)
+    assert universum_runner.local.repo_file.basename in log
+
+    # Run from Git
+    universum_runner.clean_artifacts()
+    log = universum_runner.run(config, vcs_type="git", force_installed=True)
+    assert universum_runner.git.repo_file.basename in log
 
     # Run from P4
-    project_dir = unicode(perforce_workspace.root_directory.join("examples"))
-    try:
-        shutil.copytree(os.path.join(os.getcwd(), "examples"), project_dir)
-    except OSError:
-        shutil.rmtree(project_dir)
-        shutil.copytree(os.path.join(os.getcwd(), "examples"), project_dir)
+    universum_runner.clean_artifacts()
+    log = universum_runner.run(config, vcs_type="p4", force_installed=True)
+    assert universum_runner.perforce.repo_file.basename in log
 
-    ignore_p4_exception("no file(s) to reconcile", update_directory,
-                        perforce_workspace, project_dir + "/...")
 
-    cmd = "universum --p4-force-clean -p4p {} -p4u {} -p4P {} -p4d {} -p4c {} -lcp {} -pr {} -ad {}" \
-        .format(perforce_workspace.p4.port,
-                perforce_workspace.p4.user,
-                perforce_workspace.p4.password,
-                "//depot/examples/...",
-                "my_disposable_p4_client",
-                "basic_config.py",
-                universum_runner.project_root,
-                universum_runner.artifact_dir)
-    log = command_runner.assert_success(cmd)
-    assert "Build for platform B 32 bits" in log
+def test_minimal_install_with_p4python_only(universum_runner_no_gitpython, capsys):
+    config = """
+from _universum.configuration_support import Variations
 
-    assert os.path.exists(os.path.join(os.getcwd(), "artifacts/out.zip"))
-    command_runner.assert_success("rm -rf {}".format(universum_runner.artifact_dir))
+configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+"""
+
+    # Run from Git
+    universum_runner_no_gitpython.run(config, vcs_type="git", force_installed=True, expected_to_fail=True)
+    assert "Please refer to `Prerequisites` chapter of project documentation" in capsys.readouterr().out
+
+    # Run from P4
+    universum_runner_no_gitpython.clean_artifacts()
+    log = universum_runner_no_gitpython.run(config, vcs_type="p4", force_installed=True)
+    assert universum_runner_no_gitpython.perforce.repo_file.basename in log
+
+
+def test_minimal_install_plain_ubuntu(universum_runner_plain_ubuntu, capsys):
+    config = """
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+"""
+
+    # Run locally
+    log = universum_runner_plain_ubuntu.run(config, force_installed=True)
+    assert universum_runner_plain_ubuntu.local.repo_file.basename in log
+
+    # Run from P4
+    universum_runner_plain_ubuntu.run(config, vcs_type="p4", force_installed=True, expected_to_fail=True)
+    assert "Please refer to `Prerequisites` chapter of project documentation" in capsys.readouterr().out
+
+    # Run from Git
+    universum_runner_plain_ubuntu.clean_artifacts()
+    universum_runner_plain_ubuntu.environment.assert_successful_execution("apt-get install -y git")
+    universum_runner_plain_ubuntu.environment.install_python_module("gitpython")
+    log = universum_runner_plain_ubuntu.run(config, vcs_type="git", force_installed=True)
+    assert universum_runner_plain_ubuntu.git.repo_file.basename in log
