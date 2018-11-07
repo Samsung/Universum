@@ -21,9 +21,10 @@ class UncrustifyAnalyzer(object):
     def define_arguments():
         parser = argparse.ArgumentParser(description="Uncrustify analyzer")
         parser.add_argument("--file-names", "-fn", dest="file_names", nargs="+",
-                            help=r"Expression *.c, *.cpp, *.h, *.java or C/C++/C header/java files for analazer")
+                            help="Expression '*.c', '*.cpp', '*.h', '*.java' "
+                                 "or C/C++/C header/java files for analyser")
         parser.add_argument("--file-list", "-fl", dest="file_list", nargs=1,
-                            help="File with list of file for analyzer")
+                            help="File with list of file for analyser")
         parser.add_argument("--cfg-file", "-cf", dest="cfg_file", nargs=1,
                             help="Specify a configuration file or UNCRUSTIFY_CONFIG")
         parser.add_argument("--pattern-form", "-pf", dest="pattern_form", type=str,
@@ -31,7 +32,7 @@ class UncrustifyAnalyzer(object):
                                  "to the total file list from [--file_names] and [--file_list]")
         parser.add_argument("--result-file", dest="result_file",
                             help="File for storing json results of Universum run. "
-                            "Set it to \"${CODE_REPORT_FILE}\" for running from Universum, variable will be "
+                            "Set it to '${CODE_REPORT_FILE}' for running from Universum, variable will be "
                             "handled during run. If you run this script separately from Universum, just "
                             "name the result file or leave it empty.")
         return parser

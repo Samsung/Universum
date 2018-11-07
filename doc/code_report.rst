@@ -1,12 +1,12 @@
 Code report
-=======================
+===========
 
 The following analysing modules (analysers) are installed by default: ``universum_pylint``, ``universum_svace``,
 ``universum_uncrustify``. Analysers are separate scripts, fully compatible with Universum.
 It is possible to use them independently from command line.
 
 All analysers must have an argument for JSON file with analysis results. If you run code report independently,
-the name must conform to file name standards. If argumnet is not provided, output will be written to console.
+the name must conform to file name standards. If argument is not provided, output will be written to console.
 
 Running analysers from Universum, you need to add ``code_report=True`` and result file argument mandatory must be
 set to ``"${CODE_REPORT_FILE}"``. ``"${CODE_REPORT_FILE}"`` is a pseudo-variable that will be replaced with
@@ -22,8 +22,10 @@ When using via Universum ``code_report=True`` step, use ``--report-to-review``
 functionality to comment on any found issues to code review system.
 
 
+.. _code_report#pylint:
+
 Pylint
-------------
+------
 
 .. argparse::
     :ref: analyzers.pylint.form_arguments_for_documentation
@@ -57,8 +59,10 @@ This file will get us the following list of configurations:
     [{'command': 'universum_pylint --python-version 3 --result-file ${CODE_REPORT_FILE} --files *.py examples/', 'name': 'pylint', 'code_report': True}]
 
 
+.. _code_report#svace:
+
 Svace
-------------
+-----
 
 .. argparse::
     :ref: analyzers.svace.form_arguments_for_documentation
@@ -92,8 +96,10 @@ will produce this list of configurations:
     [{'command': 'universum_svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}', 'name': 'svace', 'code_report': True}]
 
 
+.. _code_report#uncrustify:
+
 Uncrustify
-------------
+----------
 
 .. argparse::
     :ref: analyzers.uncrustify.form_arguments_for_documentation
