@@ -16,8 +16,9 @@ configs = Variations([dict(name="Create virtual environment", command=["virtuale
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("PYTHONIOENCODING=utf-8 make test")),
                       dict(name="Run static pylint", code_report=True,
-                           command=["universum_static", "--type", "pylint", "--rcfile", "pylintrc",
-                                    "--files", "*.py _universum/", "tests/"])])
+                           command=["universum_pylint", "--python-version", "2", "--rcfile", "pylintrc",
+                                    "--files", "*.py", "_universum/", "tests/", "analyzers/",
+                                    "--result-file", "${CODE_REPORT_FILE}"])])
 
 if __name__ == '__main__':
     print configs.dump()

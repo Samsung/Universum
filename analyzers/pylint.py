@@ -5,7 +5,10 @@ import argparse
 import glob
 import json
 import sys
+
 import sh
+
+from . import utils
 
 
 class PylintAnalyzer(object):
@@ -23,11 +26,7 @@ class PylintAnalyzer(object):
         parser.add_argument("--rcfile", dest="rcfile", help="Specify a configuration file.")
         parser.add_argument("--python-version", dest="version", default="3", choices=["2", "3"],
                             help="Version of Python")
-        parser.add_argument("--result-file", dest="result_file",
-                            help="File for storing json results of Pylint run. "
-                                 "Set it to \"${CODE_REPORT_FILE}\" for running from Universum, variable will be "
-                                 "handled during run. If you run this script separately from Universum, just "
-                                 "name the result file.")
+        utils.add_common_arguments(parser)
         return parser
 
     def __init__(self, settings):
@@ -72,11 +71,7 @@ class PylintAnalyzer(object):
                     # it uses cgi.escape lib and escapes symbols <>&
                     issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                     issues_loads.append(issue)
-                if not self.settings.result_file:
-                    sys.stdout.write(json.dumps(issues_loads, indent=4))
-                else:
-                    with open(self.json_file, "wb") as outfile:
-                        outfile.write(json.dumps(issues_loads, indent=4))
+                utils.analyzers_output(self.json_file, issues_loads)
                 return 1
             except ValueError as e:
                 sys.stderr.write(e.message)

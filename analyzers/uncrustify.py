@@ -2,12 +2,14 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
-import json
-import sys
-import sh
-import os
 import difflib
+import sys
+import os
+
 import glob2
+import sh
+
+from . import utils
 
 
 class UncrustifyAnalyzer(object):
@@ -30,11 +32,7 @@ class UncrustifyAnalyzer(object):
         parser.add_argument("--pattern-form", "-pf", dest="pattern_form", type=str,
                             help="Specify pattern which apply "
                                  "to the total file list from [--file_names] and [--file_list]")
-        parser.add_argument("--result-file", dest="result_file",
-                            help="File for storing json results of Universum run. "
-                            "Set it to '${CODE_REPORT_FILE}' for running from Universum, variable will be "
-                            "handled during run. If you run this script separately from Universum, just "
-                            "name the result file or leave it empty.")
+        utils.add_common_arguments(parser)
         return parser
 
     def parse_files(self):
@@ -60,15 +58,17 @@ class UncrustifyAnalyzer(object):
         self.file_names = settings.file_names
         self.file_list = settings.file_list
         self.pattern_form = settings.pattern_form
+        self.json_file = settings.result_file
+
+    def execute(self):  # pylint: disable=too-many-locals
+
         if not (self.file_names or self.file_list):
             sys.stderr.write("Please, specify at least one option [--file_names] or [--file_list].")
             return 2
         if not self.cfg_file:
             sys.stderr.write("Please, specify [--cfg_file] option.")
             return 2
-        self.json_file = settings.result_file
 
-    def execute(self):
         analyze_files = self.parse_files()
         if not analyze_files:
             sys.stderr.write("Correct your parameters. List of files for uncrustify is empty.")
@@ -90,9 +90,8 @@ class UncrustifyAnalyzer(object):
             # generate html diff ----------------------------------------------
             differ = difflib.HtmlDiff(tabsize=8, wrapcolumn=82)
             html = differ.make_file(f1_lines, f2_lines, context=False)
-            outfile = open('uncrustify/' + file_name +'.html', 'w')
-            outfile.write(html)
-            outfile.close()
+            with open('uncrustify/' + file_name + '.html', 'w') as outfile:
+                outfile.write(html)
 
             file_sequence = difflib.SequenceMatcher(a=f1_lines, b=f2_lines)
             # Get matching in lines
@@ -126,13 +125,8 @@ class UncrustifyAnalyzer(object):
                     issue["line"] = match.a
                     issues_loads.append(issue)
                     prev_match = match
-            if issues_loads:
-                if not self.settings.result_file:
-                    sys.stdout.write(json.dumps(issues_loads, indent=4))
-                else:
-                    with open(self.json_file, "w") as outfile:
-                        outfile.write(json.dumps(issues_loads, indent=4))
-                return 1
+            utils.analyzers_output(self.json_file, issues_loads)
+            return 1
         return 0
 
 

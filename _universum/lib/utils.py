@@ -73,8 +73,8 @@ def create_driver(local_factory, teamcity_factory, jenkins_factory, default=None
     return local_factory()
 
 
-def format_traceback(ex, trace):
-    tb_lines = traceback.format_exception(ex.__class__, ex, trace)
+def format_traceback(exc, trace):
+    tb_lines = traceback.format_exception(exc.__class__, exc, trace)
     tb_text = ''.join(tb_lines)
     return tb_text
 
