@@ -19,6 +19,7 @@ class Submit(Module):
 
     @staticmethod
     def define_arguments(parser):
+        parser.prog = parser.prog + " submit"
         parser.add_argument("--create-review", action="store_true", dest="review",
                             help="create deletable review (shelve for P4, temp branch for Git) "
                                  "instead of actual submitting to repo")

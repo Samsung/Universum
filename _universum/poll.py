@@ -20,6 +20,7 @@ class Poll(Module):
 
     @staticmethod
     def define_arguments(parser):
+        parser.prog = parser.prog + " poll"
         parser.add_argument('--file', '-f', dest='db_file', help='File to store last known CLs', default="p4poll.json")
         parser.add_argument('--num', '-n', dest='max_number', help='Maximum number of CLs processed, default is 10',
                             type=int, default=10)
