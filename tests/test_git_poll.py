@@ -40,7 +40,7 @@ def assert_polled_commits(commits, stdout_checker, http_request_checker):
 
 def test_max_number_commits(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make changes in polled branch
@@ -49,7 +49,7 @@ def test_max_number_commits(stdout_checker, http_request_checker, git_poll_envir
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits(changes_to_polled[1:],
                           stdout_checker,
                           http_request_checker)
@@ -59,7 +59,7 @@ def test_max_number_commits(stdout_checker, http_request_checker, git_poll_envir
 
 def test_merge_one_branch_ff(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make changes in polled branch
@@ -71,7 +71,7 @@ def test_merge_one_branch_ff(stdout_checker, http_request_checker, git_poll_envi
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits([change_to_polled] + changes_to_branch,
                           stdout_checker,
                           http_request_checker)
@@ -79,7 +79,7 @@ def test_merge_one_branch_ff(stdout_checker, http_request_checker, git_poll_envi
 
 def test_merge_one_branch_noff(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make changes in polled branch
@@ -92,7 +92,7 @@ def test_merge_one_branch_noff(stdout_checker, http_request_checker, git_poll_en
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           http_request_checker)
@@ -102,7 +102,7 @@ def test_merge_one_branch_noff(stdout_checker, http_request_checker, git_poll_en
 
 def test_merge_two_subsequent_branches_noff(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make changes in polled branch
@@ -117,7 +117,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, http_request_checker
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           http_request_checker)
@@ -127,7 +127,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, http_request_checker
 
 def test_merge_two_subsequent_branches_ff(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make changes in polled branch
@@ -142,7 +142,7 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, http_request_checker, 
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits([change_to_polled] + changes_to_first_branch + changes_to_second_branch,
                           stdout_checker,
                           http_request_checker)
@@ -150,7 +150,7 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, http_request_checker, 
 
 def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make a branch from polled
@@ -168,7 +168,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_request_chec
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits([change_to_polled, merge_commit_id],
                           stdout_checker,
                           http_request_checker)
@@ -178,7 +178,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_request_chec
 @pytest.mark.xfail
 def test_merge_ff_commit_merged_from_polled(stdout_checker, http_request_checker, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
 
     # ACT
     # make a branch from polled
@@ -199,7 +199,7 @@ def test_merge_ff_commit_merged_from_polled(stdout_checker, http_request_checker
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(Poll, git_poll_environment.settings) == 0
+    assert universum.run(git_poll_environment.settings) == 0
     assert_polled_commits([change_to_polled, change_to_branch],
                           stdout_checker,
                           http_request_checker)

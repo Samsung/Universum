@@ -77,6 +77,7 @@ def get_image(request, client, params, name):
 
 def create_settings(class_name):
     argument_parser = default_args.ArgParserWithDefault()
+    argument_parser.set_defaults(main_class=class_name)
     gravity.define_arguments_recursive(class_name, argument_parser)
     return argument_parser.parse_args([])
 

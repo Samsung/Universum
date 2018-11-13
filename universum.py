@@ -15,22 +15,31 @@ from _universum.lib.module_arguments import ModuleArgumentParser, IncorrectParam
 from _universum.lib.utils import Uninterruptible, format_traceback
 
 
-def define_arguments(main_class=Main):
-    if main_class is Main:
-        epilog = "Available subcommands are 'poll' and 'submit'. Use 'universum <subcommand> --help' for more info"
-    else:
-        epilog = None
-    parser = ModuleArgumentParser(description=__title__ + " " + __version__, epilog=epilog)
+def define_arguments(*args):
+    parser = ModuleArgumentParser(description=__title__ + " " + __version__)
     parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
+    define_arguments_recursive(Main, parser)
 
-    define_arguments_recursive(main_class, parser)
+    subparsers = parser.add_subparsers(title="Additional commands",
+                                       metavar="{poll,submit}",
+                                       help="Use 'universum <subcommand> --help' for more info")
+    define_arguments_recursive(Poll, subparsers.add_parser("poll"))
+    define_arguments_recursive(Submit, subparsers.add_parser("submit"))
+
+    if parser.needs_default_parser(*args):
+        default_parser = "default"
+        subparsers.add_parser(default_parser)
+        if args:
+            args[0].insert(len(args), default_parser)
+        else:
+            sys.argv.insert(len(sys.argv), default_parser)
+
     return parser
 
 
-def run(main_class, settings):
+def run(settings):
     result = 0
-
-    main_module = construct_component(main_class, settings)
+    main_module = construct_component(settings.main_class, settings)
 
     finalized = False
 
@@ -62,43 +71,11 @@ def run(main_class, settings):
 
 
 def main(*args, **kwargs):
-    command = None
-    # 'command' may or may not be the first positional argument for this script
-    # if no command is passed to script, default 'Main' module is executed
-    # if any command is passed, it chould be parsed and excluded from parameters before calling argparse
-    # because argparse should parse different arguments depending on 'command' value
-    try:
-        # if main is called from another python script, *args and **kwargs are passed to arparse
-        # args is a tuple of up to three elements, where first one is a list of passed arguments
-        # if any 'command' is passed to main this way, it should be the first element of args[0]
-        if not args[0][0].startswith("-"):
-            command = args[0][0]
-            # if succeeded, removing command parameter from immutable tuple 'args':
-            arg_list = list(args)
-            arg_list[0] = args[0][1:]
-            args = tuple(arg_list)
-    except IndexError:
-        # IndexError means no parameters were passed via *args
-        # so we should check sys.argv for 'command'
-        try:
-            if not sys.argv[1].startswith("-"):
-                command = sys.argv[1]
-                # and also remove 'command' from parameters passed to argparse if succeeded
-                sys.argv.pop(1)
-        except IndexError:
-            # if no parameters were passed via *args or sys.argv, argparse will handle this situation
-            pass
-
-    if command == "submit":
-        main_class = Submit
-    elif command == "poll":
-        main_class = Poll
-    else:
-        main_class = Main
-    parser = define_arguments(main_class)
+    parser = define_arguments(*args)
     settings = parser.parse_args(*args, **kwargs)
+    settings.main_class = getattr(settings, "main_class", Main)
     try:
-        return run(main_class, settings)
+        return run(settings)
     except IncorrectParameterError as e:
         parser.error(e.message)
 
