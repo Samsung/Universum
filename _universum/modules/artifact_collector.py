@@ -61,12 +61,7 @@ class ArtifactCollector(ProjectDirectory):
             os.makedirs(self.artifact_dir)
 
     def make_file_name(self, name):
-        name = name.replace(" ", "_")
-        name = name.replace("/", "\\")
-        if name.startswith('_'):
-            name = name[1:]
-        name = os.path.join(self.artifact_dir, name)
-        return name
+        return utils.calculate_file_absolute_path(self.artifact_dir, name)
 
     def create_text_file(self, name):
         try:

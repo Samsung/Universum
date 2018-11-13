@@ -270,7 +270,6 @@ class Launcher(ProjectDirectory):
         return self.project_configs
 
     def create_process(self, item, redirect_to_file=False):
-        item = self.code_report_collector.prepare_env_for_code_report(item, self.settings.project_root)
         working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
                                              self.settings.project_root)
 
@@ -287,6 +286,9 @@ class Launcher(ProjectDirectory):
             log_file = None
 
         return Step(item, self.out, fail_block, self.server.add_build_tag, log_file, working_directory)
+
+    def launch_custom_configs(self, custom_configs):
+        self.structure.execute_step_structure(custom_configs, self.create_process)
 
     @make_block("Executing build steps")
     def launch_project(self):

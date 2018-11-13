@@ -38,6 +38,10 @@ class Main(Module):
 
         argument_parser.add_argument("--build-only-latest", action="store_true", dest="build_only_latest",
                                      help="Skip build if review version isn't latest")
+        argument_parser.add_argument("--no-diff", action="store_true", dest="no_diff",
+                                     help="Only applies to build steps where ``code_report=True``; "
+                                          "disables calculating analysis diff for changed files, "
+                                          "in this case full analysis report will be published")
 
     def __init__(self, *args, **kwargs):
         super(Main, self).__init__(*args, **kwargs)
@@ -66,11 +70,17 @@ class Main(Module):
 
         self.vcs.prepare_repository()
         project_configs = self.launcher.process_project_configs()
+        afterall_configs = self.code_report_collector.prepare_environment(project_configs)
         self.artifacts.set_and_clean_artifacts(project_configs)
 
         self.reporter.report_build_started()
         self.launcher.launch_project()
-        self.code_report_collector.report_code_report_results()
+        if afterall_configs:
+            if not self.settings.no_diff:
+                repo_diff = self.vcs.revert_repository()
+                self.launcher.launch_custom_configs(afterall_configs)
+                self.code_report_collector.repo_diff = repo_diff
+            self.code_report_collector.report_code_report_results()
         self.artifacts.collect_artifacts()
         self.reporter.report_build_result()
 

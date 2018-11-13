@@ -12,6 +12,7 @@ from .module_arguments import IncorrectParameterError
 __all__ = [
     "strip_path_start",
     "parse_path",
+    "calculate_file_absolute_path",
     "detect_environment",
     "create_driver",
     "format_traceback",
@@ -41,6 +42,15 @@ def parse_path(path, starting_point):
         path = os.path.join(starting_point, path)
 
     return os.path.abspath(path)
+
+
+def calculate_file_absolute_path(target_directory, file_basename):
+    name = file_basename.replace(" ", "_")
+    name = name.replace("/", "\\")
+    if name.startswith('_'):
+        name = name[1:]
+    name = os.path.join(target_directory, name)
+    return name
 
 
 def detect_environment():

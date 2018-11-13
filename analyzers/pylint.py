@@ -14,8 +14,10 @@ from . import utils
 class PylintAnalyzer(object):
     """
     Pylint runner.
-    Specify parameters such as type, project folders, config file for code report tool.
-    For example: ./code_report.py --type=pylint --files *.py tests/
+    Specify parameters such as project folders, config file for code report tool.
+    For example:
+    universum_pylint --python-version 2 --files *.py tests/
+    ./pylint.py --python-version 2 --files *.py tests/
     Output: json of the found issues in the code.
     """
 
