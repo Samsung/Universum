@@ -15,8 +15,8 @@ from . import utils
 class UncrustifyAnalyzer(object):
     """
     Uncrustify runner.
-    Specify parameters such as type, file list, config file for code report tool.
-    For example: ./code_report.py --type=uncrustify --files *.py tests/
+    Specify parameters such as file list, config file for code report tool.
+    For example: universum_uncrustify --files *.py tests/
     Output: json of the found issues in the code.
     """
     @staticmethod
@@ -25,44 +25,67 @@ class UncrustifyAnalyzer(object):
         parser.add_argument("--file-names", "-fn", dest="file_names", nargs="+",
                             help="Expression '*.c', '*.cpp', '*.h', '*.java' "
                                  "or C/C++/C header/java files for analyser")
-        parser.add_argument("--file-list", "-fl", dest="file_list", nargs=1,
+        parser.add_argument("--file-lists", "-fl", dest="file_lists", nargs="+",
                             help="File with list of file for analyser")
         parser.add_argument("--cfg-file", "-cf", dest="cfg_file", nargs=1,
                             help="Specify a configuration file or UNCRUSTIFY_CONFIG")
-        parser.add_argument("--pattern-form", "-pf", dest="pattern_form", type=str,
+        parser.add_argument("--pattern-form", "-pf", dest="pattern_form", nargs="+",
                             help="Specify pattern which apply "
                                  "to the total file list from [--file_names] and [--file_list]")
+
         utils.add_common_arguments(parser)
         return parser
 
+    @staticmethod
+    def add_files_recursively(item_path):
+        files = []
+        if os.path.isfile(item_path):
+            files.append(item_path)
+        elif os.path.isdir(item_path):
+            folder_path = os.path.join(os.getcwd(), item_path)
+            for root_dir, _, files_name in os.walk(folder_path):
+                for file_name in files_name:
+                    files.append(os.path.join(root_dir, file_name))
+        else:
+            sys.stderr.write(item_path + " doesn't exist.")
+            return 2
+
+        return files
+
     def parse_files(self):
         files = []
-        if self.file_list:
-            with open(self.file_list) as f:
-                files.append(f.readlines())
+        filter_files = []
         if self.file_names:
             for file_name in self.file_names:
-                files.extend(glob2.glob(file_name))
+                files.extend(self.add_files_recursively(file_name))
+        if self.file_lists:
+            file_lines = []
+            for file_list in self.file_lists:
+                with open(file_list) as f:
+                    for file_name in f.readlines():
+                        file_lines.append(file_name.strip())
+            for file_name in file_lines:
+                files.extend(self.add_files_recursively(file_name))
         if self.pattern_form:
-            sum_files = []
-            for file_name in files:
-                if file_name not in glob2.glob(self.pattern_form):
-                    sum_files.append(file_name)
+            for pattern in self.pattern_form:
+                for file_name in files:
+                    if pattern not in file_name:
+                        filter_files.append(file_name)
         else:
-            sum_files = files
-        return sum_files
+            filter_files = files
+        return filter_files
 
     def __init__(self, settings):
         self.settings = settings
         self.cfg_file = settings.cfg_file
         self.file_names = settings.file_names
-        self.file_list = settings.file_list
+        self.file_lists = settings.file_lists
         self.pattern_form = settings.pattern_form
         self.json_file = settings.result_file
 
     def execute(self):  # pylint: disable=too-many-locals
 
-        if not (self.file_names or self.file_list):
+        if not (self.file_names or self.file_lists):
             sys.stderr.write("Please, specify at least one option [--file_names] or [--file_list].")
             return 2
         if not self.cfg_file:
