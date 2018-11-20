@@ -11,7 +11,7 @@ from ..lib.ci_exception import CiException, CriticalCiException, StepException
 from ..lib.gravity import Dependency
 from ..lib.module_arguments import IncorrectParameterError
 from ..lib.utils import make_block
-from . import automation_server, artifact_collector, reporter, code_report_collector
+from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .output import needs_output
 from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
@@ -87,7 +87,7 @@ def check_if_env_set(configuration):
 
 class Step(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, item, out, fail_block, send_tag, log_file, working_directory):
+    def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
         super(Step, self).__init__()
         self.configuration = item
         self.out = out
@@ -97,10 +97,9 @@ class Step(object):
         self.working_directory = working_directory
 
         self.environment = os.environ.copy()
-        user_environment = item.get("environment", None)
-        if user_environment:
-            for key in user_environment:
-                self.environment[key] = user_environment[key]
+        user_environment = item.get("environment", {})
+        self.environment.update(user_environment)
+        self.environment.update(additional_environment)
 
         self.cmd = None
         self.process = None
@@ -201,6 +200,7 @@ class Step(object):
 @needs_structure
 class Launcher(ProjectDirectory):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
+    api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
     server_factory = Dependency(automation_server.AutomationServer)
     code_report_collector = Dependency(code_report_collector.CodeReportCollector)
@@ -235,6 +235,7 @@ class Launcher(ProjectDirectory):
                 "Required option CONFIG_PATH (or '--launcher-config-path', or '-lcp') is missing.")
 
         self.artifacts = self.artifacts_factory()
+        self.api_support = self.api_support_factory()
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
@@ -293,7 +294,9 @@ class Launcher(ProjectDirectory):
         else:
             log_file = None
 
-        return Step(item, self.out, fail_block, self.server.add_build_tag, log_file, working_directory)
+        additional_environment = self.api_support.get_environment_settings()
+        return Step(item, self.out, fail_block, self.server.add_build_tag,
+                    log_file, working_directory, additional_environment)
 
     def launch_custom_configs(self, custom_configs):
         self.structure.execute_step_structure(custom_configs, self.create_process)
