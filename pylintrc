@@ -1,6 +1,7 @@
 [MASTER]
 ignore = thirdparty,doc
 known-third-party = P4
+extension-pkg-whitelist=lxml.etree
 
 [MESSAGES CONTROL]
 disable = missing-docstring,
@@ -27,6 +28,7 @@ variable-rgx = [a-z_][a-z0-9_]{0,30}$
 const-rgx = (([a-z_][a-z0-9_]*)|([A-Z_][A-Z0-9_]*)|(__.*__))$
 attr-rgx = [a-z_][a-z0-9_]{1,30}$
 function-rgx = [a-z_][a-z0-9_]*$
+good-names = P4Exception
 
 [FORMAT]
 max-line-length = 130

@@ -2,12 +2,13 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
-import json
 import os
 import sys
 
 import sh
 from lxml import etree
+
+from . import utils
 
 
 class SvaceAnalyzer(object):
@@ -18,11 +19,7 @@ class SvaceAnalyzer(object):
         parser.add_argument("--build-cmd", dest="build_cmd", nargs='+',
                             help="Relative path to build script or command itself.")
         parser.add_argument("--lang", dest="lang", choices=["JAVA", "CXX"], help="Language to analyze.")
-        parser.add_argument("--result-file", dest="result_file",
-                            help="File for storing json results of Svace run. "
-                            "Set it to \"${CODE_REPORT_FILE}\" for running from Universum, variable will be "
-                            "handled during run. If you run this script separately from Universum, just "
-                            "name the result file.")
+        utils.add_common_arguments(parser)
         return parser
 
     def __init__(self, settings):
@@ -47,9 +44,9 @@ class SvaceAnalyzer(object):
     def analyze(self):
         try:
             cmd_analyze = sh.Command(self.settings.svace_home + "/bin/svace")
-            run_analyze = cmd_analyze("analyze", "-q", "--svace-dir", self.work_folder, "--disable-language",
-                                      self.disabled_language, "--enable-language", self.enabled_language,
-                                      "--preset", self.enabled_language)
+            cmd_analyze("analyze", "-q", "--svace-dir", self.work_folder, "--disable-language",
+                        self.disabled_language, "--enable-language", self.enabled_language,
+                        "--preset", self.enabled_language)
 
             svres_full = os.path.join(self.work_folder, "analyze-res", self.project_name + ".svres")
             root = etree.parse(svres_full)
@@ -63,11 +60,7 @@ class SvaceAnalyzer(object):
                 issue["path"] = info.attrib["file"]
                 issue["line"] = info.attrib["line"]
                 issues_loads.append(issue)
-            if not self.settings.result_file:
-                sys.stdout.write(json.dumps(issues_loads, indent=4))
-            else:
-                with open(self.json_file, "w") as outfile:
-                    outfile.write(json.dumps(issues_loads, indent=4))
+            utils.analyzers_output(self.json_file, issues_loads)
             if issues_loads:
                 return 1
         except etree.XMLSyntaxError as e:
@@ -85,12 +78,12 @@ class SvaceAnalyzer(object):
 
         try:
             cmd_init = sh.Command(self.settings.svace_home + "/bin/svace")
-            run_init = cmd_init("init", "-f", "--shared=all", "--bare", self.work_folder)
+            cmd_init("init", "-f", "--shared=all", "--bare", self.work_folder)
             cmd_build = sh.Command(self.settings.svace_home + "/bin/svace")
-            run_build = cmd_build("build", self.settings.jack_option, self.settings.verbose,
-                                  "--hash-server-memory", self.settings.hash_server_memory,
-                                  "--svace-dir", self.work_folder, self.settings.build_cmd,
-                                  _err=sys.stderr, _out=sys.stdout)
+            cmd_build("build", self.settings.jack_option, self.settings.verbose,
+                      "--hash-server-memory", self.settings.hash_server_memory,
+                      "--svace-dir", self.work_folder, self.settings.build_cmd,
+                      _err=sys.stderr, _out=sys.stdout)
         except sh.ErrorReturnCode_255:
             sys.stderr.write("Svace exited with error code 255. No build object found.\n")
             return 2

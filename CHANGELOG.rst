@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.16.1 (2018-11-22)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **code_report:** replace wildcards with directory names processing for Uncrustify
+* **code_report:** add regexp support in pattern filter for Uncrustify
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** fix 'Related Change IDs' bug with wrong current review determining
+
+
 0.16.0 (2018-11-07)
 -------------------
 

@@ -39,7 +39,8 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
             if 'sphinx' in sys.modules:
                 action.help += "\n\nEnvironment variable: ${}".format(action.metavar)
             else:
-                action.help += " [env: {}]".format(action.metavar)
+                if not isinstance(action, argparse._SubParsersAction):
+                    action.help += " [env: {}]".format(action.metavar)
             default = os.environ.get(action.metavar, action.default)
 
             if isinstance(action, (argparse._AppendAction, argparse._AppendConstAction)):
@@ -101,6 +102,25 @@ class ModuleArgumentParser(argparse.ArgumentParser):
     def prepend_dest(self, action):
         action.dest = self.dest_prefix + action.dest
 
+    def needs_default_parser(self, *args):
+        if not self._subparsers:
+            return False
+
+        try:
+            possible_subcommand = args[0][0]
+        except IndexError:
+            try:
+                possible_subcommand = sys.argv[1:][0]
+            except IndexError:
+                return True
+
+        for x in self._subparsers._actions:
+            if not isinstance(x, argparse._SubParsersAction):
+                continue
+            for sp_name in x._name_parser_map.keys():
+                if sp_name == possible_subcommand:
+                    return False
+        return True
 
 class IncorrectParameterError(ValueError):
     pass

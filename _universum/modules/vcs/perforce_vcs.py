@@ -338,7 +338,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         # Retrieve list of shelved CLs from "classic" environment variables
         cls = []
         if self.swarm:
-            swarm_cls = self.get_related_cls(self.swarm.settings.change)
+            swarm_cls = self.get_related_cls(self.swarm.settings.review_id)
             cls.extend(swarm_cls)
         for x in range(1, 6):
             cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))

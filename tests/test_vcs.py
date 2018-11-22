@@ -97,7 +97,7 @@ def test_poll_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     # stop server
     parameters.http_request_checker.stop()
@@ -106,7 +106,7 @@ def test_poll_error_one_change(poll_parameters, poll_environment):
     change = parameters.make_a_change()
 
     # run poll again and fail triggering url because there is no server
-    assert universum.run(Poll, parameters.poll_settings) != 0
+    assert universum.run(parameters.poll_settings) != 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -118,13 +118,13 @@ def test_poll_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     # make change in workspace
     change = parameters.make_a_change()
 
     # run poll again and trigger the url
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
     parameters.http_request_checker.assert_request_was_made({"cl": [change]})
 
@@ -133,14 +133,14 @@ def test_poll_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll again and trigger the url twice
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -153,14 +153,14 @@ def test_poll_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll and trigger the urls
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -175,7 +175,7 @@ def test_poll_changes_several_times(poll_parameters, poll_environment):
     change4 = parameters.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    assert universum.run(Poll, parameters.poll_settings) == 0
+    assert universum.run(parameters.poll_settings) == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
@@ -194,11 +194,11 @@ def test_submit_error_no_repo(submit_environment, stdout_checker):
     settings = copy.deepcopy(submit_environment.settings)
     if settings.Vcs.type == "git":
         settings.ProjectDirectory.project_root = "non_existing_repo"
-        universum.run(Submit, settings)
+        universum.run(settings)
         stdout_checker.assert_has_calls_with_param("No such directory")
     else:
         settings.PerforceSubmitVcs.client = "non_existing_client"
-        universum.run(Submit, settings)
+        universum.run(settings)
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
 
@@ -216,7 +216,7 @@ class SubmitterParameters(object):
             for key in kwargs:
                 setattr(settings.Submit, key, kwargs[key])
 
-        return universum.run(Submit, settings)
+        return universum.run(settings)
 
     def assert_submit_success(self, path_list, **kwargs):
         result = self.submit_path_list(path_list, **kwargs)

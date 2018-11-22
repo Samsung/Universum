@@ -38,8 +38,8 @@ class CodeReportCollector(Module):
         temp_filename = "${CODE_REPORT_FILE}"
         for enum, i in enumerate(item["command"]):
             if temp_filename in i:
-                item["command"][enum] = item["command"][enum].replace(temp_filename,
-                                        os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json"))
+                actual_filename = os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json")
+                item["command"][enum] = item["command"][enum].replace(temp_filename, actual_filename)
         return item
 
     @make_block("Processing code report results")
@@ -59,7 +59,7 @@ class CodeReportCollector(Module):
             if report:
                 text = unicode(len(report)) + " issues"
                 self.out.log_stderr("Found " + text)
-                self.out.report_build_status(os.path.basename(report_file) + ": " + text)
+                self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
 
         if not reports:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
             self.out.log("Issues not found.")

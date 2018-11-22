@@ -2,81 +2,98 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
-import json
-import sys
-import sh
-import os
 import difflib
-import glob2
+import sys
+import os
+
+import re
+import sh
+
+from . import utils
 
 
 class UncrustifyAnalyzer(object):
     """
     Uncrustify runner.
-    Specify parameters such as type, file list, config file for code report tool.
-    For example: ./code_report.py --type=uncrustify --files *.py tests/
+    Specify parameters such as file list, config file for code report tool.
+    For example: universum_uncrustify --files *.py tests/
     Output: json of the found issues in the code.
     """
     @staticmethod
     def define_arguments():
         parser = argparse.ArgumentParser(description="Uncrustify analyzer")
-        parser.add_argument("--file-names", "-fn", dest="file_names", nargs="+",
-                            help="Expression '*.c', '*.cpp', '*.h', '*.java' "
-                                 "or C/C++/C header/java files for analyser")
-        parser.add_argument("--file-list", "-fl", dest="file_list", nargs=1,
-                            help="File with list of file for analyser")
-        parser.add_argument("--cfg-file", "-cf", dest="cfg_file", nargs=1,
-                            help="Specify a configuration file or UNCRUSTIFY_CONFIG")
-        parser.add_argument("--pattern-form", "-pf", dest="pattern_form", type=str,
-                            help="Specify pattern which apply "
-                                 "to the total file list from [--file_names] and [--file_list]")
-        parser.add_argument("--result-file", dest="result_file",
-                            help="File for storing json results of Universum run. "
-                            "Set it to '${CODE_REPORT_FILE}' for running from Universum, variable will be "
-                            "handled during run. If you run this script separately from Universum, just "
-                            "name the result file or leave it empty.")
+        parser.add_argument("--files", "-f", dest="file_names", nargs="*", default=[],
+                            help="File or directory to check; accepts multiple values; "
+                                 "all files specified by both '--files' and '--file-list' "
+                                 "are gathered into one combined list of files")
+        parser.add_argument("--file-list", "-fl", dest="file_lists", nargs="*", default=[],
+                            help="Text file with list of files or directories to check; "
+                                 "can be used with '--files'; accepts multiple values; "
+                                 "all files specified by both '--files' and '--file-list' "
+                                 "are gathered into one combined list of files")
+        parser.add_argument("--cfg-file", "-cf", dest="cfg_file",
+                            help="Name of the configuration file of Uncrustify; "
+                                 "can also be set via 'UNCRUSTIFY_CONFIG' env. variable")
+        parser.add_argument("--filter-regex", "-r", dest="pattern_form", nargs="*", default=[],
+                            help="(optional) Regular expression filter to apply to "
+                                 "combined list of files to check")
+
+        utils.add_common_arguments(parser)
         return parser
 
-    def parse_files(self):
+    @staticmethod
+    def add_files_recursively(item_path):
         files = []
-        if self.file_list:
-            with open(self.file_list) as f:
-                files.append(f.readlines())
-        if self.file_names:
-            for file_name in self.file_names:
-                files.extend(glob2.glob(file_name))
-        if self.pattern_form:
-            sum_files = []
-            for file_name in files:
-                if file_name not in glob2.glob(self.pattern_form):
-                    sum_files.append(file_name)
+        item_path = os.path.join(os.getcwd(), item_path)
+        if os.path.isfile(item_path):
+            files.append(item_path)
+        elif os.path.isdir(item_path):
+            for root_dir, _, files_name in os.walk(item_path):
+                for file_name in files_name:
+                    files.append(os.path.join(root_dir, file_name))
         else:
-            sum_files = files
-        return sum_files
+            sys.stderr.write(item_path + " doesn't exist.")
+            return 2
+
+        return files
 
     def __init__(self, settings):
         self.settings = settings
-        self.cfg_file = settings.cfg_file
-        self.file_names = settings.file_names
-        self.file_list = settings.file_list
-        self.pattern_form = settings.pattern_form
-        if not (self.file_names or self.file_list):
-            sys.stderr.write("Please, specify at least one option [--file_names] or [--file_list].")
-            return 2
-        if not self.cfg_file:
-            sys.stderr.write("Please, specify [--cfg_file] option.")
-            return 2
-        self.json_file = settings.result_file
 
-    def execute(self):
+    def parse_files(self):
+        files = []
+        file_lines = []
+        for file_name in self.settings.file_names:
+            files.extend(self.add_files_recursively(file_name))
+        for file_list in self.settings.file_lists:
+            with open(file_list) as f:
+                for file_name in f.readlines():
+                    file_lines.append(file_name.strip())
+        for file_name in file_lines:
+            files.extend(self.add_files_recursively(file_name))
+
+
+        for pattern in self.settings.pattern_form:
+            regexp = re.compile(pattern)
+            files = [file_name for file_name in files if regexp.match(file_name)]
+
+        return files
+
+    def execute(self):  # pylint: disable=too-many-locals
+
+        if not self.settings.cfg_file and ('UNCRUSTIFY_CONFIG' not in os.environ):
+            sys.stderr.write("Please specify the '--cfg_file' parameter "
+                             "or set an env. variable 'UNCRUSTIFY_CONFIG'")
+            return 2
+
         analyze_files = self.parse_files()
         if not analyze_files:
-            sys.stderr.write("Correct your parameters. List of files for uncrustify is empty.")
+            sys.stderr.write("Please provide at least one file for analysis")
             return 2
         uncrustify_folder = os.path.join(os.getcwd(), "uncrustify")
         try:
             cmd = sh.Command("uncrustify")
-            cmd("-c", self.cfg_file, "--prefix", uncrustify_folder, analyze_files)
+            cmd("-c", self.settings.cfg_file, "--prefix", uncrustify_folder, analyze_files)
         except sh.ErrorReturnCode as e:
             sys.stderr.write(str(e)+"\n")
         issues_loads = []
@@ -90,9 +107,8 @@ class UncrustifyAnalyzer(object):
             # generate html diff ----------------------------------------------
             differ = difflib.HtmlDiff(tabsize=8, wrapcolumn=82)
             html = differ.make_file(f1_lines, f2_lines, context=False)
-            outfile = open('uncrustify/' + file_name +'.html', 'w')
-            outfile.write(html)
-            outfile.close()
+            with open('uncrustify/' + file_name + '.html', 'w') as outfile:
+                outfile.write(html)
 
             file_sequence = difflib.SequenceMatcher(a=f1_lines, b=f2_lines)
             # Get matching in lines
@@ -126,13 +142,8 @@ class UncrustifyAnalyzer(object):
                     issue["line"] = match.a
                     issues_loads.append(issue)
                     prev_match = match
-            if issues_loads:
-                if not self.settings.result_file:
-                    sys.stdout.write(json.dumps(issues_loads, indent=4))
-                else:
-                    with open(self.json_file, "w") as outfile:
-                        outfile.write(json.dumps(issues_loads, indent=4))
-                return 1
+            utils.analyzers_output(self.settings.result_file, issues_loads)
+            return 1
         return 0
 
 
