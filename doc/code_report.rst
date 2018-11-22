@@ -104,6 +104,7 @@ Uncrustify
 .. argparse::
     :ref: analyzers.uncrustify.form_arguments_for_documentation
     :prog: universum_uncrustify
+    :nodefault:
 
 Config example for ``universum_uncrustify``:
 
