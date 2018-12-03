@@ -107,6 +107,8 @@ class UncrustifyAnalyzer(object):
 
     def __init__(self, settings):
         self.settings = settings
+        self.wrapcolumn = None
+        self.tabsize = None
 
     def parse_files(self):
         files = []
@@ -127,6 +129,22 @@ class UncrustifyAnalyzer(object):
             return 2
 
         return files
+
+    def get_htmldiff_parameters(self):
+        if not (self.wrapcolumn and self.tabsize):
+            with open(self.settings.cfg_file) as config:
+                for line in config.readlines():
+                    if line.startswith("code_width"):
+                        self.wrapcolumn = int(line.split()[2])
+                    if line.startswith("input_tab_size"):
+                        self.tabsize = int(line.split()[2])
+        return self.wrapcolumn, self.tabsize
+
+    def generate_html_diff(self, file_name, left_lines, right_lines):
+        wrapcolumn, tabsize = self.get_htmldiff_parameters()
+        differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
+        with open(file_name + '.html', 'w') as outfile:
+            outfile.write(differ.make_file(left_lines, right_lines, context=False))
 
     def get_file_issues(self, src_file):
         self.settings.output_directory = os.path.join(os.getcwd(), self.settings.output_directory)
@@ -149,9 +167,7 @@ class UncrustifyAnalyzer(object):
 
         # Generate html diff
         if file_issues:
-            differ = difflib.HtmlDiff(tabsize=8, wrapcolumn=100)
-            with open(uncrustify_file + '.html', 'w') as outfile:
-                outfile.write(differ.make_file(src_lines, fixed_lines, context=False))
+            self.generate_html_diff(uncrustify_file, src_lines, fixed_lines)
 
         return file_issues
 
