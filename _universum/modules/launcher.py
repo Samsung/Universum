@@ -95,6 +95,13 @@ class Step(object):
         self.send_tag = send_tag
         self.file = log_file
         self.working_directory = working_directory
+
+        self.environment = os.environ.copy()
+        user_environment = item.get("environment", None)
+        if user_environment:
+            for key in user_environment:
+                self.environment[key] = user_environment[key]
+
         self.cmd = None
         self.process = None
 
@@ -128,6 +135,7 @@ class Step(object):
                                 _iter=True,
                                 _bg_exc=False,
                                 _cwd=self.working_directory,
+                                _env=self.environment,
                                 _bg=is_background,
                                 _out=self.handle_stdout,
                                 _err=self.handle_stderr)

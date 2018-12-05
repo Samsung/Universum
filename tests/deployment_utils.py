@@ -190,8 +190,12 @@ class UniversumRunner(object):
                + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
 
         if expected_to_fail:
-            return self.environment.assert_unsuccessful_execution(cmd, environment=environment)
-        return self.environment.assert_successful_execution(cmd, environment=environment)
+            result = self.environment.assert_unsuccessful_execution(cmd, environment=environment)
+        else:
+            result = self.environment.assert_successful_execution(cmd, environment=environment)
+
+        os.remove(config_file)
+        return result
 
     def clean_artifacts(self):
         self.environment.assert_successful_execution("rm -rf {}".format(self.artifact_dir))

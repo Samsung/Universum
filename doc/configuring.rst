@@ -197,6 +197,13 @@ command
     A project configuration can have an empty list as a command. Such configuration
     won't do anything except informing user about missing it.
 
+.. _build_environment:
+
+environment
+    Python dictionary of required environment variables, e.g. ``environment={"VAR1": "String", "VAR2": "123"}``
+    Can be set at any step level, but re-declaring variables is not supported, so please make sure
+    to mention every variable only one time at most.
+
 .. _build_artifacts:
 
 artifacts
