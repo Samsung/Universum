@@ -277,38 +277,14 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
         return self.swarm
 
-    def parse_description(self, cl_number):
+    def get_related_cls(self, cl_number):
+        cl_list = [cl_number]
         description = self.p4.run_describe(cl_number)[0]
         for entry in description['desc'].splitlines():
             if entry.startswith("[Related change IDs]"):
-                cl_list = [number.strip() for number in entry.strip("[Related change IDs]").split(",")]
-                if cl_number in cl_list:
-                    return cl_list
-                self.reporter.add_block_to_report(self.structure.get_current_block())
-                self.structure.fail_current_block("Current CL is not in related list!")
+                cl_list.extend([number.strip() for number in entry.strip("[Related change IDs]").split(",")])
 
-        return [cl_number]
-
-    @make_block("Checking that current and master CLs related change IDs are the same", False)
-    def get_related_cls(self, cl_number):
-        cl_list = self.parse_description(cl_number)
-        if not cl_list:
-            return cl_list
-
-        master_cl = cl_list[-1]
-        if master_cl == cl_number:
-            return cl_list
-
-        master_list = self.parse_description(master_cl)
-        if cl_list != master_list:
-            self.reporter.add_block_to_report(self.structure.get_current_block())
-            self.structure.fail_current_block("Related CLs list doesn't match master CL related list!")
-            return cl_list
-
-        self.out.log("Not a master CL, no check needed")
-        self.out.report_build_status("Not a master CL")
-        self.swarm = None
-        raise SilentAbortException(application_exit_code=0)
+        return cl_list
 
     def expand_workspace_parameters(self):
         # Create a list of depots for sync
@@ -335,10 +311,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                         self.depots.pop(index)
                 self.depots.append({"path": splat_entry[0], "cl": splat_entry[1]})
 
-        # Retrieve list of shelved CLs from "classic" environment variables
+        # Retrieve list of shelved CLs from Swarm and "classic" environment variables
         cls = []
         if self.swarm:
-            swarm_cls = self.get_related_cls(self.swarm.settings.review_id)
+            swarm_cls = self.get_related_cls(self.swarm.settings.change)
             cls.extend(swarm_cls)
         for x in range(1, 6):
             cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
