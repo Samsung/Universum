@@ -1,6 +1,24 @@
 Change log
 ==========
 
+0.16.2 (2018-12-13)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **configs:** add support of :ref:`setting the environment variables <build_environment>` for build steps
+* **code_report:** add parameter '--output-directory' for Uncrustify fixed files
+* **code_report:** read HtmlDiff argument value from Uncrustify config
+* **api:** add initial API support and 'file-diff' as example usage
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** remove 'master CL check' feature as it doesn't work correctly
+* **p4:** fix ascii decoding on p4 diff
+
+
 0.16.1 (2018-11-22)
 -------------------
 

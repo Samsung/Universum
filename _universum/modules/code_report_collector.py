@@ -1,19 +1,23 @@
 # -*- coding: UTF-8 -*-
 
+from copy import deepcopy
 import glob
 import json
 import os
 
+from _universum.configuration_support import Variations
 from .output import needs_output
+from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
-from ..lib.gravity import Dependency, Module
+from ..lib import utils
+from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from .structure_handler import needs_structure
 
 
 @needs_output
 @needs_structure
-class CodeReportCollector(Module):
+class CodeReportCollector(ProjectDirectory):
     reporter_factory = Dependency(reporter.Reporter)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
@@ -30,20 +34,28 @@ class CodeReportCollector(Module):
         if not os.path.exists(self.report_path):
             os.makedirs(self.report_path)
 
-    def prepare_env_for_code_report(self, item, project_root):
-        if not item.get("code_report", False):
-            return item
+    def prepare_environment(self, project_configs):
+        afterall_steps = []
+        for item in project_configs:
+            if not item.get("code_report", False):
+                continue
 
-        self.set_code_report_directory(project_root)
-        temp_filename = "${CODE_REPORT_FILE}"
-        for enum, i in enumerate(item["command"]):
-            if temp_filename in i:
-                actual_filename = os.path.join(self.report_path, item.get("name").replace(" ", "_") + ".json")
-                item["command"][enum] = item["command"][enum].replace(temp_filename, actual_filename)
-        return item
+            self.set_code_report_directory(self.settings.project_root)
+
+            temp_filename = "${CODE_REPORT_FILE}"
+            for enum, i in enumerate(item["command"]):
+                if temp_filename in i:
+                    name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
+                    actual_filename = os.path.join(self.report_path, name)
+                    item["command"][enum] = item["command"][enum].replace(temp_filename, actual_filename)
+
+            afterall_item = deepcopy(item)
+            afterall_item.update({"afterall": True})
+            afterall_steps.append(afterall_item)
+        return Variations(afterall_steps)
 
     @make_block("Processing code report results")
-    def report(self):
+    def report_code_report_results(self):
         reports = glob.glob(self.report_path + "/*.json")
         for report_file in reports:
             with open(report_file, "r") as f:
@@ -63,7 +75,3 @@ class CodeReportCollector(Module):
 
         if not reports:  # e.g. required module is not installed (pylint, load-plugins for pylintrc)
             self.out.log("Issues not found.")
-
-    def report_code_report_results(self):
-        if os.path.exists(self.report_path):
-            self.report()

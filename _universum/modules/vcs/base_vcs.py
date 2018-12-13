@@ -57,6 +57,9 @@ class BaseDownloadVcs(BaseVcs):
     def prepare_repository(self):
         raise NotImplementedError
 
+    def copy_cl_files_and_revert(self):
+        raise NotImplementedError
+
 
 class BaseSubmitVcs(BaseVcs):
     """

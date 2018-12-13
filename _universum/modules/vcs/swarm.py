@@ -112,7 +112,7 @@ class Swarm(ReportObserver, Module):
         self.out.log(text)
         return False
 
-    def post_comment(self, text, filename=None, line=None, version=None):
+    def post_comment(self, text, filename=None, line=None, version=None, no_notification=False):
         request = {"body": text,
                    "topic": "reviews/" + unicode(self.settings.review_id)}
         if filename:
@@ -121,8 +121,10 @@ class Swarm(ReportObserver, Module):
                 request["context[rightLine]"] = line
             if version:
                 request["context[version]"] = version
+            if no_notification:
+                request["silenceNotification"] = "true"
 
-        result = requests.post(self.settings.server_url + "/api/v5/comments", data=request,
+        result = requests.post(self.settings.server_url + "/api/v9/comments", data=request,
                                auth=(self.user, self.password))
         check_request_result(result)
 
@@ -150,7 +152,10 @@ class Swarm(ReportObserver, Module):
             abs_path = os.path.join(self.client_root, path)
             if abs_path in self.mappings_dict:
                 for issue in issues:
-                    self.post_comment(issue['message'], filename=self.mappings_dict[abs_path], line=issue['line'])
+                    self.post_comment(issue['message'],
+                                      filename=self.mappings_dict[abs_path],
+                                      line=issue['line'],
+                                      no_notification=True)
 
     def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm

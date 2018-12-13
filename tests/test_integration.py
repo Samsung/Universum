@@ -269,3 +269,31 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review --build-only-latest -sre=''")
     assert "Variable 'REVIEW' is not set" in log
+
+
+def test_environment(universum_runner):
+    script = universum_runner.local.root_directory.join("script.sh")
+    script.write("""#!/bin/bash
+echo ${SPECIAL_TESTING_VARIABLE}
+""")
+    script.chmod(777)
+
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Test configuration", command=["script.sh"],
+                           environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])    
+""")
+    assert "This string should be in log" in log
+
+    universum_runner.clean_artifacts()
+    log = universum_runner.run("""
+from _universum.configuration_support import Variations
+
+upper = Variations([dict(name="Test configuration",
+                         environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
+lower = Variations([dict(name=" 1", command=["script.sh"], environment={"OTHER_VARIABLE": "Something"}),
+                    dict(name=" 2", command=["ls", "-la"])])
+configs = upper * lower
+""")
+    assert "This string should be in log" in log

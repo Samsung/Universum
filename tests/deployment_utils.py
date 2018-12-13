@@ -159,10 +159,10 @@ class UniversumRunner(object):
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none -fsd {}".format(unicode(self.local.root_directory))
+            return " -vt none --no-diff -fsd {}".format(unicode(self.local.root_directory))
 
         if vcs_type == "git":
-            return " -vt git -gr {} -grs {}".format(self.git.server.url, self.git.server.target_branch)
+            return " -vt git --no-diff -gr {} -grs {}".format(self.git.server.url, self.git.server.target_branch)
 
         return " -vt p4 --p4-force-clean -p4p {} -p4u {} -p4P {} -p4d {} -p4c {}" \
             .format(self.perforce.p4.port,
@@ -190,8 +190,12 @@ class UniversumRunner(object):
                + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
 
         if expected_to_fail:
-            return self.environment.assert_unsuccessful_execution(cmd, environment=environment)
-        return self.environment.assert_successful_execution(cmd, environment=environment)
+            result = self.environment.assert_unsuccessful_execution(cmd, environment=environment)
+        else:
+            result = self.environment.assert_successful_execution(cmd, environment=environment)
+
+        os.remove(config_file)
+        return result
 
     def clean_artifacts(self):
         self.environment.assert_successful_execution("rm -rf {}".format(self.artifact_dir))

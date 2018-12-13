@@ -8,7 +8,7 @@ from ...lib.utils import make_block
 from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from .base_vcs import BaseVcs
+from .base_vcs import BaseVcs, BaseDownloadVcs
 
 __all__ = [
     "GitMainVcs",
@@ -97,7 +97,7 @@ class GitVcs(BaseVcs):
 
 @needs_output
 @needs_structure
-class GitMainVcs(GitVcs):
+class GitMainVcs(GitVcs, BaseDownloadVcs):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git")
@@ -141,6 +141,9 @@ class GitMainVcs(GitVcs):
         self.check_out()
         if self.settings.cherrypick_id:
             self.cherry_pick()
+
+    def copy_cl_files_and_revert(self):
+        raise NotImplementedError
 
 
 @needs_output

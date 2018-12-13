@@ -28,6 +28,9 @@ def combine(dictionary_a, dictionary_b):
     >>> combine(dict(attr_a = "a1", attr_b = ["b11", "b12"]), dict(attr_a = "a2", attr_b = ["b2"]))
     {'attr_b': ['b11', 'b12', 'b2'], 'attr_a': 'a1a2'}
 
+    >>> combine(dict(attr_a = {"a1": "v1"}, attr_b = {"b1": "v1"}), dict(attr_a = {"a2": "v2"}))
+    {'attr_b': {'b1': 'v1'}, 'attr_a': {'a1': 'v1', 'a2': 'v2'}}
+
     """
 
     result = {}
@@ -35,7 +38,12 @@ def combine(dictionary_a, dictionary_b):
         if key in skip_attributes:
             continue
         if key in dictionary_b:
-            result[key] = dictionary_a[key] + dictionary_b[key]
+            if isinstance(dictionary_a[key], dict) and isinstance(dictionary_b[key], dict):
+                new_value = dictionary_a[key].copy()
+                new_value.update(dictionary_b[key])
+                result[key] = new_value
+            else:
+                result[key] = dictionary_a[key] + dictionary_b[key]
         else:
             result[key] = dictionary_a[key]
 

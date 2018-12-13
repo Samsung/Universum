@@ -118,3 +118,8 @@ class MainVcs(create_vcs()):
             shutil.rmtree(self.settings.project_root)
         except OSError:
             pass
+
+    @make_block("Revert repository")
+    def revert_repository(self):
+        diff = self.driver.copy_cl_files_and_revert()
+        return diff

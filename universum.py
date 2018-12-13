@@ -6,6 +6,7 @@ import signal
 import sys
 
 from _universum import __version__, __title__
+from _universum.api import Api
 from _universum.main import Main
 from _universum.poll import Poll
 from _universum.submit import Submit
@@ -23,6 +24,7 @@ def define_arguments(*args):
     subparsers = parser.add_subparsers(title="Additional commands",
                                        metavar="{poll,submit}",
                                        help="Use 'universum <subcommand> --help' for more info")
+    define_arguments_recursive(Api, subparsers.add_parser("api"))
     define_arguments_recursive(Poll, subparsers.add_parser("poll"))
     define_arguments_recursive(Submit, subparsers.add_parser("submit"))
 
