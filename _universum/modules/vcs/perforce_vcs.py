@@ -424,9 +424,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def check_diff_for_depot(self, depot):
         try:
             p4cmd = sh.Command("p4")
-            result = utils.trim_and_convert_to_unicode(p4cmd("-c", self.settings.client, "-u", self.settings.user,
-                                                             "-P", self.settings.password, "-p", self.settings.port,
-                                                             "diff", depot))
+            diff_result = p4cmd("-c", self.settings.client, "-u", self.settings.user,
+                                "-P", self.settings.password, "-p", self.settings.port,
+                                "diff", depot)
+            result = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
             for line in e.stderr.splitlines():
                 if not (line.startswith("Librarian checkout")
