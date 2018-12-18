@@ -10,7 +10,7 @@ def run_virtual(cmd):
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
              "--files *.py _universum/ ests/ analyzers/ --result-file ${CODE_REPORT_FILE}"
 
-configs = Variations([dict(name="Create virtual environment", command=["virtualenv", env_name]),
+configs = Variations([dict(name="Create virtual environment", command=["python2", "-m", "virtualenv", env_name]),
                       dict(name="Install development",
                            command=run_virtual("pip --default-timeout=1200 install .[development]")),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
