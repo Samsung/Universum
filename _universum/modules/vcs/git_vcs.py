@@ -111,18 +111,22 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
                             help="List of commit IDs to be cherry-picked, separated by comma. "
                                  "'--git-cherry-pick-id' can be added to the command line several times")
 
+    def __init__(self, *args, **kwargs):
+        super(GitMainVcs, self).__init__(*args, **kwargs)
+        self.checkout_id = None
+
     @make_block("Checking out")
     @catch_git_exception()
     def check_out(self):
         if self.settings.checkout_id:
-            checkout_id = self.settings.checkout_id
+            self.checkout_id = self.settings.checkout_id
         elif self.settings.refspec:
-            checkout_id = "FETCH_HEAD"
+            self.checkout_id = "FETCH_HEAD"
         else:
-            checkout_id = "HEAD"
-        self.out.log("Checking out '" + checkout_id + "'...")
-        self.repo.git.checkout(checkout_id)
-        self.append_repo_status("Checked out: " + checkout_id + "\n")
+            self.checkout_id = "HEAD"
+        self.out.log("Checking out '" + self.checkout_id + "'...")
+        self.repo.git.checkout(self.checkout_id)
+        self.append_repo_status("Checked out: " + self.checkout_id + "\n")
 
     @make_block("Cherry-picking")
     @catch_git_exception()
@@ -134,6 +138,27 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
             self.repo.git.cherry_pick(commit, "--no-commit")
             self.append_repo_status(" " + commit)
         self.append_repo_status("\n")
+
+    def calculate_file_diff(self):
+        status_letters = {'A': "add", 'C': "copy", 'D': "delete", 'M': "modify", 'R': "rename",
+                          'T': "change file type", 'U': "unmerged", 'X': "unknown"}
+        result = []
+        for line in self.repo.git.diff(self.checkout_id, name_status=True).splitlines():
+            try:
+                diff_record = line.split()
+                try:
+                    # Some status letters are followed by score, e.g. 'R86'
+                    status = status_letters[diff_record[0][0]]
+                except KeyError:
+                    status = diff_record[0]
+
+                result.append({"action": status,
+                               "repo_path": diff_record[1],
+                               "local_path": utils.parse_path(diff_record[-1], self.settings.project_root)})
+            except IndexError:
+                self.out.log_stderr(line)
+
+        return result
 
     @catch_git_exception()
     def prepare_repository(self):

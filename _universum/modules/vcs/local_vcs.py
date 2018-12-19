@@ -35,6 +35,9 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs):
             raise IncorrectParameterError("Please specify source directory if not using any VCS")
         self.source_dir = utils.parse_path(self.settings.source_dir, os.getcwd())
 
+    def calculate_file_diff(self):  # pylint: disable=no-self-use
+        return {}                   # No file diff can be calculated for local VCS
+
     @make_block("Copying sources to working directory")
     def prepare_repository(self):
         self.sources_need_cleaning = True        # pylint: disable=attribute-defined-outside-init

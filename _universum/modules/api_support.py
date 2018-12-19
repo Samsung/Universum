@@ -35,8 +35,8 @@ class ApiSupport(Module):
         self.data_file.flush()
         return {"UNIVERSUM_DATA_FILE": self.data_file.name}
 
-    def add_p4_file_diff(self, entry):
+    def add_file_diff(self, entry):
         self._set_entry("DIFF", entry)
 
-    def get_p4_file_diff(self):
+    def get_file_diff(self):
         return self._get_entry("DIFF")
