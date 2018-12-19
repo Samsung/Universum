@@ -25,39 +25,57 @@ def needs_structure(klass):
 
 
 class Block(object):
+    """
+    :type name: unicode
+    :type parent: Block
+
+    >>> b1 = Block('Build for all supported platforms')
+    >>> unicode( b1 )
+    u' Build for all supported platforms - Success'
+
+    >>> b2 = Block('Build Android', b1)
+    >>> unicode( b2 )
+    u'1. Build Android - Success'
+
+    >>> b3 = Block('Build Tizen', b1)
+    >>> unicode( b3 )
+    u'2. Build Tizen - Success'
+
+    >>> b3.status = 'Failed'
+    >>> unicode( b3 )
+    u'2. Build Tizen - Failed'
+    >>> b3.is_successful()
+    False
+
+    >>> b4 = Block('Run tests', b2)
+    >>> unicode( b4 )
+    u'1.1. Run tests - Success'
+    >>> b4.is_successful()
+    True
+    """
+
     def __init__(self, name, parent=None):
         self.name = name
         self.status = "Success"
-        if parent:
-            self.number = len(parent.children) + 1
-        else:
-            self.number = 0
         self.children = []
-        self.parent = parent
 
-    def set_status(self, status):
-        self.status = status
-
-    def get_status(self):
-        return self.status
-
-    def get_full_status(self):
-        text = get_block_num_str(self) + " "
-        if self.children:
-            text += self.name
+        self._parent = parent
+        if self.parent:
+            self.parent.children.append(self)
+            self.number = '{}{}.'.format(parent.number, len(parent.children))
         else:
-            text += self.name + " - " + self.status
-        if self.status == "Success":
-            return text, True
-        return text, False
+            self.number = ''
 
+    def __unicode__(self):
+        result = self.number + ' ' + self.name
+        return '{} - {}'.format(result, self.status) if not self.children else result
 
-def get_block_num_str(block):
-    num_str = ""
-    while block.parent:
-        num_str = str(block.number) + "." + num_str
-        block = block.parent
-    return num_str
+    @property  # getter
+    def parent(self):
+        return self._parent
+
+    def is_successful(self):
+        return self.status == "Success"
 
 
 @needs_output
@@ -72,25 +90,23 @@ class StructureHandler(Module):
 
     def open_block(self, name):
         new_block = Block(name, self.current_block)
-        self.current_block.children.append(new_block)
         self.current_block = new_block
 
-        self.out.open_block(get_block_num_str(new_block), name)
+        self.out.open_block(new_block.number, name)
 
     def close_block(self):
         block = self.current_block
         self.current_block = self.current_block.parent
-        self.out.close_block(get_block_num_str(block), block.name, block.status)
+        self.out.close_block(block.number, block.name, block.status)
 
     def report_critical_block_failure(self):
         self.out.report_skipped("Critical step failed. All further configurations will be skipped")
 
     def report_skipped_block(self, name):
         new_skipped_block = Block(name, self.current_block)
-        new_skipped_block.set_status("Skipped")
-        self.current_block.children.append(new_skipped_block)
+        new_skipped_block.status = "Skipped"
 
-        self.out.report_skipped(get_block_num_str(new_skipped_block) + " " + name +
+        self.out.report_skipped(new_skipped_block.number + " " + name +
                                 " skipped because of critical step failure")
 
     def fail_current_block(self, error=None):
@@ -100,7 +116,7 @@ class StructureHandler(Module):
     def fail_block(self, block, error=None):
         if error:
             self.out.log_exception(error)
-        block.set_status("Failed")
+        block.status = "Failed"
         self.out.report_build_problem(block.name + " " + block.status)
 
     def get_current_block(self):

@@ -15,12 +15,12 @@ __all__ = [
 
 
 def report_steps_recursively(block, text, indent, only_fails=False):
-    text_status, is_successful = block.get_full_status()
     if only_fails:
-        if not is_successful:
-            text += text_status + "\n"
+        if not block.is_successful():
+            text += unicode(block) + "\n"
     else:
-        text += indent + text_status + "\n"
+        text += indent + unicode(block) + "\n"
+    is_successful = block.is_successful()
     for substep in block.children:
         text, status = report_steps_recursively(substep, text, indent + "  ", only_fails)
         is_successful = is_successful and status
