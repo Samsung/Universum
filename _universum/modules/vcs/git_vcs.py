@@ -140,8 +140,16 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
         self.append_repo_status("\n")
 
     def calculate_file_diff(self):
-        status_letters = {'A': "add", 'C': "copy", 'D': "delete", 'M': "modify", 'R': "rename",
-                          'T': "change file type", 'U': "unmerged", 'X': "unknown"}
+        status_letters = {
+            'A': "add",
+            'C': "copy",
+            'D': "delete",
+            'M': "modify",
+            'R': "rename",
+            'T': "change file type",
+            'U': "unmerged",
+            'X': "unknown"
+        }
         result = []
         for line in self.repo.git.diff(self.checkout_id, name_status=True).splitlines():
             try:
