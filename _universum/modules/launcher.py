@@ -103,6 +103,8 @@ class Step(object):
 
         self.cmd = None
         self.process = None
+        self._is_background = False
+        self._postponed_out = []
 
     def prepare_command(self):
         try:
@@ -130,12 +132,14 @@ class Step(object):
         if not self.prepare_command():
             return
 
+        self._is_background = is_background
+        self._postponed_out = []
         self.process = self.cmd(*self.configuration["command"][1:],
                                 _iter=True,
                                 _bg_exc=False,
                                 _cwd=self.working_directory,
                                 _env=self.environment,
-                                _bg=is_background,
+                                _bg=self._is_background,
                                 _out=self.handle_stdout,
                                 _err=self.handle_stderr)
 
@@ -149,6 +153,8 @@ class Step(object):
 
         if self.file:
             self.file.write(line + "\n")
+        elif self._is_background:
+            self._postponed_out.append((self.out.log_shell_output, line))
         else:
             self.out.log_shell_output(line)
 
@@ -156,6 +162,8 @@ class Step(object):
         line = utils.trim_and_convert_to_unicode(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
+        elif self._is_background:
+            self._postponed_out.append((self.out.log_stderr, line))
         else:
             self.out.log_stderr(line)
 
@@ -181,6 +189,8 @@ class Step(object):
                         text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
                 else:
                     text = unicode(e) + "\n"
+
+            self._handle_posponed_out()
             if text:
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
@@ -194,6 +204,12 @@ class Step(object):
             self.handle_stdout()
             if self.file:
                 self.file.close()
+            self._is_background = False
+
+    def _handle_posponed_out(self):
+        for item in self._postponed_out:
+            item[0](item[1])
+        self._postponed_out = []
 
 
 @needs_output
@@ -278,7 +294,7 @@ class Launcher(ProjectDirectory):
             raise CriticalCiException(text)
         return self.project_configs
 
-    def create_process(self, item, redirect_to_file=False):
+    def create_process(self, item):
         working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
                                              self.settings.project_root)
 
@@ -288,11 +304,10 @@ class Launcher(ProjectDirectory):
         def fail_block(line=None):
             self.structure.fail_block(block, line)
 
-        if redirect_to_file or (self.settings.output == "file"):
+        log_file = None
+        if self.settings.output == "file":
             log_file = self.artifacts.create_text_file(item.get("name", "") + "_log.txt")
             self.out.log("Execution log is redirected to file")
-        else:
-            log_file = None
 
         additional_environment = self.api_support.get_environment_settings()
         return Step(item, self.out, fail_block, self.server.add_build_tag,

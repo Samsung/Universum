@@ -144,8 +144,9 @@ class StructureHandler(Module):
         return result
 
     def execute_one_step(self, configuration, executor, is_critical):
+        process = executor(configuration)
+
         background = configuration.get("background", False)
-        process = executor(configuration, redirect_to_file=background)
         process.start(is_background=background)
         if not background:
             process.finalize()
