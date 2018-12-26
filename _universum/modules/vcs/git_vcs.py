@@ -139,8 +139,8 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
             self.append_repo_status(" " + commit)
         self.append_repo_status("\n")
 
-    def calculate_file_diff(self):
-        status_letters = {
+    def _diff_against_reference_commit(self, commit_id):
+        status_mapping = {
             'A': "add",
             'C': "copy",
             'D': "delete",
@@ -151,12 +151,12 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
             'X': "unknown"
         }
         result = []
-        for line in self.repo.git.diff(self.checkout_id, name_status=True).splitlines():
+        for line in self.repo.git.diff(commit_id, name_status=True).splitlines():
             try:
                 diff_record = line.split()
                 try:
                     # Some status letters are followed by score, e.g. 'R86'
-                    status = status_letters[diff_record[0][0]]
+                    status = status_mapping[diff_record[0][0]]
                 except KeyError:
                     status = diff_record[0]
 
@@ -167,6 +167,9 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
                 self.out.log_stderr(line)
 
         return result
+
+    def calculate_file_diff(self):
+        return self._diff_against_reference_commit(self.checkout_id)
 
     @catch_git_exception()
     def prepare_repository(self):
