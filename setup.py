@@ -38,13 +38,15 @@ setup(
     extras_require={
         'docs': [
             'sphinx',
-            'sphinx-argparse'
+            'sphinx-argparse',
+            'sphinx_rtd_theme'
         ],
         'development': [
             'gitpython',
             'P4',
             'sphinx',
-            'sphinx-argparse'
+            'sphinx-argparse',
+            'sphinx_rtd_theme'
         ],
         'test': [
             'docker',
@@ -57,6 +59,7 @@ setup(
             'pytest-pylint',
             'sphinx',
             'sphinx-argparse',
+            'sphinx_rtd_theme',
             'teamcity-messages',
             'pytest-cov',
             'coverage'
