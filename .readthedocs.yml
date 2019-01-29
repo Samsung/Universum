@@ -4,7 +4,6 @@ sphinx:
   configuration: doc/conf.py
 python:
   version: 2.7
-  setup_py_install: true
   pip_install: true
   extra_requirements:
     - docs
