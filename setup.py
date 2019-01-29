@@ -36,6 +36,10 @@ setup(
         'lxml'
     ],
     extras_require={
+        'docs': [
+            'sphinx',
+            'sphinx-argparse'
+        ],
         'development': [
             'gitpython',
             'P4',
