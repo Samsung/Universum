@@ -11,6 +11,17 @@ def readme():
         return f.read()
 
 
+docs = (
+    'sphinx',
+    'sphinx-argparse',
+    'sphinx_rtd_theme'
+)
+
+vcs = (
+    'gitpython',
+    'P4'
+)
+
 setup(
     name=_universum.__title__,
     version=_universum.__version__,
@@ -36,23 +47,17 @@ setup(
         'lxml'
     ],
     extras_require={
-        'development': [
-            'gitpython',
-            'P4',
-            'sphinx',
-            'sphinx-argparse'
-        ],
+        'docs': [docs],
+        'development': [docs, vcs],
         'test': [
+            docs,
+            vcs,
             'docker',
-            'gitpython',
             'httpretty<=0.8',
             'mock',
-            'P4',
             'pytest<3.7',
             'pylint<2',
             'pytest-pylint',
-            'sphinx',
-            'sphinx-argparse',
             'teamcity-messages',
             'pytest-cov',
             'coverage'
