@@ -1,8 +1,20 @@
 Change log
 ==========
 
-0.16.3 (2018-12-??)
+0.17.0 (2019-02-01)
 -------------------
+
+New features
+~~~~~~~~~~~~
+
+* **api:** add 'file-diff' for Git & Gerrit
+
+Bug fixes
+~~~~~~~~~
+
+* **code_report:** fixed missing project_home parameter in arguments
+* **setup:** fix make target list, specify python version
+* **tests:** update docker images used for testing
 
 
 0.16.2 (2018-12-13)
