@@ -17,8 +17,9 @@ class SvaceAnalyzer(object):
     def define_arguments():
         parser = argparse.ArgumentParser(description="Svace analyzer")
         parser.add_argument("--build-cmd", dest="build_cmd", nargs='+',
-                            help="Relative path to build script or command itself.")
-        parser.add_argument("--lang", dest="lang", choices=["JAVA", "CXX"], help="Language to analyze.")
+                            help="Relative path to build script or command itself")
+        parser.add_argument("--lang", dest="lang", choices=["JAVA", "CXX"], help="Language to analyze")
+        parser.add_argument("--project-name", dest="project_name", help="Svace project name defined on server")
         utils.add_common_arguments(parser)
         return parser
 
@@ -28,7 +29,7 @@ class SvaceAnalyzer(object):
         self.settings.svace_home = "/opt/svace-x64-linux"
         self.project_name = self.settings.project_name + "_" + self.settings.lang
 
-        self.work_folder = os.path.join(os.getcwd(), self.settings.project_name)
+        self.work_folder = os.path.join(os.getcwd(), self.project_name)
         self.settings.jack_option = "--enable-jack-interception"
         self.settings.hash_server_memory = "2048"
         self.settings.verbose = "--verbose"

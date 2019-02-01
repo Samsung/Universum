@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: UTF-8 -*-
 
 from setuptools import setup, find_packages
@@ -11,6 +11,17 @@ def readme():
         return f.read()
 
 
+docs = (
+    'sphinx',
+    'sphinx-argparse',
+    'sphinx_rtd_theme'
+)
+
+vcs = (
+    'gitpython',
+    'P4'
+)
+
 setup(
     name=_universum.__title__,
     version=_universum.__version__,
@@ -19,7 +30,7 @@ setup(
     author='Ivan Keliukh, Kateryna Dovgan',
     author_email='k.dovgan@samsung.com',
     license='BSD',
-    packages=find_packages(exclude='tests'),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum', 'analyzers.pylint', 'analyzers.svace', 'analyzers.uncrustify'],
     entry_points={'console_scripts': [
         'universum = universum:main',
@@ -27,6 +38,7 @@ setup(
         'universum_svace = analyzers.svace:main',
         'universum_uncrustify = analyzers.uncrustify:main'
     ]},
+    python_requires='>=2.7.6, <3',
     setup_requires=['setuptools'],
     install_requires=[
         'glob2',
@@ -35,26 +47,24 @@ setup(
         'lxml'
     ],
     extras_require={
-        'development': [
-            'gitpython',
-            'P4',
-            'sphinx',
-            'sphinx-argparse'
-        ],
+        'docs': [docs],
+        'development': [docs, vcs],
         'test': [
+            docs,
+            vcs,
             'docker',
-            'gitpython',
             'httpretty<=0.8',
             'mock',
-            'P4',
             'pytest<3.7',
             'pylint<2',
             'pytest-pylint',
-            'sphinx',
-            'sphinx-argparse',
             'teamcity-messages',
             'pytest-cov',
             'coverage'
         ]
     }
 )
+
+
+if __name__ == "__main__":
+    print "Please use 'sudo pip install .' instead of launching this script"

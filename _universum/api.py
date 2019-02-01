@@ -38,7 +38,7 @@ class Api(Module):
 
     def execute(self):
         if self.settings.action == "file-diff":
-            print self.api_support.get_p4_file_diff()
+            print self.api_support.get_file_diff()
         else:
             raise NotImplementedError()
 

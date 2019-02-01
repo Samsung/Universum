@@ -68,3 +68,57 @@ def test_multiple_p4_file_diff(universum_runner):
     assert len(result) == 10000
     for entry in result:
         assert entry["action"] == "add"
+
+
+def test_git_file_diff(universum_runner):
+    repo = universum_runner.git.repo
+    server = universum_runner.git.server
+    logger = universum_runner.git.logger
+    git_directory = universum_runner.git.root_directory
+    git_file = universum_runner.git.repo_file
+
+    repo.git.checkout(server.target_branch)
+    repo.git.checkout("new_testing_branch", b=True)
+    repo.git.mv(unicode(git_file), unicode(git_directory.join("some_new_file_name.txt")))
+    change = unicode(repo.index.commit("Special commit for testing"))
+    repo.remotes.origin.push(progress=logger, all=True)
+
+    log = universum_runner.run(config, vcs_type="git",
+                               environment=["GIT_CHERRYPICK_ID=" + change, "GIT_REFSPEC=" + server.target_branch])
+    assert "Module sh got exit code" not in log
+
+    with open(os.path.join(universum_runner.artifact_dir, "output.json")) as f:
+        result = json.load(f)
+
+    assert result[0]["action"] == "delete"
+    assert result[0]["repo_path"] == "readme.txt"
+    assert result[1]["action"] == "add"
+    assert result[1]["repo_path"] == "some_new_file_name.txt"
+
+
+def test_multiple_git_file_diff(universum_runner):
+    repo = universum_runner.git.repo
+    server = universum_runner.git.server
+    logger = universum_runner.git.logger
+    git_directory = universum_runner.git.root_directory
+
+    repo.git.checkout(server.target_branch)
+    repo.git.checkout("new_testing_branch", b=True)
+    files = []
+    for index in range(0, 10000):
+        new_file = git_directory.join("new_file_" + unicode(index) + ".txt")
+        new_file.write("This is file #" + unicode(index) + "\n")
+        files.append(unicode(new_file))
+    repo.index.add(files)
+    change = unicode(repo.index.commit("Special commit for testing"))
+    repo.remotes.origin.push(progress=logger, all=True)
+
+    log = universum_runner.run(config, vcs_type="git",
+                               environment=["GIT_CHERRYPICK_ID=" + change, "GIT_REFSPEC=" + server.target_branch])
+    assert "Module sh got exit code" not in log
+
+    with open(os.path.join(universum_runner.artifact_dir, "output.json")) as f:
+        result = json.load(f)
+    assert len(result) == 10000
+    for entry in result:
+        assert entry["action"] == "add"

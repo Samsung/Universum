@@ -14,19 +14,6 @@ __all__ = [
 ]
 
 
-def report_steps_recursively(block, text, indent, only_fails=False):
-    text_status, is_successful = block.get_full_status()
-    if only_fails:
-        if not is_successful:
-            text += text_status + "\n"
-    else:
-        text += indent + text_status + "\n"
-    for substep in block.children:
-        text, status = report_steps_recursively(substep, text, indent + "  ", only_fails)
-        is_successful = is_successful and status
-    return text, is_successful
-
-
 class ReportObserver(object):
     """
     Abstract base class for reporting modules
@@ -116,13 +103,14 @@ class Reporter(Module):
 
         is_successful = True
         text = "Here is the summarized build result:\n"
+        self.out.log(text)
         for step in self.blocks_to_report:
-            text, status = report_steps_recursively(step, text, "", self.settings.only_fails)
+            text, status = self._report_steps_recursively(step, text, "")
             is_successful = is_successful and status
         if self.settings.only_fails and is_successful:
             text += "  All steps succeeded"
+            self.out.log("  All steps succeeded")
 
-        self.out.log(text)
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
             return
@@ -130,7 +118,7 @@ class Reporter(Module):
         if is_successful:
             self.out.log("Reporting successful build...")
             if not self.settings.report_success:
-                text = "Sending comment skipped." + \
+                text = "Sending comment skipped. " + \
                        "To report build success, use '--report-build-success' option"
                 self.out.log(text)
                 text = None
@@ -153,3 +141,17 @@ class Reporter(Module):
             self.out.log("Reporting code report issues ")
             for observer in self.observers:
                 observer.code_report_to_review(self.code_report_comments)
+
+    def _report_steps_recursively(self, block, text, indent):
+        if not self.settings.only_fails:
+            text += indent + unicode(block) + '\n'
+            self.out.report_step(indent + unicode(block), block.status)
+        elif not block.is_successful():
+            text += unicode(block) + '\n'
+            self.out.report_step(unicode(block), block.status)
+
+        is_successful = block.is_successful()
+        for substep in block.children:
+            text, status = self._report_steps_recursively(substep, text, indent + "  ")
+            is_successful = is_successful and status
+        return text, is_successful

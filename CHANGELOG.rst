@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.17.0 (2019-02-01)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **api:** add 'file-diff' for Git & Gerrit
+
+Bug fixes
+~~~~~~~~~
+
+* **code_report:** fixed missing project_home parameter in arguments
+* **setup:** specify python version in setup.py, merge 'source_doctest' make target into 'test'
+
+
 0.16.2 (2018-12-13)
 -------------------
 

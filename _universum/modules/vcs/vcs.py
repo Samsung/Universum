@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-import os
+import json
 import shutil
 import sh
 
@@ -8,6 +8,7 @@ from ...lib import utils
 from ...lib.gravity import Dependency
 from ...lib.utils import make_block
 from .. import artifact_collector
+from ..api_support import ApiSupport
 from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
 from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
@@ -81,6 +82,7 @@ SubmitVcs = create_vcs("submit")
 
 class MainVcs(create_vcs()):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
+    api_support_factory = Dependency(ApiSupport)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -92,6 +94,7 @@ class MainVcs(create_vcs()):
     def __init__(self, *args, **kwargs):
         super(MainVcs, self).__init__(*args, **kwargs)
         self.artifacts = self.artifacts_factory()
+        self.api_support = self.api_support_factory()
 
         if self.settings.report_to_review:
             self.code_review = self.driver.code_review()
@@ -112,6 +115,9 @@ class MainVcs(create_vcs()):
         status_file.write("\nFile list:\n\n")
         status_file.write(utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root)) + "\n")
         status_file.close()
+
+        file_diff = self.driver.calculate_file_diff()
+        self.api_support.add_file_diff(json.dumps(file_diff, indent=4))
 
     def clean_sources_silently(self):
         try:
