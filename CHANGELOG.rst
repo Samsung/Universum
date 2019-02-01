@@ -13,8 +13,7 @@ Bug fixes
 ~~~~~~~~~
 
 * **code_report:** fixed missing project_home parameter in arguments
-* **setup:** fix make target list, specify python version
-* **tests:** update docker images used for testing
+* **setup:** specify python version in setup.py, merge 'source_doctest' make target into 'test'
 
 
 0.16.2 (2018-12-13)
