@@ -1,5 +1,5 @@
 /* overriding tables */
-@media screen and (min-width: 767px) {
+@media screen {
     .wy-table-responsive table td {
         white-space: normal !important;
     }
