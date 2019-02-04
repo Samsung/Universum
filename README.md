@@ -1,9 +1,16 @@
 # Project 'Universum'
 
+Universum project is a Python solution that simplifies SW project verification
+by integrating existing CI systems and provides additional functionality for CI.
+
 Full documentation can be found here: https://universum.readthedocs.io/
 
-Project `Universum` is a continuous integration framework, containing
-a collection of functions that simplify implementation of the
-automatic build, testing, static analysis and other steps.
-The goal of this project is to provide unified approach for adding continuous integration
-to any project. It currently supports Perforce, Git, Gerrit, Swarm, Jenkins and TeamCity.
+TBD:
+
+1. Add instrunctions on Universum development:
+   * What to install and set up environment
+   * How to run tests
+   * Minimal architecture overview
+2. Mention mandatory documenting of new features and code review
+3. Describe CI, add links if possible
+4. Add direct links to community docs
