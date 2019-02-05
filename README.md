@@ -1,16 +1,19 @@
 # Project 'Universum'
 
-Universum project is a Python solution that simplifies SW project verification
-by integrating existing CI systems and provides additional functionality for CI.
+Universum integrates various CI systems and provides additional features,
+such as: customized downloading sources from VCS, running tests
+described in configuration file and reporting the results to code review systems.
 
 Full documentation can be found here: https://universum.readthedocs.io/
 
-TBD:
+Further versions of this README file should include:
 
-1. Add instrunctions on Universum development:
-   * What to install and set up environment
+1. Instructions for Universum developers:
+   * What to install
+   * How to set up
    * How to run tests
    * Minimal architecture overview
-2. Mention mandatory documenting of new features and code review
-3. Describe CI, add links if possible
-4. Add direct links to community docs
+2. Notification on mandatory code review for all commits to master
+3. Notification on mandatory documenting of the newly added features
+3. Description of CI process, links to configurations/logs/build results/etc.
+4. Direct links to the community docs
