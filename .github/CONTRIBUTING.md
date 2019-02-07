@@ -2,7 +2,7 @@
 
 If you want to contribute to a project and make it better, your help is very welcome.
 Contributing is also a great way to learn more about social coding on Github,
-new technologies and and their ecosystems and how to make constructive,
+new technologies and their ecosystems and how to make constructive,
 helpful bug reports, feature requests and the noblest of all contributions:
 a good, clean pull request.
 
@@ -17,7 +17,7 @@ But **this is not mandatory**. We always welcome any help.
 
 ### 0. [Fork](http://help.github.com/fork-a-repo/) the project repository from Github
 
-This step is requiered because of current Universum access policies: you won't be able to commit
+This step is required because of current Universum access policies: you won't be able to commit
 directly to Universum itself.
 
 
