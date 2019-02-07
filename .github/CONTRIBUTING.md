@@ -6,10 +6,11 @@ new technologies and and their ecosystems and how to make constructive,
 helpful bug reports, feature requests and the noblest of all contributions:
 a good, clean pull request.
 
-You can use templates to create a description of your[**pull request**](PULL_REQUEST_TEMPLATE.md)
-or [**issue**](ISSUE_TEMPLATE.md), the design of the template will greatly simplify
-Universum team work on injecting your code. But **this is not mandatory**.
-We will always welcome any help.
+You can use templates to create a [**bug report**](ISSUE_TEMPLATE/bug_report.md),
+[**feature request**](ISSUE_TEMPLATE/feature_request.md)
+or your own [**pull request**](PULL_REQUEST_TEMPLATE.md).
+Using these templates will greatly simplify your interaction with Universum team.
+But **this is not mandatory**. We always welcome any help.
 
 
 ## How to make a clean pull request
@@ -48,7 +49,7 @@ for your item. This will allow the team to review your suggestion,
 and provide appropriate feedback along the way.
 
 > For small changes or documentation issues, you don't need to create an issue,
-a pull request is enough in this case.
+a pull request is enough in this case
 
 
 ### 4. Fetch the latest code from the Universum
@@ -76,7 +77,7 @@ $ git checkout -b 999-name-of-your-branch-goes-here
 
 Make sure it works :)
 
-> Please note we use [PEP 8](https://www.python.org/dev/peps/pep-0008/) and use Pylint to check
+> Please note we comply to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and use Pylint to check
 the code style. Please refer to `pylintrc` file in root directory if needed
 
 
