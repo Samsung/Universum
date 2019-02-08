@@ -14,10 +14,17 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 
-0. Contents of configuration file ('config.py' by default)
-1. Environment variables set (especially those used by Universum)
-2. Command line with all parameters
-4. Additional context if needed
+List the performed steps:
+1. Go to '...'
+2. Click on '...'
+3. Scroll down to '...'
+4. See error
+
+Also provide the following information if applicable:
+ * Contents of configuration file ('config.py' by default)
+ * Environment variables set (especially those used by Universum)
+ * Command line with all parameters
+ * Additional context if needed
 
 
 **Expected behavior**
