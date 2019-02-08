@@ -25,7 +25,7 @@ vcs = (
 setup(
     name=_universum.__title__,
     version=_universum.__version__,
-    description='Continuous Integration Framework',
+    description='Unifier of Continuous Integration',
     long_description=readme(),
     author='Ivan Keliukh <i.keliukh@samsung.com>, Kateryna Dovgan <k.dovgan@samsung.com>',
     license='BSD',
