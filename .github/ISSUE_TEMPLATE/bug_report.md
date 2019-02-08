@@ -14,13 +14,13 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 
-List the performed steps:
- 1. Install and set up some specific SW (e.g. thirdparty code syle checker)
- 2. Add specific contents to specific files in specific VCS (e.g. add utf-8 characters to read-only file in Git)
- 3. Configure and run Universum (see below)
- 4. See error
+List the performed steps, for example:
+ * Install, set up or launch some specific SW
+ * Run specific commands in shell
+ * Add specific contents to specific files in specific VCS
+ * Configure and run Universum
 
-Also provide the following information if applicable:
+For Universum please provide the following information if applicable:
  * Contents of configuration file ('config.py' by default)
  * Environment variables set (especially those used by Universum)
  * Command line with all parameters
