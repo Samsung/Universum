@@ -1,5 +1,10 @@
 /* overriding tables */
 @media screen {
+    .logo {
+        height: 48px !important;
+        align: left !important;
+    }
+
     .wy-table-responsive table td {
         white-space: normal !important;
     }
