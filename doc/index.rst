@@ -18,7 +18,6 @@ Project 'Universum'
     :height: 150
     :width: 150
     :align: right
-    :class: logo-image
 
 Project `Universum` is a continuous integration framework, containing
 a collection of functions that simplify implementation of the
