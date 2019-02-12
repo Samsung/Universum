@@ -14,6 +14,11 @@ Project 'Universum'
     teamcity.rst
     changelog_ref.rst
 
+.. image:: _static/logo.svg
+    :height: 150
+    :width: 150
+    :align: right
+
 Project `Universum` is a continuous integration framework, containing
 a collection of functions that simplify implementation of the
 automatic build, testing, static analysis and other steps.
