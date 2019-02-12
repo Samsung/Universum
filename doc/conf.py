@@ -107,6 +107,8 @@ html_context = {
     'css_files': ['_static/theme_overrides.css']
 }
 
+html_scaled_image_link = False
+
 
 # -- Options for HTMLHelp output ------------------------------------------
 
