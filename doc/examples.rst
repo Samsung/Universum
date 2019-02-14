@@ -4,8 +4,14 @@ Other usage examples
 Here are some examples of Python scripts using Universum.
 
 
-Export Perforce repository to Git saving commit messages
---------------------------------------------------------
+Export Perforce repository to Git
+---------------------------------
+
+Here's an example script that ports all commits from certain directory in Perforce repository
+to certain directory in Git directory. (Note that to port whole repository you just have to pass
+root directories in both cases)
+
+In this example commit messages are preserved, but all changes are committed to Git from one user.
 
 Preconditions:
  * Git repository is created and cloned (``--git-repo`` is an absolute local path)
