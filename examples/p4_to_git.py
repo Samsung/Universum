@@ -12,11 +12,11 @@ def main():
     parser.add_argument("--p4-user")
     parser.add_argument("--p4-password")
     parser.add_argument("--p4-client")
-    parser.add_argument("--depot-path")
-    parser.add_argument("--client-root")
+    parser.add_argument("--p4-depot-path")
+    parser.add_argument("--p4-client-root")
+    parser.add_argument("--git-repo")
     parser.add_argument("--git-user")
     parser.add_argument("--git-email")
-    parser.add_argument("--git-repo")
     args = parser.parse_args()
 
     p4 = P4()
@@ -28,10 +28,10 @@ def main():
 
     p4.connect()
 
-    depot_path = args.depot_path
+    depot_path = args.p4_depot_path
 
     client = p4.fetch_client(client_name)
-    client["Root"] = args.client_root
+    client["Root"] = args.p4_client_root
     client["View"] = [depot_path + " //" + client_name + "/..."]
     p4.save_client(client)
     p4.client = client_name
