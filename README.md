@@ -1,6 +1,6 @@
 # Project 'Universum'
-[![Documentation Status](https://readthedocs.org/projects/universum/badge/?version=0.17.0)](
-https://universum.readthedocs.io/en/0.17.0/?badge=0.17.0)
+[![Documentation Status](https://readthedocs.org/projects/universum/badge/?version=latest)](
+https://universum.readthedocs.io/en/latest/?badge=latest)
 
 Universum integrates various CI systems and provides additional features,
 such as: customized downloading sources from VCS, running tests
