@@ -12,6 +12,7 @@ Project 'Universum'
     configuration_support.rst
     universum_docs.rst
     teamcity.rst
+    examples.rst
     changelog_ref.rst
 
 .. image:: _static/logo.svg
