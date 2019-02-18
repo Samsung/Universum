@@ -58,17 +58,15 @@ Script
     :linenos:
 
 
-.. admonition:: See lines 52-53 for the reference
+Possible script modifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    In this example commit messages are preserved, but all changes are committed to Git from one user.
-    To port commit users as well use ``p4.run_describe(cl)[0]['user']`` to find P4 user
-    and replace incoming parameters ``--git-user``, ``--git-email`` with
-    mapping of P4 users into Git user parameters (``-gu``, ``-ge``) that are passed to submitter.
+In this example commit messages are preserved, but all changes are committed to Git from one user.
+To port commit users as well use ``p4.run_describe(cl)[0]['user']`` to find P4 user
+and replace incoming parameters ``--git-user``, ``--git-email`` with
+mapping of P4 users into Git user parameters (``-gu``, ``-ge``) that are passed to submitter.
+See lines 52-53 for the reference.
 
-
-.. admonition:: See line 35 for the reference
-
-    Also this script only can process the contents of one P4 folder, creating a single mapping for it
-    in ``client["View"]``. To use multiple mappings, edit ``client["View"]`` accordingly
-    instead of parsing ``--depot-path`` parameter.
-
+Also this script only can process the contents of one P4 folder, creating a single mapping for it
+in ``client["View"]``. To use multiple mappings, edit ``client["View"]`` accordingly
+instead of parsing ``--depot-path`` parameter. See line 35 for the reference.
