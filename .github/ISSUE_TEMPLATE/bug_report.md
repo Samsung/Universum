@@ -7,12 +7,12 @@ assignees: k-dovgan
 
 ---
 
-**Describe the bug**
+## Description
 
 A clear and concise description of what the bug is.
 
 
-**To Reproduce**
+## Steps to reproduce
 
 List the performed steps, for example:
  * Install, set up or launch some specific SW
@@ -27,23 +27,22 @@ For Universum please provide the following information if applicable:
  * Additional context if needed
 
 
-**Expected behavior**
+## Expected result
 
 A clear and concise description of what you expected to happen.
 
 
-**Actual behavior**
+## Actual result
 
 A detailed explanation of what exactly happened.
 
 
-**Environment**
+## Environment
 
  - OS: [e.g. Ubuntu 16.04.5]
  - Python version [e.g. 2.7.6]
  - Universum version [e.g. 0.17.0]
 
-
-**Additional context**
+## Additional context
 
 Add any other context about the problem here.
