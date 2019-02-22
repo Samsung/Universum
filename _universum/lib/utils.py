@@ -124,8 +124,6 @@ def import_module(name, path=None, target_name=None):
         try:
             filename, pathname, description = imp.find_module(name, path)
             return imp.load_module(target_name, filename, pathname, description)
-        except ImportError:
-            raise CriticalCiException("Failed to import '" + name + "' module")
         finally:
             if filename:
                 filename.close()

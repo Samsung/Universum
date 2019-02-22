@@ -80,6 +80,8 @@ def main(*args, **kwargs):
         return run(settings)
     except IncorrectParameterError as e:
         parser.error(e.message)
+    except ImportError as e:
+        print unicode(e)
 
 
 if __name__ == "__main__":

@@ -61,13 +61,12 @@ class PerforceVcs(base_vcs.BaseVcs):
 
         try:
             p4_module = utils.import_module("P4")
-        except CriticalCiException as e:
-            if "Failed to import" in unicode(e):
-                text = "Using VCS type 'p4' requires official Helix CLI and Pyhton package 'perforce-p4python' " \
-                       "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
-                       "documentation for detailed instructions"
-                raise CriticalCiException(text)
-            raise
+        except ImportError:
+            text = "Error: using VCS type 'p4' requires official Helix CLI and Pyhton package 'perforce-p4python' " \
+                   "to be installed. Please refer to `Prerequisites` chapter of project documentation for " \
+                   "detailed instructions"
+            raise ImportError(text)
+
         self.p4 = p4_module.P4()
         global P4Exception
         P4Exception = p4_module.P4Exception
