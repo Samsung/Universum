@@ -82,6 +82,7 @@ def main(*args, **kwargs):
         parser.error(e.message)
     except ImportError as e:
         print unicode(e)
+        return 2
 
 
 if __name__ == "__main__":
