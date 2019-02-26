@@ -32,7 +32,7 @@ def define_arguments(*args):
         default_parser = "default"
         subparsers.add_parser(default_parser)
         if args:
-            args[0].insert(len(args), default_parser)
+            args[0].insert(len(args[0]), default_parser)
         else:
             sys.argv.insert(len(sys.argv), default_parser)
 
