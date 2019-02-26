@@ -38,6 +38,13 @@ def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tm
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
+def test_vcs_error_no_vcs_type(capsys):
+    with pytest.raises(SystemExit):
+        universum.main(["-ot", "term"])
+
+    assert "The repository (VCS) type is not set" in capsys.readouterr().err
+
+
 def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
