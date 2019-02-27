@@ -1,0 +1,7 @@
+.idea
+.vscode
+*.pyc
+doc/_build
+.coverage
+.pytest_cache
+htmlcov
