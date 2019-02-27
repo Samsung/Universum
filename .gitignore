@@ -1,0 +1,13 @@
+.idea
+.vscode
+*.pyc
+*.pyo
+doc/_build
+.coverage
+.coverage.docker
+__pycache__
+.pytest_cache
+htmlcov
+temp
+artifacts
+temp_config.py
