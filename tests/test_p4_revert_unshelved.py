@@ -10,8 +10,8 @@ from . import utils
 
 
 class DiffParameters(object):
-    def __init__(self, environment):
-        self.env = environment
+    def __init__(self, perforce_workspace):
+        self.perforce_workspace = perforce_workspace
 
         for env_var in ["P4_PATH", "P4_MAPPINGS"]:
             try:
@@ -20,12 +20,12 @@ class DiffParameters(object):
                 pass
 
         settings = utils.create_settings(vcs.MainVcs)
-        settings.PerforceVcs.port = environment.p4.port
-        settings.PerforceVcs.user = environment.p4.user
-        settings.PerforceVcs.password = environment.p4.password
+        settings.PerforceVcs.port = perforce_workspace.p4.port
+        settings.PerforceVcs.user = perforce_workspace.p4.user
+        settings.PerforceVcs.password = perforce_workspace.p4.password
         settings.Output.type = "term"
-        settings.ProjectDirectory.project_root = str(self.env.root_directory + "/../new_workspace")
-        settings.PerforceWithMappings.mappings = [self.env.depot + " /..."]
+        settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory + "/../new_workspace")
+        settings.PerforceWithMappings.mappings = [self.perforce_workspace.depot + " /..."]
         settings.PerforceMainVcs.force_clean = True
         settings.PerforceMainVcs.client = "new_client"
 
@@ -48,21 +48,24 @@ class DiffParameters(object):
 
 
 @pytest.fixture()
-def revert_parameters(perforce_workspace):
-    params = DiffParameters(perforce_workspace)
-    yield params
-    params.exit()
+def diff_parameters(perforce_workspace):
+    params = None
+    try:
+        params = DiffParameters(perforce_workspace)
+        yield params
+    finally:
+        if params:
+            params.exit()
 
 
-def test_p4_c_and_revert(revert_parameters):  # pylint: disable = too-many-locals
-    parameters = revert_parameters
-
-    test_dir = parameters.env.root_directory.ensure("test_files", dir=True)
+def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
+    p4 = diff_parameters.perforce_workspace.p4
+    test_dir = diff_parameters.perforce_workspace.root_directory.ensure("test_files", dir=True)
 
     def create_file(filename):
         cur_file = test_dir.join(filename)
-        parameters.env.p4.run("add", str(cur_file))
-        parameters.env.p4.run("edit", str(cur_file))
+        p4.run("add", str(cur_file))
+        p4.run("edit", str(cur_file))
         cur_file.write("import os\n\nprint('File {0} has no special modifiers.')\n"
                        "print(os.name)\nprint(os.getcwd())\nprint(os.strerror(3))\n"
                        "print('File change type: {0}')\n".format(filename))
@@ -75,13 +78,13 @@ def test_p4_c_and_revert(revert_parameters):  # pylint: disable = too-many-local
     create_file("branch")
     create_file("delete")
 
-    change = parameters.env.p4.run_change("-o")[0]
+    change = p4.run_change("-o")[0]
     change["Description"] = "Submit test files"
-    parameters.env.p4.run_submit(change)
+    p4.run_submit(change)
 
     # open for edit for edit, move/add and move/rename files
     for cur_file in [test_dir.join("edit"), test_dir.join("move"), test_dir.join("rename")]:
-        parameters.env.p4.run("edit", str(cur_file))
+        p4.run("edit", str(cur_file))
 
     # edit
     test_dir.join("edit").write("import os\n\nprint('File %s has no special modifiers.')\n"
@@ -89,28 +92,28 @@ def test_p4_c_and_revert(revert_parameters):  # pylint: disable = too-many-local
                                 "print('File change type: %s')\n" % (test_dir.join("edit"), "edit"))
 
     # move, rename
-    parameters.env.p4.run("move", test_dir + "/move", test_dir + "/moved/move")
-    parameters.env.p4.run("rename", test_dir + "/rename", test_dir + "/renamed_rename")
+    p4.run("move", test_dir + "/move", test_dir + "/moved/move")
+    p4.run("rename", test_dir + "/rename", test_dir + "/renamed_rename")
     # integrate
-    parameters.env.p4.run("integrate", test_dir + "/integrate", test_dir + "/integrated")
-    parameters.env.p4.run("resolve", "-at")
+    p4.run("integrate", test_dir + "/integrate", test_dir + "/integrated")
+    p4.run("resolve", "-at")
     # branch
-    parameters.env.p4.run("integrate", test_dir + "/branch", test_dir + "/moved/branch_to")
+    p4.run("integrate", test_dir + "/branch", test_dir + "/moved/branch_to")
     # delete
-    parameters.env.p4.run("delete", test_dir + "/delete")
+    p4.run("delete", test_dir + "/delete")
     # add
     add = test_dir.join("add")
     add.write("\nprint('new file')\nprint('not in repo, only for shelve.')")
-    parameters.env.p4.run("add", add)
+    p4.run("add", add)
 
     # make change
-    change = parameters.env.p4.fetch_change()
+    change = p4.fetch_change()
     change["Description"] = "Test revert #1"
-    saved_change = parameters.env.p4.save_change(change)[0].split()[1]
+    saved_change = p4.save_change(change)[0].split()[1]
 
-    shelve = parameters.env.p4.run_shelve("-fc", saved_change)[0]
+    shelve = p4.run_shelve("-fc", saved_change)[0]
 
-    diff, is_files_opened = parameters.run_diff(shelve)
+    diff, is_files_opened = diff_parameters.run_diff(shelve)
     assert not is_files_opened
 
     new_test_dir = str(test_dir).replace("workspace", "new_workspace")

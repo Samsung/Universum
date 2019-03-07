@@ -94,7 +94,9 @@ class TestEnvironment(object):
             self.settings = create_settings(submit.Submit)
             self.settings.subcommand = "submit"
             self.settings.Submit.commit_message = "Test CL"
-            self.settings.ProjectDirectory.project_root = unicode(self.root_directory)
+            # For submitter, the main working dir (project_root) should be the root
+            # of the VCS workspace/client
+            self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
         self.settings.Output.type = "term"
 
     def get_last_change(self):

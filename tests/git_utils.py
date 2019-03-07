@@ -101,7 +101,7 @@ class GitEnvironment(utils.TestEnvironment):
     def __init__(self, client, directory, test_type):
         db_file = directory.join("gitpoll.json")
         self.db_file = unicode(db_file)
-        self.root_directory = client.root_directory
+        self.vcs_cooking_dir = client.root_directory
 
         super(GitEnvironment, self).__init__(test_type)
 
@@ -124,11 +124,11 @@ class GitEnvironment(utils.TestEnvironment):
         return changes.split(" ")[0]
 
     def file_present(self, file_path):
-        relative_path = os.path.relpath(file_path, unicode(self.root_directory))
+        relative_path = os.path.relpath(file_path, unicode(self.vcs_cooking_dir))
         return relative_path in self.repo.git.ls_files(file_path)
 
     def text_in_file(self, text, file_path):
-        relative_path = os.path.relpath(file_path, unicode(self.root_directory))
+        relative_path = os.path.relpath(file_path, unicode(self.vcs_cooking_dir))
         return text in self.repo.git.show("HEAD:" + relative_path)
 
     def make_a_change(self):
