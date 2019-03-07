@@ -179,7 +179,6 @@ def perforce_workspace(request, perforce_connection, tmpdir):
     depot = "//depot/..."
 
     try:
-        work_dir = tmpdir.ensure("working", dir=True)
         root = tmpdir.ensure("workspace", dir=True)
 
         client = p4.fetch_client(client_name)
@@ -202,21 +201,19 @@ def perforce_workspace(request, perforce_connection, tmpdir):
 
         change = p4.run_change("-o")[0]
         change["Description"] = "Test submit"
-        commited_change = p4.run_submit(change)
+        p4.run_submit(change)
 
         yield utils.Params(p4=p4,
                            client_name=client_name,
-                           commited_change=commited_change,
                            depot=depot,
-                           work_dir=work_dir,
                            root_directory=root,
                            repo_file=writeable_file,
                            nonwritable_file=usual_file)
 
     finally:
         if client_created:
-            remainig_shelves = p4.run_changes("-s", "shelved")
-            for item in remainig_shelves:
+            remaining_shelves = p4.run_changes("-s", "shelved")
+            for item in remaining_shelves:
                 p4.run_shelve("-dfc", item["change"])
             p4.delete_client("-f", client_name)
 
@@ -225,7 +222,7 @@ class P4Environment(utils.TestEnvironment):
     def __init__(self, perforce_workspace, directory, test_type):
         db_file = directory.join("p4poll.json")
         self.db_file = unicode(db_file)
-        self.root_directory = perforce_workspace.root_directory
+        self.vcs_cooking_dir = perforce_workspace.root_directory
         self.repo_file = perforce_workspace.repo_file
         self.nonwritable_file = perforce_workspace.nonwritable_file
         self.p4 = perforce_workspace.p4
