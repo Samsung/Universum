@@ -4,7 +4,7 @@
 import os
 
 
-def get_line_with_text( text, log ):
+def get_line_with_text(text, log):
     for line in log.splitlines():
         if text in line:
             return line

@@ -8,7 +8,7 @@ def run_virtual(cmd):
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
-             "--files *.py _universum/ ests/ analyzers/ --result-file ${CODE_REPORT_FILE}"
+             "--files *.py _universum/ tests/ analyzers/ --result-file ${CODE_REPORT_FILE}"
 
 configs = Variations([dict(name="Create virtual environment", command=["python2", "-m", "virtualenv", env_name]),
                       dict(name="Install development",
