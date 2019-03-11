@@ -254,6 +254,11 @@ def submit_environment(request, perforce_workspace, git_client, tmpdir):
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 
 
+def test_submit_success_no_changes(submit_parameters, submit_environment):
+    parameters = submit_parameters(submit_environment)
+    assert parameters.submit_path_list([]) == 0
+
+
 def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 

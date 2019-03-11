@@ -3,12 +3,12 @@
 import glob
 import os
 
-from ...lib.ci_exception import CriticalCiException
-from ...lib.utils import make_block
-from ...lib import utils
+from .base_vcs import BaseVcs, BaseDownloadVcs
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from .base_vcs import BaseVcs, BaseDownloadVcs
+from ...lib import utils
+from ...lib.ci_exception import CriticalCiException
+from ...lib.utils import make_block
 
 __all__ = [
     "GitMainVcs",
@@ -29,6 +29,7 @@ class GitVcs(BaseVcs):
     """
     This class contains CI functions for interaction with Git
     """
+
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git", "Git repository settings")
@@ -259,8 +260,11 @@ class GitSubmitVcs(GitVcs):
         else:
             self.repo.git.add(relative_path_list, all=True)
 
-        if "nothing added to commit" in self.repo.git.status() \
-                or "no changes added to commit" in self.repo.git.status():
+        repo_status = self.repo.git.status()
+        nothing_committed = ("nothing added to commit" in repo_status or
+                             "no changes added to commit" in repo_status or
+                             "nothing to commit" in repo_status)
+        if nothing_committed:
             return 0
 
         self.out.log(self.repo.git.commit(m=description))
