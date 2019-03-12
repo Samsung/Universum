@@ -369,6 +369,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 except IndexError:
                     text = "Error getting latest CL number for '" + depot["path"] + "'"
                     text += "\nPlease check depot path formatting (e.g. '/...' in the end for directories)"
+                    raise CriticalCiException(text)
                 self.out.log("Latest CL: " + depot["cl"])
 
             line = depot["path"] + '@' + depot["cl"]
