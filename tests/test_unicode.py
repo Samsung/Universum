@@ -19,7 +19,7 @@ def test_unicode(vcs, test_type, perforce_workspace, git_client, unicode_dir):
     if vcs == "git":
         # change git client root dir to unicode path
         work_dir = unicode_dir.mkdir("client")
-        git_client.repo = git.Repo.clone_from(git_client.server.url, unicode(work_dir))
+        git_client.repo = git.Repo.clone_from(git_client.server.url, unicode(work_dir).encode("utf8"))
         git_client.root_directory = work_dir
 
         env = git_utils.GitEnvironment(git_client, unicode_dir, test_type=test_type)
