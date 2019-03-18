@@ -6,7 +6,7 @@ import string
 
 import docker
 
-from _universum import submit, poll
+from _universum import submit, poll, main
 from _universum.lib import gravity
 from . import default_args
 
@@ -82,21 +82,45 @@ def create_settings(class_name):
     return argument_parser.parse_args([])
 
 
+simple_test_config = """
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+"""
+
+
 class TestEnvironment(object):
-    def __init__(self, test_type):
+    def __init__(self, directory, test_type):
         if test_type == "poll":
+
             self.settings = create_settings(poll.Poll)
             self.settings.subcommand = "poll"
+
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
-        else:
+            self.settings.ProjectDirectory.project_root = unicode(directory.mkdir("project_root"))
+        elif test_type == "submit":
+
             self.settings = create_settings(submit.Submit)
             self.settings.subcommand = "submit"
+
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
+        elif test_type == "main":
+
+            self.settings = create_settings(main.Main)
+
+            configs_file = directory.join("configs.py")
+            configs_file.write(simple_test_config)
+            self.settings.Launcher.config_path = unicode(configs_file)
+            self.settings.ArtifactCollector.artifact_dir = unicode(directory.mkdir("artifacts"))
+            # The project_root directory must not exist before launching main
+            self.settings.ProjectDirectory.project_root = unicode(directory.join("project_root"))
+        else:
+            assert False, "TestEnvironment expects test_type parameter to be poll, submit or main"
         self.settings.Output.type = "term"
 
     def get_last_change(self):

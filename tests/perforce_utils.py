@@ -34,7 +34,8 @@ def ignore_p4_exception(ignore_if, func, *args, **kwargs):
 
 
 def is_p4_container_healthy(container, server_name, polling_start):
-    logs = container.logs(timestamps=True)
+    # Server log contains unicode paths, we have to convert raw str to unicode type
+    logs = container.logs(timestamps=True).decode("utf-8", "replace")
 
     if container.status != "running":
         return False
@@ -179,7 +180,7 @@ def perforce_workspace(request, perforce_connection, tmpdir):
     depot = "//depot/..."
 
     try:
-        root = tmpdir.ensure("workspace", dir=True)
+        root = tmpdir.mkdir("workspace")
 
         client = p4.fetch_client(client_name)
         client["Root"] = str(root)
@@ -227,12 +228,17 @@ class P4Environment(utils.TestEnvironment):
         self.nonwritable_file = perforce_workspace.nonwritable_file
         self.p4 = perforce_workspace.p4
         self.depot = perforce_workspace.depot
-        super(P4Environment, self).__init__(test_type)
+        super(P4Environment, self).__init__(directory, test_type)
 
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
         self.settings.PerforceVcs.password = perforce_workspace.p4.password
+        try:
+            self.settings.PerforceMainVcs.client = "p4_disposable_workspace"
+            self.settings.PerforceMainVcs.force_clean = True
+        except AttributeError:
+            pass
         try:
             self.settings.PerforceWithMappings.project_depot_path = perforce_workspace.depot
         except AttributeError:

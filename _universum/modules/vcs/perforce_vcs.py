@@ -11,7 +11,7 @@ from ...modules.reporter import Reporter
 from ...lib.ci_exception import CriticalCiException, SilentAbortException
 from ...lib.gravity import Dependency
 from ...lib.module_arguments import IncorrectParameterError
-from ...lib.utils import make_block, Uninterruptible
+from ...lib.utils import make_block, Uninterruptible, convert_to_str
 from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
@@ -111,12 +111,6 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         parser.add_argument("--p4-client", "-p4c", dest="client", metavar="P4CLIENT",
                             help="Existing P4 client (workspace) name to use for submitting")
 
-    def __init__(self, *args, **kwargs):
-        super(PerforceSubmitVcs, self).__init__(*args, **kwargs)
-
-        self.client_name = self.settings.client
-        self.client_root = self.settings.project_root
-
     def p4reconcile(self, *args, **kwargs):
         try:
             return self.p4.run_reconcile(*args, **kwargs)
@@ -160,11 +154,11 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             if file_path.endswith("/"):
                 file_path += "..."
             if edit_only:
-                reconcile_result = self.p4reconcile("-e", file_path)
+                reconcile_result = self.p4reconcile("-e", convert_to_str(file_path))
                 if not reconcile_result:
                     self.out.log("The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
             else:
-                reconcile_result = self.p4reconcile(file_path)
+                reconcile_result = self.p4reconcile(convert_to_str(file_path))
 
             for line in reconcile_result:
                 # p4reconcile returns list of dicts AND strings if file is opened in another workspace
@@ -343,7 +337,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             raise CriticalCiException("Workspace '" + self.client_name + "' already exists!")
 
         client = self.p4.fetch_client(self.client_name)
-        client["Root"] = self.client_root
+        client["Root"] = convert_to_str(self.client_root)
         client["View"] = self.client_view
         self.p4.save_client(client)
         self.p4.client = self.client_name
