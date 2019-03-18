@@ -190,7 +190,7 @@ class Step(object):
                 else:
                     text = unicode(e) + "\n"
 
-            self._handle_posponed_out()
+            self._handle_postponed_out()
             if text:
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
@@ -206,7 +206,7 @@ class Step(object):
                 self.file.close()
             self._is_background = False
 
-    def _handle_posponed_out(self):
+    def _handle_postponed_out(self):
         for item in self._postponed_out:
             item[0](item[1])
         self._postponed_out = []
@@ -266,7 +266,8 @@ class Launcher(ProjectDirectory):
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
         try:
-            execfile(config_path, config_globals)
+            with open(config_path) as config:
+                exec(config.read(), config_globals)  # pylint: disable=exec-used
 
             self.source_project_configs = config_globals["configs"]
             dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
