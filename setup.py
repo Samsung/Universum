@@ -18,7 +18,7 @@ docs = (
 )
 
 vcs = (
-    'gitpython',
+    'gitpython>=2.1.8',
     'P4'
 )
 

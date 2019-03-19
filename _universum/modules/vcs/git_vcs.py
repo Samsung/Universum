@@ -8,7 +8,7 @@ from ..output import needs_output
 from ..structure_handler import needs_structure
 from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
-from ...lib.utils import make_block
+from ...lib.utils import make_block, convert_to_str
 
 __all__ = [
     "GitMainVcs",
@@ -79,11 +79,12 @@ class GitVcs(BaseVcs):
             raise CriticalCiException("Cannot clone: GIT_REPO is not specified")
 
         self.out.log("Cloning '" + self.settings.repo + "'...")
+        destination_directory = convert_to_str(self.settings.project_root)
         if history_depth:
-            self.repo = git.Repo.clone_from(self.settings.repo, self.settings.project_root,
+            self.repo = git.Repo.clone_from(self.settings.repo, destination_directory,
                                             depth=history_depth, no_single_branch=True, progress=self.logger)
         else:
-            self.repo = git.Repo.clone_from(self.settings.repo, self.settings.project_root, progress=self.logger)
+            self.repo = git.Repo.clone_from(self.settings.repo, destination_directory, progress=self.logger)
 
         self.sources_need_cleaning = True
         self.append_repo_status("Git repo: " + self.settings.repo + "\n\n")
@@ -239,7 +240,7 @@ class GitSubmitVcs(GitVcs):
 
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
-            self.repo = git.Repo(self.settings.project_root)
+            self.repo = git.Repo(convert_to_str(self.settings.project_root))
         except git.exc.NoSuchPathError:
             raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
         except git.exc.InvalidGitRepositoryError:
