@@ -134,8 +134,7 @@ class UniversumRunner(object):
         self.environment.add_environment_variables([
             "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
         ])
-        self.environment.add_bind_dirs([unicode(self.local.root_directory),
-                                        self.git.server.get_location()])
+        self.environment.add_bind_dirs([unicode(self.local.root_directory)])
 
         self.environment.start_container()
         self.environment.install_python_module(self.working_dir)
