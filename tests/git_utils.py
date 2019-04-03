@@ -26,7 +26,7 @@ class GitServer(object):
         port = utils.get_open_port()
         self.url = "git://127.0.0.1:" + unicode(port) + unicode(working_directory)
         self._daemon = sh.git("daemon", "--listen=127.0.0.1", "--port=" + unicode(port),
-                              unicode(working_directory),
+                              "--enable=receive-pack", unicode(working_directory),
                               _iter=True, _bg_exc=False, _bg=True,
                               _out=std_redirect, _err=std_redirect)
 
