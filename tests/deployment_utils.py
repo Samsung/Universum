@@ -147,13 +147,12 @@ def clean_execution_environment(request):
 
 @pytest.fixture()
 def local_sources(tmpdir):
-    source_dir = tmpdir.mkdir("project_sources")
     if utils.is_pycharm():
-        source_dir = py.path.local(".work")
-    if not source_dir.check():
-        source_dir.remove(rec=1)
-        source_dir.mkdir()
+        tmpdir = py.path.local(".work")
+        tmpdir.remove(rec=1, ignore_errors=True)
+        tmpdir.mkdir()
 
+    source_dir = tmpdir.mkdir("project_sources")
     local_file = source_dir.join("readme.txt")
     local_file.write("This is a an empty file")
 
