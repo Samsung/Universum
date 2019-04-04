@@ -55,7 +55,7 @@ class ExecutionEnvironment(object):
         try:
             self._container = self._client.containers.get(self._container_id)
             if not utils.check_if_container_outdated(self._container):
-                return True
+                return
         except docker.errors.NotFound:
             pass
 
@@ -67,7 +67,6 @@ class ExecutionEnvironment(object):
                                                       environment=self._environment,
                                                       auto_remove=True,
                                                       detach=True)
-        return False
 
     def get_working_directory(self):
         return self._work_dir
@@ -182,9 +181,9 @@ class UniversumRunner(object):
         ])
         self.environment.add_bind_dirs([unicode(self.local.root_directory)])
 
-        if not self.environment.start_container():
-            self.environment.install_python_module(self.working_dir)
-            self.environment.install_python_module("coverage")
+        self.environment.start_container()
+        self.environment.install_python_module(self.working_dir)
+        self.environment.install_python_module("coverage")
 
     def _basic_args(self):
         return " -lo console -pr {} -ad {}".format(self.project_root, self.artifact_dir)
