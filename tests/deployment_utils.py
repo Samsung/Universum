@@ -93,8 +93,15 @@ class ExecutionEnvironment(object):
 
     def install_python_module(self, name):
         cmd = "pip --default-timeout=1200 install " + name
-        log = self.assert_successful_execution(cmd)
-        assert "Successfully installed" in log
+        log = ""
+        try:
+            log = self.assert_successful_execution(cmd)
+            assert "Successfully installed" in log
+        except AssertionError:
+            if not utils.is_pycharm() or self._force_clean:
+                raise
+            if "Requirement already satisfied" not in log:
+                raise
 
     def exit(self):
         try:
