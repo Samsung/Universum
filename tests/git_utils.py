@@ -21,10 +21,11 @@ class GitServer(object):
         self._repo.daemon_export = True
 
         def std_redirect(line):
-            print "git server said: " + line
+            print "[git daemon] " + line
 
         port = utils.get_open_port()
-        # We use this URL for now while docker works in 'host localhost is container localhost' mode
+        # We use this URL for now while docker works in 'host' mode
+        # In 'host' mode host localhost is container localhost
         self.url = "git://127.0.0.1:" + unicode(port) + unicode(working_directory)
         self._daemon = sh.git("daemon", "--listen=127.0.0.1", "--port=" + unicode(port),
                               "--enable=receive-pack", unicode(working_directory),
