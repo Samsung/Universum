@@ -27,6 +27,9 @@ class GitServer(object):
         # We use this URL for now while docker works in 'host' mode
         # In 'host' mode host localhost is container localhost
         self.url = "git://127.0.0.1:" + unicode(port) + unicode(working_directory)
+
+        # pylint: disable = unexpected-keyword-arg, too-many-function-args
+        # module sh built-in alias for sh.Command('git') causes pylint warnings
         self._daemon = sh.git("daemon", "--listen=127.0.0.1", "--port=" + unicode(port),
                               "--enable=receive-pack", unicode(working_directory),
                               _iter=True, _bg_exc=False, _bg=True,
