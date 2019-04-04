@@ -2,6 +2,7 @@
 
 import os
 import random
+import socket
 import string
 
 import docker
@@ -33,6 +34,14 @@ def is_pycharm():
 
 def randomize_name(name):
     return name + "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+
+
+def get_open_port():
+    temp = socket.socket()
+    temp.bind(("", 0))
+    result = temp.getsockname()[1]
+    temp.close()
+    return result
 
 
 def pull_image(client, params, image_name):

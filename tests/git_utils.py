@@ -6,18 +6,32 @@ import os
 import git
 from git.remote import RemoteProgress
 import pytest
+import sh
 
 from . import utils
 
 
 class GitServer(object):
     def __init__(self, working_directory, branch_name):
-        self.url = "file://" + unicode(working_directory)
         self.target_branch = branch_name
         self.target_file = "readme.txt"
 
         self._working_directory = working_directory
         self._repo = git.Repo.init(unicode(working_directory))
+        self._repo.daemon_export = True
+
+        def std_redirect(line):
+            print "[git daemon] " + line
+
+        port = utils.get_open_port()
+        # We use this URL for now while docker works in 'host' mode
+        # In 'host' mode host localhost is container localhost
+        self.url = "git://127.0.0.1:" + unicode(port) + unicode(working_directory)
+        self._daemon = sh.git("daemon", "--listen=127.0.0.1", "--port=" + unicode(port),
+                              "--enable=receive-pack", unicode(working_directory),
+                              _iter=True, _bg_exc=False, _bg=True,
+                              _out=std_redirect, _err=std_redirect)
+
         configurator = self._repo.config_writer()
         configurator.set_value("user", "name", "Testing user")
         configurator.set_value("user", "email", "some@email.com")
@@ -29,9 +43,6 @@ class GitServer(object):
         self._commit_count = 0
 
         self._branch = self._repo.create_head(branch_name)
-
-    def get_location(self):
-        return unicode(self._working_directory)
 
     def make_a_change(self):
         self._branch.checkout()
@@ -74,11 +85,22 @@ class GitServer(object):
     def get_last_commit(self):
         return self._repo.git.log('-n1', pretty='format:"%H"').replace('"', '')
 
+    def exit(self):
+        try:
+            self._daemon.terminate()
+            self._daemon.wait()
+        except sh.SignalException_SIGTERM:
+            pass
+
 
 @pytest.fixture()
 def git_server(tmpdir):
     directory = tmpdir.mkdir("server")
-    yield GitServer(directory, "testing")
+    server = GitServer(directory, "testing")
+    try:
+        yield server
+    finally:
+        server.exit()
 
 
 @pytest.fixture()
