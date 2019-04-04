@@ -4,6 +4,8 @@
 import getpass
 from pwd import getpwnam
 import os
+import py
+from requests.exceptions import ReadTimeout
 
 import docker
 
@@ -12,10 +14,13 @@ from . import utils
 
 
 class ExecutionEnvironment(object):
-    def __init__(self, request, work_dir):
+    def __init__(self, request, work_dir, force_clean=False):
         self.request = request
+        self._force_clean = force_clean
         self._image = None
+        self._image_name = None
         self._container = None
+        self._container_id = None
         self._work_dir = work_dir
 
         self._client = docker.from_env(timeout=1200)
@@ -24,7 +29,11 @@ class ExecutionEnvironment(object):
         self._environment = []
 
     def set_image(self, image_name, params):
+        self._image_name = image_name
         self._image = utils.get_image(self.request, self._client, params, image_name)
+        self._container_id = utils.randomize_name("ci_test_" + image_name + "-")
+        if utils.is_pycharm() and not self._force_clean:
+            self._container_id = self.request.config.cache.get("ci_test/" + self._image_name, self._container_id)
 
     def add_bind_dirs(self, directories):
         if self._container:
@@ -43,13 +52,19 @@ class ExecutionEnvironment(object):
         if not self._image:
             self.request.raiseerror("Please get a docker image for this container!")
 
-        self._container = self._client.containers.run(self._image,
-                                                      command="sleep infinity",
-                                                      network_mode='host',
-                                                      volumes=self._volumes,
-                                                      environment=self._environment,
-                                                      auto_remove=True,
-                                                      detach=True)
+        try:
+            self._container = self._client.containers.get(self._container_id)
+            return True
+        except docker.errors.NotFound:
+            self._container = self._client.containers.run(self._image,
+                                                          name=self._container_id,
+                                                          command="sleep infinity",
+                                                          network_mode='host',
+                                                          volumes=self._volumes,
+                                                          environment=self._environment,
+                                                          auto_remove=True,
+                                                          detach=True)
+            return False
 
     def get_working_directory(self):
         return self._work_dir
@@ -86,7 +101,13 @@ class ExecutionEnvironment(object):
             user_id = getpwnam(getpass.getuser()).pw_uid
             for path in self._volumes:
                 self._container.exec_run("chown -R {} {}".format(user_id, path))
-            self._container.stop(timeout=0)
+            if utils.is_pycharm() and not self._force_clean:
+                self.request.config.cache.set("ci_test/" + self._image_name, self._container_id)
+            else:
+                try:
+                    self._container.stop(timeout=0)
+                except ReadTimeout:
+                    pass
         except:
             if self._container:
                 self._container.remove(force=True)
@@ -105,8 +126,23 @@ def execution_environment(request):
 
 
 @pytest.fixture()
+def clean_execution_environment(request):
+    runner = None
+    try:
+        runner = ExecutionEnvironment(request, os.getcwd(), force_clean=True)
+        yield runner
+    finally:
+        if runner:
+            runner.exit()
+
+
+@pytest.fixture()
 def local_sources(tmpdir):
     source_dir = tmpdir.mkdir("project_sources")
+    if utils.is_pycharm():
+        source_dir = py.path.local(".work")
+        if not source_dir.check():
+            source_dir.mkdir()
     local_file = source_dir.join("readme.txt")
     local_file.write("This is a an empty file")
 
@@ -136,9 +172,9 @@ class UniversumRunner(object):
         ])
         self.environment.add_bind_dirs([unicode(self.local.root_directory)])
 
-        self.environment.start_container()
-        self.environment.install_python_module(self.working_dir)
-        self.environment.install_python_module("coverage")
+        if not self.environment.start_container():
+            self.environment.install_python_module(self.working_dir)
+            self.environment.install_python_module("coverage")
 
     def _basic_args(self):
         return " -lo console -pr {} -ad {}".format(self.project_root, self.artifact_dir)
