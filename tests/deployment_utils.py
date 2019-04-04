@@ -150,8 +150,10 @@ def local_sources(tmpdir):
     source_dir = tmpdir.mkdir("project_sources")
     if utils.is_pycharm():
         source_dir = py.path.local(".work")
-        if not source_dir.check():
-            source_dir.mkdir()
+    if not source_dir.check():
+        source_dir.remove(rec=1)
+        source_dir.mkdir()
+
     local_file = source_dir.join("readme.txt")
     local_file.write("This is a an empty file")
 
