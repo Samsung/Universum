@@ -8,24 +8,24 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
 
-def test_minimal_install(universum_runner):
+def test_minimal_install(clean_universum_runner):
     # Run without parameters
-    log = universum_runner.environment.assert_unsuccessful_execution("universum")
+    log = clean_universum_runner.environment.assert_unsuccessful_execution("universum")
     assert "command not found" not in log
 
     # Run locally
-    log = universum_runner.run(config, force_installed=True)
-    assert universum_runner.local.repo_file.basename in log
+    log = clean_universum_runner.run(config, force_installed=True)
+    assert clean_universum_runner.local.repo_file.basename in log
 
     # Run from Git
-    universum_runner.clean_artifacts()
-    log = universum_runner.run(config, vcs_type="git", force_installed=True)
-    assert universum_runner.git.repo_file.basename in log
+    clean_universum_runner.clean_artifacts()
+    log = clean_universum_runner.run(config, vcs_type="git", force_installed=True)
+    assert clean_universum_runner.git.repo_file.basename in log
 
     # Run from P4
-    universum_runner.clean_artifacts()
-    log = universum_runner.run(config, vcs_type="p4", force_installed=True)
-    assert universum_runner.perforce.repo_file.basename in log
+    clean_universum_runner.clean_artifacts()
+    log = clean_universum_runner.run(config, vcs_type="p4", force_installed=True)
+    assert clean_universum_runner.perforce.repo_file.basename in log
 
 
 def test_minimal_install_with_git_only(universum_runner_no_p4, capsys):

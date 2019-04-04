@@ -238,14 +238,21 @@ def universum_runner(execution_environment, docker_registry_params, runner_witho
 
 
 @pytest.fixture()
-def universum_runner_no_p4(execution_environment, docker_registry_params, runner_without_environment):
-    execution_environment.set_image("universum_test_env_no_p4", docker_registry_params)
-    runner_without_environment.set_environment(execution_environment)
+def clean_universum_runner(clean_execution_environment, docker_registry_params, runner_without_environment):
+    clean_execution_environment.set_image("universum_test_env", docker_registry_params)
+    runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def universum_runner_no_vcs(execution_environment, docker_registry_params, runner_without_environment):
-    execution_environment.set_image("universum_test_env_no_vcs", docker_registry_params)
-    runner_without_environment.set_environment(execution_environment)
+def universum_runner_no_p4(clean_execution_environment, docker_registry_params, runner_without_environment):
+    clean_execution_environment.set_image("universum_test_env_no_p4", docker_registry_params)
+    runner_without_environment.set_environment(clean_execution_environment)
+    yield runner_without_environment
+
+
+@pytest.fixture()
+def universum_runner_no_vcs(clean_execution_environment, docker_registry_params, runner_without_environment):
+    clean_execution_environment.set_image("universum_test_env_no_vcs", docker_registry_params)
+    runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
