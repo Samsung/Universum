@@ -54,17 +54,20 @@ class ExecutionEnvironment(object):
 
         try:
             self._container = self._client.containers.get(self._container_id)
-            return True
+            if not utils.check_if_container_outdated(self._container):
+                return True
         except docker.errors.NotFound:
-            self._container = self._client.containers.run(self._image,
-                                                          name=self._container_id,
-                                                          command="sleep infinity",
-                                                          network_mode='host',
-                                                          volumes=self._volumes,
-                                                          environment=self._environment,
-                                                          auto_remove=True,
-                                                          detach=True)
-            return False
+            pass
+
+        self._container = self._client.containers.run(self._image,
+                                                      name=self._container_id,
+                                                      command="sleep infinity",
+                                                      network_mode='host',
+                                                      volumes=self._volumes,
+                                                      environment=self._environment,
+                                                      auto_remove=True,
+                                                      detach=True)
+        return False
 
     def get_working_directory(self):
         return self._work_dir
