@@ -151,7 +151,8 @@ def local_sources(tmpdir):
         source_dir = py.path.local(".work").ensure(dir=True)
     else:
         source_dir = tmpdir.mkdir("project_sources")
-    local_file = source_dir.join("readme.txt").write("This is a an empty file")
+    local_file = source_dir.join("readme.txt")
+    local_file.write("This is a an empty file")
 
     yield utils.Params(root_directory=source_dir, repo_file=local_file)
 
