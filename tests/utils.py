@@ -21,7 +21,7 @@ __all__ = [
     "pull_image",
     "get_image",
     "python_time_from_rfc3339_time",
-    "check_if_container_outdated",
+    "is_container_outdated",
     "create_settings",
     "TestEnvironment"
 ]
@@ -93,7 +93,7 @@ def python_time_from_rfc3339_time(rfc3339_time):
     return tf_from_timestamp(rfc3339_time)
 
 
-def check_if_container_outdated(container):
+def is_container_outdated(container):
     created = python_time_from_rfc3339_time(container.attrs["Created"])
     delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(created)
     if abs(delta).days > 7:

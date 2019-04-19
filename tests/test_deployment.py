@@ -28,26 +28,26 @@ def test_minimal_install(clean_universum_runner):
     assert clean_universum_runner.perforce.repo_file.basename in log
 
 
-def test_minimal_install_with_git_only(universum_runner_no_p4, capsys):
+def test_minimal_install_with_git_only(clean_universum_runner_no_p4, capsys):
     # Run from P4
-    universum_runner_no_p4.run(config, vcs_type="p4", force_installed=True, expected_to_fail=True)
+    clean_universum_runner_no_p4.run(config, vcs_type="p4", force_installed=True, expected_to_fail=True)
     assert "Please refer to `Prerequisites` chapter of project documentation" in capsys.readouterr().out
 
     # Run from git
-    universum_runner_no_p4.clean_artifacts()
-    log = universum_runner_no_p4.run(config, vcs_type="git", force_installed=True)
-    assert universum_runner_no_p4.git.repo_file.basename in log
+    clean_universum_runner_no_p4.clean_artifacts()
+    log = clean_universum_runner_no_p4.run(config, vcs_type="git", force_installed=True)
+    assert clean_universum_runner_no_p4.git.repo_file.basename in log
 
 
-def test_minimal_install_plain_ubuntu(universum_runner_no_vcs, capsys):
+def test_minimal_install_plain_ubuntu(clean_universum_runner_no_vcs, capsys):
     # Run from P4
-    universum_runner_no_vcs.run(config, vcs_type="p4", force_installed=True, expected_to_fail=True)
+    clean_universum_runner_no_vcs.run(config, vcs_type="p4", force_installed=True, expected_to_fail=True)
     assert "Please refer to `Prerequisites` chapter of project documentation" in capsys.readouterr().out
 
     # Run from Git
-    universum_runner_no_vcs.run(config, vcs_type="git", force_installed=True, expected_to_fail=True)
+    clean_universum_runner_no_vcs.run(config, vcs_type="git", force_installed=True, expected_to_fail=True)
     assert "Please refer to `Prerequisites` chapter of project documentation" in capsys.readouterr().out
 
     # Run locally
-    log = universum_runner_no_vcs.run(config, force_installed=True)
-    assert universum_runner_no_vcs.local.repo_file.basename in log
+    log = clean_universum_runner_no_vcs.run(config, force_installed=True)
+    assert clean_universum_runner_no_vcs.local.repo_file.basename in log

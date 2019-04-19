@@ -76,7 +76,7 @@ def ensure_p4_container_started(client, name):
     try:
         container = client.containers.get(name)
         # if the container is too old, ignore it
-        if utils.check_if_container_outdated(container):
+        if utils.is_container_outdated(container):
             return False
     except docker.errors.NotFound:
         return False
