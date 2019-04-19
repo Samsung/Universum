@@ -55,7 +55,7 @@ class ExecutionEnvironment(object):
         try:
             self._container = self._client.containers.get(self._container_id)
             if not utils.check_if_container_outdated(self._container):
-                return
+                return False
         except docker.errors.NotFound:
             pass
 
@@ -67,6 +67,7 @@ class ExecutionEnvironment(object):
                                                       environment=self._environment,
                                                       auto_remove=True,
                                                       detach=True)
+        return True
 
     def get_working_directory(self):
         return self._work_dir
@@ -94,16 +95,15 @@ class ExecutionEnvironment(object):
         return self._run_and_check(cmd, False, environment=environment)
 
     def install_python_module(self, name):
+        if os.path.exists(name):
+            module_name = 'universum'
+        else:
+            module_name = name
+        if not utils.is_pycharm() or self._force_clean:
+            self.assert_unsuccessful_execution("pip show " + module_name)
         cmd = "pip --default-timeout=1200 install " + name
-        log = ""
-        try:
-            log = self.assert_successful_execution(cmd)
-            assert "Successfully installed" in log
-        except AssertionError:
-            if not utils.is_pycharm() or self._force_clean:
-                raise
-            if "Requirement already satisfied" not in log:
-                raise
+        self.assert_successful_execution(cmd)
+        self.assert_successful_execution("pip show " + module_name)
 
     def exit(self):
         try:
@@ -148,13 +148,10 @@ def clean_execution_environment(request):
 @pytest.fixture()
 def local_sources(tmpdir):
     if utils.is_pycharm():
-        tmpdir = py.path.local(".work")
-        tmpdir.remove(rec=1, ignore_errors=True)
-        tmpdir.mkdir()
-
-    source_dir = tmpdir.mkdir("project_sources")
-    local_file = source_dir.join("readme.txt")
-    local_file.write("This is a an empty file")
+        source_dir = py.path.local(".work").ensure(dir=True)
+    else:
+        source_dir = tmpdir.mkdir("project_sources")
+    local_file = source_dir.join("readme.txt").write("This is a an empty file")
 
     yield utils.Params(root_directory=source_dir, repo_file=local_file)
 
@@ -182,9 +179,9 @@ class UniversumRunner(object):
         ])
         self.environment.add_bind_dirs([unicode(self.local.root_directory)])
 
-        self.environment.start_container()
-        self.environment.install_python_module(self.working_dir)
-        self.environment.install_python_module("coverage")
+        if self.environment.start_container():
+            self.environment.install_python_module(self.working_dir)
+            self.environment.install_python_module("coverage")
 
     def _basic_args(self):
         return " -lo console -pr {} -ad {}".format(self.project_root, self.artifact_dir)
