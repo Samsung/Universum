@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+import datetime
 import os
 import random
 import socket
@@ -9,14 +10,18 @@ import docker
 
 from _universum import submit, poll, main
 from _universum.lib import gravity
+from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
 __all__ = [
     "Params",
     "is_pycharm",
     "randomize_name",
+    "get_open_port",
     "pull_image",
     "get_image",
+    "python_time_from_rfc3339_time",
+    "is_container_outdated",
     "create_settings",
     "TestEnvironment"
 ]
@@ -82,6 +87,18 @@ def get_image(request, client, params, name):
             request.raiseerror("Cannot find docker image '%s'. Try building it manually\n" % name)
 
     return image
+
+
+def python_time_from_rfc3339_time(rfc3339_time):
+    return tf_from_timestamp(rfc3339_time)
+
+
+def is_container_outdated(container):
+    created = python_time_from_rfc3339_time(container.attrs["Created"])
+    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(created)
+    if abs(delta).days > 7:
+        return True
+    return False
 
 
 def create_settings(class_name):

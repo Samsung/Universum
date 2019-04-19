@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, too-many-locals
 
-import datetime
 import time
 
 from P4 import P4, P4Exception
@@ -10,17 +9,12 @@ import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
-from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 
 p4_image_name = "perforce"
 p4_user = "p4user"
 p4_password = "abcdefgh123456"
 p4_create_timeout = 60  # seconds
 p4_start_timeout = 10  # seconds
-
-
-def python_time_from_rfc3339_time(rfc3339_time):
-    return tf_from_timestamp(rfc3339_time)
 
 
 def ignore_p4_exception(ignore_if, func, *args, **kwargs):
@@ -55,7 +49,7 @@ def is_p4_container_healthy(container, server_name, polling_start):
         # check if "Started <server name> p4d service" is logged after we
         # started container, but with some room for cases when check is
         # called with some delay after start. We give it 5 seconds at max.
-        timestamp = python_time_from_rfc3339_time(rfc3339_time)
+        timestamp = utils.python_time_from_rfc3339_time(rfc3339_time)
         if timestamp + 5 > polling_start:
             return True
 
@@ -81,17 +75,14 @@ def wait_p4_container_start(client, name, timeout):
 def ensure_p4_container_started(client, name):
     try:
         container = client.containers.get(name)
-
         # if the container is too old, ignore it
-        created = python_time_from_rfc3339_time(container.attrs["Created"])
-        delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(created)
-        if abs(delta).days > 7:
+        if utils.is_container_outdated(container):
             return False
     except docker.errors.NotFound:
         return False
 
     if container.status == "running":
-        started_at = python_time_from_rfc3339_time(container.attrs["State"]["StartedAt"])
+        started_at = utils.python_time_from_rfc3339_time(container.attrs["State"]["StartedAt"])
         if is_p4_container_healthy(container, name, started_at):
             return True
 
