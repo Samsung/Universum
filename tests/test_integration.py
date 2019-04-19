@@ -284,7 +284,7 @@ def test_environment(universum_runner):
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
-    script.chmod(777)
+    script.chmod(0777)
 
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
