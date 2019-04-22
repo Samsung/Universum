@@ -1,7 +1,7 @@
 TEST_TARGETS = pytest doc_doctest
 
 
-.PHONY: all doc test $(TEST_TARGETS) pylint build_docker_images
+.PHONY: all doc test $(TEST_TARGETS) pylint images
 
 all: doc 
 
@@ -29,6 +29,6 @@ doc_doctest:
 pylint:
 	python2 -m pylint --rcfile=pylintrc *.py _universum/ tests/
 
-build_docker_images:
+images:
 	+$(MAKE) -C tests/docker all
 
