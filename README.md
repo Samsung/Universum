@@ -11,6 +11,13 @@ Full documentation can be found here: https://universum.readthedocs.io/
 Please check out our [code of conduct](CODE_OF_CONDUCT.md)
 and [contribution policy](.github/CONTRIBUTING.md)
 
+# Installation
+
+```
+sudo python2 -m pip install git+https://github.com/Samsung/Universum/@release -U
+```
+
+## Plan for improving README
 
 Further versions of this README file should include:
 
