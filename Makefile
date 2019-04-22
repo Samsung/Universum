@@ -20,7 +20,8 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	python2 -m pytest --cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch --cov-report=html --doctest-modules -vv $(DOCKER_REGISTRY_ARGS)
+	python2 -m pytest --doctest-modules -vv $(DOCKER_REGISTRY_ARGS) --junitxml=junit_results.xml \
+	--cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch --cov-report=html
 
 
 doc_doctest:
@@ -31,4 +32,3 @@ pylint:
 
 images:
 	+$(MAKE) -C tests/docker all
-
