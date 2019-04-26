@@ -22,7 +22,7 @@ __all__ = [
     "get_image",
     "python_time_from_rfc3339_time",
     "is_container_outdated",
-    "create_settings",
+    "create_empty_settings",
     "TestEnvironment"
 ]
 
@@ -101,11 +101,22 @@ def is_container_outdated(container):
     return False
 
 
-def create_settings(class_name):
+def create_empty_settings(test_type):
+    if test_type == "poll":
+        main_class = poll.Poll
+    elif test_type == "submit":
+        main_class = submit.Submit
+    elif test_type == "main":
+        main_class = main.Main
+    else:
+        assert False, "create_empty_settings expects test_type parameter to be poll, submit or main"
     argument_parser = default_args.ArgParserWithDefault()
-    argument_parser.set_defaults(main_class=class_name)
-    gravity.define_arguments_recursive(class_name, argument_parser)
-    return argument_parser.parse_args([])
+    argument_parser.set_defaults(main_class=main_class)
+    gravity.define_arguments_recursive(main_class, argument_parser)
+    settings = argument_parser.parse_args([])
+    if test_type == "poll" or test_type == "submit":
+        settings.subcommand = test_type
+    return settings
 
 
 simple_test_config = """
@@ -117,36 +128,25 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 class TestEnvironment(object):
     def __init__(self, directory, test_type):
+        self.settings = create_empty_settings(test_type)
         if test_type == "poll":
-
-            self.settings = create_settings(poll.Poll)
-            self.settings.subcommand = "poll"
-
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
             self.settings.ProjectDirectory.project_root = unicode(directory.mkdir("project_root"))
         elif test_type == "submit":
-
-            self.settings = create_settings(submit.Submit)
-            self.settings.subcommand = "submit"
-
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
         elif test_type == "main":
-
-            self.settings = create_settings(main.Main)
-
             configs_file = directory.join("configs.py")
             configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = unicode(configs_file)
             self.settings.ArtifactCollector.artifact_dir = unicode(directory.mkdir("artifacts"))
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = unicode(directory.join("project_root"))
-        else:
-            assert False, "TestEnvironment expects test_type parameter to be poll, submit or main"
+
         self.settings.Output.type = "term"
 
     def get_last_change(self):
