@@ -19,7 +19,8 @@ class DiffParameters(object):
             except KeyError:
                 pass
 
-        settings = utils.create_settings(vcs.MainVcs)
+        # TODO: move this block to utils
+        settings = utils.create_empty_settings("main")
         settings.PerforceVcs.port = perforce_workspace.p4.port
         settings.PerforceVcs.user = perforce_workspace.p4.user
         settings.PerforceVcs.password = perforce_workspace.p4.password
