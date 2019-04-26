@@ -110,11 +110,13 @@ def create_empty_settings(test_type):
         main_class = main.Main
     else:
         assert False, "create_empty_settings expects test_type parameter to be poll, submit or main"
-
     argument_parser = default_args.ArgParserWithDefault()
     argument_parser.set_defaults(main_class=main_class)
     gravity.define_arguments_recursive(main_class, argument_parser)
-    return argument_parser.parse_args([])
+    settings = argument_parser.parse_args([])
+    if test_type == "poll" or test_type == "submit":
+        settings.subcommand = test_type
+    return settings
 
 
 simple_test_config = """
@@ -128,15 +130,11 @@ class TestEnvironment(object):
     def __init__(self, directory, test_type):
         self.settings = create_empty_settings(test_type)
         if test_type == "poll":
-            self.settings.subcommand = "poll"
-
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
             self.settings.ProjectDirectory.project_root = unicode(directory.mkdir("project_root"))
         elif test_type == "submit":
-            self.settings.subcommand = "submit"
-
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
