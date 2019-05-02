@@ -28,9 +28,9 @@ class ExecutionEnvironment(object):
         self._volumes = {work_dir: {'bind': work_dir, 'mode': 'rw'}}
         self._environment = []
 
-    def set_image(self, image_name, params):
+    def set_image(self, image_name):
         self._image_name = image_name
-        self._image = utils.get_image(self.request, self._client, params, image_name)
+        self._image = self._client.images.get(image_name)
         self._container_id = utils.randomize_name("ci_test_" + image_name + "-")
         if utils.is_pycharm() and not self._force_clean:
             self._container_id = self.request.config.cache.get("ci_test/" + self._image_name, self._container_id)
@@ -239,28 +239,28 @@ def runner_without_environment(perforce_workspace, git_client, local_sources):
 
 
 @pytest.fixture()
-def universum_runner(execution_environment, docker_registry_params, runner_without_environment):
-    execution_environment.set_image("universum_test_env", docker_registry_params)
+def universum_runner(execution_environment, runner_without_environment):
+    execution_environment.set_image("universum_test_env")
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_universum_runner(clean_execution_environment, docker_registry_params, runner_without_environment):
-    clean_execution_environment.set_image("universum_test_env", docker_registry_params)
+def clean_universum_runner(clean_execution_environment, runner_without_environment):
+    clean_execution_environment.set_image("universum_test_env")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_universum_runner_no_p4(clean_execution_environment, docker_registry_params, runner_without_environment):
-    clean_execution_environment.set_image("universum_test_env_no_p4", docker_registry_params)
+def clean_universum_runner_no_p4(clean_execution_environment, runner_without_environment):
+    clean_execution_environment.set_image("universum_test_env_no_p4")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_universum_runner_no_vcs(clean_execution_environment, docker_registry_params, runner_without_environment):
-    clean_execution_environment.set_image("universum_test_env_no_vcs", docker_registry_params)
+def clean_universum_runner_no_vcs(clean_execution_environment, runner_without_environment):
+    clean_execution_environment.set_image("universum_test_env_no_vcs")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment

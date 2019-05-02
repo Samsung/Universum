@@ -6,8 +6,6 @@ import random
 import socket
 import string
 
-import docker
-
 from _universum import submit, poll, main
 from _universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
@@ -18,8 +16,6 @@ __all__ = [
     "is_pycharm",
     "randomize_name",
     "get_open_port",
-    "pull_image",
-    "get_image",
     "python_time_from_rfc3339_time",
     "is_container_outdated",
     "create_empty_settings",
@@ -47,46 +43,6 @@ def get_open_port():
     result = temp.getsockname()[1]
     temp.close()
     return result
-
-
-def pull_image(client, params, image_name):
-    image = None
-
-    if params is None:
-        print "Docker registry parameters are not set, pull is skipped"
-        return image
-
-    try:
-        registry = params.url
-        client.login(params.login, registry=registry, password=params.password, reauth=True)
-        if registry.startswith("https://"):
-            registry = registry[8:]
-        if registry.startswith("http://"):
-            registry = registry[7:]
-
-        image = client.images.pull(registry + "/" + image_name, tag="latest")
-        image.tag(image_name)
-    except docker.errors.APIError as e:
-        print unicode(e)
-
-    return image
-
-
-def get_image(request, client, params, name):
-    try:
-        image = client.images.get(name)
-    except docker.errors.ImageNotFound:
-        print "'%s' image not found locally, trying to pull from registry" % name
-        image = pull_image(client, params, name)
-
-    if image is None:
-        try:
-            print "'%s' image not found in registry, trying to pull by name" % name
-            image = client.images.pull(name)
-        except docker.errors.ImageNotFound:
-            request.raiseerror("Cannot find docker image '%s'. Try building it manually\n" % name)
-
-    return image
 
 
 def python_time_from_rfc3339_time(rfc3339_time):
