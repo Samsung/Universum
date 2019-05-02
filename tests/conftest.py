@@ -4,31 +4,8 @@
 import httpretty
 import pytest
 import mock
-from . import utils
 
 pytest_plugins = ['tests.perforce_utils', 'tests.git_utils', 'tests.deployment_utils']
-
-
-def pytest_addoption(parser):
-    parser.addoption("--docker-registry-url", action="store", default=None,
-                     help="Fully-qualified name of docker registry to pull images from. "
-                          "Optional, images are built if registry is not specified")
-    parser.addoption("--docker-registry-login", action="store", default=None,
-                     help="User name to login to registry")
-    parser.addoption("--docker-registry-password", action="store", default=None,
-                     help="Password to login to registry")
-
-
-@pytest.fixture(scope="session")
-def docker_registry_params(request):
-    url = request.config.getoption("--docker-registry-url")
-    login = request.config.getoption("--docker-registry-login")
-    password = request.config.getoption("--docker-registry-password")
-
-    if not all((url, login, password)):
-        return None
-
-    return utils.Params(url=url, login=login, password=password)
 
 
 class FuzzyCallChecker(object):

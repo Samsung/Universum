@@ -10,7 +10,6 @@ from requests.exceptions import ReadTimeout
 
 from . import utils
 
-p4_image_name = "perforce"
 p4_user = "p4user"
 p4_password = "abcdefgh123456"
 p4_create_timeout = 60  # seconds
@@ -94,8 +93,8 @@ def ensure_p4_container_started(client, name):
     return True
 
 
-def create_new_p4_container(request, client, name, params):
-    image = utils.get_image(request, client, params, p4_image_name)
+def create_new_p4_container(request, client, name):
+    image = client.images.get("perforce")
     client.containers.run(image,
                           name=name,
                           detach=True,
@@ -107,7 +106,7 @@ def create_new_p4_container(request, client, name, params):
 
 
 @pytest.fixture(scope="session")
-def docker_perforce(request, docker_registry_params):
+def docker_perforce(request):
     container = None
     client = docker.from_env()
 
@@ -123,7 +122,7 @@ def docker_perforce(request, docker_registry_params):
             except docker.errors.NotFound:
                 pass
 
-            create_new_p4_container(request, client, unique_id, docker_registry_params)
+            create_new_p4_container(request, client, unique_id)
 
         container = client.containers.get(unique_id)
 

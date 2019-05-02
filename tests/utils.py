@@ -6,8 +6,6 @@ import random
 import socket
 import string
 
-import docker
-
 from _universum import submit, poll, main
 from _universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
@@ -18,11 +16,9 @@ __all__ = [
     "is_pycharm",
     "randomize_name",
     "get_open_port",
-    "pull_image",
-    "get_image",
     "python_time_from_rfc3339_time",
     "is_container_outdated",
-    "create_empty_settings",
+    "create_settings",
     "TestEnvironment"
 ]
 
@@ -49,46 +45,6 @@ def get_open_port():
     return result
 
 
-def pull_image(client, params, image_name):
-    image = None
-
-    if params is None:
-        print "Docker registry parameters are not set, pull is skipped"
-        return image
-
-    try:
-        registry = params.url
-        client.login(params.login, registry=registry, password=params.password, reauth=True)
-        if registry.startswith("https://"):
-            registry = registry[8:]
-        if registry.startswith("http://"):
-            registry = registry[7:]
-
-        image = client.images.pull(registry + "/" + image_name, tag="latest")
-        image.tag(image_name)
-    except docker.errors.APIError as e:
-        print unicode(e)
-
-    return image
-
-
-def get_image(request, client, params, name):
-    try:
-        image = client.images.get(name)
-    except docker.errors.ImageNotFound:
-        print "'%s' image not found locally, trying to pull from registry" % name
-        image = pull_image(client, params, name)
-
-    if image is None:
-        try:
-            print "'%s' image not found in registry, trying to pull by name" % name
-            image = client.images.pull(name)
-        except docker.errors.ImageNotFound:
-            request.raiseerror("Cannot find docker image '%s'. Try building it manually\n" % name)
-
-    return image
-
-
 def python_time_from_rfc3339_time(rfc3339_time):
     return tf_from_timestamp(rfc3339_time)
 
@@ -101,22 +57,11 @@ def is_container_outdated(container):
     return False
 
 
-def create_empty_settings(test_type):
-    if test_type == "poll":
-        main_class = poll.Poll
-    elif test_type == "submit":
-        main_class = submit.Submit
-    elif test_type == "main":
-        main_class = main.Main
-    else:
-        assert False, "create_empty_settings expects test_type parameter to be poll, submit or main"
+def create_settings(class_name):
     argument_parser = default_args.ArgParserWithDefault()
-    argument_parser.set_defaults(main_class=main_class)
-    gravity.define_arguments_recursive(main_class, argument_parser)
-    settings = argument_parser.parse_args([])
-    if test_type == "poll" or test_type == "submit":
-        settings.subcommand = test_type
-    return settings
+    argument_parser.set_defaults(main_class=class_name)
+    gravity.define_arguments_recursive(class_name, argument_parser)
+    return argument_parser.parse_args([])
 
 
 simple_test_config = """
@@ -128,25 +73,36 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 class TestEnvironment(object):
     def __init__(self, directory, test_type):
-        self.settings = create_empty_settings(test_type)
         if test_type == "poll":
+
+            self.settings = create_settings(poll.Poll)
+            self.settings.subcommand = "poll"
+
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
             self.settings.ProjectDirectory.project_root = unicode(directory.mkdir("project_root"))
         elif test_type == "submit":
+
+            self.settings = create_settings(submit.Submit)
+            self.settings.subcommand = "submit"
+
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
         elif test_type == "main":
+
+            self.settings = create_settings(main.Main)
+
             configs_file = directory.join("configs.py")
             configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = unicode(configs_file)
             self.settings.ArtifactCollector.artifact_dir = unicode(directory.mkdir("artifacts"))
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = unicode(directory.join("project_root"))
-
+        else:
+            assert False, "TestEnvironment expects test_type parameter to be poll, submit or main"
         self.settings.Output.type = "term"
 
     def get_last_change(self):
