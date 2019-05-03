@@ -62,7 +62,7 @@ class PerforceVcs(base_vcs.BaseVcs):
         try:
             p4_module = utils.import_module("P4")
         except ImportError:
-            text = "Error: using VCS type 'p4' requires official Helix CLI and Pyhton package 'perforce-p4python' " \
+            text = "Error: using VCS type 'p4' requires official Helix CLI and Python package 'perforce-p4python' " \
                    "to be installed. Please refer to `Prerequisites` chapter of project documentation for " \
                    "detailed instructions"
             raise ImportError(text)
@@ -110,6 +110,14 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         parser = argument_parser.get_or_create_group("Perforce")
         parser.add_argument("--p4-client", "-p4c", dest="client", metavar="P4CLIENT",
                             help="Existing P4 client (workspace) name to use for submitting")
+
+    def __init__(self, *args, **kwargs):
+        super(PerforceSubmitVcs, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "client", None):
+            raise IncorrectParameterError("P4CLIENT (-p4c) is not specified.\n\n"
+                                          "This parameter is required for submitting changes to the perforce.\n"
+                                          "It defines the name of the existing workspace to use for submit.\n")
 
     def p4reconcile(self, *args, **kwargs):
         try:
@@ -202,6 +210,11 @@ class PerforceWithMappings(PerforceVcs):
 
     def __init__(self, *args, **kwargs):
         super(PerforceWithMappings, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "project_depot_path", None) and not getattr(self.settings, "mappings", None):
+            raise IncorrectParameterError("both P4_PATH (-p4d) and P4_MAPPINGS (-p4m) are not set.\n\n"
+                                          "Universum needs one of these parameters to be set in order to download sources.\n")
+
         # Convert old-style depot path into mappings
         if self.settings.project_depot_path:
             if self.settings.mappings:
@@ -248,6 +261,9 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
     def __init__(self, *args, **kwargs):
         super(PerforceMainVcs, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "client", None):
+            raise IncorrectParameterError("P4CLIENT (-p4c) is not specified. It is required for creating workspace.")
 
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
@@ -321,9 +337,6 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     @make_block("Creating workspace")
     @catch_p4exception()
     def create_workspace(self):
-        if not getattr(self.settings, "client"):
-            raise CriticalCiException("P4CLIENT is not specified. Cannot create workspace")
-
         self.expand_workspace_parameters()
 
         if not all((self.client_name, self.client_root, self.client_view)):

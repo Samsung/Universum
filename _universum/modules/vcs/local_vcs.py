@@ -31,8 +31,10 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs):
     def __init__(self, *args, **kwargs):
         super(LocalMainVcs, self).__init__(*args, **kwargs)
 
-        if self.settings.source_dir is None:
-            raise IncorrectParameterError("Please specify source directory if not using any VCS")
+        if not getattr(self.settings, "source_dir", None):
+            raise IncorrectParameterError("the source directory is not specified.\n"
+                                          "Please specify source directory by using --file-source-dir\n"
+                                          "command-line option or SOURCE_DIR environment variable")
         self.source_dir = utils.parse_path(self.settings.source_dir, os.getcwd())
 
     def calculate_file_diff(self):  # pylint: disable=no-self-use

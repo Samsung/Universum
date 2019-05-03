@@ -36,7 +36,7 @@ class Submit(Module):
 
     def __init__(self, *args, **kwargs):
         super(Submit, self).__init__(*args, **kwargs)
-        if getattr(self.settings, "commit_message") is None:
+        if not getattr(self.settings, "commit_message", None):
             raise IncorrectParameterError("Commit message is required. Please use '--commit-message' option "
                                           "or COMMIT_MESSAGE environment variable")
 
