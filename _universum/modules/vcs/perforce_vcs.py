@@ -263,7 +263,9 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         super(PerforceMainVcs, self).__init__(*args, **kwargs)
 
         if not getattr(self.settings, "client", None):
-            raise IncorrectParameterError("P4CLIENT (-p4c) is not specified. It is required for creating workspace.")
+            raise IncorrectParameterError("P4CLIENT (-p4c) is not specified.\n\n"
+                                          "This parameter is required for creating temporary\n"
+                                          "workspace for downloading project sources.")
 
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
