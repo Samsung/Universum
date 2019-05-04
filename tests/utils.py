@@ -70,8 +70,6 @@ def create_empty_settings(test_type):
     argument_parser.set_defaults(main_class=main_class)
     gravity.define_arguments_recursive(main_class, argument_parser)
     settings = argument_parser.parse_args([])
-    if test_type == "poll" or test_type == "submit":
-        settings.subcommand = test_type
     return settings
 
 
