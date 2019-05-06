@@ -24,9 +24,15 @@ def define_arguments(*args):
     subparsers = parser.add_subparsers(title="Additional commands",
                                        metavar="{poll,submit}",
                                        help="Use 'universum <subcommand> --help' for more info")
-    define_arguments_recursive(Api, subparsers.add_parser("api"))
-    define_arguments_recursive(Poll, subparsers.add_parser("poll"))
-    define_arguments_recursive(Submit, subparsers.add_parser("submit"))
+
+    def define_command(klass, command):
+        command_parser = subparsers.add_parser(command)
+        command_parser.set_defaults(command_parser=command_parser)
+        define_arguments_recursive(klass, command_parser)
+
+    define_command(Api, "api")
+    define_command(Poll, "poll")
+    define_command(Submit, "submit")
 
     if parser.needs_default_parser(*args):
         default_parser = "default"
@@ -76,10 +82,12 @@ def main(*args, **kwargs):
     parser = define_arguments(*args)
     settings = parser.parse_args(*args, **kwargs)
     settings.main_class = getattr(settings, "main_class", Main)
+    settings.command_parser = getattr(settings, "command_parser", parser)
+
     try:
         return run(settings)
     except IncorrectParameterError as e:
-        parser.error(e.message)
+        settings.command_parser.error(e.message)
     except ImportError as e:
         print unicode(e)
         return 2
