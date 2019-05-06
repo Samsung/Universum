@@ -57,6 +57,14 @@ def create_settings(test_type, vcs_type):
     return settings
 
 
+def parametrize_unset(parameter_name="unset"):
+    return pytest.mark.parametrize(parameter_name, [
+        lambda x, y, z: delattr(getattr(x, y), z),
+        lambda x, y, z: setattr(getattr(x, y), z, None),
+        lambda x, y, z: setattr(getattr(x, y), z, "")
+    ], ids=["del", "none", "empty"])
+
+
 def assert_incorrect_parameter(settings, match):
     with pytest.raises(IncorrectParameterError, match=match) as exception_info:
         universum.run(settings)
@@ -102,11 +110,11 @@ param("main",   "TeamcityServer",       "user_id",         error_match="TC_USER"
 param("main",   "TeamcityServer",       "passwd",          error_match="TC_PASSWD")
 # pylint: enable = bad-whitespace
 
-
+@parametrize_unset()
 @pytest.mark.parametrize("test_type, module, field, vcs_type, error_match", missing_params)
-def test_missing_params(test_type, module, field, vcs_type, error_match):
+def test_missing_params(unset, test_type, module, field, vcs_type, error_match):
     settings = create_settings(test_type, vcs_type)
-    delattr(getattr(settings, module), field)
+    unset(settings, module, field)
 
     assert_incorrect_parameter(settings, "(?i)" + error_match)
 
@@ -114,10 +122,12 @@ def test_missing_params(test_type, module, field, vcs_type, error_match):
 mappings_error_match = "(?=.*P4_PATH)(?=.*P4_MAPPINGS)"
 
 
-def test_missing_both_perforce_mappings_and_depot_path():
+@parametrize_unset("unset_mappings")
+@parametrize_unset("unset_depot_path")
+def test_missing_both_perforce_mappings_and_depot_path(unset_mappings, unset_depot_path):
     settings = create_settings("main", "p4")
-    delattr(getattr(settings, "PerforceWithMappings"), "mappings")
-    delattr(getattr(settings, "PerforceWithMappings"), "project_depot_path")
+    unset_mappings(settings, "PerforceWithMappings", "mappings")
+    unset_depot_path(settings, "PerforceWithMappings", "project_depot_path")
 
     assert_incorrect_parameter(settings, mappings_error_match)
 
