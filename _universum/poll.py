@@ -16,7 +16,7 @@ __all__ = ["Poll"]
 class Poll(Module):
     description = "Polling module of Universum"
     vcs_factory = Dependency(vcs.PollVcs)
-    server_factory = Dependency(automation_server.AutomationServer)
+    server_factory = Dependency(automation_server.AutomationServerForTrigger)
 
     @staticmethod
     def define_arguments(parser):

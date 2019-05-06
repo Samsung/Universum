@@ -3,14 +3,14 @@
 import requests
 
 from ...lib.module_arguments import IncorrectParameterError
-from .base_server import BaseServer
+from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
 __all__ = [
     "TeamcityServer"
 ]
 
 
-class TeamcityServer(BaseServer):
+class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("TeamCity variables",
