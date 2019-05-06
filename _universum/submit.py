@@ -37,8 +37,9 @@ class Submit(Module):
     def __init__(self, *args, **kwargs):
         super(Submit, self).__init__(*args, **kwargs)
         if not getattr(self.settings, "commit_message", None):
-            raise IncorrectParameterError("Commit message is required. Please use '--commit-message' option "
-                                          "or COMMIT_MESSAGE environment variable")
+            raise IncorrectParameterError("commit message is not specified.\n\n"
+                                          "Please use '--commit-message' option or COMMIT_MESSAGE\n"
+                                          "environment variable")
 
         self.vcs = self.vcs_factory()
         self.client = None

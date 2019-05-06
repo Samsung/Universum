@@ -248,7 +248,10 @@ class Launcher(ProjectDirectory):
 
         if not getattr(self.settings, "config_path", None):
             raise IncorrectParameterError(
-                "Required option CONFIG_PATH (or '--launcher-config-path', or '-lcp') is missing.")
+                "the path to config file is not specified.\n"
+                "Please specify the path to project config file by using\n"
+                "'--launcher-config-path' ('-lcp') command-line option or\n"
+                "CONFIG_PATH environment variable")
 
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()

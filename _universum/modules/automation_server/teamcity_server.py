@@ -27,17 +27,19 @@ class TeamcityServer(BaseServer):
         parser.add_argument("--tc-auth-passwd", "-tcp", dest="passwd",
                             metavar="TC_PASSWD", help="system.teamcity.auth.password")
 
-    def check_required_option(self, name, env_var):
+    def check_required_option(self, name, option, env_var):
         if not getattr(self.settings, name, None):
-            raise IncorrectParameterError("Unable to retrieve TeamCity variable '" + env_var + "'")
+            raise IncorrectParameterError("the mandatory TeamCity setting '" + name + "' is not set\n\n"
+                                          "Please use command-line option '" + option + "'\n"
+                                          "or set the environment variable '" + env_var + "'")
 
     def __init__(self, *args, **kwargs):
         super(TeamcityServer, self).__init__(*args, **kwargs)
-        self.check_required_option("server_url", "TEAMCITY_SERVER")
-        self.check_required_option("build_id", "BUILD_ID")
-        self.check_required_option("configuration_id", "CONFIGURATION_ID")
-        self.check_required_option("user_id", "TC_USER")
-        self.check_required_option("passwd", "TC_PASSWD")
+        self.check_required_option("server_url", "--tc-server", "TEAMCITY_SERVER")
+        self.check_required_option("build_id", "--tc-build-id", "BUILD_ID")
+        self.check_required_option("configuration_id", "--tc-configuration-id", "CONFIGURATION_ID")
+        self.check_required_option("user_id", "--tc-auth-user-id", "TC_USER")
+        self.check_required_option("passwd", "--tc-auth-passwd", "TC_PASSWD")
 
         self.tc_build_link = self.settings.server_url + "/viewLog.html?tab=buildLog&buildId=" + self.settings.build_id
         self.tc_artifact_link = self.settings.server_url + "/repository/download/" + \
