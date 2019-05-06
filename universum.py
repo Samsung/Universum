@@ -28,6 +28,7 @@ def define_arguments(*args):
     def define_command(klass, command):
         command_parser = subparsers.add_parser(command)
         command_parser.set_defaults(command_parser=command_parser)
+        command_parser.set_defaults(main_class=klass)
         define_arguments_recursive(klass, command_parser)
 
     define_command(Api, "api")

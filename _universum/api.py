@@ -15,8 +15,6 @@ class Api(Module):
 
     @staticmethod
     def define_arguments(parser):
-        parser.set_defaults(main_class=Api)
-
         parser.add_argument('action', choices=["get-shelves", "file-diff", "swarm"],
                             help="Input some description")
 
