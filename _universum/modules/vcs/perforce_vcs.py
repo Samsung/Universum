@@ -115,9 +115,11 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         super(PerforceSubmitVcs, self).__init__(*args, **kwargs)
 
         if not getattr(self.settings, "client", None):
-            raise IncorrectParameterError("P4CLIENT (-p4c) is not specified.\n\n"
+            raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
                                           "This parameter is required for submitting changes to the perforce.\n"
-                                          "It defines the name of the existing workspace to use for submit.\n")
+                                          "It defines the name of the existing workspace to use for submit.\n"
+                                          "Please specify the workspace name by using '--p4-client' ('-p4c')\n"
+                                          "command-line parameter or P4CLIENT environment variable.")
 
     def p4reconcile(self, *args, **kwargs):
         try:
@@ -263,9 +265,11 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         super(PerforceMainVcs, self).__init__(*args, **kwargs)
 
         if not getattr(self.settings, "client", None):
-            raise IncorrectParameterError("P4CLIENT (-p4c) is not specified.\n\n"
-                                          "This parameter is required for creating temporary\n"
-                                          "workspace for downloading project sources.")
+            raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
+                                          "This parameter is required for creating temporary workspace\n"
+                                          "for downloading project sources. Please specify the workspace\n"
+                                          "name by using '--p4-client' ('-p4c') command-line parameter\n"
+                                          "or P4CLIENT environment variable.")
 
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
