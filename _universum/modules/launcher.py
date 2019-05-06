@@ -246,7 +246,7 @@ class Launcher(ProjectDirectory):
             else:
                 self.settings.output = "console"
 
-        if getattr(self.settings, "config_path") is None:
+        if not getattr(self.settings, "config_path", None):
             raise IncorrectParameterError(
                 "Required option CONFIG_PATH (or '--launcher-config-path', or '-lcp') is missing.")
 

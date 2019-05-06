@@ -8,6 +8,7 @@ from ..output import needs_output
 from ..structure_handler import needs_structure
 from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
+from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block, convert_to_str
 
 __all__ = [
@@ -48,7 +49,7 @@ class GitVcs(BaseVcs):
             git = utils.import_module("git")
             remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
         except ImportError:
-            text = "Error: using VCS type 'git' requires official Git CLI and Pyhton package 'gitpython' " \
+            text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
                    "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
                    "documentation for detailed instructions"
             raise ImportError(text)
@@ -193,6 +194,14 @@ class GitSubmitVcs(GitVcs):
         parser.add_argument("--git-email", "-ge", dest="email", metavar="GITEMAIL",
                             help="Git user email for submitting")
 
+    def __init__(self, *args, **kwargs):
+        super(GitSubmitVcs, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "user", None) or not getattr(self.settings, "email", None):
+            raise IncorrectParameterError("user name or email is not specified. \n\n"
+                                          "Submitting changes to repository requires setting user name and email.\n"
+                                          "Please use '--git-user' (GITUSER) and '--git-email' (GITEMAIL) parameters.")
+
     def get_list_of_modified(self, file_list):
         """
         Output of 'git status --porcelain' for most cases looks as following:
@@ -246,9 +255,6 @@ class GitSubmitVcs(GitVcs):
         except git.exc.InvalidGitRepositoryError:
             raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
-        if not getattr(self.settings, "user") or not getattr(self.settings, "email"):
-            raise CriticalCiException("Submitting changes to repository requires user name and email specified. "
-                                      "Please use '--git-user' and '--git-email' parameters")
         configurator = self.repo.config_writer()
         configurator.set_value("user", "name", self.settings.user)
         configurator.set_value("user", "email", self.settings.email)

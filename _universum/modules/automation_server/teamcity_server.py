@@ -21,14 +21,14 @@ class TeamcityServer(BaseServer):
         parser.add_argument("--tc-build-id", "-tbi", dest="build_id", metavar="BUILD_ID",
                             help="teamcity.build.id")
         parser.add_argument("--tc-configuration-id", "-tci", dest="configuration_id",
-                            metavar="CONFIGURATION_ID", help="system.teamcity.byildType.id")
+                            metavar="CONFIGURATION_ID", help="system.teamcity.buildType.id")
         parser.add_argument("--tc-auth-user-id", "-tcu", dest="user_id",
                             metavar="TC_USER", help="system.teamcity.auth.userId")
         parser.add_argument("--tc-auth-passwd", "-tcp", dest="passwd",
                             metavar="TC_PASSWD", help="system.teamcity.auth.password")
 
     def check_required_option(self, name, env_var):
-        if getattr(self.settings, name) is None:
+        if not getattr(self.settings, name, None):
             raise IncorrectParameterError("Unable to retrieve TeamCity variable '" + env_var + "'")
 
     def __init__(self, *args, **kwargs):
