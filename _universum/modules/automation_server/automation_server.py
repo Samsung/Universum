@@ -59,4 +59,3 @@ class AutomationServerForTrigger(AutomationServer):
 
     def trigger_build(self, revision):
         return self.driver.trigger_build(revision)
-

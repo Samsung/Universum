@@ -85,7 +85,7 @@ class TestEnvironment(object):
         self.settings = create_empty_settings(test_type)
         if test_type == "poll":
             self.settings.Poll.db_file = self.db_file
-            self.settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
+            self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
             self.settings.ProjectDirectory.project_root = unicode(directory.mkdir("project_root"))
         elif test_type == "submit":
