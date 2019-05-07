@@ -218,7 +218,7 @@ class Launcher(ProjectDirectory):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
-    server_factory = Dependency(automation_server.AutomationServer)
+    server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
     code_report_collector = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
