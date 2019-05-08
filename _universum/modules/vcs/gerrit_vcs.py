@@ -38,7 +38,7 @@ class GerritVcs(git_vcs.GitVcs):
 
     def run_ssh_command(self, line, stdin=None, stdout=None):
         try:
-            self.ssh(line, _in=stdin, _out=stdout)
+            return self.ssh(line, _in=stdin, _out=stdout)
         except sh.ErrorReturnCode as e:
             text = "Got exit code " + unicode(e.exit_code) + \
                    " while executing the following command:\n" + unicode(e.full_cmd)
@@ -75,21 +75,25 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
         self.update_review_version()
         return "https://" + self.hostname + "/#/c/" + self.review + "/"
 
-    def is_latest_version(self):
-        self.update_review_version()
-        request = "gerrit query --current-patch-set --format json " + self.review
-        response = self.run_ssh_command(request)
+    def _get_patch_set_description(self, reference):
+        request = "gerrit query --current-patch-set --format json " + reference
+        response = unicode(self.run_ssh_command(request))
 
         # response is expected to consist of two json objects: patch set description and query summary
         # JSONDecoder.raw_decode() decodes first json object and ignores all that follows
         try:
             decoder = json.JSONDecoder()
             result = decoder.raw_decode(response)
-            latest_version = int(result[0]["currentPatchSet"]["number"])
+            return result[0]
         except (KeyError, ValueError):
             text = "Error parsing gerrit server response. Full response is the following:\n"
             text += response
             raise CiException(text)
+
+    def is_latest_version(self):
+        self.update_review_version()
+        review_description = self._get_patch_set_description("change:" + self.review)
+        latest_version = int(review_description["currentPatchSet"]["number"])
 
         if int(self.review_version) == latest_version:
             return True
@@ -99,6 +103,12 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
         self.out.log(text)
 
         return False
+
+    def calculate_file_diff(self):
+        review_description = self._get_patch_set_description("commit:" + self.commit_id)
+        target_branch = review_description["branch"]
+        reference_commit = self.repo.git.merge_base(target_branch, self.commit_id)
+        return self._diff_against_reference_commit(unicode(reference_commit))
 
     def code_report_to_review(self, report):
         # git show returns string, each file separated by \n,

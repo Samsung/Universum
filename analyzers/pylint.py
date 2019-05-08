@@ -8,7 +8,7 @@ import sys
 
 import sh
 
-from . import utils
+from analyzers import utils
 
 
 class PylintAnalyzer(object):
@@ -64,22 +64,24 @@ class PylintAnalyzer(object):
             elif e.stdout:
                 issues = e.stdout
 
-        if issues:
-            try:
-                issues_loads = []
+        try:
+            issues_loads = []
+            loads = []
+            if issues:
                 loads = json.loads(issues)
-                for issue in loads:
-                    # pylint has its own escape rules for json output of "message" values.
-                    # it uses cgi.escape lib and escapes symbols <>&
-                    issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
-                    issues_loads.append(issue)
-                utils.analyzers_output(self.json_file, issues_loads)
+            for issue in loads:
+                # pylint has its own escape rules for json output of "message" values.
+                # it uses cgi.escape lib and escapes symbols <>&
+                issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+                issues_loads.append(issue)
+            utils.analyzers_output(self.json_file, issues_loads)
+            if issues_loads:
                 return 1
-            except ValueError as e:
-                sys.stderr.write(e.message)
-                sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
-                sys.stderr.write(issues)
-                return 2
+        except ValueError as e:
+            sys.stderr.write(e.message)
+            sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
+            sys.stderr.write(issues)
+            return 2
         return 0
 
 

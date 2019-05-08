@@ -50,8 +50,8 @@ def pull_image(client, params, image_name):
         if registry.startswith("http://"):
             registry = registry[7:]
 
-        image = client.images.pull(registry + "/" + image_name)
-        image.tag(image_name, "latest")
+        image = client.images.pull(registry + "/" + image_name, tag="latest")
+        image.tag(image_name)
     except docker.errors.APIError as e:
         print unicode(e)
 

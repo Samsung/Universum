@@ -60,6 +60,9 @@ class BaseDownloadVcs(BaseVcs):
     def copy_cl_files_and_revert(self):
         raise NotImplementedError
 
+    def calculate_file_diff(self):
+        raise NotImplementedError
+
 
 class BaseSubmitVcs(BaseVcs):
     """

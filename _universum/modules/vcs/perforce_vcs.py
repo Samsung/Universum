@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import json
 import os
 import shutil
 import warnings
@@ -8,7 +7,6 @@ import warnings
 import sh
 
 from ...modules.artifact_collector import ArtifactCollector
-from ...modules.api_support import ApiSupport
 from ...modules.reporter import Reporter
 from ...lib.ci_exception import CriticalCiException, SilentAbortException
 from ...lib.gravity import Dependency
@@ -225,7 +223,6 @@ class PerforceWithMappings(PerforceVcs):
 class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     swarm_factory = Dependency(Swarm)
     artifacts_factory = Dependency(ArtifactCollector)
-    api_support_factory = Dependency(ApiSupport)
     reporter_factory = Dependency(Reporter)
 
     @staticmethod
@@ -260,7 +257,6 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         super(PerforceMainVcs, self).__init__(*args, **kwargs)
 
         self.artifacts = self.artifacts_factory()
-        self.api_support = self.api_support_factory()
         self.reporter = self.reporter_factory()
         # self.swarm is initialized by self.code_review()
         self.swarm = None
@@ -443,7 +439,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         for entry in self.p4.run_opened():
             action_list[entry["depotFile"]] = entry["action"]
         if not action_list:
-            return json.dumps({})
+            return {}
 
         result = []
         # Both 'p4 opened' and 'p4 where' entries have same key 'depotFile'
@@ -451,11 +447,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result.append({"action": action_list[entry["depotFile"]],
                            "repo_path": entry["depotFile"],
                            "local_path": entry["path"]})
-        return json.dumps(result, indent=4)
+        return result
 
     @make_block("Checking diff")
     def diff(self):
-        self.api_support.add_p4_file_diff(self.calculate_file_diff())
         rep_diff = []
         for depot in self.depots:
             line = depot["path"] + '@' + depot["cl"]

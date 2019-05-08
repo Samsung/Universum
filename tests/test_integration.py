@@ -4,6 +4,13 @@
 import os
 
 
+def get_line_with_text( text, log ):
+    for line in log.splitlines():
+        if text in line:
+            return line
+    return ""
+
+
 def test_minimal_execution(universum_runner):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -34,8 +41,9 @@ artifacts = Variations([dict(name="Existing artifacts", artifacts="one/**/file*"
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
     """
     log = universum_runner.run(config)
-    assert "Collecting 'something' - Failed" in log
-    assert "Collecting 'something_else' for report - Success" in log
+    assert 'Failed' in get_line_with_text("Collecting 'something' - ", log)
+    assert 'Success' in get_line_with_text("Collecting 'something_else' for report - ", log)
+
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "three.zip"))
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "two2.zip"))
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file1.txt"))
@@ -57,7 +65,7 @@ script = Variations([dict(name=" unsuccessful step", command=["ls", "non-existen
 configs = background * (script + sleep * multiply) + wait + background * (sleep + script)
 """)
     assert "All ongoing background steps should be finished before next step execution" in log
-    assert "Background unsuccessful step - Failed" in log
+    assert 'Failed' in get_line_with_text("Background unsuccessful step - ", log)
 
     # Test background after failed foreground (regression)
     universum_runner.clean_artifacts()
@@ -88,7 +96,7 @@ from _universum.configuration_support import Variations
 configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
                       dict(name="Bad step 2", command=["ls", "not_a_file"], background=True)])
 """)
-    assert "Bad step 2 - Failed" in log
+    assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
 def test_critical_steps(universum_runner):
@@ -282,7 +290,7 @@ echo ${SPECIAL_TESTING_VARIABLE}
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["script.sh"],
-                           environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])    
+                           environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
 """)
     assert "This string should be in log" in log
 

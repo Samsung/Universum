@@ -64,6 +64,9 @@ class Output(Module):
     def report_skipped(self, message):
         self.driver.report_skipped(message)
 
+    def report_step(self, message, status):
+        self.driver.report_step(message, status)
+
     def log_exception(self, line):
         self.driver.log_exception(line)
 

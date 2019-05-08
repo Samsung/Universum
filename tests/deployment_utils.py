@@ -76,16 +76,6 @@ class ExecutionEnvironment(object):
     def assert_unsuccessful_execution(self, cmd, environment=None):
         return self._run_and_check(cmd, False, environment=environment)
 
-    def install_pip(self):
-        self.assert_successful_execution("apt-get update")
-        self.assert_successful_execution("apt-get install -y wget")
-        self.assert_successful_execution(
-            "wget --no-check-certificate -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'"
-        )
-        self.assert_successful_execution("apt-get install -y python")
-        log = self.assert_successful_execution("python get-pip.py")
-        assert "Successfully installed" in log
-
     def install_python_module(self, name):
         cmd = "pip --default-timeout=1200 install " + name
         log = self.assert_successful_execution(cmd)
@@ -115,18 +105,6 @@ def execution_environment(request):
 
 
 @pytest.fixture()
-def pythonp4_environment(execution_environment, docker_registry_params):
-    execution_environment.set_image("pythonp4", docker_registry_params)
-    yield execution_environment
-
-
-@pytest.fixture()
-def plain_ubuntu_environment(execution_environment, docker_registry_params):
-    execution_environment.set_image("ubuntu:trusty", docker_registry_params)
-    yield execution_environment
-
-
-@pytest.fixture()
 def local_sources(tmpdir):
     source_dir = tmpdir.mkdir("project_sources")
     local_file = source_dir.join("readme.txt")
@@ -136,11 +114,18 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner(object):
-    def __init__(self, execution_environment, perforce_workspace, git_client, local_sources):
+    def __init__(self, perforce_workspace, git_client, local_sources):
         self.perforce = perforce_workspace
         self.git = git_client
         self.local = local_sources
 
+        # Need to be initialized in 'set_environment'
+        self.environment = None
+        self.working_dir = None
+        self.project_root = None
+        self.artifact_dir = None
+
+    def set_environment(self, execution_environment):
         self.environment = execution_environment
         self.working_dir = self.environment.get_working_directory()
         self.project_root = os.path.join(self.working_dir, "temp")
@@ -149,10 +134,12 @@ class UniversumRunner(object):
         self.environment.add_environment_variables([
             "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
         ])
-        self.environment.add_bind_dirs([unicode(local_sources.root_directory),
-                                        git_client.server.get_location()])
+        self.environment.add_bind_dirs([unicode(self.local.root_directory),
+                                        self.git.server.get_location()])
 
         self.environment.start_container()
+        self.environment.install_python_module(self.working_dir)
+        self.environment.install_python_module("coverage")
 
     def _basic_args(self):
         return " -lo console -pr {} -ad {}".format(self.project_root, self.artifact_dir)
@@ -202,25 +189,28 @@ class UniversumRunner(object):
 
 
 @pytest.fixture()
-def universum_runner_no_gitpython(pythonp4_environment, perforce_workspace, git_client, local_sources):
-    runner = UniversumRunner(pythonp4_environment, perforce_workspace, git_client, local_sources)
-    runner.environment.install_python_module(runner.working_dir)
-    runner.environment.install_python_module("coverage")
+def runner_without_environment(perforce_workspace, git_client, local_sources):
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources)
     yield runner
     runner.clean_artifacts()
 
 
 @pytest.fixture()
-def universum_runner(universum_runner_no_gitpython):
-    universum_runner_no_gitpython.environment.install_python_module("gitpython")
-    yield universum_runner_no_gitpython
+def universum_runner(execution_environment, docker_registry_params, runner_without_environment):
+    execution_environment.set_image("universum_test_env", docker_registry_params)
+    runner_without_environment.set_environment(execution_environment)
+    yield runner_without_environment
 
 
 @pytest.fixture()
-def universum_runner_plain_ubuntu(plain_ubuntu_environment, perforce_workspace, git_client, local_sources):
-    runner = UniversumRunner(plain_ubuntu_environment, perforce_workspace, git_client, local_sources)
-    runner.environment.install_pip()
-    runner.environment.install_python_module(runner.working_dir)
-    runner.environment.install_python_module("coverage")
-    yield runner
-    runner.clean_artifacts()
+def universum_runner_no_p4(execution_environment, docker_registry_params, runner_without_environment):
+    execution_environment.set_image("universum_test_env_no_p4", docker_registry_params)
+    runner_without_environment.set_environment(execution_environment)
+    yield runner_without_environment
+
+
+@pytest.fixture()
+def universum_runner_no_vcs(execution_environment, docker_registry_params, runner_without_environment):
+    execution_environment.set_image("universum_test_env_no_vcs", docker_registry_params)
+    runner_without_environment.set_environment(execution_environment)
+    yield runner_without_environment

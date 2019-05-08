@@ -1,4 +1,4 @@
-TEST_TARGETS = pytest source_doctest doc_doctest
+TEST_TARGETS = pytest doc_doctest
 
 
 .PHONY: all doc test $(TEST_TARGETS) pylint
@@ -16,17 +16,15 @@ doc_clean:
 
 
 
-test: 
+test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	pytest --cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch --cov-report=html -vv $(DOCKER_REGISTRY_ARGS)
+	python2 -m pytest --cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch --cov-report=html --doctest-modules -vv $(DOCKER_REGISTRY_ARGS)
 
-source_doctest:
-	pytest _universum/*.py --doctest-modules -vv
 
 doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	pylint --rcfile=pylintrc *.py _universum/ tests/
+	python2 -m pylint --rcfile=pylintrc *.py _universum/ tests/
