@@ -16,8 +16,6 @@ def create_settings(test_type, vcs_type):
 
     if test_type == "poll":
         settings.Poll.db_file = "p4poll.json"
-        settings.JenkinsServer.trigger_url = "https://localhost/?cl=%s"
-        settings.AutomationServer.type = "jenkins"
     elif test_type == "submit":
         settings.Submit.commit_message = "Test CL"
     elif test_type == "main":
@@ -110,6 +108,7 @@ param("main",   "TeamcityServer",       "user_id",         error_match="TC_USER"
 param("main",   "TeamcityServer",       "passwd",          error_match="TC_PASSWD")
 # pylint: enable = bad-whitespace
 
+
 @parametrize_unset()
 @pytest.mark.parametrize("test_type, module, field, vcs_type, error_match", missing_params)
 def test_missing_params(unset, test_type, module, field, vcs_type, error_match):
@@ -137,3 +136,19 @@ def test_present_both_perforce_mappings_and_depot_path():
     settings.PerforceWithMappings.mappings = ["//depot/... /..."]
 
     assert_incorrect_parameter(settings, mappings_error_match)
+
+
+@parametrize_unset()
+@pytest.mark.parametrize("vcs_type", ["p4", "git"])
+def test_missing_jenkins_params(unset, vcs_type):
+    settings = create_settings("main", vcs_type)
+    settings.AutomationServer.type = "jenkins"
+    unset(settings, "JenkinsServerForHostingBuild", "build_url")
+
+    assert_incorrect_parameter(settings, "build-url")
+
+    settings = create_settings("poll", vcs_type)
+    settings.AutomationServer.type = "jenkins"
+    unset(settings, "JenkinsServerForTrigger", "trigger_url")
+
+    assert_incorrect_parameter(settings, "trigger-url")
