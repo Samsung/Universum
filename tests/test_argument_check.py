@@ -45,6 +45,10 @@ def create_settings(test_type, vcs_type):
         if test_type == "main":
             settings.PerforceMainVcs.client = "p4_disposable_workspace"
             settings.PerforceMainVcs.force_clean = True
+            settings.MainVcs.report_to_review = True
+            settings.Swarm.review_id = "123"
+            settings.Swarm.change = "456"
+            settings.Swarm.server_url = "https://swarm"
 
         if test_type == "main" or test_type == "poll":
             settings.PerforceWithMappings.project_depot_path = "//depot"
@@ -78,18 +82,23 @@ def param(test_type, module, field, vcs_type="*", error_match=None):
     global missing_params
 
     if isinstance(vcs_type, list):
-        for vcs in vcs_type:
-            param(test_type, module, field, vcs, error_match)
+        for specific_vcs_type in vcs_type:
+            param(test_type, module, field, specific_vcs_type, error_match)
         return
 
     if vcs_type == "*":
         param(test_type, module, field, ["p4", "git", "none"], error_match)
         return
 
+    if test_type == "*":
+        for specific_test_type in ["main", "submit", "poll"]:
+            param(specific_test_type, module, field, vcs_type, error_match)
+        return
+
     if error_match is None:
         error_match = field
 
-    test_id = test_type + "-" + vcs_type + "-"+ module + "." + field
+    test_id = test_type + "-" + vcs_type + "-" + module + "." + field
     missing_params.append(pytest.param(test_type, module, field, vcs_type, error_match, id=test_id))
 
 
@@ -106,6 +115,12 @@ param("main",   "TeamcityServer",       "configuration_id")
 param("main",   "TeamcityServer",       "server_url",      error_match="TEAMCITY_SERVER")
 param("main",   "TeamcityServer",       "user_id",         error_match="TC_USER")
 param("main",   "TeamcityServer",       "passwd",          error_match="TC_PASSWD")
+param("*",      "PerforceVcs",          "port",            vcs_type="p4")
+param("*",      "PerforceVcs",          "user",            vcs_type="p4")
+param("*",      "PerforceVcs",          "password",        vcs_type="p4")
+param("main",   "Swarm",                "server_url",      vcs_type="p4", error_match="SWARM_SERVER")
+param("main",   "Swarm",                "review_id",       vcs_type="p4", error_match="REVIEW")
+param("main",   "Swarm",                "change",          vcs_type="p4")
 # pylint: enable = bad-whitespace
 
 

@@ -2,6 +2,7 @@
 
 import codecs
 import imp
+import inspect
 import os
 import sys
 import traceback
@@ -90,11 +91,9 @@ def format_traceback(exc, trace):
     return tb_text
 
 
-def check_required_option(settings, name, env_var):
-    if not getattr(settings, name, None):
-        text = "Variable '" + env_var + "' is not set. " + \
-               "Please set it or pass corresponding parameter via command line options"
-        raise IncorrectParameterError(text)
+def check_required_option(settings, setting_name, error_message):
+    if not getattr(settings, setting_name, None):
+        raise IncorrectParameterError(inspect.cleandoc(error_message))
 
 
 def catch_exception(exception_name, ignore_if=None):
