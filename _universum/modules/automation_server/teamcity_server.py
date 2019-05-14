@@ -2,7 +2,7 @@
 
 import requests
 
-from ...lib.module_arguments import IncorrectParameterError
+from ...lib import utils
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
 __all__ = [
@@ -27,19 +27,67 @@ class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger):
         parser.add_argument("--tc-auth-passwd", "-tcp", dest="passwd",
                             metavar="TC_PASSWD", help="system.teamcity.auth.password")
 
-    def check_required_option(self, name, option, env_var):
-        if not getattr(self.settings, name, None):
-            raise IncorrectParameterError("the mandatory TeamCity setting '" + name + "' is not set\n\n"
-                                          "Please use command-line option '" + option + "'\n"
-                                          "or set the environment variable '" + env_var + "'")
-
     def __init__(self, *args, **kwargs):
         super(TeamcityServer, self).__init__(*args, **kwargs)
-        self.check_required_option("server_url", "--tc-server", "TEAMCITY_SERVER")
-        self.check_required_option("build_id", "--tc-build-id", "BUILD_ID")
-        self.check_required_option("configuration_id", "--tc-configuration-id", "CONFIGURATION_ID")
-        self.check_required_option("user_id", "--tc-auth-user-id", "TC_USER")
-        self.check_required_option("passwd", "--tc-auth-passwd", "TC_PASSWD")
+        utils.check_required_option(self.settings, "server_url", """
+            the URL of the TeamCity server is not specified.
+
+            The URL of the TeamCity server is used for constructing links to builds
+            and artifacts in code review system, and to adding build tags if
+            requested. Please specify the server URL by using '--tc-server' ('-ts')
+            command line parameter or by setting TEAMCITY_SERVER environment
+            variable.""")
+        utils.check_required_option(self.settings, "build_id", """
+            the id of the build on TeamCity is not specified.
+
+            The id of the build on TeamCity is used for constructing links to builds
+            and artifacts in code review system, and to adding build tags if
+            requested. Please specify the id of the build by using '--tc-build-id'
+            ('-tbi') command line parameter or by setting BUILD_ID environment
+            variable.
+            
+            The recommended way to define this parameter is to set BUILD_ID
+            environment variable to %teamcity.build.id% in the settings of
+            the top-level project on the TeamCity. 
+            """)
+        utils.check_required_option(self.settings, "configuration_id", """
+            the id of the configuration on TeamCity is not specified.
+
+            The id of the configuration on TeamCity is used for constructing 
+            links to artifacts in code review system. Please specify the id of 
+            the configuration by using '--tc-configuration-id' ('-tci')
+            command line parameter or by setting CONFIGURATION_ID environment
+            variable.
+
+            The recommended way to define this parameter is to set CONFIGURATION_ID
+            environment variable to %system.teamcity.buildType.id% in the settings of
+            the top-level project on the TeamCity. 
+            """)
+        utils.check_required_option(self.settings, "user_id", """
+            the id of the TeamCity user is not specified.
+
+            The TeamCity user id is used for adding build tags. Please specify the  
+            TeamCity user id by using '--tc-auth-user-id' ('-tcu') command line 
+            parameter or by setting TC_USER environment variable.
+
+            The recommended way to define this parameter is to set TC_USER
+            environment variable to %system.teamcity.auth.userId% in the settings of
+            the top-level project on the TeamCity.
+            
+            Please note that the user must have permission to add tags to build.
+            """)
+        utils.check_required_option(self.settings, "passwd", """
+            the password of the TeamCity user is not specified.
+
+            The TeamCity user password is used for adding build tags.
+            Please specify the TeamCity user password by using '--tc-auth-passwd'
+            ('-tcp') command line parameter or by setting TC_PASSWD environment
+            variable.
+
+            The recommended way to define this parameter is to set TC_PASSWD
+            environment variable to %system.teamcity.auth.password% in the settings
+            of the top-level project on the TeamCity.
+            """)
 
         self.tc_build_link = self.settings.server_url + "/viewLog.html?tab=buildLog&buildId=" + self.settings.build_id
         self.tc_artifact_link = self.settings.server_url + "/repository/download/" + \

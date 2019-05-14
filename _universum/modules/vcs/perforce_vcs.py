@@ -49,15 +49,30 @@ class PerforceVcs(base_vcs.BaseVcs):
         parser.add_argument("--p4-user", "-p4u", dest="user", help="P4 user name", metavar="P4USER")
         parser.add_argument("--p4-password", "-p4P", dest="password", help="P4 password", metavar="P4PASSWD")
 
-    def check_required_option(self, name, env_var):
-        utils.check_required_option(self.settings, name, env_var)
-
     def __init__(self, *args, **kwargs):
         super(PerforceVcs, self).__init__(*args, **kwargs)
 
-        self.check_required_option("port", "P4PORT")
-        self.check_required_option("user", "P4USER")
-        self.check_required_option("password", "P4PASSWD")
+        utils.check_required_option(self.settings, "port", """
+            the perforce 'port' is not specified.
+            
+            The perforce port defines protocol, host and listening port
+            of the perforce server. Please specify perforce port by
+            using '--p4-port' ('-p4p') command line parameter or
+            by setting P4PORT environment variable.""")
+        utils.check_required_option(self.settings, "user", """
+            the perforce user name is not specified.
+
+            The perforce user name is required to authenticate with
+            perforce server. Please specify the perforce user name by
+            using '--p4-user' ('-p4u') command line parameter or
+            by setting P4USER environment variable.""")
+        utils.check_required_option(self.settings, "password", """
+            the perforce password is not specified.
+
+            The perforce password is required to authenticate with
+            perforce server. Please specify the perforce password by
+            using '--p4-password' ('-p4P') command line parameter or
+            by setting P4PASSWD environment variable.""")
 
         try:
             p4_module = utils.import_module("P4")
