@@ -263,20 +263,20 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review")
-    assert "Variable 'REVIEW' is not set" in log
+    assert "URL of the Swarm server is not specified" in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review -sre=''")
-    assert "Variable 'REVIEW' is not set" in log
+                               additional_parameters=" --report-to-review -ssu=''")
+    assert "URL of the Swarm server is not specified" in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review",
-                               environment=["SWARM_REVIEW=''"])
-    assert "Variable 'REVIEW' is not set" in log
+                               environment=["SWARM_SERVER="])
+    assert "URL of the Swarm server is not specified" in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review --build-only-latest -sre=''")
-    assert "Variable 'REVIEW' is not set" in log
+                               additional_parameters=" --report-to-review --build-only-latest -ssu=''")
+    assert "URL of the Swarm server is not specified" in log
 
 
 def test_environment(universum_runner):
