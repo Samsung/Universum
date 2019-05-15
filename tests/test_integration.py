@@ -255,6 +255,7 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
 
 
 def test_empty_required_params(universum_runner):
+    url_error = "URL of the Swarm server is not specified"
     config = """
 from _universum.configuration_support import Variations
 
@@ -263,20 +264,33 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review")
-    assert "URL of the Swarm server is not specified" in log
+    assert url_error in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review -ssu=''")
-    assert "URL of the Swarm server is not specified" in log
+    assert url_error in log
+
+    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review -ssu=http://swarm")
+    assert url_error not in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review",
                                environment=["SWARM_SERVER="])
-    assert "URL of the Swarm server is not specified" in log
+    assert url_error in log
+
+    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review",
+                               environment=["SWARM_SERVER=http://swarm"])
+    assert url_error not in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review --build-only-latest -ssu=''")
-    assert "URL of the Swarm server is not specified" in log
+    assert url_error in log
+
+    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review --build-only-latest -ssu=http://swarm")
+    assert url_error not in log
 
 
 def test_environment(universum_runner):
