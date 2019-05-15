@@ -54,6 +54,14 @@ class GitVcs(BaseVcs):
                    "documentation for detailed instructions"
             raise ImportError(text)
 
+        utils.check_required_option(self.settings, "repo", """
+            the git repo is not specified.
+
+            The repo defines the location of project source codes.
+            Please specify the git repo by using '--git-repo' ('-gr') 
+            command line parameter or by setting GIT_REPO environment
+            variable.""")
+
         class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
                 super(Progress, self).__init__(*args, **kwargs)
@@ -65,7 +73,7 @@ class GitVcs(BaseVcs):
         self.repo = None
         self.logger = Progress(self.out)
 
-        if self.settings.refspec:
+        if getattr(self.settings, "refspec", None):
             if self.settings.refspec.startswith("origin/"):
                 self.refspec = self.settings.refspec[7:]
             else:
@@ -76,9 +84,6 @@ class GitVcs(BaseVcs):
     @make_block("Cloning repository")
     @catch_git_exception()
     def clone_and_fetch(self, history_depth=None):
-        if not self.settings.repo:
-            raise CriticalCiException("Cannot clone: GIT_REPO is not specified")
-
         self.out.log("Cloning '" + self.settings.repo + "'...")
         destination_directory = convert_to_str(self.settings.project_root)
         if history_depth:

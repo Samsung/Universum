@@ -91,7 +91,10 @@ class Swarm(ReportObserver, Module):
             """)
 
         if " " in self.settings.change or "," in self.settings.change:
-            raise IncorrectParameterError("SWARM_CHANGELIST takes only one CL number")
+            raise IncorrectParameterError("the Swarm changelist for unshelving is incorrect.\n\n"
+                                          "The changelist parameter must only contain one number. Please specify the\n"
+                                          "changelist by using '--swarm-change' ('-sch') command line parameter or by\n"
+                                          "setting SWARM_CHANGELIST environment variable.")
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)

@@ -27,10 +27,16 @@ class GerritVcs(git_vcs.GitVcs):
         self.reporter = None
 
         if not self.settings.repo.startswith("ssh://"):
-            raise IncorrectParameterError("Right now Gerrit builds are only available via SSH access")
+            raise IncorrectParameterError("only ssh access is supported for gerrit.\n\n"
+                                          "Please change the git repo to ssh protocol by using '--git-repo' ('-gr')\n"
+                                          "command line parameter or by setting GIT_REPO environment variable.")
 
         parsed_repo = urlparse.urlparse(self.settings.repo)
         self.hostname = parsed_repo.hostname
+        if not parsed_repo.username:
+            raise IncorrectParameterError("The user name for accessing gerrit is not specified.\n\n"
+                                          "The user name should be included into git repo specification for SSH protocol:\n"
+                                          "--git-repo=ssh://<user>@<host>:<port>/<path>")
         self.ssh = sh.ssh.bake(parsed_repo.username+"@"+self.hostname, p=parsed_repo.port)
         self.commit_id = None
         self.review = None
@@ -50,26 +56,46 @@ class GerritVcs(git_vcs.GitVcs):
 class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
     reporter_factory = Dependency(Reporter)
 
-    def code_review(self):
-        # Gerrit code review system is Gerrit itself
-        if not self.settings.refspec:
-            raise IncorrectParameterError("Please pass 'refs/changes/...' to --git-refspec parameter")
+    def __init__(self, *args, **kwargs):
+        super(GerritMainVcs, self).__init__(*args, **kwargs)
 
+        utils.check_required_option(self.settings, "refspec", """
+            git refspec for gerrit is not specified.
+            
+            For gerrit the git refspec defines the branch to download and the review to
+            work with. Please specify the refspec by using '--git-refspec' ('-grs')
+            command line parameter or by setting GIT_REFSPEC environment variable.
+            
+            Usually, it is enough to set refspec to 'refs/changes/<path>'. For example,
+            on a TeamCity server it is enough to set GIT_REFSPEC variable to
+            %teamcity.build.branch% for the entire project.  
+        """)
+
+        refspec = self.settings.refspec
+        if refspec.startswith("refs/"):
+            refspec = refspec[5:]
+
+        if refspec.count("/") < 2:
+            raise IncorrectParameterError("the git refspec for gerrit has incorrect format.\n\n"
+                                          "The git refspec for gerrit must contain components, separated by slash:\n"
+                                          "/refs/changes/<number>/<change>/<patch set>.\n"
+                                          "Those components define change id and patch set number.")
+
+        self.refspec = refspec
         if self.settings.checkout_id:
-            raise IncorrectParameterError("Please use --git-refspec instead of commit ID")
+            raise IncorrectParameterError("git checkout ID is supplied.\n\n"
+                                          "Please use '--git-refspec' ('-grs') instead of checkout ID for gerrit.")
 
+    def code_review(self):
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
         return self
 
     def update_review_version(self):
-        refspec = self.settings.refspec
-        if refspec.startswith("refs/"):
-            refspec = refspec[5:]
         if not self.review:
-            self.review = refspec.split("/")[2]
+            self.review = self.refspec.split("/")[2]
         if not self.review_version:
-            self.review_version = refspec.split("/")[3]
+            self.review_version = self.refspec.split("/")[3]
 
     def get_review_link(self):
         self.update_review_version()

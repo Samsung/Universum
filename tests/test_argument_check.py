@@ -29,14 +29,15 @@ def create_settings(test_type, vcs_type):
         settings.TeamcityServer.user_id = "TeamCityUser"
         settings.TeamcityServer.passwd = "TeamCityPassword"
 
-    if vcs_type == "git":
-        settings.GitVcs.repo = "git://127.0.0.1"
-        settings.GitVcs.refspec = "master"
+    if vcs_type == "git" or vcs_type == "gerrit":
+        settings.GitVcs.repo = "ssh://user@127.0.0.1"
+        settings.GitVcs.refspec = "refs/changes/20/203040/7"
         if test_type == "submit":
             settings.GitSubmitVcs.user = "Testing User"
             settings.GitSubmitVcs.email = "some@email.com"
     elif vcs_type == "none":
-        settings.LocalMainVcs.source_dir = "temp"
+        if test_type == "main":
+            settings.LocalMainVcs.source_dir = "temp"
     elif vcs_type == "p4":
         settings.PerforceVcs.port = "127.0.0.1:1666"
         settings.PerforceVcs.user = "p4user"
@@ -87,7 +88,7 @@ def param(test_type, module, field, vcs_type="*", error_match=None):
         return
 
     if vcs_type == "*":
-        param(test_type, module, field, ["p4", "git", "none"], error_match)
+        param(test_type, module, field, ["p4", "git", "gerrit", "none"], error_match)
         return
 
     if test_type == "*":
@@ -104,12 +105,12 @@ def param(test_type, module, field, vcs_type="*", error_match=None):
 
 # pylint: disable = bad-whitespace
 param("main",   "Launcher",             "config_path")
-param("submit", "Submit",               "commit_message",  vcs_type=["p4", "git"])
+param("submit", "Submit",               "commit_message",  vcs_type=["p4", "git", "gerrit"])
 param("submit", "PerforceSubmitVcs",    "client",          vcs_type="p4")
 param("main",   "PerforceMainVcs",      "client",          vcs_type="p4")
 param("main",   "LocalMainVcs",         "source_dir",      vcs_type="none")
-param("submit", "GitSubmitVcs",         "user",            vcs_type="git")
-param("submit", "GitSubmitVcs",         "email",           vcs_type="git")
+param("submit", "GitSubmitVcs",         "user",            vcs_type=["git", "gerrit"])
+param("submit", "GitSubmitVcs",         "email",           vcs_type=["git", "gerrit"])
 param("main",   "TeamcityServer",       "build_id")
 param("main",   "TeamcityServer",       "configuration_id")
 param("main",   "TeamcityServer",       "server_url",      error_match="TEAMCITY_SERVER")
@@ -121,6 +122,9 @@ param("*",      "PerforceVcs",          "password",        vcs_type="p4")
 param("main",   "Swarm",                "server_url",      vcs_type="p4", error_match="SWARM_SERVER")
 param("main",   "Swarm",                "review_id",       vcs_type="p4", error_match="REVIEW")
 param("main",   "Swarm",                "change",          vcs_type="p4")
+param("*",      "Vcs",                  "type")
+param("*",      "GitVcs",               "repo",            vcs_type=["git", "gerrit"])
+param("main",   "GitVcs",               "refspec",         vcs_type="gerrit")
 # pylint: enable = bad-whitespace
 
 
@@ -154,7 +158,7 @@ def test_present_both_perforce_mappings_and_depot_path():
 
 
 @parametrize_unset()
-@pytest.mark.parametrize("vcs_type", ["p4", "git"])
+@pytest.mark.parametrize("vcs_type", ["p4", "git", "gerrit"])
 def test_missing_jenkins_params(unset, vcs_type):
     settings = create_settings("main", vcs_type)
     settings.AutomationServer.type = "jenkins"
@@ -167,3 +171,39 @@ def test_missing_jenkins_params(unset, vcs_type):
     unset(settings, "JenkinsServerForTrigger", "trigger_url")
 
     assert_incorrect_parameter(settings, "trigger-url")
+
+
+@pytest.mark.parametrize("vcs_type", ["git", "none"])
+def test_code_review_for_unsupported_vcs(vcs_type):
+    settings = create_settings("main", vcs_type)
+    settings.MainVcs.report_to_review = True
+
+    assert_incorrect_parameter(settings, "code review system")
+
+
+def test_gerrit_non_ssh_repo():
+    settings = create_settings("main", "gerrit")
+    settings.GitVcs.repo = "https://gerrit"
+
+    assert_incorrect_parameter(settings, "ssh protocol")
+
+
+def test_gerrit_wrong_refspec():
+    settings = create_settings("main", "gerrit")
+    settings.GitVcs.refspec = "no slashes in this string"
+
+    assert_incorrect_parameter(settings, "incorrect format")
+
+
+def test_gerrit_no_username_in_ssh_repo():
+    settings = create_settings("main", "gerrit")
+    settings.GitVcs.repo = "ssh://127.0.0.1"
+
+    assert_incorrect_parameter(settings, "user name")
+
+
+def test_swarm_changelist_incorrect_format():
+    settings = create_settings("main", "p4")
+    settings.Swarm.change = "123,456"
+
+    assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
