@@ -31,7 +31,8 @@ def create_settings(test_type, vcs_type):
 
     if vcs_type == "git" or vcs_type == "gerrit":
         settings.GitVcs.repo = "ssh://user@127.0.0.1"
-        settings.GitVcs.refspec = "refs/changes/20/203040/7"
+        # the refspec is crafted to satisfy requirements of our gerrit module, and git doesn't care
+        settings.GitVcs.refspec = "refs/changes/00/000000/0"
         if test_type == "submit":
             settings.GitSubmitVcs.user = "Testing User"
             settings.GitSubmitVcs.email = "some@email.com"

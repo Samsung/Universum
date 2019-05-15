@@ -34,7 +34,7 @@ class GerritVcs(git_vcs.GitVcs):
         parsed_repo = urlparse.urlparse(self.settings.repo)
         self.hostname = parsed_repo.hostname
         if not parsed_repo.username:
-            raise IncorrectParameterError("The user name for accessing gerrit is not specified.\n\n"
+            raise IncorrectParameterError("the user name for accessing gerrit is not specified.\n\n"
                                           "The user name should be included into git repo specification for SSH protocol:\n"
                                           "--git-repo=ssh://<user>@<host>:<port>/<path>")
         self.ssh = sh.ssh.bake(parsed_repo.username+"@"+self.hostname, p=parsed_repo.port)
