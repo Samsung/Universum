@@ -2,6 +2,7 @@
 # pylint: disable = redefined-outer-name
 
 import os
+from time import sleep
 
 import git
 from git.remote import RemoteProgress
@@ -19,9 +20,12 @@ class GitServer(object):
         self._working_directory = working_directory
         self._repo = git.Repo.init(unicode(working_directory))
         self._repo.daemon_export = True
+        self._daemon_started = False
 
         def std_redirect(line):
             print "[git daemon] " + line
+            if "Ready to rumble" in line:
+                self._daemon_started = True
 
         port = utils.get_open_port()
         # We use this URL for now while docker works in 'host' mode
@@ -46,6 +50,9 @@ class GitServer(object):
         self._commit_count = 0
 
         self._branch = self._repo.create_head(branch_name)
+        
+        while not self._daemon_started:
+            sleep(1)
 
     def make_a_change(self):
         self._branch.checkout()
