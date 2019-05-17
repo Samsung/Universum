@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+# pylint: disable = protected-access
 
 import argparse
 import os
@@ -28,7 +29,6 @@ class ModuleNamespace(argparse.Namespace):
 
 
 # noinspection PyProtectedMember
-# pylint: disable = protected-access
 class ModuleArgumentGroup(argparse._ArgumentGroup):
     def __init__(self, container, *args, **kwargs):
         self.container = container
@@ -64,6 +64,7 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
         self.container.prepend_dest(action)
 
 
+# noinspection PyProtectedMember
 class ModuleArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, **kwargs):
@@ -93,6 +94,11 @@ class ModuleArgumentParser(argparse.ArgumentParser):
         if namespace is None:
             namespace = ModuleNamespace()
 
+        if args is None:
+            args = sys.argv[1:]
+
+        self._add_default_parser(args)
+
         return argparse.ArgumentParser.parse_args(self, args, namespace)
 
     def add_hidden_argument(self, *args, **kwargs):
@@ -102,25 +108,40 @@ class ModuleArgumentParser(argparse.ArgumentParser):
     def prepend_dest(self, action):
         action.dest = self.dest_prefix + action.dest
 
-    def needs_default_parser(self, *args):
+    def _get_subparsers_action(self):
         if not self._subparsers:
-            return False
+            return None
 
+        for action in self._subparsers._actions:
+            if isinstance(action, argparse._SubParsersAction):
+                return action
+
+        return None
+
+    @staticmethod
+    def _needs_default_parser(subparsers_action, args):
         try:
-            possible_subcommand = args[0][0]
+            possible_subcommand = args[0]
         except IndexError:
-            try:
-                possible_subcommand = sys.argv[1:][0]
-            except IndexError:
-                return True
+            return True
 
-        for x in self._subparsers._actions:
-            if not isinstance(x, argparse._SubParsersAction):
-                continue
-            for sp_name in x._name_parser_map.keys():
-                if sp_name == possible_subcommand:
-                    return False
+        for sp_name in subparsers_action._name_parser_map.keys():
+            if sp_name == possible_subcommand:
+                return False
+
         return True
+
+    def _add_default_parser(self, args):
+        subparsers_action = self._get_subparsers_action()
+        if not subparsers_action:
+            return
+        if not self._needs_default_parser(subparsers_action, args):
+            return
+
+        default = "default"
+        subparsers_action.add_parser(default)
+        args.insert(len(args), default)
+
 
 class IncorrectParameterError(ValueError):
     pass
