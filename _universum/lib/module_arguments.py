@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+# pylint: disable = protected-access
 
 import argparse
 import os
@@ -28,7 +29,6 @@ class ModuleNamespace(argparse.Namespace):
 
 
 # noinspection PyProtectedMember
-# pylint: disable = protected-access
 class ModuleArgumentGroup(argparse._ArgumentGroup):
     def __init__(self, container, *args, **kwargs):
         self.container = container
@@ -65,7 +65,6 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
 
 
 # noinspection PyProtectedMember
-# pylint: disable = protected-access
 class ModuleArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, **kwargs):
@@ -101,7 +100,6 @@ class ModuleArgumentParser(argparse.ArgumentParser):
         self._add_default_parser(args)
 
         return argparse.ArgumentParser.parse_args(self, args, namespace)
-
 
     def add_hidden_argument(self, *args, **kwargs):
         kwargs["help"] = argparse.SUPPRESS
