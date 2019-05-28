@@ -35,7 +35,7 @@ class ReportObserver(object):
 @needs_output
 @needs_structure
 class Reporter(Module):
-    automation_server_factory = Dependency(automation_server.AutomationServer)
+    automation_server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
 
     @staticmethod
     def define_arguments(argument_parser):

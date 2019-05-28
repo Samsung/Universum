@@ -8,13 +8,15 @@ def run_virtual(cmd):
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
-             "--files *.py _universum/ ests/ analyzers/ --result-file ${CODE_REPORT_FILE}"
+             "--files *.py _universum/ tests/ analyzers/ --result-file ${CODE_REPORT_FILE}"
 
-configs = Variations([dict(name="Create virtual environment", command=["python2", "-m", "virtualenv", env_name]),
+configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
+                      dict(name="Create virtual environment",
+                           command=["python2", "-m", "virtualenv", env_name, "--system-site-packages"]),
                       dict(name="Install development",
                            command=run_virtual("pip --default-timeout=1200 install .[development]")),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
-                      dict(name="Install tests",
+                      dict(name="Install tests", artifacts="junit_results.xml",
                            command=run_virtual("pip --default-timeout=1200 install .[test]")),
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("PYTHONIOENCODING=utf-8 make test")),

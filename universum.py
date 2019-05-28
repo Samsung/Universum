@@ -16,7 +16,7 @@ from _universum.lib.module_arguments import ModuleArgumentParser, IncorrectParam
 from _universum.lib.utils import Uninterruptible, format_traceback
 
 
-def define_arguments(*args):
+def define_arguments():
     parser = ModuleArgumentParser(description=__title__ + " " + __version__)
     parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
     define_arguments_recursive(Main, parser)
@@ -24,17 +24,16 @@ def define_arguments(*args):
     subparsers = parser.add_subparsers(title="Additional commands",
                                        metavar="{poll,submit}",
                                        help="Use 'universum <subcommand> --help' for more info")
-    define_arguments_recursive(Api, subparsers.add_parser("api"))
-    define_arguments_recursive(Poll, subparsers.add_parser("poll"))
-    define_arguments_recursive(Submit, subparsers.add_parser("submit"))
 
-    if parser.needs_default_parser(*args):
-        default_parser = "default"
-        subparsers.add_parser(default_parser)
-        if args:
-            args[0].insert(len(args), default_parser)
-        else:
-            sys.argv.insert(len(sys.argv), default_parser)
+    def define_command(klass, command):
+        command_parser = subparsers.add_parser(command)
+        command_parser.set_defaults(command_parser=command_parser)
+        command_parser.set_defaults(main_class=klass)
+        define_arguments_recursive(klass, command_parser)
+
+    define_command(Api, "api")
+    define_command(Poll, "poll")
+    define_command(Submit, "submit")
 
     return parser
 
@@ -72,14 +71,19 @@ def run(settings):
     return result
 
 
-def main(*args, **kwargs):
-    parser = define_arguments(*args)
-    settings = parser.parse_args(*args, **kwargs)
+def main(args=None):
+    parser = define_arguments()
+    settings = parser.parse_args(args)
     settings.main_class = getattr(settings, "main_class", Main)
+    settings.command_parser = getattr(settings, "command_parser", parser)
+
     try:
         return run(settings)
     except IncorrectParameterError as e:
-        parser.error(e.message)
+        settings.command_parser.error(e.message)
+    except ImportError as e:
+        print unicode(e)
+        return 2
 
 
 if __name__ == "__main__":

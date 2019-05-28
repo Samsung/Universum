@@ -212,7 +212,7 @@ artifacts
     (e.g. `"out/**/index.html"`).
     If not stated otherwise (see ``--no-archive`` `command-line parameter <args.html#artifacts>`__
     for details), artifact directories are copied as archives.
-    If :ref:`'clean' key <clean_artifacts>` is either absent or set to `False` and
+    If :ref:`'artifact_prebuild_clean' key <clean_artifacts>` is either absent or set to `False` and
     stated artifacts are present in downloaded sources, it is considered a failure and configuration
     execution will not proceed.
     If no required artifacts were found in the end of the `Universum` run, it is also considered a failure.
@@ -234,12 +234,12 @@ report_artifacts
 .. _clean_artifacts:
 
 artifact_prebuild_clean
-    Basic usage is adding ``clean=True`` to configuration description.
+    Basic usage is adding ``artifact_prebuild_clean=True`` to configuration description.
     By default artifacts are not stored in VCS, and artifact presence before build most likely
     means that working directory is not cleaned after previous build and therefore might influence
     build results. But sometimes deliverables have to be stored in VCS, and in this case
     instead of stopping the build they should be simply cleaned before it. This is where
-    ``clean=True`` key is supposed to be used. If set without any :ref:`artifacts <build_artifacts>`
+    ``artifact_prebuild_clean=True`` key is supposed to be used. If set without any :ref:`artifacts <build_artifacts>`
     or `report_artifacts`_, this key will be ignored.
 
 ..

@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 
-from .base_server import BaseServer
+from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
 __all__ = [
     "LocalServer"
 ]
 
 
-class LocalServer(BaseServer):
+class LocalServer(BaseServerForHostingBuild, BaseServerForTrigger):
 
     def report_build_location(self):
         return "Local build. No external logs provided"

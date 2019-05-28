@@ -49,9 +49,6 @@ class Swarm(ReportObserver, Module):
         parser.add_argument("--swarm-fail-link", "-sfl", dest="fail_link", metavar="FAIL",
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
-    def check_required_option(self, name, env_var):
-        utils.check_required_option(self.settings, name, env_var)
-
     def __init__(self, user, password, *args, **kwargs):
         super(Swarm, self).__init__(*args, **kwargs)
         self.user = user
@@ -61,12 +58,43 @@ class Swarm(ReportObserver, Module):
         self.client_root = ""
         self.mappings_dict = {}
 
-        self.check_required_option("review_id", "REVIEW")
-        self.check_required_option("server_url", "SWARM_SERVER")
-        self.check_required_option("change", "SWARM_CHANGELIST")
+        utils.check_required_option(self.settings, "server_url", """
+            the URL of the Swarm server is not specified.
+
+            The URL is needed for communicating with swarm code review system:
+            getting review revision, posting comments, voting. Please specify 
+            the server URL by using '--swarm-server-url' ('-ssu') command
+            line parameter or by setting SWARM_SERVER environment variable.""")
+        utils.check_required_option(self.settings, "review_id", """
+            the Swarm review number is not specified.
+
+            The review number is needed for communicating with swarm code review system:
+            getting review revision, posting comments, voting. Please specify the number
+            by using '--swarm-review-id' ('-sre') command line parameter or by setting
+            REVIEW environment variable.
+            
+            In order to setup sending of the review number for pre-commit in Swarm,
+            please use the '{review}' argument in Automated Tests field of the Project
+            Settings.              
+            """)
+        utils.check_required_option(self.settings, "change", """
+            the Swarm changelist for unshelving is not specified.
+
+            The changelist is used for unshelving change before build and for
+            determining review revision. Please specify the changelist by using
+            '--swarm-change' ('-sch') command line parameter or by setting
+            SWARM_CHANGELIST environment variable.
+
+            In order to setup sending of the review number for pre-commit in Swarm,
+            please use the '{change}' argument in Automated Tests field of the Project
+            Settings.              
+            """)
 
         if " " in self.settings.change or "," in self.settings.change:
-            raise IncorrectParameterError("SWARM_CHANGELIST takes only one CL number")
+            raise IncorrectParameterError("the Swarm changelist for unshelving is incorrect.\n\n"
+                                          "The changelist parameter must only contain one number. Please specify the\n"
+                                          "changelist by using '--swarm-change' ('-sch') command line parameter or by\n"
+                                          "setting SWARM_CHANGELIST environment variable.")
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)

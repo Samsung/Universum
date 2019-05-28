@@ -12,7 +12,7 @@ from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from ..lib import utils
-from .automation_server import AutomationServer
+from .automation_server import AutomationServerForHostingBuild
 from .output import needs_output
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
@@ -27,7 +27,7 @@ __all__ = [
 @needs_structure
 class ArtifactCollector(ProjectDirectory):
     reporter_factory = Dependency(Reporter)
-    automation_server_factory = Dependency(AutomationServer)
+    automation_server_factory = Dependency(AutomationServerForHostingBuild)
 
     @staticmethod
     def define_arguments(argument_parser):

@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, too-many-locals
 
-import datetime
 import time
 
 from P4 import P4, P4Exception
@@ -10,17 +9,11 @@ import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
-from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 
-p4_image_name = "perforce"
 p4_user = "p4user"
 p4_password = "abcdefgh123456"
 p4_create_timeout = 60  # seconds
 p4_start_timeout = 10  # seconds
-
-
-def python_time_from_rfc3339_time(rfc3339_time):
-    return tf_from_timestamp(rfc3339_time)
 
 
 def ignore_p4_exception(ignore_if, func, *args, **kwargs):
@@ -34,7 +27,8 @@ def ignore_p4_exception(ignore_if, func, *args, **kwargs):
 
 
 def is_p4_container_healthy(container, server_name, polling_start):
-    logs = container.logs(timestamps=True)
+    # Server log contains unicode paths, we have to convert raw str to unicode type
+    logs = container.logs(timestamps=True).decode("utf-8", "replace")
 
     if container.status != "running":
         return False
@@ -54,7 +48,7 @@ def is_p4_container_healthy(container, server_name, polling_start):
         # check if "Started <server name> p4d service" is logged after we
         # started container, but with some room for cases when check is
         # called with some delay after start. We give it 5 seconds at max.
-        timestamp = python_time_from_rfc3339_time(rfc3339_time)
+        timestamp = utils.python_time_from_rfc3339_time(rfc3339_time)
         if timestamp + 5 > polling_start:
             return True
 
@@ -80,17 +74,14 @@ def wait_p4_container_start(client, name, timeout):
 def ensure_p4_container_started(client, name):
     try:
         container = client.containers.get(name)
-
         # if the container is too old, ignore it
-        created = python_time_from_rfc3339_time(container.attrs["Created"])
-        delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(created)
-        if abs(delta).days > 7:
+        if utils.is_container_outdated(container):
             return False
     except docker.errors.NotFound:
         return False
 
     if container.status == "running":
-        started_at = python_time_from_rfc3339_time(container.attrs["State"]["StartedAt"])
+        started_at = utils.python_time_from_rfc3339_time(container.attrs["State"]["StartedAt"])
         if is_p4_container_healthy(container, name, started_at):
             return True
 
@@ -102,8 +93,8 @@ def ensure_p4_container_started(client, name):
     return True
 
 
-def create_new_p4_container(request, client, name, params):
-    image = utils.get_image(request, client, params, p4_image_name)
+def create_new_p4_container(request, client, name):
+    image = client.images.get("perforce")
     client.containers.run(image,
                           name=name,
                           detach=True,
@@ -115,7 +106,7 @@ def create_new_p4_container(request, client, name, params):
 
 
 @pytest.fixture(scope="session")
-def docker_perforce(request, docker_registry_params):
+def docker_perforce(request):
     container = None
     client = docker.from_env()
 
@@ -131,7 +122,7 @@ def docker_perforce(request, docker_registry_params):
             except docker.errors.NotFound:
                 pass
 
-            create_new_p4_container(request, client, unique_id, docker_registry_params)
+            create_new_p4_container(request, client, unique_id)
 
         container = client.containers.get(unique_id)
 
@@ -179,8 +170,7 @@ def perforce_workspace(request, perforce_connection, tmpdir):
     depot = "//depot/..."
 
     try:
-        work_dir = tmpdir.ensure("working", dir=True)
-        root = tmpdir.ensure("workspace", dir=True)
+        root = tmpdir.mkdir("workspace")
 
         client = p4.fetch_client(client_name)
         client["Root"] = str(root)
@@ -202,21 +192,19 @@ def perforce_workspace(request, perforce_connection, tmpdir):
 
         change = p4.run_change("-o")[0]
         change["Description"] = "Test submit"
-        commited_change = p4.run_submit(change)
+        p4.run_submit(change)
 
         yield utils.Params(p4=p4,
                            client_name=client_name,
-                           commited_change=commited_change,
                            depot=depot,
-                           work_dir=work_dir,
                            root_directory=root,
                            repo_file=writeable_file,
                            nonwritable_file=usual_file)
 
     finally:
         if client_created:
-            remainig_shelves = p4.run_changes("-s", "shelved")
-            for item in remainig_shelves:
+            remaining_shelves = p4.run_changes("-s", "shelved")
+            for item in remaining_shelves:
                 p4.run_shelve("-dfc", item["change"])
             p4.delete_client("-f", client_name)
 
@@ -225,17 +213,22 @@ class P4Environment(utils.TestEnvironment):
     def __init__(self, perforce_workspace, directory, test_type):
         db_file = directory.join("p4poll.json")
         self.db_file = unicode(db_file)
-        self.root_directory = perforce_workspace.root_directory
+        self.vcs_cooking_dir = perforce_workspace.root_directory
         self.repo_file = perforce_workspace.repo_file
         self.nonwritable_file = perforce_workspace.nonwritable_file
         self.p4 = perforce_workspace.p4
         self.depot = perforce_workspace.depot
-        super(P4Environment, self).__init__(test_type)
+        super(P4Environment, self).__init__(directory, test_type)
 
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
         self.settings.PerforceVcs.password = perforce_workspace.p4.password
+        try:
+            self.settings.PerforceMainVcs.client = "p4_disposable_workspace"
+            self.settings.PerforceMainVcs.force_clean = True
+        except AttributeError:
+            pass
         try:
             self.settings.PerforceWithMappings.project_depot_path = perforce_workspace.depot
         except AttributeError:

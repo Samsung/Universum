@@ -1,17 +1,19 @@
 # -*- coding: UTF-8 -*-
 
+import inspect
 import json
 import shutil
 import sh
 
-from ...lib import utils
-from ...lib.gravity import Dependency
-from ...lib.utils import make_block
+from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
 from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
-from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
+from ...lib import utils
+from ...lib.gravity import Dependency
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import make_block
 
 __all__ = [
     "MainVcs",
@@ -37,6 +39,8 @@ def create_vcs(class_type=None):
         gerrit_driver_factory_class = gerrit_vcs.GerritMainVcs
         local_driver_factory_class = local_vcs.LocalMainVcs
 
+    vcs_types = ["none", "p4", "git", "gerrit"]
+
     @needs_structure
     class Vcs(ProjectDirectory):
         local_driver_factory = Dependency(local_driver_factory_class)
@@ -48,14 +52,38 @@ def create_vcs(class_type=None):
         def define_arguments(argument_parser):
             parser = argument_parser.get_or_create_group("Source files")
 
-            parser.add_argument("--vcs-type", "-vt", dest="type", default="p4",
-                                choices=["none", "p4", "git", "gerrit"],
-                                help="Select repository type to download sources from: Perforce ('p4', the default), "
+            parser.add_argument("--vcs-type", "-vt", dest="type",
+                                choices=vcs_types, metavar="VCS_TYPE",
+                                help="Select repository type to download sources from: Perforce ('p4'), "
                                      "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
                                      "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
         def __init__(self, *args, **kwargs):
             super(Vcs, self).__init__(*args, **kwargs)
+
+            if not getattr(self.settings, "type", None):
+                text = inspect.cleandoc("""
+                    The repository (VCS) type is not set.
+                     
+                    The repository type defines the version control system 
+                    that is used for performing the requested action.
+                    For example, Universum needs to get project source codes
+                    for performing Continuous Integration (CI) builds.  
+
+                    The following types are supported: {}.
+                    
+                    Each of these types requires supplying its own
+                    configuration parameters. At the minimum, the following
+                    parameters are required:
+                      * "git" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
+                      * "perforce"         - P4PORT (-p4p), P4USER (-p4u) and P4PASSWD (-p4P)
+                      * "none"             - SOURCE_DIR (-fsd)
+                      
+                    Depending on the requested action, additional type-specific
+                    parameters are required. For example, P4CLIENT (-p4c) is
+                    required for CI builds with perforce.""").format(", ".join(vcs_types))
+                raise IncorrectParameterError(text)
+
             try:
                 if self.settings.type == "none":
                     driver_factory = self.local_driver_factory

@@ -190,7 +190,7 @@ class Step(object):
                 else:
                     text = unicode(e) + "\n"
 
-            self._handle_posponed_out()
+            self._handle_postponed_out()
             if text:
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
@@ -206,7 +206,7 @@ class Step(object):
                 self.file.close()
             self._is_background = False
 
-    def _handle_posponed_out(self):
+    def _handle_postponed_out(self):
         for item in self._postponed_out:
             item[0](item[1])
         self._postponed_out = []
@@ -218,7 +218,7 @@ class Launcher(ProjectDirectory):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
-    server_factory = Dependency(automation_server.AutomationServer)
+    server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
     code_report_collector = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
@@ -246,9 +246,12 @@ class Launcher(ProjectDirectory):
             else:
                 self.settings.output = "console"
 
-        if getattr(self.settings, "config_path") is None:
+        if not getattr(self.settings, "config_path", None):
             raise IncorrectParameterError(
-                "Required option CONFIG_PATH (or '--launcher-config-path', or '-lcp') is missing.")
+                "the path to config file is not specified.\n"
+                "Please specify the path to project config file by using\n"
+                "'--launcher-config-path' ('-lcp') command-line option or\n"
+                "CONFIG_PATH environment variable")
 
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()
@@ -266,7 +269,8 @@ class Launcher(ProjectDirectory):
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
         try:
-            execfile(config_path, config_globals)
+            with open(config_path) as config:
+                exec(config.read(), config_globals)  # pylint: disable=exec-used
 
             self.source_project_configs = config_globals["configs"]
             dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")

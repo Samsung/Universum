@@ -38,6 +38,13 @@ def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tm
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
+def test_vcs_error_no_vcs_type(capsys):
+    with pytest.raises(SystemExit):
+        universum.main(["-ot", "term"])
+
+    assert "The repository (VCS) type is not set" in capsys.readouterr().err
+
+
 def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
@@ -247,30 +254,32 @@ def submit_environment(request, perforce_workspace, git_client, tmpdir):
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 
 
+def test_submit_success_no_changes(submit_parameters, submit_environment):
+    parameters = submit_parameters(submit_environment)
+    assert parameters.submit_path_list([]) == 0
+
+
 def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     file_name = utils.randomize_name("new_file") + ".txt"
-    file_path = os.path.join(unicode(parameters.environment.root_directory), file_name)
+    temp_file = parameters.environment.vcs_cooking_dir.join(file_name)
+    file_path = unicode(temp_file)
 
     # Add a file
-    temp_file = open(file_path, "ab")
     temp_file.write("This is a new file" + "\n")
-    temp_file.close()
-    parameters.assert_submit_success([unicode(file_path)])
+    parameters.assert_submit_success([file_path])
     assert parameters.file_present(file_path)
 
     # Modify a file
-    temp_file = open(file_path, "ab")
     text = "This is a new line in the file"
     temp_file.write(text + "\n")
-    temp_file.close()
-    parameters.assert_submit_success([unicode(file_path)])
+    parameters.assert_submit_success([file_path])
     assert parameters.text_in_file(text, file_path)
 
     # Delete a file
-    os.remove(file_path)
-    parameters.assert_submit_success([unicode(file_path)])
+    temp_file.remove()
+    parameters.assert_submit_success([file_path])
     assert not parameters.file_present(file_path)
 
 
@@ -278,7 +287,7 @@ def test_submit_success_ignore_new_and_deleted_while_edit_only(submit_parameters
     parameters = submit_parameters(submit_environment)
 
     new_file_name = utils.randomize_name("new_file") + ".txt"
-    temp_file = parameters.environment.root_directory.join(new_file_name)
+    temp_file = parameters.environment.vcs_cooking_dir.join(new_file_name)
     temp_file.write("This is a new temp file" + "\n")
     deleted_file_path = unicode(parameters.environment.repo_file)
     deleted_file_name = os.path.basename(deleted_file_path)
@@ -322,7 +331,7 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
     dir_name = utils.randomize_name("new_directory")
 
     # Create and reconcile new directory
-    tmp_dir = parameters.environment.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(dir_name)
     for i in range(0, 9):
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write("This is some file" + "\n")
@@ -365,7 +374,7 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
     dir_name = utils.randomize_name("new_directory")
 
     # Create embedded directories, partially reconcile
-    tmp_dir = parameters.environment.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(dir_name)
     inner_dir = tmp_dir.mkdir("inner_directory")
     text = "This is some file" + "\n"
     for i in range(0, 9):
@@ -390,12 +399,12 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
 
     # Create one more directory
     other_dir_name = utils.randomize_name("new_directory")
-    other_tmp_dir = parameters.environment.root_directory.mkdir(other_dir_name)
+    other_tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(other_dir_name)
     for i in range(0, 9):
         tmp_file = other_tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(parameters.environment.root_directory) + "/new_directory*/"])
+    parameters.assert_submit_success([unicode(parameters.environment.vcs_cooking_dir) + "/new_directory*/"])
 
     for i in range(0, 9):
         file_name = "new_file{}.txt".format(i)
@@ -470,6 +479,6 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
     # Clean up the repo
     shutil.rmtree(unicode(tmp_dir))
     shutil.rmtree(unicode(other_tmp_dir))
-    parameters.assert_submit_success([unicode(parameters.environment.root_directory) + "/*"])
+    parameters.assert_submit_success([unicode(parameters.environment.vcs_cooking_dir) + "/*"])
     assert not parameters.file_present(unicode(tmp_dir))
     assert not parameters.file_present(unicode(other_tmp_dir))

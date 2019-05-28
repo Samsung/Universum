@@ -3,12 +3,13 @@
 import glob
 import os
 
-from ...lib.ci_exception import CriticalCiException
-from ...lib.utils import make_block
-from ...lib import utils
+from .base_vcs import BaseVcs, BaseDownloadVcs
 from ..output import needs_output
 from ..structure_handler import needs_structure
-from .base_vcs import BaseVcs, BaseDownloadVcs
+from ...lib import utils
+from ...lib.ci_exception import CriticalCiException
+from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import make_block, convert_to_str
 
 __all__ = [
     "GitMainVcs",
@@ -29,6 +30,7 @@ class GitVcs(BaseVcs):
     """
     This class contains CI functions for interaction with Git
     """
+
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git", "Git repository settings")
@@ -46,13 +48,19 @@ class GitVcs(BaseVcs):
         try:
             git = utils.import_module("git")
             remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
-        except CriticalCiException as e:
-            if "Failed to import" in unicode(e):
-                text = "Using VCS type 'git' requires official Git CLI and Pyhton package 'gitpython' " \
-                       "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
-                       "documentation for detailed instructions"
-                raise CriticalCiException(text)
-            raise
+        except ImportError:
+            text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
+                   "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
+                   "documentation for detailed instructions"
+            raise ImportError(text)
+
+        utils.check_required_option(self.settings, "repo", """
+            the git repo is not specified.
+
+            The repo defines the location of project source codes.
+            Please specify the git repo by using '--git-repo' ('-gr') 
+            command line parameter or by setting GIT_REPO environment
+            variable.""")
 
         class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
@@ -65,7 +73,7 @@ class GitVcs(BaseVcs):
         self.repo = None
         self.logger = Progress(self.out)
 
-        if self.settings.refspec:
+        if getattr(self.settings, "refspec", None):
             if self.settings.refspec.startswith("origin/"):
                 self.refspec = self.settings.refspec[7:]
             else:
@@ -76,15 +84,13 @@ class GitVcs(BaseVcs):
     @make_block("Cloning repository")
     @catch_git_exception()
     def clone_and_fetch(self, history_depth=None):
-        if not self.settings.repo:
-            raise CriticalCiException("Cannot clone: GIT_REPO is not specified")
-
         self.out.log("Cloning '" + self.settings.repo + "'...")
+        destination_directory = convert_to_str(self.settings.project_root)
         if history_depth:
-            self.repo = git.Repo.clone_from(self.settings.repo, self.settings.project_root,
+            self.repo = git.Repo.clone_from(self.settings.repo, destination_directory,
                                             depth=history_depth, no_single_branch=True, progress=self.logger)
         else:
-            self.repo = git.Repo.clone_from(self.settings.repo, self.settings.project_root, progress=self.logger)
+            self.repo = git.Repo.clone_from(self.settings.repo, destination_directory, progress=self.logger)
 
         self.sources_need_cleaning = True
         self.append_repo_status("Git repo: " + self.settings.repo + "\n\n")
@@ -193,6 +199,14 @@ class GitSubmitVcs(GitVcs):
         parser.add_argument("--git-email", "-ge", dest="email", metavar="GITEMAIL",
                             help="Git user email for submitting")
 
+    def __init__(self, *args, **kwargs):
+        super(GitSubmitVcs, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "user", None) or not getattr(self.settings, "email", None):
+            raise IncorrectParameterError("user name or email is not specified. \n\n"
+                                          "Submitting changes to repository requires setting user name and email.\n"
+                                          "Please use '--git-user' (GITUSER) and '--git-email' (GITEMAIL) parameters.")
+
     def get_list_of_modified(self, file_list):
         """
         Output of 'git status --porcelain' for most cases looks as following:
@@ -240,15 +254,12 @@ class GitSubmitVcs(GitVcs):
 
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
-            self.repo = git.Repo(self.settings.project_root)
+            self.repo = git.Repo(convert_to_str(self.settings.project_root))
         except git.exc.NoSuchPathError:
             raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
         except git.exc.InvalidGitRepositoryError:
             raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
-        if not getattr(self.settings, "user") or not getattr(self.settings, "email"):
-            raise CriticalCiException("Submitting changes to repository requires user name and email specified. "
-                                      "Please use '--git-user' and '--git-email' parameters")
         configurator = self.repo.config_writer()
         configurator.set_value("user", "name", self.settings.user)
         configurator.set_value("user", "email", self.settings.email)
@@ -261,8 +272,11 @@ class GitSubmitVcs(GitVcs):
         else:
             self.repo.git.add(relative_path_list, all=True)
 
-        if "nothing added to commit" in self.repo.git.status() \
-                or "no changes added to commit" in self.repo.git.status():
+        repo_status = self.repo.git.status()
+        nothing_committed = ("nothing added to commit" in repo_status or
+                             "no changes added to commit" in repo_status or
+                             "nothing to commit" in repo_status)
+        if nothing_committed:
             return 0
 
         self.out.log(self.repo.git.commit(m=description))

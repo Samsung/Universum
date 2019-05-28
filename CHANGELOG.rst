@@ -1,6 +1,34 @@
 Change log
 ==========
 
+0.18.0 (2019-05-28)
+-------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **remove setting default VCS type to p4.**
+  `--vcs-type` is now a required option
+
+New features
+~~~~~~~~~~~~
+
+* **docs:** restructure documentation, switch README to Markdown
+* **docs:** add logo, favicon and community docs
+* **docs:** add example P4-to-Git porting script
+* **args:** VCS type can now be defined via environment variable
+
+Bug fixes
+~~~~~~~~~
+
+* **incorrect checks of parameters**
+* **argument error message for subcommands**
+* **docs:** reference to :ref:`artifact_prebuild_clean <clean_artifacts>`
+* **submit:** git module returns error if there are no files
+* **p4:** no error on sync if depot is empty
+* **git:** bug with unicode on newer GitPython
+
+
 0.17.0 (2019-02-01)
 -------------------
 

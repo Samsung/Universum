@@ -4,7 +4,7 @@
 import os
 
 
-def get_line_with_text( text, log ):
+def get_line_with_text(text, log):
     for line in log.splitlines():
         if text in line:
             return line
@@ -255,6 +255,7 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
 
 
 def test_empty_required_params(universum_runner):
+    url_error = "URL of the Swarm server is not specified"
     config = """
 from _universum.configuration_support import Variations
 
@@ -263,20 +264,33 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review")
-    assert "Variable 'REVIEW' is not set" in log
+    assert url_error in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review -sre=''")
-    assert "Variable 'REVIEW' is not set" in log
+                               additional_parameters=" --report-to-review -ssu=''")
+    assert url_error in log
+
+    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review -ssu=http://swarm")
+    assert url_error not in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review",
-                               environment=["SWARM_REVIEW=''"])
-    assert "Variable 'REVIEW' is not set" in log
+                               environment=["SWARM_SERVER="])
+    assert url_error in log
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review --build-only-latest -sre=''")
-    assert "Variable 'REVIEW' is not set" in log
+                               additional_parameters=" --report-to-review",
+                               environment=["SWARM_SERVER=http://swarm"])
+    assert url_error not in log
+
+    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review --build-only-latest -ssu=''")
+    assert url_error in log
+
+    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+                               additional_parameters=" --report-to-review --build-only-latest -ssu=http://swarm")
+    assert url_error not in log
 
 
 def test_environment(universum_runner):
@@ -284,7 +298,7 @@ def test_environment(universum_runner):
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
-    script.chmod(777)
+    script.chmod(0777)
 
     log = universum_runner.run("""
 from _universum.configuration_support import Variations

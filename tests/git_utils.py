@@ -2,22 +2,43 @@
 # pylint: disable = redefined-outer-name
 
 import os
+from time import sleep
 
 import git
 from git.remote import RemoteProgress
 import pytest
+import sh
 
 from . import utils
 
 
 class GitServer(object):
     def __init__(self, working_directory, branch_name):
-        self.url = "file://" + unicode(working_directory)
         self.target_branch = branch_name
         self.target_file = "readme.txt"
 
         self._working_directory = working_directory
         self._repo = git.Repo.init(unicode(working_directory))
+        self._repo.daemon_export = True
+        self._daemon_started = False
+
+        def std_redirect(line):
+            print "[git daemon] " + line
+            if "Ready to rumble" in line:
+                self._daemon_started = True
+
+        port = utils.get_open_port()
+        # We use this URL for now while docker works in 'host' mode
+        # In 'host' mode host localhost is container localhost
+        self.url = "git://127.0.0.1:" + unicode(port) + unicode(working_directory)
+
+        # pylint: disable = unexpected-keyword-arg, too-many-function-args
+        # module sh built-in alias for sh.Command('git') causes pylint warnings
+        self._daemon = sh.git("daemon", "--verbose", "--listen=127.0.0.1", "--port=" + unicode(port),
+                              "--enable=receive-pack", unicode(working_directory),
+                              _iter=True, _bg_exc=False, _bg=True,
+                              _out=std_redirect, _err=std_redirect)
+
         configurator = self._repo.config_writer()
         configurator.set_value("user", "name", "Testing user")
         configurator.set_value("user", "email", "some@email.com")
@@ -30,8 +51,8 @@ class GitServer(object):
 
         self._branch = self._repo.create_head(branch_name)
 
-    def get_location(self):
-        return unicode(self._working_directory)
+        while not self._daemon_started:
+            sleep(1)
 
     def make_a_change(self):
         self._branch.checkout()
@@ -74,11 +95,22 @@ class GitServer(object):
     def get_last_commit(self):
         return self._repo.git.log('-n1', pretty='format:"%H"').replace('"', '')
 
+    def exit(self):
+        try:
+            self._daemon.terminate()
+            self._daemon.wait()
+        except sh.SignalException_SIGTERM:
+            pass
+
 
 @pytest.fixture()
 def git_server(tmpdir):
     directory = tmpdir.mkdir("server")
-    yield GitServer(directory, "testing")
+    server = GitServer(directory, "testing")
+    try:
+        yield server
+    finally:
+        server.exit()
 
 
 @pytest.fixture()
@@ -101,9 +133,9 @@ class GitEnvironment(utils.TestEnvironment):
     def __init__(self, client, directory, test_type):
         db_file = directory.join("gitpoll.json")
         self.db_file = unicode(db_file)
-        self.root_directory = client.root_directory
+        self.vcs_cooking_dir = client.root_directory
 
-        super(GitEnvironment, self).__init__(test_type)
+        super(GitEnvironment, self).__init__(directory, test_type)
 
         self.server = client.server
         self.repo = client.repo
@@ -124,11 +156,11 @@ class GitEnvironment(utils.TestEnvironment):
         return changes.split(" ")[0]
 
     def file_present(self, file_path):
-        relative_path = os.path.relpath(file_path, unicode(self.root_directory))
+        relative_path = os.path.relpath(file_path, unicode(self.vcs_cooking_dir))
         return relative_path in self.repo.git.ls_files(file_path)
 
     def text_in_file(self, text, file_path):
-        relative_path = os.path.relpath(file_path, unicode(self.root_directory))
+        relative_path = os.path.relpath(file_path, unicode(self.vcs_cooking_dir))
         return text in self.repo.git.show("HEAD:" + relative_path)
 
     def make_a_change(self):

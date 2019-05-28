@@ -7,7 +7,7 @@ import _universum
 
 
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
 
 
@@ -18,17 +18,16 @@ docs = (
 )
 
 vcs = (
-    'gitpython',
+    'gitpython>=2.1.8',
     'P4'
 )
 
 setup(
     name=_universum.__title__,
     version=_universum.__version__,
-    description='Continuous Integration Framework',
+    description='Unifier of Continuous Integration',
     long_description=readme(),
-    author='Ivan Keliukh, Kateryna Dovgan',
-    author_email='k.dovgan@samsung.com',
+    author='Ivan Keliukh <i.keliukh@samsung.com>, Kateryna Dovgan <k.dovgan@samsung.com>',
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum', 'analyzers.pylint', 'analyzers.svace', 'analyzers.uncrustify'],

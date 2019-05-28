@@ -11,7 +11,7 @@ from ...modules.reporter import Reporter
 from ...lib.ci_exception import CriticalCiException, SilentAbortException
 from ...lib.gravity import Dependency
 from ...lib.module_arguments import IncorrectParameterError
-from ...lib.utils import make_block, Uninterruptible
+from ...lib.utils import make_block, Uninterruptible, convert_to_str
 from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
@@ -49,25 +49,39 @@ class PerforceVcs(base_vcs.BaseVcs):
         parser.add_argument("--p4-user", "-p4u", dest="user", help="P4 user name", metavar="P4USER")
         parser.add_argument("--p4-password", "-p4P", dest="password", help="P4 password", metavar="P4PASSWD")
 
-    def check_required_option(self, name, env_var):
-        utils.check_required_option(self.settings, name, env_var)
-
     def __init__(self, *args, **kwargs):
         super(PerforceVcs, self).__init__(*args, **kwargs)
 
-        self.check_required_option("port", "P4PORT")
-        self.check_required_option("user", "P4USER")
-        self.check_required_option("password", "P4PASSWD")
+        utils.check_required_option(self.settings, "port", """
+            the perforce 'port' is not specified.
+            
+            The perforce port defines protocol, host and listening port
+            of the perforce server. Please specify perforce port by
+            using '--p4-port' ('-p4p') command line parameter or
+            by setting P4PORT environment variable.""")
+        utils.check_required_option(self.settings, "user", """
+            the perforce user name is not specified.
+
+            The perforce user name is required to authenticate with
+            perforce server. Please specify the perforce user name by
+            using '--p4-user' ('-p4u') command line parameter or
+            by setting P4USER environment variable.""")
+        utils.check_required_option(self.settings, "password", """
+            the perforce password is not specified.
+
+            The perforce password is required to authenticate with
+            perforce server. Please specify the perforce password by
+            using '--p4-password' ('-p4P') command line parameter or
+            by setting P4PASSWD environment variable.""")
 
         try:
             p4_module = utils.import_module("P4")
-        except CriticalCiException as e:
-            if "Failed to import" in unicode(e):
-                text = "Using VCS type 'p4' requires official Helix CLI and Pyhton package 'perforce-p4python' " \
-                       "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
-                       "documentation for detailed instructions"
-                raise CriticalCiException(text)
-            raise
+        except ImportError:
+            text = "Error: using VCS type 'p4' requires official Helix CLI and Python package 'perforce-p4python' " \
+                   "to be installed. Please refer to `Prerequisites` chapter of project documentation for " \
+                   "detailed instructions"
+            raise ImportError(text)
+
         self.p4 = p4_module.P4()
         global P4Exception
         P4Exception = p4_module.P4Exception
@@ -115,8 +129,12 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
     def __init__(self, *args, **kwargs):
         super(PerforceSubmitVcs, self).__init__(*args, **kwargs)
 
-        self.client_name = self.settings.client
-        self.client_root = self.settings.project_root
+        if not getattr(self.settings, "client", None):
+            raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
+                                          "This parameter is required for submitting changes to the perforce.\n"
+                                          "It defines the name of the existing workspace to use for submit.\n"
+                                          "Please specify the workspace name by using '--p4-client' ('-p4c')\n"
+                                          "command-line parameter or P4CLIENT environment variable.")
 
     def p4reconcile(self, *args, **kwargs):
         try:
@@ -161,11 +179,11 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             if file_path.endswith("/"):
                 file_path += "..."
             if edit_only:
-                reconcile_result = self.p4reconcile("-e", file_path)
+                reconcile_result = self.p4reconcile("-e", convert_to_str(file_path))
                 if not reconcile_result:
                     self.out.log("The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
             else:
-                reconcile_result = self.p4reconcile(file_path)
+                reconcile_result = self.p4reconcile(convert_to_str(file_path))
 
             for line in reconcile_result:
                 # p4reconcile returns list of dicts AND strings if file is opened in another workspace
@@ -209,6 +227,11 @@ class PerforceWithMappings(PerforceVcs):
 
     def __init__(self, *args, **kwargs):
         super(PerforceWithMappings, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "project_depot_path", None) and not getattr(self.settings, "mappings", None):
+            raise IncorrectParameterError("both P4_PATH (-p4d) and P4_MAPPINGS (-p4m) are not set.\n\n"
+                                          "Universum needs one of these parameters to be set in order to download sources.\n")
+
         # Convert old-style depot path into mappings
         if self.settings.project_depot_path:
             if self.settings.mappings:
@@ -255,6 +278,13 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
     def __init__(self, *args, **kwargs):
         super(PerforceMainVcs, self).__init__(*args, **kwargs)
+
+        if not getattr(self.settings, "client", None):
+            raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
+                                          "This parameter is required for creating temporary workspace\n"
+                                          "for downloading project sources. Please specify the workspace\n"
+                                          "name by using '--p4-client' ('-p4c') command-line parameter\n"
+                                          "or P4CLIENT environment variable.")
 
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
@@ -328,9 +358,6 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     @make_block("Creating workspace")
     @catch_p4exception()
     def create_workspace(self):
-        if not getattr(self.settings, "client"):
-            raise CriticalCiException("P4CLIENT is not specified. Cannot create workspace")
-
         self.expand_workspace_parameters()
 
         if not all((self.client_name, self.client_root, self.client_view)):
@@ -344,7 +371,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             raise CriticalCiException("Workspace '" + self.client_name + "' already exists!")
 
         client = self.p4.fetch_client(self.client_name)
-        client["Root"] = self.client_root
+        client["Root"] = convert_to_str(self.client_root)
         client["View"] = self.client_view
         self.p4.save_client(client)
         self.p4.client = self.client_name
@@ -370,6 +397,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 except IndexError:
                     text = "Error getting latest CL number for '" + depot["path"] + "'"
                     text += "\nPlease check depot path formatting (e.g. '/...' in the end for directories)"
+                    raise CriticalCiException(text)
                 self.out.log("Latest CL: " + depot["cl"])
 
             line = depot["path"] + '@' + depot["cl"]
