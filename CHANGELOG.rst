@@ -1,7 +1,7 @@
 Change log
 ==========
 
-0.18.0 (2019-05-27)
+0.18.0 (2019-05-28)
 -------------------
 
 BREAKING CHANGES
@@ -16,6 +16,7 @@ New features
 * **docs:** restructure documentation, switch README to Markdown
 * **docs:** add logo, favicon and community docs
 * **docs:** add example P4-to-Git porting script
+* **args:** VCS type can now be defined via environment variable
 
 Bug fixes
 ~~~~~~~~~

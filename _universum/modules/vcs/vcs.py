@@ -53,7 +53,7 @@ def create_vcs(class_type=None):
             parser = argument_parser.get_or_create_group("Source files")
 
             parser.add_argument("--vcs-type", "-vt", dest="type",
-                                choices=vcs_types,
+                                choices=vcs_types, metavar="VCS_TYPE",
                                 help="Select repository type to download sources from: Perforce ('p4'), "
                                      "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
                                      "Gerrit uses Git parameters. Each VCS type has its own settings.")
