@@ -22,7 +22,7 @@ Perforce
 ~~~~~~~~
 
 * p4 CLI (see `official installation manual
-  <https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.install.html#install.linux.packages>`__
+  <https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.install.html>`__
   for details)
 * P4Python (see `official installation manual
   <https://www.perforce.com/helix-p4python-package-repositories-overview>`__ for details)
