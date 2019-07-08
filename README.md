@@ -39,18 +39,26 @@ cd universum-working-dir
 git checkout master
 pip install .[test] -U
 make images
-
 ```
+After this run `make tests` and ensure all tests are passing.
+
+Also note that running `pip uninstall universum` will remove Universum itself,
+but all the dependency modules will remain in the system.
+
+## Quick architecture overview
+
+The main idea of project 'Universum' architecture is ability to use it not only as
+finished product, but also as a library of separate and consistent modules.
+* 'lib' contains utility functions for initial setup and inter-module communication
+* 'modules' contain functionality implementations themselves
+* upper-level modules ('main'/'poll'/'submit') switch between Universum modes
+
+For each module exact description see docstrings.
 
 ## Plan for improving README
 
 Further versions of this README file should include:
 
-1. Instructions for Universum developers:
-   * What to install
-   * How to set up
-   * How to run tests
-   * Minimal architecture overview
-2. Notification on mandatory code review for all commits to master
-3. Notification on mandatory documenting of the newly added features
+1. Notification on mandatory code review for all commits to master
+2. Notification on mandatory documenting of the newly added features
 3. Description of CI process, links to configurations/logs/build results/etc.
