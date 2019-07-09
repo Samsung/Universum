@@ -11,7 +11,7 @@ Full documentation can be found here: https://universum.readthedocs.io/
 Please check out our [code of conduct](CODE_OF_CONDUCT.md)
 and [contribution policy](.github/CONTRIBUTING.md)
 
-# Installation from GitHub
+## Installation from GitHub
 
 ### Latest release
 
@@ -39,18 +39,65 @@ cd universum-working-dir
 git checkout master
 pip install .[test] -U
 make images
-
 ```
+After this run `make tests` and ensure all tests are passing.
+
+Also note that running `pip uninstall universum` will remove Universum itself,
+but all the dependency modules will remain in the system.
+
+## Quick contents overview
+
+The main idea of project 'Universum' architecture is ability to use it not only as
+finished product, but also as a library of separate and consistent modules.
+
+Here's the list of what can be found inside `_universum` directory:
+* `main`/`poll`/`submit`/`api` - managing modules for different Universum modes
+* `configuration_support` - special module for [configuring the project](
+https://universum.readthedocs.io/en/latest/configuring.html)
+* `lib` - utility functions libraries
+  * `ci_exception` - internal exceptions
+  * `module_arguments` - handles [command line](
+  https://universum.readthedocs.io/en/latest/args.html) and other parameters
+  * `gravity` - inter-module communication
+  * `utils` - miscellaneous
+* `modules` - independent packages
+  * `api_support` - 'main' mode module to answer API requests
+  * `automation_server` - drivers for CI systems (e.g. Jenkins)
+  * `artifact_collector` - implements [build artifacts](
+  https://universum.readthedocs.io/en/latest/configuring.html#common-variations-keys)
+  * `code_report_collector` - support for [external 'code report' modules](
+  https://universum.readthedocs.io/en/latest/code_report.html)
+  * `launcher` - executes build scenario, described in [project configuration file](
+  https://universum.readthedocs.io/en/latest/configuring.html)
+  * `output` - drivers for environment-based logs
+  * `project_directory` - interaction with host file system
+  * `reporter` - interaction with code review systems
+  * `structure_handler` - execution 'blocks' isolation, order, reporting, etc.
+  * `vcs` - CI target sources preparation
+
+Also there are 'base' modules/classes for driver implementation standardization,
+and 'main' modules/classes for automated driver choosing based on environment and settings.
+
+`doc` directory contains sources for [project documentation](
+https://universum.readthedocs.io/en/latest/index.html). It can be generated
+locally with running `make` from root directory using Sphinx.
+  
+`tests` directory contains test system, based on PyTest. Full tests can be started
+from root directory via `make tests` command, otherwise use standard PyTest syntax.
+*Commits failing any of project tests should not be merged into 'master' branch!*
+
+`examples` contains various examples of [project configuration files](
+https://universum.readthedocs.io/en/latest/configuring.html). Usage of such files
+is illustrated in `run_basic_example.sh` script.
+
+`analyzers` directory is not a part of Universum itself. It contains example external scripts
+compatible with Universum for static (and other types of) analysis.
+
 
 ## Plan for improving README
 
 Further versions of this README file should include:
 
-1. Instructions for Universum developers:
-   * What to install
-   * How to set up
-   * How to run tests
-   * Minimal architecture overview
-2. Notification on mandatory code review for all commits to master
-3. Notification on mandatory documenting of the newly added features
+1. Notification on mandatory code review for all commits to master
+2. Notification on mandatory documenting of the newly added features
 3. Description of CI process, links to configurations/logs/build results/etc.
