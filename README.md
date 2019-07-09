@@ -95,20 +95,18 @@ for static (and other types of) analysis.
 
 ## Quick architecture overview
 
-The main idea of project 'Universum' architecture is ability to use it not only as
-finished product, but also as a library of separate and consistent modules.
-
 1. Project only entry point (except ['analyzers'](https://universum.readthedocs.io/en/latest/code_report.html))
 is `universum.py`. Based on chosen execution mode (default, submitting, polling, etc.)
-if calls one of 'main' modules, passing them all parameters
-2. Each module is inherited from `Module` class, defined in `gravity`. Because of this
-   * all module dependencies are handled via `Dependency` mechanism
-   * all module parameters, described in `define_arguments()` are automatically parsed and
-     passed to module via `self.settings`
-3. `configuration_support` is, in fact, an 'external' module, used not by Universum,
+it calls one of 'main' modules, passing them all parameters
+2. Universum is a set of separate modules, each implementing its own piece of functionality.
+   They are connected using special `gravity` module.
+3. All classes, inherited from `Module` (defined in `gravity`), automatically can:
+   * use `Dependency` mechanism to rely on other modules
+   * describe any module parameters in `define_arguments()` and receive them parsed via `self.settings`
+4. `configuration_support` is, in fact, an 'external' module, used not only by Universum,
    but by [user configuration file](https://universum.readthedocs.io/en/latest/configuring.html)
    for generating project configuration
-4. 'Base' classes are virtual, not implementing any actual functionality, but describing
+5. 'Base' classes are virtual, not implementing any actual functionality, but describing
    the structure of inherited classes and ensuring they have all required functions
    that will be called by modules using them
 
