@@ -45,7 +45,7 @@ After this run `make tests` and ensure all tests are passing.
 Also note that running `pip uninstall universum` will remove Universum itself,
 but all the dependency modules will remain in the system.
 
-## Quick architecture overview
+## Quick contents overview
 
 The main idea of project 'Universum' architecture is ability to use it not only as
 finished product, but also as a library of separate and consistent modules.
@@ -76,21 +76,21 @@ https://universum.readthedocs.io/en/latest/configuring.html)
   * `vcs` - CI target sources preparation
 
 Also there are 'base' modules/classes for driver implementation standardization,
-and 'main' modules/classes for automated driver choosing based on environment and
-settings.
+and 'main' modules/classes for automated driver choosing based on environment and settings.
 
 `doc` directory contains sources for [project documentation](
-https://universum.readthedocs.io/en/latest/index.html), and can be generated
-locally with `make docs` using Sphinx.
-
-`tests` directory contains test system, based on PyTest.
+https://universum.readthedocs.io/en/latest/index.html). It can be generated
+locally with running `make` from root directory using Sphinx.
+  
+`tests` directory contains test system, based on PyTest. Full tests can be started
+from root directory via `make tests` command, otherwise use standard PyTest syntax.
 
 `examples` contains various examples of [project configuration files](
-  https://universum.readthedocs.io/en/latest/configuring.html).
+https://universum.readthedocs.io/en/latest/configuring.html). Usage of such files
+is illustrated in `run_basic_example.sh` script.
 
-`analyzers` directory is not a part of Universum itself. It contains
-example external scripts compatible with Universum for static
-(and other types of) analysis.
+`analyzers` directory is not a part of Universum itself. It contains example external scripts
+compatible with Universum for static (and other types of) analysis.
 
 
 ## Plan for improving README
