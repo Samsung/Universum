@@ -99,9 +99,9 @@ for static (and other types of) analysis.
 is `universum.py`. Based on chosen execution mode (default, submitting, polling, etc.)
 it calls one of 'main' modules, passing them all parameters
 2. Universum is a set of separate modules, each implementing its own piece of functionality.
-   They are connected using special `gravity` module.
+   They are connected using special `gravity` library
 3. All classes, inherited from `Module` (defined in `gravity`), automatically can:
-   * use `Dependency` mechanism to rely on other modules
+   * use `Dependency` mechanism to use other modules
    * describe any module parameters in `define_arguments()` and receive them parsed via `self.settings`
 4. `configuration_support` is, in fact, an 'external' module, used not only by Universum,
    but by [user configuration file](https://universum.readthedocs.io/en/latest/configuring.html)
