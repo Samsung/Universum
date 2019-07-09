@@ -11,7 +11,7 @@ Full documentation can be found here: https://universum.readthedocs.io/
 Please check out our [code of conduct](CODE_OF_CONDUCT.md)
 and [contribution policy](.github/CONTRIBUTING.md)
 
-# Installation from GitHub
+## Installation from GitHub
 
 ### Latest release
 
@@ -84,6 +84,7 @@ locally with running `make` from root directory using Sphinx.
   
 `tests` directory contains test system, based on PyTest. Full tests can be started
 from root directory via `make tests` command, otherwise use standard PyTest syntax.
+*Commits failing any of project tests should not be merged into 'master' branch!*
 
 `examples` contains various examples of [project configuration files](
 https://universum.readthedocs.io/en/latest/configuring.html). Usage of such files
