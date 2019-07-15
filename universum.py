@@ -41,6 +41,7 @@ def define_arguments():
 def run(settings):
     result = 0
     main_module = construct_component(settings.main_class, settings)
+    main_module.out.log("Running {} {}".format(__title__, __version__))
 
     finalized = False
 
