@@ -28,6 +28,14 @@ class Api(Module):
 
         class MinimalOut(object):
             @staticmethod
+            def log(line):
+                pass
+
+            @staticmethod
+            def report_build_problem(problem):
+                pass
+
+            @staticmethod
             def log_exception(error):
                 ex_traceback = sys.exc_info()[2]
                 sys.stderr.write("Unexpected error.\n" + format_traceback(error, ex_traceback))
