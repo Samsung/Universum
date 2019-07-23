@@ -100,13 +100,10 @@ class TerminalBasedOutput(BaseOutput):
         self.print_lines(line)
 
 
-class JenkinsOutput(TerminalBasedOutput):
-    line_start = u" "
-    block_start = u"+++"
-    block_end = u"+++"
-
-
 class LocalOutput(TerminalBasedOutput):
     line_start = u" |   "
     block_start = u""
     block_end = u" \u2514 "
+
+
+JenkinsOutput = LocalOutput
