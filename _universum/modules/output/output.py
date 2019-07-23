@@ -2,7 +2,7 @@
 
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
-from .terminal_based_output import JenkinsOutput, LocalOutput
+from .terminal_based_output import TerminalBasedOutput
 from .teamcity_output import TeamcityOutput
 
 __all__ = [
@@ -25,8 +25,7 @@ def needs_output(klass):
 
 class Output(Module):
     teamcity_driver_factory = Dependency(TeamcityOutput)
-    local_driver_factory = Dependency(LocalOutput)
-    jenkins_driver_factory = Dependency(JenkinsOutput)
+    terminal_driver_factory = Dependency(TerminalBasedOutput)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -37,9 +36,9 @@ class Output(Module):
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
-        self.driver = utils.create_driver(local_factory=self.local_driver_factory,
+        self.driver = utils.create_driver(local_factory=self.terminal_driver_factory,
                                           teamcity_factory=self.teamcity_driver_factory,
-                                          jenkins_factory=self.jenkins_driver_factory,
+                                          jenkins_factory=self.terminal_driver_factory,
                                           default=self.settings.type)
 
     def log(self, line):
