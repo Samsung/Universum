@@ -15,7 +15,7 @@ Bug fixes
 
 * **artifacts:** rewrite 'make_archive' to use ZIP64 extensions
 * **tests:** fails if VCS is set globally via env
-* **out:** remove outdated Jenkins plugin block labels
+* **out:** remove old Jenkins block labels because of upcomming plugin update
 
 
 0.18.0 (2019-05-28)
