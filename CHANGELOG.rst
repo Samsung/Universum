@@ -1,6 +1,23 @@
 Change log
 ==========
 
+0.18.1 (2019-07-23)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **out:** add Universum version as log identifier for Jenkins plugin
+
+
+Bug fixes
+~~~~~~~~~
+
+* **artifacts:** rewrite 'make_archive' to use ZIP64 extensions
+* **tests:** fails if VCS is set globally via env
+* **out:** remove outdated Jenkins plugin block labels
+
+
 0.18.0 (2019-05-28)
 -------------------
 
