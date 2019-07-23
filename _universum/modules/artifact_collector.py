@@ -5,6 +5,7 @@ import distutils
 from distutils import dir_util, errors
 import os
 import shutil
+import zipfile
 
 import glob2
 
@@ -21,6 +22,39 @@ from .structure_handler import needs_structure
 __all__ = [
     "ArtifactCollector"
 ]
+
+
+def make_big_archive(target, source):
+    save_cwd = os.getcwd()
+    if source is not None:
+        target = os.path.abspath(target)
+        os.chdir(source)
+    base_dir = os.curdir
+
+    try:
+        filename = target + ".zip"
+        archive_dir = os.path.dirname(target)
+
+        if archive_dir and not os.path.exists(archive_dir):
+            os.makedirs(archive_dir)
+
+        with zipfile.ZipFile(filename, "w", compression=zipfile.ZIP_DEFLATED,
+                             allowZip64=True) as zf:
+            path = os.path.normpath(base_dir)
+            zf.write(path, path)
+            for dirpath, dirnames, filenames in os.walk(base_dir):
+                for name in sorted(dirnames):
+                    path = os.path.normpath(os.path.join(dirpath, name))
+                    zf.write(path, path)
+                for name in filenames:
+                    path = os.path.normpath(os.path.join(dirpath, name))
+                    if os.path.isfile(path):
+                        zf.write(path, path)
+    finally:
+        if source is not None:
+            os.chdir(save_cwd)
+
+    return filename
 
 
 @needs_output
@@ -167,7 +201,7 @@ class ArtifactCollector(ProjectDirectory):
             destination = os.path.join(self.artifact_dir, artifact_name)
             if not self.settings.no_archive:
                 try:
-                    shutil.make_archive(destination, "zip", matching_path)
+                    make_big_archive(destination, matching_path)
                     if is_report:
                         artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name + ".zip")
                         self.collected_report_artifacts.add(artifact_path)

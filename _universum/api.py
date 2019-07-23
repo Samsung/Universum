@@ -23,10 +23,18 @@ class Api(Module):
         try:
             self.api_support = self.api_support_factory(api_mode=True)
         except EnvironmentError as error:
-            sys.stderr.write(unicode(error))
+            sys.stderr.write(unicode(error) + u"\n")
             sys.exit(2)
 
         class MinimalOut(object):
+            @staticmethod
+            def log(line):
+                pass
+
+            @staticmethod
+            def report_build_problem(problem):
+                pass
+
             @staticmethod
             def log_exception(error):
                 ex_traceback = sys.exc_info()[2]

@@ -7,8 +7,6 @@ import shutil
 import pytest
 
 import universum
-from _universum.poll import Poll
-from _universum.submit import Submit
 from . import git_utils, perforce_utils, utils
 
 
@@ -39,6 +37,10 @@ def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tm
 
 
 def test_vcs_error_no_vcs_type(capsys):
+    try:
+        del os.environ["VCS_TYPE"]
+    except KeyError as e:
+        pass
     with pytest.raises(SystemExit):
         universum.main(["-ot", "term"])
 

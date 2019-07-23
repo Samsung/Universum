@@ -46,7 +46,7 @@ def stdout_checker(request):
 
 @pytest.fixture()
 def log_exception_checker(request):
-    with mock.patch('_universum.modules.output.terminal_based_output.LocalOutput.log_exception') as logging_mock:
+    with mock.patch('_universum.modules.output.terminal_based_output.TerminalBasedOutput.log_exception') as logging_mock:
         result = FuzzyCallChecker(logging_mock)
         yield result
 
