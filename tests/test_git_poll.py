@@ -5,7 +5,6 @@
 import pytest
 
 import universum
-from _universum.poll import Poll
 from .git_utils import GitEnvironment
 
 
@@ -32,15 +31,15 @@ def make_branch_with_changes(git_server, branch_name, commits_number, branch_fro
     return commits
 
 
-def assert_polled_commits(commits, stdout_checker, http_request_checker):
+def assert_polled_commits(commits, stdout_checker, http_check):
     for commit in commits:
         stdout_checker.assert_has_calls_with_param("==> Detected commit " + commit)
-        http_request_checker.assert_request_was_made({"cl": [commit]})
+        http_check.assert_request_was_made({"cl": [commit]})
 
 
-def test_max_number_commits(stdout_checker, http_request_checker, git_poll_environment):
+def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make changes in polled branch
@@ -49,17 +48,17 @@ def test_max_number_commits(stdout_checker, http_request_checker, git_poll_envir
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits(changes_to_polled[1:],
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
     # Ensure that oldest commit is beyond "allowed_commits_number" and is not polled
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_polled[0])
 
 
-def test_merge_one_branch_ff(stdout_checker, http_request_checker, git_poll_environment):
+def test_merge_one_branch_ff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make changes in polled branch
@@ -71,15 +70,15 @@ def test_merge_one_branch_ff(stdout_checker, http_request_checker, git_poll_envi
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits([change_to_polled] + changes_to_branch,
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
 
 
-def test_merge_one_branch_noff(stdout_checker, http_request_checker, git_poll_environment):
+def test_merge_one_branch_noff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make changes in polled branch
@@ -92,17 +91,17 @@ def test_merge_one_branch_noff(stdout_checker, http_request_checker, git_poll_en
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch[0])
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch[1])
 
 
-def test_merge_two_subsequent_branches_noff(stdout_checker, http_request_checker, git_poll_environment):
+def test_merge_two_subsequent_branches_noff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make changes in polled branch
@@ -117,17 +116,17 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, http_request_checker
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_first_branch[0])
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_second_branch[0])
 
 
-def test_merge_two_subsequent_branches_ff(stdout_checker, http_request_checker, git_poll_environment):
+def test_merge_two_subsequent_branches_ff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make changes in polled branch
@@ -142,15 +141,15 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, http_request_checker, 
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits([change_to_polled] + changes_to_first_branch + changes_to_second_branch,
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
 
 
-def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_request_checker, git_poll_environment):
+def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make a branch from polled
@@ -168,17 +167,17 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_request_chec
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits([change_to_polled, merge_commit_id],
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch)
 
 
 @pytest.mark.xfail
-def test_merge_ff_commit_merged_from_polled(stdout_checker, http_request_checker, git_poll_environment):
+def test_merge_ff_commit_merged_from_polled(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
 
     # ACT
     # make a branch from polled
@@ -199,8 +198,8 @@ def test_merge_ff_commit_merged_from_polled(stdout_checker, http_request_checker
 
     # ASSERT
     # run poll again and trigger the url twice
-    assert universum.run(git_poll_environment.settings) == 0
+    http_check.run_and_collect(universum.run, git_poll_environment.settings)
     assert_polled_commits([change_to_polled, change_to_branch],
                           stdout_checker,
-                          http_request_checker)
+                          http_check)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + merge_commit_to_branch)

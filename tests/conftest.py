@@ -60,7 +60,8 @@ class HttpChecker(object):
                 return
             queries.append(request.querystring)
 
-        assert False, 'Query string is not found in calls to http server.\nExpected: %s\nActual: %r' % (query, queries)
+        assert False, 'Query string is not found in calls to http server.\n' \
+                      'Expected: %s\nActual: %r' % (query, queries)
 
     @staticmethod
     def assert_request_was_not_made(query):
@@ -72,25 +73,20 @@ class HttpChecker(object):
             queries.append(request.querystring)
 
     @staticmethod
-    def reset():
-        httpretty.disable()
+    def run_and_collect(call, *args, **kwargs):
         httpretty.reset()
         httpretty.enable()
         httpretty.register_uri(httpretty.GET, "https://localhost/")
 
-    @staticmethod
-    def stop():
-        httpretty.disable()
-        httpretty.reset()
+        try:
+            assert call(*args, **kwargs) == 0
+        finally:
+            httpretty.disable()
 
 
 @pytest.fixture()
-def http_request_checker(request):
-    httpretty.enable()
-    httpretty.register_uri(httpretty.GET, "https://localhost/")
+def http_check(request):
     yield HttpChecker()
-    httpretty.disable()
-    httpretty.reset()
 
 
 def check_output((out, err)):
