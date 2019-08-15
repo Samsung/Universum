@@ -39,7 +39,7 @@ def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tm
 def test_vcs_error_no_vcs_type(capsys):
     try:
         del os.environ["VCS_TYPE"]
-    except KeyError as e:
+    except KeyError:
         pass
     with pytest.raises(SystemExit):
         universum.main(["-ot", "term"])
@@ -76,10 +76,10 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
 
 
 class PollerParameters(object):
-    def __init__(self, log_exception_checker, stdout_checker, http_request_checker, environment):
+    def __init__(self, log_exception_checker, stdout_checker, http_check, environment):
         self.log_exception_checker = log_exception_checker
         self.stdout_checker = stdout_checker
-        self.http_request_checker = http_request_checker
+        self.http_check = http_check
         self.poll_settings = environment.settings
         self.environment = environment
 
@@ -88,9 +88,9 @@ class PollerParameters(object):
 
 
 @pytest.fixture()
-def poll_parameters(log_exception_checker, stdout_checker, http_request_checker):
+def poll_parameters(log_exception_checker, stdout_checker, http_check):
     def inner(environment):
-        return PollerParameters(log_exception_checker, stdout_checker, http_request_checker, environment)
+        return PollerParameters(log_exception_checker, stdout_checker, http_check, environment)
     yield inner
 
 
@@ -106,10 +106,7 @@ def test_poll_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(parameters.poll_settings) == 0
-
-    # stop server
-    parameters.http_request_checker.stop()
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     # make change in workspace
     change = parameters.make_a_change()
@@ -127,74 +124,72 @@ def test_poll_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     # make change in workspace
     change = parameters.make_a_change()
 
-    # run poll again and trigger the url
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_request_was_made({"cl": [change]})
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
-    parameters.http_request_checker.assert_request_was_made({"cl": [change]})
 
 
 def test_poll_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll again and trigger the url twice
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
 
-    parameters.http_request_checker.assert_request_was_made({"cl": [change1]})
-    parameters.http_request_checker.assert_request_was_made({"cl": [change2]})
+    parameters.http_check.assert_request_was_made({"cl": [change1]})
+    parameters.http_check.assert_request_was_made({"cl": [change2]})
 
 
 def test_poll_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll and trigger the urls
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
 
-    parameters.http_request_checker.assert_request_was_made({"cl": [change1]})
-    parameters.http_request_checker.assert_request_was_made({"cl": [change2]})
+    parameters.http_check.assert_request_was_made({"cl": [change1]})
+    parameters.http_check.assert_request_was_made({"cl": [change2]})
 
     # make more changes in workspace
     parameters.stdout_checker.reset()
-    parameters.http_request_checker.reset()
     change3 = parameters.make_a_change()
     change4 = parameters.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    assert universum.run(parameters.poll_settings) == 0
+    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
     parameters.stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change2)
 
-    parameters.http_request_checker.assert_request_was_made({"cl": [change3]})
-    parameters.http_request_checker.assert_request_was_made({"cl": [change4]})
-    parameters.http_request_checker.assert_request_was_not_made({"cl": [change1]})
-    parameters.http_request_checker.assert_request_was_not_made({"cl": [change2]})
+    parameters.http_check.assert_request_was_made({"cl": [change3]})
+    parameters.http_check.assert_request_was_made({"cl": [change4]})
+    parameters.http_check.assert_request_was_not_made({"cl": [change1]})
+    parameters.http_check.assert_request_was_not_made({"cl": [change2]})
 
 # ----------------------------------------------------------------------------------------------
 
