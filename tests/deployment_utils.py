@@ -210,7 +210,7 @@ class UniversumRunner(object):
             f.write(config)
             f.close()
 
-        cmd = "coverage run --branch --append --source={} {}/universum.py" \
+        cmd = "coverage run --branch --append --source='{}' '{}/universum.py'" \
             .format(self.working_dir, self.working_dir)
 
         # We cannot collect coverage from installed module, so we run it only if specifically told so
