@@ -4,7 +4,6 @@
 import getpass
 from pwd import getpwnam
 import os
-import py
 from requests.exceptions import ReadTimeout
 
 import docker
@@ -186,16 +185,16 @@ class UniversumRunner(object):
             self.environment.install_python_module("coverage")
 
     def _basic_args(self):
-        return " -lo console -pr {} -ad {}".format(self.project_root, self.artifact_dir)
+        return " -lo console -pr '{}' -ad '{}'".format(self.project_root, self.artifact_dir)
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd {}".format(unicode(self.local.root_directory))
+            return " -vt none --no-diff -fsd '{}'".format(unicode(self.local.root_directory))
 
         if vcs_type == "git":
-            return " -vt git --no-diff -gr {} -grs {}".format(self.git.server.url, self.git.server.target_branch)
+            return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
 
-        return " -vt p4 --p4-force-clean -p4p {} -p4u {} -p4P {} -p4d {} -p4c {}" \
+        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c '{}'" \
             .format(self.perforce.p4.port,
                     self.perforce.p4.user,
                     self.perforce.p4.password,
@@ -217,7 +216,7 @@ class UniversumRunner(object):
         if force_installed:
             cmd = "universum"
 
-        cmd += " -lcp {}".format(config_file) \
+        cmd += " -lcp '{}'".format(config_file) \
                + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
 
         if expected_to_fail:
@@ -229,7 +228,7 @@ class UniversumRunner(object):
         return result
 
     def clean_artifacts(self):
-        self.environment.assert_successful_execution("rm -rf {}".format(self.artifact_dir))
+        self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
 
 @pytest.fixture()
