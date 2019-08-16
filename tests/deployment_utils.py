@@ -97,6 +97,7 @@ class ExecutionEnvironment(object):
     def install_python_module(self, name):
         if os.path.exists(name):
             module_name = 'universum'
+            name = "'" + name + "'"
         else:
             module_name = name
         if not utils.is_pycharm() or self._force_clean:
