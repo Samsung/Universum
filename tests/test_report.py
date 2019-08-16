@@ -8,17 +8,18 @@ import universum, utils
 
 
 class ReportEnvironment(utils.TestEnvironment):
-    def __init__(self, directory, local_sources):
+    def __init__(self, directory, client):
         super(ReportEnvironment, self).__init__(directory, "main")
 
-        self.settings.Vcs.type = "none"
+        self.settings.Vcs.type = "github"
         self.settings.MainVcs.report_to_review = True
-        self.settings.LocalMainVcs.source_dir = unicode(local_sources.root_directory)
+        self.settings.GitVcs.repo = client.server.url
+        self.settings.GitVcs.refspec = client.server.target_branch
 
 
 @pytest.fixture()
-def report_environment(tmpdir, local_sources):
-    yield ReportEnvironment(tmpdir, local_sources)
+def report_environment(tmpdir, git_client):
+    yield ReportEnvironment(tmpdir, git_client)
 
 
 def test_github_run(stdout_checker, http_check, report_environment):
