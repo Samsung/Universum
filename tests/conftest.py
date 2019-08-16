@@ -2,8 +2,11 @@
 # pylint: disable = redefined-outer-name
 
 import httpretty
+import py
 import pytest
 import mock
+
+import utils
 
 pytest_plugins = ['tests.perforce_utils', 'tests.git_utils', 'tests.deployment_utils']
 
@@ -101,3 +104,15 @@ def detect_fails(capsys):
     yield capsys
     check_output(capsys.readouterr())
     check_output(capsys._outerr)
+
+
+@pytest.fixture()
+def local_sources(tmpdir):
+    if utils.is_pycharm():
+        source_dir = py.path.local(".work").ensure(dir=True)
+    else:
+        source_dir = tmpdir.mkdir("project_sources")
+    local_file = source_dir.join("readme.txt")
+    local_file.write("This is a an empty file")
+
+    yield utils.Params(root_directory=source_dir, repo_file=local_file)
