@@ -195,7 +195,7 @@ class UniversumRunner(object):
         if vcs_type == "git":
             return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
 
-        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c '{}'" \
+        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
             .format(self.perforce.p4.port,
                     self.perforce.p4.user,
                     self.perforce.p4.password,
