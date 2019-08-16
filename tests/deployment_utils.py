@@ -97,6 +97,7 @@ class ExecutionEnvironment(object):
     def install_python_module(self, name):
         if os.path.exists(name):
             module_name = 'universum'
+            name = "'" + name + "'"
         else:
             module_name = name
         if not utils.is_pycharm() or self._force_clean:
@@ -185,16 +186,16 @@ class UniversumRunner(object):
             self.environment.install_python_module("coverage")
 
     def _basic_args(self):
-        return " -lo console -pr {} -ad {}".format(self.project_root, self.artifact_dir)
+        return " -lo console -pr '{}' -ad '{}'".format(self.project_root, self.artifact_dir)
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd {}".format(unicode(self.local.root_directory))
+            return " -vt none --no-diff -fsd '{}'".format(unicode(self.local.root_directory))
 
         if vcs_type == "git":
-            return " -vt git --no-diff -gr {} -grs {}".format(self.git.server.url, self.git.server.target_branch)
+            return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
 
-        return " -vt p4 --p4-force-clean -p4p {} -p4u {} -p4P {} -p4d {} -p4c {}" \
+        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
             .format(self.perforce.p4.port,
                     self.perforce.p4.user,
                     self.perforce.p4.password,
@@ -209,14 +210,14 @@ class UniversumRunner(object):
             f.write(config)
             f.close()
 
-        cmd = "coverage run --branch --append --source={} {}/universum.py" \
+        cmd = "coverage run --branch --append --source='{}' '{}/universum.py'" \
             .format(self.working_dir, self.working_dir)
 
         # We cannot collect coverage from installed module, so we run it only if specifically told so
         if force_installed:
             cmd = "universum"
 
-        cmd += " -lcp {}".format(config_file) \
+        cmd += " -lcp '{}'".format(config_file) \
                + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
 
         if expected_to_fail:
@@ -228,7 +229,7 @@ class UniversumRunner(object):
         return result
 
     def clean_artifacts(self):
-        self.environment.assert_successful_execution("rm -rf {}".format(self.artifact_dir))
+        self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
 
 @pytest.fixture()
