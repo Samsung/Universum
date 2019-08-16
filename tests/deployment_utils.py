@@ -4,7 +4,6 @@
 import getpass
 from pwd import getpwnam
 import os
-import py
 from requests.exceptions import ReadTimeout
 
 import docker
@@ -144,18 +143,6 @@ def clean_execution_environment(request):
     finally:
         if runner:
             runner.exit()
-
-
-@pytest.fixture()
-def local_sources(tmpdir):
-    if utils.is_pycharm():
-        source_dir = py.path.local(".work").ensure(dir=True)
-    else:
-        source_dir = tmpdir.mkdir("project_sources")
-    local_file = source_dir.join("readme.txt")
-    local_file.write("This is a an empty file")
-
-    yield utils.Params(root_directory=source_dir, repo_file=local_file)
 
 
 class UniversumRunner(object):
