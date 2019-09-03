@@ -36,8 +36,7 @@ def create_settings(test_type, vcs_type):
         if test_type == "submit":
             settings.GitSubmitVcs.user = "Testing User"
             settings.GitSubmitVcs.email = "some@email.com"
-        elif test_type == "main":
-            # the checkout id is crafted to satisfy requirements of our github module, and others don't care
+        elif test_type == "main" and vcs_type != "gerrit":
             settings.GitMainVcs.checkout_id = "HEAD"
     elif vcs_type == "none":
         if test_type == "main":
