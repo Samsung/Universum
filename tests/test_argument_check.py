@@ -29,13 +29,16 @@ def create_settings(test_type, vcs_type):
         settings.TeamcityServer.user_id = "TeamCityUser"
         settings.TeamcityServer.passwd = "TeamCityPassword"
 
-    if vcs_type == "git" or vcs_type == "gerrit":
+    if vcs_type == "git" or vcs_type == "gerrit" or vcs_type == "github":
         settings.GitVcs.repo = "ssh://user@127.0.0.1"
-        # the refspec is crafted to satisfy requirements of our gerrit module, and git doesn't care
+        # the refspec is crafted to satisfy requirements of our gerrit module, and others don't care
         settings.GitVcs.refspec = "refs/changes/00/000000/0"
         if test_type == "submit":
             settings.GitSubmitVcs.user = "Testing User"
             settings.GitSubmitVcs.email = "some@email.com"
+        elif test_type == "main":
+            # the checkout id is crafted to satisfy requirements of our github module, and others don't care
+            settings.GitMainVcs.checkout_id = "HEAD"
     elif vcs_type == "none":
         if test_type == "main":
             settings.LocalMainVcs.source_dir = "temp"
@@ -89,7 +92,7 @@ def param(test_type, module, field, vcs_type="*", error_match=None):
         return
 
     if vcs_type == "*":
-        param(test_type, module, field, ["p4", "git", "gerrit", "none"], error_match)
+        param(test_type, module, field, ["p4", "git", "gerrit", "github", "none"], error_match)
         return
 
     if test_type == "*":
@@ -126,6 +129,7 @@ param("main",   "Swarm",                "change",          vcs_type="p4")
 param("*",      "Vcs",                  "type")
 param("*",      "GitVcs",               "repo",            vcs_type=["git", "gerrit"])
 param("main",   "GitVcs",               "refspec",         vcs_type="gerrit")
+param("main",   "GitMainVcs",           "checkout_id",     vcs_type="github")
 # pylint: enable = bad-whitespace
 
 
