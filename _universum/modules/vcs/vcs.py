@@ -5,7 +5,7 @@ import json
 import shutil
 import sh
 
-from . import git_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
+from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
 from ..project_directory import ProjectDirectory
@@ -27,25 +27,29 @@ def create_vcs(class_type=None):
         p4_driver_factory_class = perforce_vcs.PerforceSubmitVcs
         git_driver_factory_class = git_vcs.GitSubmitVcs
         gerrit_driver_factory_class = gerrit_vcs.GerritSubmitVcs
+        github_driver_factory_class = git_vcs.GitSubmitVcs
         local_driver_factory_class = base_vcs.BaseSubmitVcs
     elif class_type == "poll":
         p4_driver_factory_class = perforce_vcs.PerforcePollVcs
         git_driver_factory_class = git_vcs.GitPollVcs
         gerrit_driver_factory_class = git_vcs.GitPollVcs
+        github_driver_factory_class = git_vcs.GitPollVcs
         local_driver_factory_class = base_vcs.BasePollVcs
     else:
         p4_driver_factory_class = perforce_vcs.PerforceMainVcs
         git_driver_factory_class = git_vcs.GitMainVcs
         gerrit_driver_factory_class = gerrit_vcs.GerritMainVcs
+        github_driver_factory_class = github_vcs.GithubMainVcs
         local_driver_factory_class = local_vcs.LocalMainVcs
 
-    vcs_types = ["none", "p4", "git", "gerrit"]
+    vcs_types = ["none", "p4", "git", "gerrit", "github"]
 
     @needs_structure
     class Vcs(ProjectDirectory):
         local_driver_factory = Dependency(local_driver_factory_class)
         git_driver_factory = Dependency(git_driver_factory_class)
         gerrit_driver_factory = Dependency(gerrit_driver_factory_class)
+        github_driver_factory = Dependency(github_driver_factory_class)
         perforce_driver_factory = Dependency(p4_driver_factory_class)
 
         @staticmethod
@@ -55,7 +59,7 @@ def create_vcs(class_type=None):
             parser.add_argument("--vcs-type", "-vt", dest="type",
                                 choices=vcs_types, metavar="VCS_TYPE",
                                 help="Select repository type to download sources from: Perforce ('p4'), "
-                                     "Git ('git'), Gerrit ('gerrit') or a local directory ('none'). "
+                                     "Git ('git'), Gerrit ('gerrit'), GitHub ('github') or a local directory ('none'). "
                                      "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
         def __init__(self, *args, **kwargs):
@@ -75,9 +79,9 @@ def create_vcs(class_type=None):
                     Each of these types requires supplying its own
                     configuration parameters. At the minimum, the following
                     parameters are required:
-                      * "git" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
-                      * "perforce"         - P4PORT (-p4p), P4USER (-p4u) and P4PASSWD (-p4P)
-                      * "none"             - SOURCE_DIR (-fsd)
+                      * "git", "github" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
+                      * "perforce"                   - P4PORT (-p4p), P4USER (-p4u) and P4PASSWD (-p4P)
+                      * "none"                       - SOURCE_DIR (-fsd)
                       
                     Depending on the requested action, additional type-specific
                     parameters are required. For example, P4CLIENT (-p4c) is
@@ -91,6 +95,8 @@ def create_vcs(class_type=None):
                     driver_factory = self.git_driver_factory
                 elif self.settings.type == "gerrit":
                     driver_factory = self.gerrit_driver_factory
+                elif self.settings.type == "github":
+                    driver_factory = self.github_driver_factory
                 else:
                     driver_factory = self.perforce_driver_factory
             except AttributeError:

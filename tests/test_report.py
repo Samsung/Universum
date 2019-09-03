@@ -14,7 +14,8 @@ class ReportEnvironment(utils.TestEnvironment):
         self.settings.Vcs.type = "github"
         self.settings.MainVcs.report_to_review = True
         self.settings.GitVcs.repo = client.server.url
-        self.settings.GitVcs.refspec = client.server.target_branch
+        commit_id = unicode(client.repo.remotes.origin.refs[client.server.target_branch].commit)
+        self.settings.GitMainVcs.checkout_id = commit_id
 
 
 @pytest.fixture()
