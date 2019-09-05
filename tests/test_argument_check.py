@@ -108,12 +108,12 @@ def param(test_type, module, field, vcs_type="*", error_match=None):
 
 # pylint: disable = bad-whitespace
 param("main",   "Launcher",             "config_path")
-param("submit", "Submit",               "commit_message",  vcs_type=["p4", "git", "gerrit"])
+param("submit", "Submit",               "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
 param("submit", "PerforceSubmitVcs",    "client",          vcs_type="p4")
 param("main",   "PerforceMainVcs",      "client",          vcs_type="p4")
 param("main",   "LocalMainVcs",         "source_dir",      vcs_type="none")
-param("submit", "GitSubmitVcs",         "user",            vcs_type=["git", "gerrit"])
-param("submit", "GitSubmitVcs",         "email",           vcs_type=["git", "gerrit"])
+param("submit", "GitSubmitVcs",         "user",            vcs_type=["git", "gerrit", "github"])
+param("submit", "GitSubmitVcs",         "email",           vcs_type=["git", "gerrit", "github"])
 param("main",   "TeamcityServer",       "build_id")
 param("main",   "TeamcityServer",       "configuration_id")
 param("main",   "TeamcityServer",       "server_url",      error_match="TEAMCITY_SERVER")
@@ -126,7 +126,7 @@ param("main",   "Swarm",                "server_url",      vcs_type="p4", error_
 param("main",   "Swarm",                "review_id",       vcs_type="p4", error_match="REVIEW")
 param("main",   "Swarm",                "change",          vcs_type="p4")
 param("*",      "Vcs",                  "type")
-param("*",      "GitVcs",               "repo",            vcs_type=["git", "gerrit"])
+param("*",      "GitVcs",               "repo",            vcs_type=["git", "gerrit", "github"])
 param("main",   "GitVcs",               "refspec",         vcs_type="gerrit")
 param("main",   "GitMainVcs",           "checkout_id",     vcs_type="github")
 # pylint: enable = bad-whitespace
