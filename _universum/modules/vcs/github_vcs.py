@@ -1,5 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+import datetime
+import requests
+import urlparse
+
 from ...lib.gravity import Dependency
 from ...lib import utils
 from ..reporter import ReportObserver, Reporter
@@ -25,6 +29,8 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                                  "https://developer.github.com/v3/oauth_authorizations/")
         parser.add_argument("--github-check-name", "-ghc", dest="check_name", metavar="GITHUB_CHECK_NAME",
                             default="Universum check", help="The name of Github check run")
+        parser.add_argument("--github-api-url", "-gha", dest="api_url", metavar="GITHUB_API_URL",
+                            default="https://api.github.com/", help="API URL for integration")
 
     def __init__(self, *args, **kwargs):
         super(GithubMainVcs, self).__init__(*args, **kwargs)
@@ -39,6 +45,9 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     In CI builds commit ID is usually extracted from webhook and handled automatically.  
                 """)
 
+        parsed_repo = urlparse.urlparse(self.settings.repo)
+        self.repo_path = unicode(parsed_repo.path).strip(".git")
+
     def code_review(self):
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
@@ -48,7 +57,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         self.out.log("GitHub has no review versions")
 
     def get_review_link(self):
-        return self.settings.repo.split(".git")[0] + self.settings.checkout_id
+        return self.settings.repo.split(".git")[0] + "/" + self.settings.checkout_id
 
     def is_latest_version(self):
         return True
@@ -57,7 +66,48 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         pass
 
     def report_start(self, report_text):
-        pass
+        headers = {
+            "Accept": "application/vnd.github.antiope-preview+json",
+            "Authorization": "token " + self.settings.token
+        }
+        request = {
+            "name": self.settings.check_name,
+            "status": "in_progress",
+            "started_at": datetime.datetime.now().isoformat(),
+            "output": {
+                "title": self.settings.check_name,
+                "summary": report_text
+            }
+        }
+
+        path = self.settings.api_url + "repos" + self.repo_path + "/check-runs"
+        result = requests.post(path, data=request, headers=headers)
+        utils.check_request_result(result)
 
     def report_result(self, result, report_text=None, no_vote=False):
-        pass
+        headers = {
+            "Accept": "application/vnd.github.antiope-preview+json",
+            "Authorization": "token " + self.settings.token
+        }
+        if result:
+            conclusion = "success"
+        else:
+            conclusion = "failure"
+
+        if not report_text:
+            report_text = ""
+
+        request = {
+            "name": self.settings.check_name,
+            "status": "completed",
+            "completed_at": datetime.datetime.now().isoformat(),
+            "conclusion": conclusion,
+            "output": {
+                "title": self.settings.check_name,
+                "summary": report_text
+            }
+        }
+
+        path = self.settings.api_url + "repos" + self.repo_path + "/check-runs"
+        result = requests.post(path, data=request, headers=headers)
+        utils.check_request_result(result)

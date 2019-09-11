@@ -73,13 +73,17 @@ class HttpChecker(object):
             queries.append(request.querystring)
 
     @staticmethod
-    def assert_success_and_collect(function, *args, **kwargs):
+    def assert_success_and_collect(function, params, url="https://localhost/", method="GET"):
         httpretty.reset()
         httpretty.enable()
-        httpretty.register_uri(httpretty.GET, "https://localhost/")
+        if method == "GET":
+            hmethod = httpretty.GET
+        else:
+            hmethod = httpretty.POST
+        httpretty.register_uri(hmethod, url)
 
         try:
-            assert function(*args, **kwargs) == 0
+            assert function(params) == 0
         finally:
             httpretty.disable()
 

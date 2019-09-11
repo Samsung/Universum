@@ -7,6 +7,7 @@ import os
 import sys
 import traceback
 
+from _universum.lib.ci_exception import CiException
 from .ci_exception import CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
 
@@ -24,7 +25,8 @@ __all__ = [
     "convert_to_str",
     "unify_argument_list",
     "Uninterruptible",
-    "make_block"
+    "make_block",
+    "check_request_result"
 ]
 
 # For proper unicode symbols processing
@@ -208,3 +210,10 @@ def make_block(block_name, pass_errors=True):
             return self.structure.run_in_block(func, block_name, pass_errors, self, *args, **kwargs)
         return function_in_block
     return decorated_function
+
+
+def check_request_result(result):
+    if result.status_code != 200:
+        text = "Invalid return code " + result.status_code + ". Response is:\n"
+        text += result.text
+        raise CiException(text)
