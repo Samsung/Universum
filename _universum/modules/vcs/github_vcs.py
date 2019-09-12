@@ -105,7 +105,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             }
         }
 
-        result = requests.post(self.check_url, data=request, headers=headers)
+        result = requests.patch(self.check_url, json=request, headers=headers)
         utils.check_request_result(result)
 
     def report_result(self, result, report_text=None, no_vote=False):
@@ -131,5 +131,5 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             }
         }
 
-        result = requests.post(self.check_url, data=request, headers=headers)
+        result = requests.patch(self.check_url, json=request, headers=headers)
         utils.check_request_result(result)
