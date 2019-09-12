@@ -14,6 +14,10 @@ __all__ = [
 ]
 
 
+def get_time():
+    return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+
 class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
     """
     This class mostly contains functions for Gihub report observer
@@ -94,7 +98,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         }
         request = {
             "status": "in_progress",
-            "started_at": datetime.datetime.now().isoformat(),
+            "started_at": get_time(),
             "output": {
                 "title": self.settings.check_name,
                 "summary": report_text
@@ -119,7 +123,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
 
         request = {
             "status": "completed",
-            "completed_at": datetime.datetime.now().isoformat(),
+            "completed_at":  get_time(),
             "conclusion": conclusion,
             "output": {
                 "title": self.settings.check_name,
