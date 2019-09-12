@@ -19,12 +19,13 @@ class ReportEnvironment(utils.TestEnvironment):
         commit_id = unicode(client.repo.remotes.origin.refs[client.server.target_branch].commit)
         self.settings.GitMainVcs.checkout_id = commit_id
         self.settings.GithubMainVcs.token = "token"
+        self.settings.GithubMainVcs.check_id = "123"
         self.settings.GithubMainVcs.api_url = "http://api.github.com/"
         self.settings.Reporter.report_start = True
         self.settings.Reporter.report_success = True
 
         self.path = "http://api.github.com/repos" + \
-                    unicode(client.root_directory).strip("client") + \
+                    unicode(client.root_directory).rsplit("client", 0)[0] + \
                     "server/check-runs"
 
 

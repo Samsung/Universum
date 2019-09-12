@@ -39,6 +39,7 @@ def create_settings(test_type, vcs_type):
         elif test_type == "main" and vcs_type == "github":
             settings.GitMainVcs.checkout_id = "HEAD"
             settings.GithubMainVcs.token = "some_token"
+            settings.GithubMainVcs.check_id = "000000000"
     elif vcs_type == "none":
         if test_type == "main":
             settings.LocalMainVcs.source_dir = "temp"
@@ -131,6 +132,7 @@ param("*",      "GitVcs",               "repo",            vcs_type=["git", "ger
 param("main",   "GitVcs",               "refspec",         vcs_type="gerrit")
 param("main",   "GitMainVcs",           "checkout_id",     vcs_type="github")
 param("main",   "GithubMainVcs",        "token",           vcs_type="github")
+param("main",   "GithubMainVcs",        "check_id",        vcs_type="github")
 # pylint: enable = bad-whitespace
 
 

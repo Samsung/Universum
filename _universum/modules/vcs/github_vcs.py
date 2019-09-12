@@ -29,6 +29,8 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                                  "https://developer.github.com/v3/oauth_authorizations/")
         parser.add_argument("--github-check-name", "-ghc", dest="check_name", metavar="GITHUB_CHECK_NAME",
                             default="Universum check", help="The name of Github check run")
+        parser.add_argument("--github-check-id", "-ghi", dest="check_id", metavar="GITHUB_CHECK_ID",
+                            help="Github check run ID")
         parser.add_argument("--github-api-url", "-gha", dest="api_url", metavar="GITHUB_API_URL",
                             default="https://api.github.com/", help="API URL for integration")
 
@@ -56,9 +58,17 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     For information on how to acquire the token please see
                     https://developer.github.com/v3/oauth_authorizations/
                 """)
+        utils.check_required_option(self.settings, "check_id", """
+                    github check id is not specified.
 
-        parsed_repo = urlparse.urlparse(self.settings.repo)
-        self.repo_path = unicode(parsed_repo.path).strip(".git")
+                    GitHub check runs each have unique ID, that is used to update check result.
+                    To integrate Universum with GitHub, check run should be already created before performing
+                    actual check. Please specify check run ID by using '--github-check-id' ('-ghi')
+                    command line parameter or by setting GITHUB_CHECK_ID environment variable.
+                """)
+
+        repo_path = unicode(urlparse.urlparse(self.settings.repo).path).rsplit(".git", 1)[0]
+        self.check_url = self.settings.api_url + "repos" + repo_path + "/check-runs/" + self.settings.check_id
 
     def code_review(self):
         self.reporter = self.reporter_factory()
@@ -69,7 +79,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         self.out.log("GitHub has no review versions")
 
     def get_review_link(self):
-        return self.settings.repo.split(".git")[0] + "/" + self.settings.checkout_id
+        return self.settings.repo.rsplit(".git", 1)[0] + "/" + "pulls"
 
     def is_latest_version(self):
         return True
@@ -83,7 +93,6 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             "Authorization": "token " + self.settings.token
         }
         request = {
-            "name": self.settings.check_name,
             "status": "in_progress",
             "started_at": datetime.datetime.now().isoformat(),
             "output": {
@@ -92,8 +101,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             }
         }
 
-        path = self.settings.api_url + "repos" + self.repo_path + "/check-runs"
-        result = requests.post(path, data=request, headers=headers)
+        result = requests.post(self.check_url, data=request, headers=headers)
         utils.check_request_result(result)
 
     def report_result(self, result, report_text=None, no_vote=False):
@@ -110,7 +118,6 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             report_text = ""
 
         request = {
-            "name": self.settings.check_name,
             "status": "completed",
             "completed_at": datetime.datetime.now().isoformat(),
             "conclusion": conclusion,
@@ -120,6 +127,5 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             }
         }
 
-        path = self.settings.api_url + "repos" + self.repo_path + "/check-runs"
-        result = requests.post(path, data=request, headers=headers)
+        result = requests.post(self.check_url, data=request, headers=headers)
         utils.check_request_result(result)
