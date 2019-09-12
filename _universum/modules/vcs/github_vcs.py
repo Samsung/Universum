@@ -44,6 +44,18 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
 
                     In CI builds commit ID is usually extracted from webhook and handled automatically.  
                 """)
+        utils.check_required_option(self.settings, "token", """
+                    github api token is not specified.
+
+                    GitHub API token is used for application authorization. Expected format is
+                    'v1.4e96f8c2d1922c3b154a65ca7ecb91f6994fb0c5'.
+                    Please specify the token by using '--github-token' ('-ght')
+                    command line parameter or by setting GITHUB_TOKEN environment variable.
+
+                    In CI builds github api token is expected to be acquired automatically before build.
+                    For information on how to acquire the token please see
+                    https://developer.github.com/v3/oauth_authorizations/
+                """)
 
         parsed_repo = urlparse.urlparse(self.settings.repo)
         self.repo_path = unicode(parsed_repo.path).strip(".git")

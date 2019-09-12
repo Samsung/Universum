@@ -36,8 +36,9 @@ def create_settings(test_type, vcs_type):
         if test_type == "submit":
             settings.GitSubmitVcs.user = "Testing User"
             settings.GitSubmitVcs.email = "some@email.com"
-        elif test_type == "main" and vcs_type != "gerrit":
+        elif test_type == "main" and vcs_type == "github":
             settings.GitMainVcs.checkout_id = "HEAD"
+            settings.GithubMainVcs.token = "some_token"
     elif vcs_type == "none":
         if test_type == "main":
             settings.LocalMainVcs.source_dir = "temp"
@@ -129,6 +130,7 @@ param("*",      "Vcs",                  "type")
 param("*",      "GitVcs",               "repo",            vcs_type=["git", "gerrit", "github"])
 param("main",   "GitVcs",               "refspec",         vcs_type="gerrit")
 param("main",   "GitMainVcs",           "checkout_id",     vcs_type="github")
+param("main",   "GithubMainVcs",        "token",           vcs_type="github")
 # pylint: enable = bad-whitespace
 
 
