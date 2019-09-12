@@ -214,6 +214,6 @@ def make_block(block_name, pass_errors=True):
 
 def check_request_result(result):
     if result.status_code != 200:
-        text = "Invalid return code " + result.status_code + ". Response is:\n"
+        text = "Invalid return code " + unicode(result.status_code) + ". Response is:\n"
         text += result.text
         raise CiException(text)
