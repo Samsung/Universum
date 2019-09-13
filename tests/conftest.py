@@ -78,8 +78,10 @@ class HttpChecker(object):
         httpretty.enable()
         if method == "GET":
             hmethod = httpretty.GET
-        else:
+        elif method == "POST":
             hmethod = httpretty.POST
+        else:
+            hmethod = httpretty.PATCH
         httpretty.register_uri(hmethod, url)
 
         try:
