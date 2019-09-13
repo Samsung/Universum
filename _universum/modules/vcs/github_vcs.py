@@ -83,7 +83,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         self.out.log("GitHub has no review versions")
 
     def get_review_link(self):
-        return self.settings.repo.rsplit(".git", 1)[0] + "/" + "pulls"
+        return self.settings.repo.rsplit(".git", 1)[0] + "/runs/" + self.settings.check_id
 
     def is_latest_version(self):
         return True
