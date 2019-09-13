@@ -36,11 +36,10 @@ def report_environment(tmpdir, git_client):
 
 # def test_github_run(stdout_checker, http_check, report_environment):
 def test_github_run(http_check, report_environment):
-    print report_environment.path
     http_check.assert_success_and_collect(universum.run, report_environment.settings,
                                           url=report_environment.path, method="PATCH")
-    requests = httpretty.httpretty.latest_requests
-    for req in requests:
-        print req
-    # http_check.assert_request_was_made({"status": "completed"})
+
+    http_check.assert_request_body_contained("status", "in_progress")
+    http_check.assert_request_body_contained("status", "completed")
+    http_check.assert_request_body_contained("conclusion", "success")
     # stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
