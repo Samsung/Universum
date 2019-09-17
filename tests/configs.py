@@ -8,7 +8,7 @@ def run_virtual(cmd):
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
-             "--files *.py _universum/ tests/ analyzers/ --result-file ${CODE_REPORT_FILE}"
+             "--files *.py _universum/ tests/ analyzers/ --result-file '${CODE_REPORT_FILE}'"
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
                       dict(name="Create virtual environment",
