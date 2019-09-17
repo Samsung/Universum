@@ -70,6 +70,7 @@ class GitVcs(BaseVcs):
             def line_dropped(self, line):
                 self.out.log(line)
 
+        self.clone_url = self.settings.repo
         self.repo = None
         self.logger = Progress(self.out)
 
@@ -84,16 +85,16 @@ class GitVcs(BaseVcs):
     @make_block("Cloning repository")
     @catch_git_exception()
     def clone_and_fetch(self, history_depth=None):
-        self.out.log("Cloning '" + self.settings.repo + "'...")
+        self.out.log("Cloning '" + self.clone_url + "'...")
         destination_directory = convert_to_str(self.settings.project_root)
         if history_depth:
-            self.repo = git.Repo.clone_from(self.settings.repo, destination_directory,
+            self.repo = git.Repo.clone_from(self.clone_url, destination_directory,
                                             depth=history_depth, no_single_branch=True, progress=self.logger)
         else:
-            self.repo = git.Repo.clone_from(self.settings.repo, destination_directory, progress=self.logger)
+            self.repo = git.Repo.clone_from(self.clone_url, destination_directory, progress=self.logger)
 
         self.sources_need_cleaning = True
-        self.append_repo_status("Git repo: " + self.settings.repo + "\n\n")
+        self.append_repo_status("Git repo: " + self.clone_url + "\n\n")
 
         self.out.log("Please note that default remote name is 'origin'")
         if self.settings.refspec:

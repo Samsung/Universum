@@ -71,8 +71,13 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     command line parameter or by setting GITHUB_CHECK_ID environment variable.
                 """)
 
-        repo_path = unicode(urlparse.urlparse(self.settings.repo).path).rsplit(".git", 1)[0]
+        parsed_repo = urlparse.urlsplit(self.settings.repo)
+        repo_path = unicode(parsed_repo.path).rsplit(".git", 1)[0]
         self.check_url = self.settings.api_url + "repos" + repo_path + "/check-runs/" + self.settings.check_id
+        if parsed_repo.scheme == "https" and not parsed_repo.username:
+            new_netloc = "x-access-token:{}@{}".format(self.settings.token, parsed_repo.netloc)
+            parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
+        self.clone_url = urlparse.urlunsplit(parsed_repo)
 
     def code_review(self):
         self.reporter = self.reporter_factory()
