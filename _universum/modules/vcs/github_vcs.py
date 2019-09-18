@@ -78,6 +78,10 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             new_netloc = "x-access-token:{}@{}".format(self.settings.token, parsed_repo.netloc)
             parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
         self.clone_url = urlparse.urlunsplit(parsed_repo)
+        self.headers = {
+            "Accept": "application/vnd.github.antiope-preview+json",
+            "Authorization": "token " + self.settings.token
+        }
 
     def code_review(self):
         self.reporter = self.reporter_factory()
@@ -94,13 +98,28 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         return True
 
     def code_report_to_review(self, report):
-        pass
+        # git show returns string, each file separated by \n,
+        # first line consists of commit id and commit comment, so it's skipped
+        commit_files = self.repo.git.show("--name-only", "--oneline", self.commit_id).split('\n')[1:]
+        comments = []
+        for path, issues in report.iteritems():
+            if path in commit_files:
+                for issue in issues:
+                    comments.append(dict(path=path,
+                                         message=issue['message'],
+                                         start_line=issue['line'],
+                                         end_line=issue['line'],
+                                         annotation_level="warning"))
+        request = {
+            "output": {
+                "annotations": comments
+            }
+        }
+
+        result = requests.patch(self.check_url, json=request, headers=self.headers)
+        utils.check_request_result(result)
 
     def report_start(self, report_text):
-        headers = {
-            "Accept": "application/vnd.github.antiope-preview+json",
-            "Authorization": "token " + self.settings.token
-        }
         request = {
             "status": "in_progress",
             "started_at": get_time(),
@@ -110,14 +129,10 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             }
         }
 
-        result = requests.patch(self.check_url, json=request, headers=headers)
+        result = requests.patch(self.check_url, json=request, headers=self.headers)
         utils.check_request_result(result)
 
     def report_result(self, result, report_text=None, no_vote=False):
-        headers = {
-            "Accept": "application/vnd.github.antiope-preview+json",
-            "Authorization": "token " + self.settings.token
-        }
         if result:
             conclusion = "success"
         else:
@@ -136,5 +151,5 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
             }
         }
 
-        result = requests.patch(self.check_url, json=request, headers=headers)
+        result = requests.patch(self.check_url, json=request, headers=self.headers)
         utils.check_request_result(result)
