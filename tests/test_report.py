@@ -7,6 +7,7 @@ import pytest
 import universum
 from . import utils
 
+
 class ReportEnvironment(utils.TestEnvironment):
     def __init__(self, directory, client):
         super(ReportEnvironment, self).__init__(directory, "main")
