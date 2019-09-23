@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# pylint: disable = redefined-outer-name
+# pylint: disable = redefined-outer-name, abstract-method
 
-import httpretty
 import pytest
 
 import universum
-import utils
-
+from . import utils
 
 class ReportEnvironment(utils.TestEnvironment):
     def __init__(self, directory, client):
@@ -34,7 +32,6 @@ def report_environment(tmpdir, git_client):
     yield ReportEnvironment(tmpdir, git_client)
 
 
-# def test_github_run(stdout_checker, http_check, report_environment):
 def test_github_run(http_check, report_environment):
     http_check.assert_success_and_collect(universum.run, report_environment.settings,
                                           url=report_environment.path, method="PATCH")
@@ -42,4 +39,3 @@ def test_github_run(http_check, report_environment):
     http_check.assert_request_body_contained("status", "in_progress")
     http_check.assert_request_body_contained("status", "completed")
     http_check.assert_request_body_contained("conclusion", "success")
-    # stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
