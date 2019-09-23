@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 import datetime
-import requests
 import urlparse
+import requests
 
 from ...lib.gravity import Dependency
 from ...lib import utils
@@ -85,9 +85,9 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         self.request = dict()
         self.request["status"] = "in_progress"
         self.request["output"] = {
-                "title": self.settings.check_name,
-                "summary": ""
-            }
+            "title": self.settings.check_name,
+            "summary": ""
+        }
 
     def code_review(self):
         self.reporter = self.reporter_factory()
@@ -100,7 +100,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
     def get_review_link(self):
         return self.settings.repo.rsplit(".git", 1)[0] + "/runs/" + self.settings.check_id
 
-    def is_latest_version(self):
+    def is_latest_version(self):  # pylint: disable=no-self-use
         return True
 
     def _report(self):
