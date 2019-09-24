@@ -19,7 +19,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Install tests", artifacts="junit_results.xml",
                            command=run_virtual("pip --default-timeout=1200 install .[test]")),
                       dict(name="Make tests", artifacts="htmlcov",
-                           command=run_virtual("PYTHONIOENCODING=utf-8 make test")),
+                           command=run_virtual("export LANG=en_US.UTF-8; make test")),
                       dict(name="Run static pylint", code_report=True,
                            command=run_virtual("pip uninstall -y universum; " + pylint_cmd))])
 
