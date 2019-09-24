@@ -23,5 +23,6 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Run static pylint", code_report=True,
                            command=run_virtual("pip uninstall -y universum; " + pylint_cmd))])
 
+
 if __name__ == '__main__':
     print configs.dump()
