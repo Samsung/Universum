@@ -4,7 +4,7 @@ env_name = "virtual_universe"
 
 
 def run_virtual(cmd):
-    return ["bash", "-c", "source {}/bin/activate; env -i PATH=$PATH {}".format(env_name, cmd)]
+    return ["bash", "-c", "bash -c 'source {}/bin/activate; {}'".format(env_name, cmd)]
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
@@ -22,7 +22,6 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                            command=run_virtual("PYTHONIOENCODING=utf-8 make test")),
                       dict(name="Run static pylint", code_report=True,
                            command=run_virtual("pip uninstall -y universum; " + pylint_cmd))])
-
 
 if __name__ == '__main__':
     print configs.dump()
