@@ -4,7 +4,7 @@ env_name = "virtual_universe"
 
 
 def run_virtual(cmd):
-    return ["bash", "-c", "env -i source {}/bin/activate; {}".format(env_name, cmd)]
+    return ["bash", "-c", "env -i PATH=$PATH source {}/bin/activate; {}".format(env_name, cmd)]
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
