@@ -123,14 +123,3 @@ def detect_fails(capsys):
     yield capsys
     check_output(capsys.readouterr())
     check_output(capsys._outerr)
-
-
-@pytest.fixture(autouse=True)
-def clean_environment():
-    import os
-    env_list = ["GIT_CHECKOUT_ID"]  # somehow get the list of all Universum env vars here later
-    env = dict(os.environ)
-    for var in env:
-        if var in env_list:
-            del os.environ[var]
-    yield
