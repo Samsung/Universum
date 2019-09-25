@@ -1,10 +1,11 @@
+import os
 from _universum.configuration_support import Variations
 
 env_name = "virtual_universe"
 
 
 def run_virtual(cmd):
-    return ["bash", "-c", "source {}/bin/activate; {}".format(env_name, cmd)]
+    return ["env", "-i", "PATH=" + os.getenv("PATH"), "bash", "-c", "source {}/bin/activate; {}".format(env_name, cmd)]
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
@@ -19,7 +20,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Install tests", artifacts="junit_results.xml",
                            command=run_virtual("pip --default-timeout=1200 install .[test]")),
                       dict(name="Make tests", artifacts="htmlcov",
-                           command=run_virtual("PYTHONIOENCODING=utf-8 make test")),
+                           command=run_virtual("export LANG=en_US.UTF-8; make test")),
                       dict(name="Run static pylint", code_report=True,
                            command=run_virtual("pip uninstall -y universum; " + pylint_cmd))])
 
