@@ -230,7 +230,7 @@ class Launcher(ProjectDirectory):
                             help="Define whether to print build logs to console or store to vcs. "
                                  "Log file names are generated based on the names of build steps. "
                                  "Possible values: 'console', 'file'. By default, logs are printed to console "
-                                 "when the build is launched on TeamCity agent")
+                                 "when the build is launched on Jenkins or TeamCity agent")
 
         parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
@@ -241,7 +241,7 @@ class Launcher(ProjectDirectory):
         self.project_configs = None
 
         if self.settings.output is None:
-            if utils.detect_environment() != "tc":
+            if utils.detect_environment() == "terminal":
                 self.settings.output = "file"
             else:
                 self.settings.output = "console"
