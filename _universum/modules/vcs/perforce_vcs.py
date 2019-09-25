@@ -561,8 +561,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.p4.client = self.client_name
             report = self.p4.run_revert("//...")
             self.p4report(report)
-        except P4Exception:
-            pass
+        except P4Exception as e:
+            if "Client '{}' unknown".format(self.client_name) not in e.value \
+                    and "file(s) not opened on this client" not in e.value:
+                raise
         self.p4.delete_client(self.client_name)
 
     def finalize(self):
