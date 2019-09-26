@@ -242,9 +242,9 @@ class Launcher(ProjectDirectory):
 
         if self.settings.output is None:
             if utils.detect_environment() == "terminal":
-                self.settings.output = "file"
+                self.output = "file"
             else:
-                self.settings.output = "console"
+                self.output = "console"
 
         if not getattr(self.settings, "config_path", None):
             raise IncorrectParameterError(
@@ -309,7 +309,7 @@ class Launcher(ProjectDirectory):
             self.structure.fail_block(block, line)
 
         log_file = None
-        if self.settings.output == "file":
+        if self.output == "file":
             log_file = self.artifacts.create_text_file(item.get("name", "") + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
@@ -324,3 +324,17 @@ class Launcher(ProjectDirectory):
     def launch_project(self):
         self.reporter.add_block_to_report(self.structure.get_current_block())
         self.structure.execute_step_structure(self.project_configs, self.create_process)
+
+    def execute(self):
+        if not self.settings.output:
+            self.output = 'console'
+
+        self.artifacts.clean_artifacts_silently()
+
+        self.process_project_configs()
+        self.launch_project()
+        self.reporter.report_initialized = True
+        self.reporter.report_build_result()
+
+    def finalize(self):
+        pass

@@ -9,6 +9,7 @@ from _universum import __version__, __title__
 from _universum.api import Api
 from _universum.main import Main
 from _universum.poll import Poll
+from _universum.modules.launcher import Launcher
 from _universum.submit import Submit
 from _universum.lib.ci_exception import SilentAbortException
 from _universum.lib.gravity import define_arguments_recursive, construct_component
@@ -34,6 +35,7 @@ def define_arguments():
     define_command(Api, "api")
     define_command(Poll, "poll")
     define_command(Submit, "submit")
+    define_command(Launcher, "nonci")
 
     return parser
 
