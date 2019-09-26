@@ -2,7 +2,6 @@ This is a test change
 One more change
 
 
-
 # Project 'Universum'
 [![Documentation Status](https://readthedocs.org/projects/universum/badge/?version=latest)](
 https://universum.readthedocs.io/en/latest/?badge=latest)
