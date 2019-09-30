@@ -240,7 +240,8 @@ class Launcher(ProjectDirectory):
         self.source_project_configs = None
         self.project_configs = None
 
-        if self.settings.output is None:
+        self.output = self.settings.output
+        if self.output is None:
             if utils.detect_environment() == "terminal":
                 self.output = "file"
             else:
