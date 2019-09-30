@@ -176,11 +176,10 @@ def unify_argument_list(source_list, separator=',', additional_list=None):
 
 
 class Uninterruptible(object):
-    def __init__(self, error_logger, is_critical=True):
+    def __init__(self, error_logger):
         self.return_code = 0
         self.error_logger = error_logger
         self.exceptions = []
-        self.is_critical = is_critical
 
     def __enter__(self):
         def excepted_function(func, *args, **kwargs):
@@ -193,26 +192,16 @@ class Uninterruptible(object):
                 self.return_code = 3
             except Exception as e:
                 ex_traceback = sys.exc_info()[2]
-                if self.is_critical:
-                    self.exceptions.append(format_traceback(e, ex_traceback))
-                else:
-                    self.exceptions.append(unicode(e))
+                self.exceptions.append(format_traceback(e, ex_traceback))
                 self.return_code = max(self.return_code, 2)
         return excepted_function
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.is_critical:
-            if self.return_code == 2:
-                for entry in self.exceptions:
-                    sys.stderr.write(entry)
-            if self.return_code != 0:
-                raise SilentAbortException(application_exit_code=self.return_code)
-        else:
-            if self.return_code != 0:
-                text = "Execution unsuccessful. The following entries has occurred:"
-                for entry in self.exceptions:
-                    text += "\n" + unicode(entry)
-                raise CiException(text)
+        if self.return_code == 2:
+            for entry in self.exceptions:
+                sys.stderr.write(entry)
+        if self.return_code != 0:
+            raise SilentAbortException(application_exit_code=self.return_code)
 
 
 def make_block(block_name, pass_errors=True):

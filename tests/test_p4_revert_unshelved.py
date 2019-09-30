@@ -8,6 +8,7 @@ import universum
 from _universum.lib.gravity import construct_component
 from _universum.modules.vcs import perforce_vcs
 from . import utils
+from perforce_utils import P4Environment
 
 
 class DiffParameters(object):
@@ -134,58 +135,36 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
         assert result == expected
 
 
-class RevertEnvironment(utils.TestEnvironment):
-    def __init__(self, directory, perforce_workspace):
-        self.work_dir = directory
-        self.vcs_cooking_dir = perforce_workspace.root_directory
-        self.repo_file = perforce_workspace.repo_file
-        self.nonwritable_file = perforce_workspace.nonwritable_file
-        self.p4 = perforce_workspace.p4
-        self.depot = perforce_workspace.depot
-        self.configs_file = directory.join("configs.py")
-
-        super(RevertEnvironment, self).__init__(directory, "main")
-
-
 @pytest.fixture()
-def perforce_environment(tmpdir, perforce_workspace):
-    yield RevertEnvironment(tmpdir, perforce_workspace)
+def perforce_environment(perforce_workspace, tmpdir):
+    yield P4Environment(perforce_workspace, tmpdir, test_type="main")
 
 
 def test_p4_error_revert(perforce_environment, stdout_checker, capsys):
     p4 = perforce_environment.p4
     p4_file = perforce_environment.repo_file
 
-    settings = perforce_environment.settings
-    settings.Vcs.type = "p4"
-    settings.Launcher.output = "console"
-    settings.PerforceVcs.port = perforce_environment.p4.port
-    settings.PerforceVcs.user = perforce_environment.p4.user
-    settings.PerforceVcs.password = perforce_environment.p4.password
-    settings.PerforceMainVcs.client = "p4_disposable_workspace"
-    settings.PerforceMainVcs.force_clean = True
-    settings.PerforceWithMappings.project_depot_path = perforce_environment.depot
-
     config = """
 from _universum.configuration_support import Variations
 
-configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "-w", "."]),
+configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555", "."]),
                       dict(name="Check", command=["ls", "-la"])])
-""".format(p4_file.basename, p4_file.basename)
-    perforce_environment.configs_file.write(config)
-
-    # Prepare SHELVE_CHANGELIST
+"""
     p4.run_edit(perforce_environment.depot)
-    p4_file.write("This is a change.\n")
+    p4_file.write(config)
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
+
+    settings = perforce_environment.settings
+    settings.Launcher.output = "console"
     settings.PerforceMainVcs.shelve_cls = [shelve_cl]
+    settings.Launcher.config_path = p4_file.basename
 
     result = universum.run(perforce_environment.settings)
-    perforce_environment.work_dir.chmod(0777, rec=1)
-    perforce_environment.work_dir.remove(rec=1)
+    perforce_environment.vcs_cooking_dir.chmod(0777, rec=1)
+    perforce_environment.vcs_cooking_dir.remove(rec=1)
     assert result != 0
     stdout_checker.assert_has_calls_with_param("Errors during command execution( \"p4 revert //...\" )")
     assert "[Errno 13] Permission denied" in capsys.readouterr().err

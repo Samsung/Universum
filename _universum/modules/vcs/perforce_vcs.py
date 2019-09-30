@@ -554,29 +554,6 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.swarm.client_root = self.client_root
             self.swarm.mappings_dict = self.mappings_dict
 
-    # @make_block("Cleaning workspace", pass_errors=False)
-    # def clean_workspace(self):
-    #
-    #     def ignore_multiple_p4exceptions(function, ignore_list, *args, **kwargs):
-    #         try:
-    #             function(*args, **kwargs)
-    #         except P4Exception as e:
-    #             for item in ignore_list:
-    #                 if item in e.value:
-    #                     return
-    #             raise
-    #
-    #     def revert():
-    #         self.p4.client = self.client_name
-    #         report = self.p4.run_revert("//...")
-    #         self.p4report(report)
-    #
-    #     with Uninterruptible(self.out.log_exception, is_critical=False) as run:
-    #         run(ignore_multiple_p4exceptions, revert,
-    #             ["Client '{}' unknown".format(self.client_name), "file(s) not opened on this client"])
-    #         run(ignore_multiple_p4exceptions, self.p4.delete_client,
-    #             ["Client '{}' doesn't exist".format(self.client_name)], self.client_name)
-
     @make_block("Cleaning workspace", pass_errors=False)
     def clean_workspace(self):
         try:
