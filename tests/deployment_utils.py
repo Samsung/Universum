@@ -159,10 +159,11 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner(object):
-    def __init__(self, perforce_workspace, git_client, local_sources):
+    def __init__(self, perforce_workspace, git_client, local_sources, command=None):
         self.perforce = perforce_workspace
         self.git = git_client
         self.local = local_sources
+        self.command = command
 
         # Need to be initialized in 'set_environment'
         self.environment = None
@@ -205,20 +206,20 @@ class UniversumRunner(object):
     def run(self, config, force_installed=False, vcs_type="none",
             additional_parameters="", environment=None, expected_to_fail=False):
 
-        config_file = os.path.join(self.working_dir, "temp_config.py")
-        with open(config_file, 'wb+') as f:
-            f.write(config)
-            f.close()
-
-        cmd = "coverage run --branch --append --source='{}' '{}/universum.py'" \
-            .format(self.working_dir, self.working_dir)
+        cmd = "coverage run --branch --append --source='{0}' '{0}/universum.py'" \
+            .format(self.working_dir)
 
         # We cannot collect coverage from installed module, so we run it only if specifically told so
         if force_installed:
             cmd = "universum"
 
-        cmd += " -lcp '{}'".format(config_file) \
-               + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
+        if self.command == 'nonci':
+            cmd += ' nonci'
+        else:
+            cmd += self._vcs_args(vcs_type)
+
+        config_file = self._create_temp_config(config)
+        cmd += " -lcp '{}'".format(config_file) + self._basic_args() + additional_parameters
 
         if expected_to_fail:
             result = self.environment.assert_unsuccessful_execution(cmd, environment=environment)
@@ -231,10 +232,16 @@ class UniversumRunner(object):
     def clean_artifacts(self):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
+    def _create_temp_config(self, config):
+        file_path = os.path.join(self.working_dir, "temp_config.py")
+        with open(file_path, 'wb+') as f:
+            f.write(config)
+            f.close()
+        return file_path
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources):
-    runner = UniversumRunner(perforce_workspace, git_client, local_sources)
+def runner_without_environment(perforce_workspace, git_client, local_sources, universum_cmd=None):
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources, command=universum_cmd)
     yield runner
     runner.clean_artifacts()
 
