@@ -11,3 +11,8 @@ htmlcov
 temp
 artifacts
 temp_config.py
+.classpath
+.factorypath
+.project
+.settings
+target
