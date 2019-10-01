@@ -162,9 +162,13 @@ configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555
     settings.PerforceMainVcs.shelve_cls = [shelve_cl]
     settings.Launcher.config_path = p4_file.basename
 
-    result = universum.run(perforce_environment.settings)
-    perforce_environment.vcs_cooking_dir.chmod(0777, rec=1)
-    perforce_environment.vcs_cooking_dir.remove(rec=1)
-    assert result != 0
-    stdout_checker.assert_has_calls_with_param("Errors during command execution( \"p4 revert //...\" )")
-    assert "[Errno 13] Permission denied" in capsys.readouterr().err
+    result = universum.run(settings)
+    try:
+        assert result != 0
+        stdout_checker.assert_has_calls_with_param("Errors during command execution( \"p4 revert //...\" )")
+        assert "[Errno 13] Permission denied" in capsys.readouterr().err
+    finally:
+        perforce_environment.vcs_cooking_dir.chmod(0777, rec=1)
+        perforce_environment.vcs_cooking_dir.remove(rec=1)
+        settings.Main.finalize_only = True
+        universum.run(settings)
