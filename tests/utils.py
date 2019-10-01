@@ -81,26 +81,26 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 
 class TestEnvironment(object):
-    def __init__(self, directory, test_type):
-        self.directory = directory
+    def __init__(self, temp_dir, test_type):
+        self.temp_dir = temp_dir
         self.settings = create_empty_settings(test_type)
         if test_type == "poll":
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
-            self.settings.ProjectDirectory.project_root = unicode(directory.mkdir("project_root"))
+            self.settings.ProjectDirectory.project_root = unicode(self.temp_dir.mkdir("project_root"))
         elif test_type == "submit":
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
         elif test_type == "main":
-            configs_file = directory.join("configs.py")
+            configs_file = self.temp_dir.join("configs.py")
             configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = unicode(configs_file)
-            self.settings.ArtifactCollector.artifact_dir = unicode(directory.mkdir("artifacts"))
+            self.settings.ArtifactCollector.artifact_dir = unicode(self.temp_dir.mkdir("artifacts"))
             # The project_root directory must not exist before launching main
-            self.settings.ProjectDirectory.project_root = unicode(directory.join("project_root"))
+            self.settings.ProjectDirectory.project_root = unicode(self.temp_dir.join("project_root"))
 
         self.settings.Output.type = "term"
 
