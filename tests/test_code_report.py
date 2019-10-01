@@ -2,9 +2,11 @@
 # -*- coding: UTF-8 -*-
 
 import re
+import pytest
 
 
-def test_code_report(universum_runner):
+@pytest.mark.parametrize('universum_cmd', (None,'nonci',))
+def test_code_report(universum_runner, universum_cmd):
     config = """
 from _universum.configuration_support import Variations
 
