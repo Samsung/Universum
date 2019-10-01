@@ -82,6 +82,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 class TestEnvironment(object):
     def __init__(self, directory, test_type):
+        self.directory = directory
         self.settings = create_empty_settings(test_type)
         if test_type == "poll":
             self.settings.Poll.db_file = self.db_file
