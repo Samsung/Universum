@@ -7,8 +7,8 @@ import pytest
 import universum
 from _universum.lib.gravity import construct_component
 from _universum.modules.vcs import perforce_vcs
+from .perforce_utils import P4Environment
 from . import utils
-from perforce_utils import P4Environment
 
 
 class DiffParameters(object):
