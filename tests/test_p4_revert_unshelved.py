@@ -168,9 +168,9 @@ configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555
     perforce_environment.temp_dir.remove(rec=1)
 
     assert result != 0
-    # Check that both 'revert' and 'clean workspace' operations were executed unsuccessfully
+    # The following checks make sure all following actions were triggered despite unsuccessful:
+    # full revert, client deleting and sources clean up
     stdout_checker.assert_has_calls_with_param("Errors during command execution( \"p4 revert //...\" )")
     stdout_checker.assert_has_calls_with_param(
         "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
-    # Check that Universum could not clean project root and exited with stderr
     assert "[Errno 13] Permission denied" in capsys.readouterr().err

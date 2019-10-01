@@ -207,7 +207,6 @@ def perforce_workspace(request, perforce_connection, tmpdir):
             for item in remaining_shelves:
                 p4.run_shelve("-dfc", item["change"])
             p4.delete_client("-f", client_name)
-            print "Hello"
 
 
 class P4Environment(utils.TestEnvironment):
