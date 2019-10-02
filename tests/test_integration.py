@@ -16,8 +16,8 @@ def get_line_with_text(text, log):
     return ""
 
 
-@pytest.mark.parametrize('universum_cmd', (None,'nonci',))
-def test_minimal_execution(universum_runner,universum_cmd):
+@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
+def test_minimal_execution(universum_runner, universum_cmd):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
 
@@ -56,8 +56,8 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file.sh"))
 
 
-@pytest.mark.parametrize('universum_cmd', (None,'nonci',))
-def test_background_steps(universum_runner,universum_cmd):
+@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
+def test_background_steps(universum_runner, universum_cmd):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
 
@@ -106,8 +106,8 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
-@pytest.mark.parametrize('universum_cmd', (None,'nonci',))
-def test_critical_steps(universum_runner,universum_cmd):
+@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
+def test_critical_steps(universum_runner, universum_cmd):
     # Test linear
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -301,8 +301,8 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
     assert url_error not in log
 
 
-@pytest.mark.parametrize('universum_cmd', (None,'nonci',))
-def test_environment(universum_runner,universum_cmd):
+@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
+def test_environment(universum_runner, universum_cmd):
     script = universum_runner.local.root_directory.join("script.sh")
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
