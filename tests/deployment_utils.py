@@ -159,11 +159,11 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner(object):
-    def __init__(self, perforce_workspace, git_client, local_sources, command=None):
+    def __init__(self, perforce_workspace, git_client, local_sources, sub_command=None):
         self.perforce = perforce_workspace
         self.git = git_client
         self.local = local_sources
-        self.command = command
+        self.sub_command = sub_command
 
         # Need to be initialized in 'set_environment'
         self.environment = None
@@ -203,6 +203,13 @@ class UniversumRunner(object):
                     self.perforce.depot,
                     "my_disposable_p4_client")
 
+    def _create_temp_config(self, config):
+        file_path = os.path.join(self.working_dir, "temp_config.py")
+        with open(file_path, 'wb+') as f:
+            f.write(config)
+            f.close()
+        return file_path
+
     def run(self, config, force_installed=False, vcs_type="none",
             additional_parameters="", environment=None, expected_to_fail=False):
 
@@ -213,10 +220,10 @@ class UniversumRunner(object):
         if force_installed:
             cmd = "universum"
 
-        if self.command == 'nonci':
-            cmd += ' nonci'
-        else:
+        if not self.sub_command:
             cmd += self._vcs_args(vcs_type)
+        else:
+            cmd += ' ' + self.sub_command
 
         config_file = self._create_temp_config(config)
         cmd += " -lcp '{}'".format(config_file) + self._basic_args() + additional_parameters
@@ -232,16 +239,9 @@ class UniversumRunner(object):
     def clean_artifacts(self):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
-    def _create_temp_config(self, config):
-        file_path = os.path.join(self.working_dir, "temp_config.py")
-        with open(file_path, 'wb+') as f:
-            f.write(config)
-            f.close()
-        return file_path
-
 @pytest.fixture()
 def runner_without_environment(perforce_workspace, git_client, local_sources, universum_cmd=None):
-    runner = UniversumRunner(perforce_workspace, git_client, local_sources, command=universum_cmd)
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources, sub_command=universum_cmd)
     yield runner
     runner.clean_artifacts()
 
