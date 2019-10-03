@@ -23,7 +23,7 @@ def define_arguments():
     define_arguments_recursive(Main, parser)
 
     subparsers = parser.add_subparsers(title="Additional commands",
-                                       metavar="{poll,submit}",
+                                       metavar="{poll,submit,nonci}",
                                        help="Use 'universum <subcommand> --help' for more info")
 
     def define_command(klass, command):

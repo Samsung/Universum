@@ -17,6 +17,7 @@ All command-line parameters, general and module-related, are passed to this main
     --version : @replace
         Display product name & version instead of launching.
 
-    {poll,submit} : @replace
+    {poll,submit,nonci} : @replace
         | :doc:`universum poll <args_poll>`
         | :doc:`universum submit <args_submit>`
+        | :doc:`universum nonci <args_nonci>`
