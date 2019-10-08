@@ -326,9 +326,8 @@ configs = upper * lower
     assert "This string should be in log" in log
 
 
-@pytest.mark.parametrize("name,terminate_type",
-                         [("interrupt", signal.SIGINT,), ("terminate", signal.SIGTERM,)])
-def test_abort(local_sources, tmpdir, name, terminate_type):
+@pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
+def test_abort(local_sources, tmpdir, terminate_type):
     config = """
 from _universum.configuration_support import Variations
 
