@@ -43,6 +43,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private Pattern universumLogStartPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution$");
     private Pattern universumLogEndPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
     private Pattern jenkinsLogEndPattern = Pattern.compile(".*Finished: .*");
+    private Pattern healthyLogPattern = Pattern.compile("^\\s+[\\|└]\\s+.*");
 
     public Annotator(Object context) {}
 
@@ -100,6 +101,11 @@ public class Annotator extends ConsoleAnnotator<Object> {
         }
 
         for (PaddingItem p : paddings) {
+            if (!healthyLogPattern.matcher(textStr).find()) {
+                logger.info("Log is broken, identation expected");
+                universumLogActive = false;
+                return this;
+            }
             text.addMarkup(p.position, "<span style=\"display: inline-block; " +
                 " width: " + (p.spacesNumber + 2) + "ch;\"></span>");
         }
