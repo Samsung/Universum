@@ -2,6 +2,11 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import signal
+import time
+
+import pytest
+import sh
 
 
 def get_line_with_text(text, log):
@@ -319,3 +324,31 @@ lower = Variations([dict(name=" 1", command=["script.sh"], environment={"OTHER_V
 configs = upper * lower
 """)
     assert "This string should be in log" in log
+
+
+@pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
+def test_abort(local_sources, tmpdir, terminate_type):
+    config = """
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
+"""
+    config_file = tmpdir.join("configs.py")
+    config_file.write(config)
+
+    cmd = sh.Command(os.path.join(os.getcwd(), "universum.py"))
+
+    def handle_out(line):
+        print line.rstrip()
+
+    process = cmd(*(["-lo", "console", "-vt", "none",
+                     "-pr", unicode(tmpdir.join("project_root")),
+                     "-ad", unicode(tmpdir.join("artifacts")),
+                     "-fsd", unicode(local_sources.root_directory),
+                     "-lcp", unicode(config_file)]),
+                  _iter=True, _bg_exc=False, _bg=True, _out=handle_out, _err=handle_out)
+    time.sleep(5)
+    process.signal(terminate_type)
+    with pytest.raises(sh.ErrorReturnCode):
+        process.wait()
+    assert process.exit_code == 3
