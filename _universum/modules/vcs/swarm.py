@@ -20,13 +20,6 @@ __all__ = [
 ]
 
 
-def check_request_result(result):
-    if result.status_code != 200:
-        text = "Invalid return code " + result.status_code + ". Response is:\n"
-        text += result.text
-        raise CiException(text)
-
-
 @needs_output
 class Swarm(ReportObserver, Module):
     """
@@ -154,7 +147,7 @@ class Swarm(ReportObserver, Module):
 
         result = requests.post(self.settings.server_url + "/api/v9/comments", data=request,
                                auth=(self.user, self.password))
-        check_request_result(result)
+        utils.check_request_result(result)
 
     def vote_review(self, result, version=None):
         request = {}
@@ -167,7 +160,7 @@ class Swarm(ReportObserver, Module):
 
         result = requests.patch(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id,
                                 data=request, auth=(self.user, self.password))
-        check_request_result(result)
+        utils.check_request_result(result)
 
     def report_start(self, report_text):
         self.update_review_version()

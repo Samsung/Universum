@@ -43,17 +43,15 @@ def run(settings):
     main_module = construct_component(settings.main_class, settings)
     main_module.out.log("{} {} started execution".format(__title__, __version__))
 
-    finalized = False
+    def signal_handler(signal_number, stack_frame):
+        raise KeyboardInterrupt
 
-    def finalize():
-        if not finalized:
-            main_module.finalize()
+    signal.signal(signal.SIGTERM, signal_handler)
 
     try:
         with Uninterruptible(main_module.out.log_exception) as run_function:
             run_function(main_module.execute)
             run_function(main_module.finalize)
-            finalized = True
 
     except SilentAbortException as e:
         result = e.application_exit_code
@@ -63,11 +61,6 @@ def run(settings):
         main_module.out.log_exception("Unexpected error.\n" + format_traceback(e, ex_traceback))
         main_module.out.report_build_problem("Unexpected error while executing script.")
         result = 2
-
-    atexit.register(finalize)
-    signal.signal(signal.SIGTERM, finalize)
-    signal.signal(signal.SIGHUP, finalize)
-    signal.signal(signal.SIGINT, finalize)
 
     main_module.out.log("{} {} finished execution".format(__title__, __version__))
     return result

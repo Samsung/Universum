@@ -218,6 +218,7 @@ class P4Environment(utils.TestEnvironment):
         self.nonwritable_file = perforce_workspace.nonwritable_file
         self.p4 = perforce_workspace.p4
         self.depot = perforce_workspace.depot
+        self.client_name = "p4_disposable_workspace"
         super(P4Environment, self).__init__(directory, test_type)
 
         self.settings.Vcs.type = "p4"
@@ -225,7 +226,7 @@ class P4Environment(utils.TestEnvironment):
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
         self.settings.PerforceVcs.password = perforce_workspace.p4.password
         try:
-            self.settings.PerforceMainVcs.client = "p4_disposable_workspace"
+            self.settings.PerforceMainVcs.client = self.client_name
             self.settings.PerforceMainVcs.force_clean = True
         except AttributeError:
             pass

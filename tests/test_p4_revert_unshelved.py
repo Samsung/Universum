@@ -4,8 +4,10 @@
 import os
 import pytest
 
+import universum
 from _universum.lib.gravity import construct_component
-from _universum.modules.vcs import perforce_vcs, vcs
+from _universum.modules.vcs import perforce_vcs
+from .perforce_utils import P4Environment
 from . import utils
 
 
@@ -131,3 +133,44 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
 
     for result, expected in zip(diff, expected_path):
         assert result == expected
+
+
+@pytest.fixture()
+def perforce_environment(perforce_workspace, tmpdir):
+    yield P4Environment(perforce_workspace, tmpdir, test_type="main")
+
+
+def test_p4_error_revert(perforce_environment, stdout_checker, capsys):
+    p4 = perforce_environment.p4
+    p4_file = perforce_environment.repo_file
+
+    config = """
+from _universum.configuration_support import Variations
+
+configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555", "."]),
+                      dict(name="Check", command=["ls", "-la"])])
+"""
+    p4.run_edit(perforce_environment.depot)
+    p4_file.write(config)
+    change = p4.fetch_change()
+    change["Description"] = "CL for shelving"
+    shelve_cl = p4.save_change(change)[0].split()[1]
+    p4.run_shelve("-fc", shelve_cl)
+
+    settings = perforce_environment.settings
+    settings.Launcher.output = "console"
+    settings.PerforceMainVcs.shelve_cls = [shelve_cl]
+    settings.Launcher.config_path = p4_file.basename
+
+    result = universum.run(settings)
+    # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
+    perforce_environment.temp_dir.chmod(0777, rec=1)
+    perforce_environment.temp_dir.remove(rec=1)
+
+    assert result != 0
+    # The following checks make sure all following actions were triggered despite unsuccessful:
+    # full revert, client deleting and sources clean up
+    stdout_checker.assert_has_calls_with_param("Errors during command execution( \"p4 revert //...\" )")
+    stdout_checker.assert_has_calls_with_param(
+        "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
+    assert "[Errno 13] Permission denied" in capsys.readouterr().err

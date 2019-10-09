@@ -1,6 +1,27 @@
 Change log
 ==========
 
+0.18.2 (2019-10-09)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **vcs:** add 'github' VCS type
+* **vcs:** implement GitHub as code review system
+* **github:** add inline comments for code_report
+* **jenkins_plugin:** add jenkins plugin for Universum logs pretty printing
+* **test:** clean environment for tests
+
+Bug fixes
+~~~~~~~~~
+
+* **handle SIGTERM properly**
+* **p4:** ignore only expected exceptions on file revert
+* **test:** single poll fails because httpretty conflicts with docker-py
+* **test:** whitespaces in local paths
+
+
 0.18.1 (2019-07-23)
 -------------------
 

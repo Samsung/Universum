@@ -60,7 +60,8 @@ class HttpChecker(object):
                 return
             queries.append(request.querystring)
 
-        assert False, 'Query string is not found in calls to http server.\nExpected: %s\nActual: %r' % (query, queries)
+        assert False, 'Query string is not found in calls to http server.\n' \
+                      'Expected: %s\nActual: %r' % (query, queries)
 
     @staticmethod
     def assert_request_was_not_made(query):
@@ -72,25 +73,42 @@ class HttpChecker(object):
             queries.append(request.querystring)
 
     @staticmethod
-    def reset():
-        httpretty.disable()
-        httpretty.reset()
-        httpretty.enable()
-        httpretty.register_uri(httpretty.GET, "https://localhost/")
+    def assert_request_body_contained(key, value):
+        results = []
+        for request in httpretty.httpretty.latest_requests:
+            if key in request.parsed_body:
+                if request.parsed_body[key] == value:
+                    return
+                results.append(request.parsed_body[key])
+
+        if not results:
+            text = "No requests with field '{}' found in calls to http server".format(key)
+        else:
+            text = "No requests with field '{}' set to '{}' found in calls to http server.\n" \
+                   "However, requests with following values were made: {}".format(key, value, results)
+        assert False, text
 
     @staticmethod
-    def stop():
-        httpretty.disable()
+    def assert_success_and_collect(function, params, url="https://localhost/", method="GET"):
         httpretty.reset()
+        httpretty.enable()
+        if method == "GET":
+            hmethod = httpretty.GET
+        elif method == "POST":
+            hmethod = httpretty.POST
+        else:
+            hmethod = httpretty.PATCH
+        httpretty.register_uri(hmethod, url)
+
+        try:
+            assert function(params) == 0
+        finally:
+            httpretty.disable()
 
 
 @pytest.fixture()
-def http_request_checker(request):
-    httpretty.enable()
-    httpretty.register_uri(httpretty.GET, "https://localhost/")
+def http_check(request):
     yield HttpChecker()
-    httpretty.disable()
-    httpretty.reset()
 
 
 def check_output((out, err)):
