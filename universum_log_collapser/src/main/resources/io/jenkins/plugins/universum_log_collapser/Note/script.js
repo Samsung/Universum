@@ -1,6 +1,8 @@
 var coloringTimeoutMilliSeconds = 250;
 var timerId = setInterval(colorFailedSections, coloringTimeoutMilliSeconds);
 
+fix_pipeline();
+
 function colorLblsAscendant(el) {
     if (el == null) {
         return;
@@ -29,6 +31,34 @@ function finishColoring() {
     clearInterval(timerId);
     setTimeout(colorFailedSections, coloringTimeoutMilliSeconds);
 }
+
+/*
+When Universum is executed using pipeline "sh", pipeline span brokes first section collapse/expand mechanism.
+Finding target <span> element and simply move a content out from tag body.
+*/
+function fix_pipeline() {
+    var spans = document.getElementsByTagName("span");
+    var logStartRegexp = new RegExp("==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution");
+    var classNameRegexp = new RegExp("^pipeline-node-\\d+$");
+    var fixed = false;
+    
+    for (var i = 0; i < spans.length; i++) {
+        var el = spans[i];
+        if ((logStartRegexp.exec(el.innerHTML) == undefined) || (classNameRegexp.exec(el.className) == undefined)) {
+            continue;
+        }
+
+        el.nextSibling.insertAdjacentHTML("beforebegin", el.innerHTML);
+        el.innerHTML = "";
+        fixed = true;
+        break;
+    }
+
+    if (!fixed) {
+        setTimeout(fix_pipeline, 50);
+    }
+}
+
 
 /*
 Overrided implementation of Jenkins fetchNext() function.
