@@ -1,8 +1,6 @@
 var coloringTimeoutMilliSeconds = 250;
 var timerId = setInterval(colorFailedSections, coloringTimeoutMilliSeconds);
 
-fix_pipeline();
-
 function colorLblsAscendant(el) {
     if (el == null) {
         return;
@@ -40,7 +38,6 @@ function fix_pipeline() {
     var spans = document.getElementsByTagName("span");
     var logStartRegexp = new RegExp("==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution");
     var classNameRegexp = new RegExp("^pipeline-node-\\d+$");
-    var fixed = false;
     
     for (var i = 0; i < spans.length; i++) {
         var el = spans[i];
@@ -50,12 +47,7 @@ function fix_pipeline() {
 
         el.nextSibling.insertAdjacentHTML("beforebegin", el.innerHTML);
         el.innerHTML = "";
-        fixed = true;
         break;
-    }
-
-    if (!fixed) {
-        setTimeout(fix_pipeline, 50);
     }
 }
 
