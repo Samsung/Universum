@@ -145,7 +145,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
         
         // Fix first section, broken by pipeline execution. See JS sources for details.
         if (sectionStartMatcher.group(2).equals("2")) {
-            text.addMarkup(0, "<script>fix_pipeline()</script>");
+            text.addMarkup(0, "<iframe onload=\"fix_pipeline()\" style=\"display:none\"></iframe>");
         }
         
         int sectionNumberStartPosition = sectionStartMatcher.end(1);
