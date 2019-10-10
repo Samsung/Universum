@@ -30,7 +30,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private List<PaddingItem> paddings = new ArrayList<>();
     private boolean universumLogActive = false;
 
-    private Pattern sectionStartPattern = Pattern.compile("(^[|\\s]*)(\\d+\\.).*");
+    private Pattern sectionStartPattern = Pattern.compile("(^[|\\s]*)(\\d+)\\..*");
     private Pattern sectionEndPattern = Pattern.compile("^[|\\s]*└.*\\[.+\\].*");
     private Pattern sectionFailPattern = Pattern.compile("^[|\\s]*└.*\\[Failed\\].*");
     /*
@@ -143,8 +143,13 @@ public class Annotator extends ConsoleAnnotator<Object> {
             isIgnoredSection = true;
         }
         
+        // Fix first section, broken by pipeline execution. See JS sources for details.
+        if (sectionStartMatcher.group(2).equals("2")) {
+            text.addMarkup(0, "<iframe onload=\"fix_pipeline()\" style=\"display:none\"></iframe>");
+        }
+        
         int sectionNumberStartPosition = sectionStartMatcher.end(1);
-        int sectionNumberEndPosition = sectionStartMatcher.end(2);
+        int sectionNumberEndPosition = sectionStartMatcher.end(2) + 1;
         paddings.add(new PaddingItem(sectionNumberStartPosition, 
             sectionNumberEndPosition - sectionNumberStartPosition));
 

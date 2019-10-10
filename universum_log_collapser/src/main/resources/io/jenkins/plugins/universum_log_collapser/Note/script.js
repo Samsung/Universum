@@ -31,6 +31,28 @@ function finishColoring() {
 }
 
 /*
+When Universum is executed using pipeline "sh", pipeline span brokes first section collapse/expand mechanism.
+Finding target <span> element and simply move a content out from tag body.
+*/
+function fix_pipeline() {
+    var spans = document.getElementsByTagName("span");
+    var logStartRegexp = new RegExp("==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution");
+    var classNameRegexp = new RegExp("^pipeline-node-\\d+$");
+    
+    for (var i = 0; i < spans.length; i++) {
+        var el = spans[i];
+        if ((logStartRegexp.exec(el.innerHTML) == undefined) || (classNameRegexp.exec(el.className) == undefined)) {
+            continue;
+        }
+
+        el.nextSibling.insertAdjacentHTML("beforebegin", el.innerHTML);
+        el.innerHTML = "";
+        break;
+    }
+}
+
+
+/*
 Overrided implementation of Jenkins fetchNext() function.
 It's called when Universum step takes long time and console output is splitted to several <pre> tags instead of one.
 e: global <pre> tag
