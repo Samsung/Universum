@@ -22,7 +22,9 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
                       dict(name="Run static pylint", code_report=True,
-                           command=run_virtual("pip uninstall -y universum; " + pylint_cmd))])
+                           command=run_virtual("pip uninstall -y universum; " + pylint_cmd)),
+                      dict(name="Run Jenkins plugin Java tests",
+                           command=["mvn", "test"], directory="../../universum_log_collapser")])
 
 if __name__ == '__main__':
     print configs.dump()
