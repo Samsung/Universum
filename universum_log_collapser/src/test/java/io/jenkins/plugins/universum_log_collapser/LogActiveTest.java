@@ -19,6 +19,10 @@ public class LogActiveTest {
     private static final String logStartLine = "==> Universum 1.2.3 started execution";
     private static final String logEndLine = "==> Universum 1.2.3 finished execution";
 
+    private static final String sectionStartClose = "</label></span><div>";
+    private static final String sectionEndClose = "</div><span class=\"nl\"></span>";
+    private static final String paddingSpan = "<span style=\"display: inline-block;  width: 4ch;\"></span>";
+
     public static class nonParametrizedTest {
 
         @Test
@@ -45,17 +49,17 @@ public class LogActiveTest {
                     " |   step data",
                     " └ [Success]",
                     replaceWithHtmlEntities(logStartLine),
-                    wrapSectionStart("1. Step name", 1),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
                     replaceWithHtmlEntities(logEndLine),
                     "1. Step name",
                     " |   step data",
                     " └ [Success]",
                     replaceWithHtmlEntities(logStartLine),
-                    wrapSectionStart("1. Step name", 2),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(2) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -74,13 +78,13 @@ public class LogActiveTest {
             };
             String[] out = new String[] {
                     replaceWithHtmlEntities(logStartLine),
-                    wrapSectionStart("1. Step name", 1),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
                     "some random line",
-                    wrapSectionStart("1. Step name", 2),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]")
+                    sectionStartOpen(2) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -99,8 +103,8 @@ public class LogActiveTest {
             };
             String[] out = new String[] {
                     replaceWithHtmlEntities(logStartLine),
-                    wrapSectionStart("1. Step name", 1),
-                    wrapSectionContent(" |   step data"),
+                    sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
                     "some random line",
                     " └ [Success]",
                     "1. Step name",
@@ -142,9 +146,9 @@ public class LogActiveTest {
                     " |   step data",
                     " └ [Success]",
                     replaceWithHtmlEntities(line),
-                    wrapSectionStart("1. Step name", 1),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -227,9 +231,9 @@ public class LogActiveTest {
                     " |   step data",
                     " └ [Success]",
                     replaceWithHtmlEntities(logStartLine),
-                    wrapSectionStart("1. Step name", 1),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
                     replaceWithHtmlEntities(line),
                     "1. Step name",
                     " |   step data",
@@ -277,13 +281,13 @@ public class LogActiveTest {
                     " |   step data",
                     " └ [Success]",
                     replaceWithHtmlEntities(logStartLine),
-                    wrapSectionStart("1. Step name", 1),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
                     replaceWithHtmlEntities(line),
-                    wrapSectionStart("1. Step name", 2),
-                    wrapSectionContent(" |   step data"),
-                    wrapSectionEnd(" └ [Success]"),
+                    sectionStartOpen(2) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -371,28 +375,13 @@ public class LogActiveTest {
         }
     }
 
-    private static String wrapSectionStart(String line, int idNum) {
-        return String.format("<input type=\"checkbox\" id=\"hide-block-%d\" class=\"hide\"/>", idNum) +
-                String.format("<label for=\"hide-block-%d\">", idNum) +
-                "<span class=\"sectionLbl\">" +
-                line +
-                "</label>" +
-                "</span>" +
-                "<div>";
-    }
-
-    private static String wrapSectionContent(String line) {
-        return "<span style=\"display: inline-block;  width: 4ch;\"></span>" + line;
-    }
-
-    private static String wrapSectionEnd(String line) {
-        return "<span style=\"display: inline-block;  width: 4ch;\"></span>" +
-                line +
-                "</div>" +
-                "<span class=\"nl\"></span>";
-    }
-
     private static String replaceWithHtmlEntities(String line) {
         return line.replaceAll(">", "&gt;").replaceAll("<", "&lt;");
+    }
+
+    private static String sectionStartOpen(int idNum) {
+        return String.format("<input type=\"checkbox\" id=\"hide-block-%d\" class=\"hide\"/>", idNum) +
+                String.format("<label for=\"hide-block-%d\">", idNum) +
+                "<span class=\"sectionLbl\">";
     }
 }
