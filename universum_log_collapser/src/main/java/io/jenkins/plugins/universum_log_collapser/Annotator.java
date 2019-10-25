@@ -3,12 +3,12 @@ package io.jenkins.plugins.universum_log_collapser;
 import hudson.MarkupText;
 import hudson.console.ConsoleAnnotator;
 
-import java.util.logging.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.List;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class PaddingItem implements Serializable {
     public int position;
@@ -41,8 +41,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
      */
     private Pattern ignoredSectionPattern = Pattern.compile(".*Reporting build result.*");
     private Pattern universumLogStartPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution$");
-    private Pattern universumLogEndPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
-    private Pattern jenkinsLogEndPattern = Pattern.compile(".*Finished: .*");
+    private Pattern universumLogEndPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ finished execution$");
+    private Pattern jenkinsLogEndPattern = Pattern.compile("^Finished: [A-Z_]+$");
     private Pattern healthyLogPattern = Pattern.compile("^\\s+[\\|└]\\s+.*");
 
     public Annotator(Object context) {}
@@ -90,6 +90,12 @@ public class Annotator extends ConsoleAnnotator<Object> {
         String textStr = text.toString(true);
         logger.info(textStr);
 
+        Matcher jenkinsLogEndMatcher = jenkinsLogEndPattern.matcher(textStr);
+        if (jenkinsLogEndMatcher.find()) {
+            logger.info("Jenkins log end found");
+            text.addMarkup(text.length(), "<iframe onload=\"finishColoring()\" style=\"display:none\"></iframe>");
+        }
+
         universumLogActive = universumLogActive || universumLogStartPattern.matcher(textStr).find();
         if (!universumLogActive) {
             logger.info("Skip non-universum log");
@@ -102,7 +108,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
         for (PaddingItem p : paddings) {
             if (!healthyLogPattern.matcher(textStr).find()) {
-                logger.info("Log is broken, identation expected");
+                logger.info("Log is broken, indentation expected");
                 universumLogActive = false;
                 return this;
             }
@@ -119,12 +125,6 @@ public class Annotator extends ConsoleAnnotator<Object> {
         Matcher sectionEndMatcher = sectionEndPattern.matcher(textStr);
         if (sectionEndMatcher.find()) {
             processSectionEnd(text, sectionFailPattern.matcher(textStr));
-            return this;
-        }
-
-        Matcher jenkinsLogEndMatcher = jenkinsLogEndPattern.matcher(textStr);
-        if (jenkinsLogEndMatcher.find()) {
-            text.addMarkup(text.length(), "<iframe onload=\"finishColoring()\" style=\"display:none\"></iframe>");
             return this;
         }
 
