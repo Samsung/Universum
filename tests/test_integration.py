@@ -16,14 +16,13 @@ def get_line_with_text(text, log):
     return ""
 
 
-@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
-def test_minimal_execution(universum_runner, universum_cmd):
-    log = universum_runner.run("""
+def test_minimal_execution(universum_runner_nonci):
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """)
-    assert universum_runner.local.repo_file.basename in log
+    assert universum_runner_nonci.local.repo_file.basename in log
 
 
 def test_artifacts(universum_runner):
@@ -56,9 +55,8 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file.sh"))
 
 
-@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
-def test_background_steps(universum_runner, universum_cmd):
-    log = universum_runner.run("""
+def test_background_steps(universum_runner_nonci):
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 background = Variations([dict(name="Background", background=True)])
@@ -75,8 +73,8 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
     assert 'Failed' in get_line_with_text("Background unsuccessful step - ", log)
 
     # Test background after failed foreground (regression)
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
@@ -84,11 +82,11 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       background=True, artifacts="file")])
 """)
     assert "All ongoing background steps completed" in log
-    assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file"))
+    assert os.path.exists(os.path.join(universum_runner_nonci.artifact_dir, "file"))
 
     # Test TC step failing
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
@@ -96,8 +94,8 @@ configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], bac
     assert "##teamcity[buildProblem description" in log
 
     # Test multiple failing background steps
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
@@ -106,10 +104,9 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
-@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
-def test_critical_steps(universum_runner, universum_cmd):
+def test_critical_steps(universum_runner_nonci):
     # Test linear
-    log = universum_runner.run("""
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Good step", command=["echo", "step succeeded"]),
@@ -120,8 +117,8 @@ configs = Variations([dict(name="Good step", command=["echo", "step succeeded"])
     assert "This shouldn't be in log." not in log
 
     # Test embedded: critical step, critical substep
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 upper = Variations([dict(name="Group 1"),
@@ -138,8 +135,8 @@ configs = upper * lower
     assert "Group 2, step 1 skipped because of critical step failure" not in log
 
     # Test embedded: critical step, non-critical substep
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 upper = Variations([dict(name="Group 1", critical=True),
@@ -155,8 +152,8 @@ configs = upper * lower
     assert "This should be in log." in log
 
     # Test critical non-commands
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Group 1")])
@@ -171,8 +168,8 @@ configs += Variations([dict(name="Linear non-command", command=["this-is-not-a-c
     assert "This shouldn't be in log." not in log
 
     # Test background
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 group = Variations([dict(name="Group")])
@@ -301,15 +298,14 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
     assert url_error not in log
 
 
-@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
-def test_environment(universum_runner, universum_cmd):
-    script = universum_runner.local.root_directory.join("script.sh")
+def test_environment(universum_runner_nonci):
+    script = universum_runner_nonci.local.root_directory.join("script.sh")
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
     script.chmod(0777)
 
-    log = universum_runner.run("""
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["script.sh"],
@@ -317,8 +313,8 @@ configs = Variations([dict(name="Test configuration", command=["script.sh"],
 """)
     assert "This string should be in log" in log
 
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    universum_runner_nonci.clean_artifacts()
+    log = universum_runner_nonci.run("""
 from _universum.configuration_support import Variations
 
 upper = Variations([dict(name="Test configuration",

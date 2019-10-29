@@ -5,8 +5,7 @@ import re
 import pytest
 
 
-@pytest.mark.parametrize('universum_cmd', (None, 'nonci',))
-def test_code_report(universum_runner, universum_cmd):
+def test_code_report(universum_runner):
     config = """
 from _universum.configuration_support import Variations
 

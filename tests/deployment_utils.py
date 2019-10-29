@@ -159,11 +159,11 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner(object):
-    def __init__(self, perforce_workspace, git_client, local_sources, sub_command=None):
+    def __init__(self, perforce_workspace, git_client, local_sources):
         self.perforce = perforce_workspace
         self.git = git_client
         self.local = local_sources
-        self.sub_command = sub_command
+        self.nonci = False
 
         # Need to be initialized in 'set_environment'
         self.environment = None
@@ -174,7 +174,7 @@ class UniversumRunner(object):
     def set_environment(self, execution_environment):
         self.environment = execution_environment
         self.working_dir = self.environment.get_working_directory()
-        self.project_root = os.path.join(self.working_dir, "temp")
+        self.project_root = self.working_dir if self.nonci else os.path.join(self.working_dir, "temp")
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
@@ -220,10 +220,10 @@ class UniversumRunner(object):
         if force_installed:
             cmd = "universum"
 
-        if not self.sub_command:
-            cmd += self._vcs_args(vcs_type)
+        if self.nonci:
+            cmd += ' nonci'
         else:
-            cmd += ' ' + self.sub_command
+            cmd += self._vcs_args(vcs_type)
 
         config_file = self._create_temp_config(config)
         cmd += " -lcp '{}'".format(config_file) + self._basic_args() + additional_parameters
@@ -240,8 +240,8 @@ class UniversumRunner(object):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources, universum_cmd=None):
-    runner = UniversumRunner(perforce_workspace, git_client, local_sources, sub_command=universum_cmd)
+def runner_without_environment(perforce_workspace, git_client, local_sources):
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources)
     yield runner
     runner.clean_artifacts()
 
@@ -249,6 +249,14 @@ def runner_without_environment(perforce_workspace, git_client, local_sources, un
 @pytest.fixture()
 def universum_runner(execution_environment, runner_without_environment):
     execution_environment.set_image("universum_test_env")
+    runner_without_environment.set_environment(execution_environment)
+    yield runner_without_environment
+
+
+@pytest.fixture(params=(False, True))
+def universum_runner_nonci(execution_environment, runner_without_environment, request):
+    execution_environment.set_image("universum_test_env")
+    runner_without_environment.nonci = request.param
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
 
