@@ -1,18 +1,18 @@
 :orphan:
 
-Non-CI command line
+Non-CI subcommand
 -------------------
 
-An aim of this command is using 'Universum' as add-on for build system.
+Purpose of this mode is running 'Universum' configurations locally.
+An aim of this mode is using Universum as part of build system.
+When 'Universum' running in this mode next CI-related features disabled:
 
+- reporting (to review board for example)
+- strict verifying of artifacts before build
+- running build scripts within a temporary project directory when VCS is none
 
-What problem this command resolves?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+However you still have pretty build result summary.
 
-This command cound be useful for projects which supports a lot of build configurations and target platforms/devices.
-Build system usage of such projects could be difficult and CI scripts usually contain duplications of build scripts.
-However such problem can be resolved by moving build configuration functionality to CI scripts.
-In this cause it's possible to use exactly same system for CI and build.
 
 .. argparse::
     :module: universum
