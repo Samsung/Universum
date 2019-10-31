@@ -11,10 +11,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class PaddingItem implements Serializable {
-    public int position;
-    public int spacesNumber;
+    int position;
+    int spacesNumber;
 
-    public PaddingItem(int p, int s) {
+    PaddingItem(int p, int s) {
         position = p;
         spacesNumber = s;
     }
@@ -31,8 +31,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private boolean universumLogActive = false;
 
     private Pattern sectionStartPattern = Pattern.compile("(^[|\\s]*)(\\d+)\\..*");
-    private Pattern sectionEndPattern = Pattern.compile("^[|\\s]*└.*\\[.+\\].*");
-    private Pattern sectionFailPattern = Pattern.compile("^[|\\s]*└.*\\[Failed\\].*");
+    private Pattern sectionEndPattern = Pattern.compile("^[|\\s]*└.*\\[[a-zA-Z]+].*");
+    private Pattern sectionFailPattern = Pattern.compile("^[|\\s]*└.*\\[Failed].*");
     /*
         "Reporting build result" section is showing summarized results of all
         build steps. Each line of this section is treated as section start, but
@@ -43,9 +43,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private Pattern universumLogStartPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution$");
     private Pattern universumLogEndPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ finished execution$");
     private Pattern jenkinsLogEndPattern = Pattern.compile("^Finished: [A-Z_]+$");
-    private Pattern healthyLogPattern = Pattern.compile("^\\s+[\\|└]\\s+.*");
-
-    public Annotator(Object context) {}
+    private Pattern healthyLogPattern = Pattern.compile("^\\s+[|└]\\s+.*");
 
     /*
     Before:
@@ -162,8 +160,10 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
     private void processSectionEnd(MarkupText text, Matcher sectionFailMatcher) {
         logger.info("Section end found");
-        paddings.remove(paddings.size() - 1);
-        
+        if (paddings.size() > 0) {
+            paddings.remove(paddings.size() - 1);
+        }
+
         if (sectionFailMatcher.find()) {
             logger.info("Failed section found");
             text.addMarkup(0, "<span class=\"failed_result\">");
