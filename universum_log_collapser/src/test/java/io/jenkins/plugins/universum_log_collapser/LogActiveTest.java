@@ -2,26 +2,17 @@ package io.jenkins.plugins.universum_log_collapser;
 
 import org.junit.Test;
 
-import hudson.MarkupText;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
 import static org.junit.runners.Parameterized.Parameter;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Enclosed.class)
-public class LogActiveTest {
-
-    private static final String logStartLine = "==> Universum 1.2.3 started execution";
-    private static final String logEndLine = "==> Universum 1.2.3 finished execution";
-
-    private static final String sectionStartClose = "</label></span><div>";
-    private static final String sectionEndClose = "</div><span class=\"nl\"></span>";
-    private static final String paddingSpan = "<span style=\"display: inline-block;  width: 4ch;\"></span>";
+public class LogActiveTest extends TestSuite {
 
     public static class nonParametrizedTest {
 
@@ -357,31 +348,5 @@ public class LogActiveTest {
             };
             checkAnnotation(in, out);
         }
-    }
-
-
-    private static void checkAnnotation(String[] in, String[] out) {
-        assertEquals(in.length, out.length);
-
-        Annotator annotator = new Annotator(null);
-        for (int i = 0; i < in.length; i++) {
-            MarkupText text = new MarkupText(in[i]);
-            Annotator result = annotator.annotate(null, text);
-
-            assertEquals(annotator, result);
-            System.out.println(out[i]);
-            System.out.println(text.toString(true));
-            assertEquals(out[i], text.toString(true));
-        }
-    }
-
-    private static String replaceWithHtmlEntities(String line) {
-        return line.replaceAll(">", "&gt;").replaceAll("<", "&lt;");
-    }
-
-    private static String sectionStartOpen(int idNum) {
-        return String.format("<input type=\"checkbox\" id=\"hide-block-%d\" class=\"hide\"/>", idNum) +
-                String.format("<label for=\"hide-block-%d\">", idNum) +
-                "<span class=\"sectionLbl\">";
     }
 }
