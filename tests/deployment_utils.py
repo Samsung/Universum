@@ -159,11 +159,11 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner(object):
-    def __init__(self, perforce_workspace, git_client, local_sources):
+    def __init__(self, perforce_workspace, git_client, local_sources, nonci):
         self.perforce = perforce_workspace
         self.git = git_client
         self.local = local_sources
-        self.nonci = False
+        self.nonci = nonci
 
         # Need to be initialized in 'set_environment'
         self.environment = None
@@ -174,7 +174,9 @@ class UniversumRunner(object):
     def set_environment(self, execution_environment):
         self.environment = execution_environment
         self.working_dir = self.environment.get_working_directory()
-        self.project_root = self.working_dir if self.nonci else os.path.join(self.working_dir, "temp")
+        self.project_root = os.path.join(self.working_dir, "temp")
+        if self.nonci:
+            self.project_root = self.local.root_directory
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
@@ -240,8 +242,8 @@ class UniversumRunner(object):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources):
-    runner = UniversumRunner(perforce_workspace, git_client, local_sources)
+def runner_without_environment(perforce_workspace, git_client, local_sources, nonci):
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci)
     yield runner
     runner.clean_artifacts()
 
@@ -253,12 +255,11 @@ def universum_runner(execution_environment, runner_without_environment):
     yield runner_without_environment
 
 
-@pytest.fixture(params=(False, True))
-def universum_runner_nonci(execution_environment, runner_without_environment, request):
-    execution_environment.set_image("universum_test_env")
-    runner_without_environment.nonci = request.param
-    runner_without_environment.set_environment(execution_environment)
-    yield runner_without_environment
+# @pytest.fixture()
+# def universum_runner(execution_environment, runner_without_environment):
+#     execution_environment.set_image("universum_test_env")
+#     runner_without_environment.set_environment(execution_environment)
+#     yield runner_without_environment
 
 
 @pytest.fixture()
@@ -280,3 +281,13 @@ def clean_universum_runner_no_vcs(clean_execution_environment, runner_without_en
     clean_execution_environment.set_image("universum_test_env_no_vcs")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
+
+
+@pytest.fixture
+def nonci(request):
+    return False
+
+
+def pytest_generate_tests(metafunc):
+    if hasattr(metafunc.function, 'nonci_applicable'):
+        metafunc.parametrize('nonci', (False, True), ids=('no subcmd', 'subcmd: nonci',))

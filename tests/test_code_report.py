@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 import re
-import pytest
 
 
 def test_code_report(universum_runner):
