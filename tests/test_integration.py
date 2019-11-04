@@ -84,7 +84,7 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       background=True, artifacts="file")])
 """)
     assert "All ongoing background steps completed" in log
-    artifacts_must_collect = (False == universum_runner.nonci)
+    artifacts_must_collect = not universum_runner.nonci
     assert artifacts_must_collect == os.path.exists(os.path.join(universum_runner.artifact_dir, "file"))
 
     # Test TC step failing
