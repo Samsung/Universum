@@ -332,7 +332,12 @@ class Launcher(ProjectDirectory):
 
         self.artifacts.clean_artifacts_silently()
 
-        self.process_project_configs()
+        project_configs = self.process_project_configs()
+        afterall_configs = self.code_report_collector.prepare_environment(project_configs)
+        if afterall_configs:
+            self.launch_custom_configs(afterall_configs)
+            self.code_report_collector.report_code_report_results()
+
         self.launch_project()
         self.reporter.report_initialized = True
         self.reporter.report_build_result()
