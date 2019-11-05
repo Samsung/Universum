@@ -334,6 +334,8 @@ class Launcher(ProjectDirectory):
 
         project_configs = self.process_project_configs()
         afterall_configs = self.code_report_collector.prepare_environment(project_configs)
+        self.artifacts.set_and_clean_artifacts(project_configs, ignore_existed_artifacts=True)
+
         if afterall_configs:
             self.launch_custom_configs(afterall_configs)
             self.code_report_collector.report_code_report_results()
@@ -341,6 +343,7 @@ class Launcher(ProjectDirectory):
         self.launch_project()
         self.reporter.report_initialized = True
         self.reporter.report_build_result()
+        self.artifacts.collect_artifacts()
 
     def finalize(self):
         pass

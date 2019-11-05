@@ -189,16 +189,18 @@ class UniversumRunner(object):
             self.environment.install_python_module("coverage")
 
     def _basic_args(self):
-        return " -lo console -pr '{}' -ad '{}'".format(self.project_root, self.artifact_dir)
+        return " -pr '{}'".format(self.project_root)
 
     def _vcs_args(self, vcs_type):
+        common_args = " -lo console -ad '{}'".format(self.artifact_dir)
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd '{}'".format(unicode(self.local.root_directory))
+            return common_args + " -vt none --no-diff -fsd '{}'".format(unicode(self.local.root_directory))
 
         if vcs_type == "git":
-            return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
+            return common_args + " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url,
+                                                                                self.git.server.target_branch)
 
-        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
+        return common_args + " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
             .format(self.perforce.p4.port,
                     self.perforce.p4.user,
                     self.perforce.p4.password,
@@ -228,7 +230,7 @@ class UniversumRunner(object):
             cmd += self._vcs_args(vcs_type)
 
         config_file = self._create_temp_config(config)
-        cmd += " -lcp '{}'".format(config_file) + self._basic_args() + additional_parameters
+        cmd += " -lcp '{}'".format(config_file) + self._basic_args() + ' ' + additional_parameters
 
         if expected_to_fail:
             result = self.environment.assert_unsuccessful_execution(cmd, environment=environment)
@@ -255,11 +257,13 @@ def universum_runner(execution_environment, runner_without_environment):
     yield runner_without_environment
 
 
-# @pytest.fixture()
-# def universum_runner(execution_environment, runner_without_environment):
-#     execution_environment.set_image("universum_test_env")
-#     runner_without_environment.set_environment(execution_environment)
-#     yield runner_without_environment
+@pytest.fixture()
+def universum_runner_nonci(execution_environment, local_sources):
+    runner = UniversumRunner(None, None, local_sources, True)
+    execution_environment.set_image("universum_test_env")
+    runner.set_environment(execution_environment)
+    yield runner
+    runner.clean_artifacts()
 
 
 @pytest.fixture()
