@@ -334,7 +334,7 @@ class Launcher(ProjectDirectory):
 
         project_configs = self.process_project_configs()
         afterall_configs = self.code_report_collector.prepare_environment(project_configs)
-        self.artifacts.set_and_clean_artifacts(project_configs, ignore_existed_artifacts=True)
+        self.artifacts.set_and_clean_artifacts(project_configs, ignore_existing_artifacts=True)
 
         if afterall_configs:
             self.launch_custom_configs(afterall_configs)

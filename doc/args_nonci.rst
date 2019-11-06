@@ -3,7 +3,7 @@
 Non-CI subcommand
 -------------------
 
-Purpose of this mode is running 'Universum' configurations locally.
+The purpose of this mode is running 'Universum' locally.
 This mode is designed to use Universum as part of build system.
 When 'Universum' running in this mode, the following CI-related features disabled:
 

@@ -120,10 +120,11 @@ class ArtifactCollector(ProjectDirectory):
         except IOError as e:
             raise CiException("The following error occurred while working with file: " + unicode(e))
 
-    def preprocess_artifact_list(self, artifact_list, ignore_already_existed):
+    def preprocess_artifact_list(self, artifact_list, ignore_already_existing=False):
         """
         Check artifacts for existence; remove if required; raise exception otherwise; sort and remove duplicates
         :param artifact_list: list of dictionaries with keys 'path' (for path) and 'clean' to clean it before build
+        :param ignore_already_existing: will not check existence of artifacts when set to 'True'
         :return: sorted list of checked paths (including duplicates and wildcards)
         """
         dir_list = set()
@@ -139,7 +140,7 @@ class ArtifactCollector(ProjectDirectory):
                             if "Is a directory" not in e:
                                 raise
                             shutil.rmtree(matching_path)
-                elif not ignore_already_existed:
+                elif not ignore_already_existing:
                     text = "Build artifacts, such as"
                     for matching_path in matches:
                         text += "\n * '" + os.path.basename(matching_path) + "'"
@@ -161,7 +162,7 @@ class ArtifactCollector(ProjectDirectory):
         return new_artifact_list
 
     @make_block("Preprocessing artifact lists")
-    def set_and_clean_artifacts(self, project_configs, ignore_existed_artifacts=False):
+    def set_and_clean_artifacts(self, project_configs, ignore_existing_artifacts=False):
         artifact_list = []
         report_artifact_list = []
         for configuration in project_configs.all():
@@ -177,12 +178,12 @@ class ArtifactCollector(ProjectDirectory):
         if artifact_list:
             name = "Setting and preprocessing artifacts according to configs"
             self.artifact_list = self.structure.run_in_block(self.preprocess_artifact_list,
-                                                             name, True, artifact_list, ignore_existed_artifacts)
+                                                             name, True, artifact_list, ignore_existing_artifacts)
         if report_artifact_list:
             name = "Setting and preprocessing artifacts to be mentioned in report"
             self.report_artifact_list = self.structure.run_in_block(self.preprocess_artifact_list,
                                                                     name, True, report_artifact_list,
-                                                                    ignore_existed_artifacts)
+                                                                    ignore_existing_artifacts)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
