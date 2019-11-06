@@ -27,7 +27,7 @@ def test_launcher_output(universum_runner_nonci):
 
     assert console_out_log != log
     step_log = universum_runner_nonci.environment.assert_successful_execution(
-        'cat ' + artifact_dir + "/test_step_log.txt" )
+        'cat ' + artifact_dir + "/test_step_log.txt")
     assert step_log_expected in step_log
 
 
@@ -37,5 +37,5 @@ def test_launcher_output(universum_runner_nonci):
     assert step_log_expected in log
 
     second_run_step_log = universum_runner_nonci.environment.assert_successful_execution(
-        'cat ' + artifact_dir + "/test_step_log.txt" )
+        'cat ' + artifact_dir + "/test_step_log.txt")
     assert step_log == second_run_step_log
