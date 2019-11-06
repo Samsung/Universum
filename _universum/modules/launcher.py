@@ -330,6 +330,7 @@ class Launcher(ProjectDirectory):
         if not self.settings.output:
             self.output = 'console'
 
+        self.out.log("Cleaning artifacts...")
         self.artifacts.clean_artifacts_silently()
 
         project_configs = self.process_project_configs()
