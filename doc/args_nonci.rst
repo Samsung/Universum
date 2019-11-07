@@ -4,15 +4,14 @@ Non-CI subcommand
 -------------------
 
 The purpose of this mode is improving usability of 'Universum' on a local host PC.
-This mode is designed to use 'Universum' as a wrapper for a build system.
-It could be useful for projects in which build system usage is complicated or unfriendly for user.
-For example:
+This mode is designed to use 'Universum' as a wrapper for a complex build system.
+In particular such wrapper could help to solve next problems:
 
-- every build command run requires to setup a lot of input parameters
-- get rid of numerous bash scripts which wraps a build system like GNU Make
+- every build command run requires setting up a lot of input parameters
+- bash script uses to wrap build system like GNU Make
 
 
-The 'universum nonci' has the following differences from 'default':
+The 'universum nonci' has the following differences from regular mode:
 
 - report to code review system, such as 'GitHub' or 'Swarm', is disabled
 - version control is disabled
