@@ -9,6 +9,7 @@ In particular such wrapper could help to resolve the following issues:
 
 - every build command run requires setting up a lot of input parameters
 - bash script is used to wrap build system like GNU Make
+- universum configs contain duplications of build system wrapper
 
 
 The 'universum nonci' has the following differences from the regular mode:
