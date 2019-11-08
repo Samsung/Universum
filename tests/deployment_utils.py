@@ -159,10 +159,11 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner(object):
-    def __init__(self, perforce_workspace, git_client, local_sources):
+    def __init__(self, perforce_workspace, git_client, local_sources, nonci):
         self.perforce = perforce_workspace
         self.git = git_client
         self.local = local_sources
+        self.nonci = nonci
 
         # Need to be initialized in 'set_environment'
         self.environment = None
@@ -174,6 +175,8 @@ class UniversumRunner(object):
         self.environment = execution_environment
         self.working_dir = self.environment.get_working_directory()
         self.project_root = os.path.join(self.working_dir, "temp")
+        if self.nonci:
+            self.project_root = self.local.root_directory
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
@@ -186,7 +189,10 @@ class UniversumRunner(object):
             self.environment.install_python_module("coverage")
 
     def _basic_args(self):
-        return " -lo console -pr '{}' -ad '{}'".format(self.project_root, self.artifact_dir)
+        return " -lo console -ad '{}'".format(self.artifact_dir)
+
+    def _mandatory_args(self, config_file):
+        return " -pr '{}'  -lcp '{}'".format(self.project_root, config_file)
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
@@ -202,23 +208,30 @@ class UniversumRunner(object):
                     self.perforce.depot,
                     "my_disposable_p4_client")
 
+    def _create_temp_config(self, config):
+        file_path = os.path.join(self.working_dir, "temp_config.py")
+        with open(file_path, 'wb+') as f:
+            f.write(config)
+            f.close()
+        return file_path
+
     def run(self, config, force_installed=False, vcs_type="none",
             additional_parameters="", environment=None, expected_to_fail=False):
 
-        config_file = os.path.join(self.working_dir, "temp_config.py")
-        with open(config_file, 'wb+') as f:
-            f.write(config)
-            f.close()
-
-        cmd = "coverage run --branch --append --source='{}' '{}/universum.py'" \
-            .format(self.working_dir, self.working_dir)
+        cmd = "coverage run --branch --append --source='{0}' '{0}/universum.py'" \
+            .format(self.working_dir)
 
         # We cannot collect coverage from installed module, so we run it only if specifically told so
         if force_installed:
             cmd = "universum"
 
-        cmd += " -lcp '{}'".format(config_file) \
-               + self._basic_args() + self._vcs_args(vcs_type) + additional_parameters
+        if self.nonci:
+            cmd += ' nonci'
+        else:
+            cmd += self._basic_args() + self._vcs_args(vcs_type)
+
+        config_file = self._create_temp_config(config)
+        cmd += self._mandatory_args(config_file) + ' ' + additional_parameters
 
         if expected_to_fail:
             result = self.environment.assert_unsuccessful_execution(cmd, environment=environment)
@@ -231,10 +244,9 @@ class UniversumRunner(object):
     def clean_artifacts(self):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
-
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources):
-    runner = UniversumRunner(perforce_workspace, git_client, local_sources)
+def runner_without_environment(perforce_workspace, git_client, local_sources, nonci):
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci)
     yield runner
     runner.clean_artifacts()
 
@@ -244,6 +256,15 @@ def universum_runner(execution_environment, runner_without_environment):
     execution_environment.set_image("universum_test_env")
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
+
+
+@pytest.fixture()
+def universum_runner_nonci(execution_environment, local_sources):
+    runner = UniversumRunner(None, None, local_sources, True)
+    execution_environment.set_image("universum_test_env")
+    runner.set_environment(execution_environment)
+    yield runner
+    runner.clean_artifacts()
 
 
 @pytest.fixture()
@@ -265,3 +286,13 @@ def clean_universum_runner_no_vcs(clean_execution_environment, runner_without_en
     clean_execution_environment.set_image("universum_test_env_no_vcs")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
+
+
+@pytest.fixture
+def nonci(request):
+    return False
+
+
+def pytest_generate_tests(metafunc):
+    if hasattr(metafunc.function, 'nonci_applicable'):
+        metafunc.parametrize('nonci', (False, True), ids=('no subcmd', 'subcmd: nonci',))
