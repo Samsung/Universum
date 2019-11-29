@@ -11,4 +11,4 @@ describe('e2e tests', () => {
         const unhandledElement = await page.$(".failed_result");
         expect(unhandledElement).toBe(null);
     });
-  });
+});
