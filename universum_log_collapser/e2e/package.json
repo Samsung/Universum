@@ -1,0 +1,14 @@
+{
+  "name": "e2e_test",
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "jest-puppeteer"
+  },
+  "dependencies": {
+    "jest": "^24.9.0",
+    "jest-puppeteer": "^4.3.0",
+    "puppeteer": "^2.0.0"
+  }
+}
