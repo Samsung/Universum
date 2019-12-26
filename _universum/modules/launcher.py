@@ -85,6 +85,24 @@ def check_if_env_set(configuration):
     return True
 
 
+def check_str_match(string, expected_substrings, unwanted_substrings):
+    """The function to check whenever specified string contain 'expected' and
+     NOT contain 'unwanted' substrings.
+    :rtype: bool
+    """
+    result = False if expected_substrings else True
+    for substr in expected_substrings:
+        if substr in string:
+            result = True
+            break
+
+    for substr in unwanted_substrings:
+        if substr in string:
+            result = False
+            break
+    return result
+
+
 class Step(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
@@ -235,6 +253,15 @@ class Launcher(ProjectDirectory):
         parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
 
+        parser.add_argument("--run-step", "-run", dest="run_step",
+                            help="Allows to filter which steps to execute during launch. "
+                                 "String value representing single filter or a set of filters separated by ':'. "
+                                 "To define exclude pattern use '!' symbol at the beginning of pattern. "
+                                 "A universum step match specified pattern when 'filter' is a substring of step "
+                                 "'name'. "
+                                 "This functionality is similar to 'boosttest' and 'gtest' filtering. "
+                                 "Except using of special characters like '*', '?' etc. which are ignored. ")
+
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)
         self.source_project_configs = None
@@ -259,10 +286,25 @@ class Launcher(ProjectDirectory):
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
+        self.include_patterns, self.exclude_patterns = self._get_filter_patterns(self.settings.run_step)
+
+    def _get_filter_patterns(self, filters):
+        """This method parse 'filters' defined as single string to lists of
+        'include' and 'exclude' patterns.
+        """
+        include = []
+        exclude = []
+
+        filters = filters.split(':') if filters else []
+        for f in filters:
+            if f.startswith('!') and len(f) > 1:
+                exclude.append(f[1:])
+            elif len(f) > 0:
+                include.append(f)
+        return include, exclude
 
     @make_block("Processing project configs")
     def process_project_configs(self):
-
         config_path = utils.parse_path(self.settings.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
         config_globals = {}
@@ -278,7 +320,10 @@ class Launcher(ProjectDirectory):
             dump_file.write(self.source_project_configs.dump())
             dump_file.close()
 
-            self.project_configs = self.source_project_configs.filter(check_if_env_set)
+            configs = self.source_project_configs.filter(check_if_env_set)
+            self.project_configs = configs.filter(lambda config: check_str_match(config['name'],
+                                                                                 self.include_patterns,
+                                                                                 self.exclude_patterns))
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
