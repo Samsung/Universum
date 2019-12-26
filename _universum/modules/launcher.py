@@ -86,10 +86,9 @@ def check_if_env_set(configuration):
 
 
 def check_str_match(string, expected_substrings, unexpected_substrings):
-    """The function to check whenever specified string contains 'expected' and
-    does NOT contains 'unexpected' substrings.
+    """The function to check whether specified string contains 'expected' and
+    does NOT contain 'unexpected' substrings.
 
-    ["", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
     >>> check_str_match("step 1", [], [])
     True
 
@@ -121,8 +120,8 @@ def check_str_match(string, expected_substrings, unexpected_substrings):
 
 
 def get_match_patterns(filters):
-    """The function to parse 'filters' defined as single string into a lists of
-    'expected' and 'unexpected' patterns.
+    """The function to parse 'filters' defined as a single string into a lists
+    of 'expected' and 'unexpected' patterns.
 
     >>> get_match_patterns("")
     [], []
@@ -148,7 +147,8 @@ def get_match_patterns(filters):
     filters = filters.split(':') if filters else []
     for f in filters:
         if f.startswith('!'):
-            unexpected.append(f[1:]) if len(f) > 1 else None # pylint: disable=expression-not-assigned
+            if len(f) > 1:
+                unexpected.append(f[1:])
         elif f:
             expected.append(f)
     return expected, unexpected
@@ -304,7 +304,7 @@ class Launcher(ProjectDirectory):
         parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
 
-        parser.add_argument("--run-step", "-run", dest="run_step",
+        parser.add_argument("--filter-step", "-filter", dest="step_filter",
                             help="Allows to filter which steps to execute during launch. "
                                  "String value representing single filter or a set of filters separated by ':'. "
                                  "To define exclude pattern use '!' symbol at the beginning of pattern. "
@@ -313,10 +313,10 @@ class Launcher(ProjectDirectory):
                                  "This functionality is similar to 'boosttest' and 'gtest' filtering. "
                                  "Except using of special characters like '*', '?' etc. which are ignored. "
                                  "Examples: "
-                                 "-run='run test' - run only steps with 'run test' str in name "
-                                 "-run='!run test' - run all steps except those which contain 'run test' in name "
-                                 "-run='test 1:test 2' - run all steps with 'test 1' OR 'test 2' in name "
-                                 "-run='test 1:!unit test 1' - run all steps with 'test 1' except 'unit test 1' ")
+                                 "-filter='run test' - run only steps with 'run test' str in name "
+                                 "-filter='!run test' - run all steps except those which contain 'run test' in name "
+                                 "-filter='test 1:test 2' - run all steps with 'test 1' OR 'test 2' in name "
+                                 "-filter='test 1:!unit test 1' - run all steps with 'test 1' except 'unit test 1' ")
 
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)
@@ -342,7 +342,7 @@ class Launcher(ProjectDirectory):
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
-        self.expected_patterns, self.unexpected_patterns = get_match_patterns(self.settings.run_step)
+        self.expected_patterns, self.unexpected_patterns = get_match_patterns(self.settings.step_filter)
 
     @make_block("Processing project configs")
     def process_project_configs(self):
