@@ -260,7 +260,12 @@ class Launcher(ProjectDirectory):
                                  "A universum step match specified pattern when 'filter' is a substring of step "
                                  "'name'. "
                                  "This functionality is similar to 'boosttest' and 'gtest' filtering. "
-                                 "Except using of special characters like '*', '?' etc. which are ignored. ")
+                                 "Except using of special characters like '*', '?' etc. which are ignored. "
+                                 "Examples: "
+                                 "-run='run test' - run only steps with 'run test' str in name "
+                                 "-run='!run test' - run all steps except those which contain 'run test' in name "
+                                 "-run='test 1:test 2' - run all steps with 'test 1' OR 'test 2' in name "
+                                 "-run='test 1:!unit test 1' - run all steps with 'test 1' except 'unit test 1' ")
 
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)
