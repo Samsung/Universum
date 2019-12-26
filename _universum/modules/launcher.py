@@ -103,6 +103,22 @@ def check_str_match(string, expected_substrings, unwanted_substrings):
     return result
 
 
+def get_match_patterns(filters):
+    """The function to parse 'filters' defined as single string into a lists of
+    'expected' and 'unwanted' patterns.
+    """
+    expected = []
+    unwanted = []
+
+    filters = filters.split(':') if filters else []
+    for f in filters:
+        if f.startswith('!'):
+            unwanted.append(f[1:]) if len(f) > 1 else None # pylint: disable=expression-not-assigned
+        elif f:
+            expected.append(f)
+    return expected, unwanted
+
+
 class Step(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
@@ -291,22 +307,7 @@ class Launcher(ProjectDirectory):
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
-        self.include_patterns, self.exclude_patterns = self._get_filter_patterns(self.settings.run_step)
-
-    def _get_filter_patterns(self, filters):
-        """This method parse 'filters' defined as single string to lists of
-        'include' and 'exclude' patterns.
-        """
-        include = []
-        exclude = []
-
-        filters = filters.split(':') if filters else []
-        for f in filters:
-            if f.startswith('!') and len(f) > 1:
-                exclude.append(f[1:])
-            elif len(f) > 0:
-                include.append(f)
-        return include, exclude
+        self.expected_patterns, self.unwanted_patterns = get_match_patterns(self.settings.run_step)
 
     @make_block("Processing project configs")
     def process_project_configs(self):
@@ -327,8 +328,8 @@ class Launcher(ProjectDirectory):
 
             configs = self.source_project_configs.filter(check_if_env_set)
             self.project_configs = configs.filter(lambda config: check_str_match(config['name'],
-                                                                                 self.include_patterns,
-                                                                                 self.exclude_patterns))
+                                                                                 self.expected_patterns,
+                                                                                 self.unwanted_patterns))
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
