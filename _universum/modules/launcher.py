@@ -85,9 +85,26 @@ def check_if_env_set(configuration):
     return True
 
 
-def check_str_match(string, expected_substrings, unwanted_substrings):
-    """The function to check whenever specified string contain 'expected' and
-     NOT contain 'unwanted' substrings.
+def check_str_match(string, expected_substrings, unexpected_substrings):
+    """The function to check whenever specified string contains 'expected' and
+    does NOT contains 'unexpected' substrings.
+
+    ["", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
+    >>> check_str_match("step 1", [], [])
+    True
+
+    >>> check_str_match("step 1", ["step 1"], [])
+    True
+
+    >>> check_str_match("step 1", ["step 1"], ["step 1"])
+    False
+
+    >>> check_str_match("step 1", [], ["step 1"])
+    False
+
+    >>> check_str_match("step 1", ["step "], ["1"])
+    False
+
     :rtype: bool
     """
     result = False if expected_substrings else True
@@ -96,7 +113,7 @@ def check_str_match(string, expected_substrings, unwanted_substrings):
             result = True
             break
 
-    for substr in unwanted_substrings:
+    for substr in unexpected_substrings:
         if substr in string:
             result = False
             break
@@ -105,18 +122,36 @@ def check_str_match(string, expected_substrings, unwanted_substrings):
 
 def get_match_patterns(filters):
     """The function to parse 'filters' defined as single string into a lists of
-    'expected' and 'unwanted' patterns.
+    'expected' and 'unexpected' patterns.
+
+    >>> get_match_patterns("")
+    [], []
+
+    >>> get_match_patterns(":")
+    [], []
+
+    >>> get_match_patterns("!:")
+    [], []
+
+    >>> get_match_patterns("f:")
+    ["f"], []
+
+    >>> get_match_patterns("f:!f 1")
+    ["f"], ["f 1"]
+
+    >>> get_match_patterns("f:!f 1:f 2:!f 3")
+    ["f", "f 2"], ["f 1", "f 3"]
     """
     expected = []
-    unwanted = []
+    unexpected = []
 
     filters = filters.split(':') if filters else []
     for f in filters:
         if f.startswith('!'):
-            unwanted.append(f[1:]) if len(f) > 1 else None # pylint: disable=expression-not-assigned
+            unexpected.append(f[1:]) if len(f) > 1 else None # pylint: disable=expression-not-assigned
         elif f:
             expected.append(f)
-    return expected, unwanted
+    return expected, unexpected
 
 
 class Step(object):
@@ -307,7 +342,7 @@ class Launcher(ProjectDirectory):
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
-        self.expected_patterns, self.unwanted_patterns = get_match_patterns(self.settings.run_step)
+        self.expected_patterns, self.unexpected_patterns = get_match_patterns(self.settings.run_step)
 
     @make_block("Processing project configs")
     def process_project_configs(self):
@@ -329,7 +364,7 @@ class Launcher(ProjectDirectory):
             configs = self.source_project_configs.filter(check_if_env_set)
             self.project_configs = configs.filter(lambda config: check_str_match(config['name'],
                                                                                  self.expected_patterns,
-                                                                                 self.unwanted_patterns))
+                                                                                 self.unexpected_patterns))
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
