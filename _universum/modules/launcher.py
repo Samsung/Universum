@@ -140,7 +140,13 @@ def get_match_patterns(filters):
 
     >>> get_match_patterns("f:!f 1:f 2:!f 3")
     ["f", "f 2"], ["f 1", "f 3"]
+
+    >>> get_match_patterns(["f", "!f 1"])
+    ["f"], ["f 1"]
     """
+    if not isinstance(filters, str):
+        filters = ":".join(filters)
+
     expected = []
     unexpected = []
 
@@ -295,28 +301,25 @@ class Launcher(ProjectDirectory):
         parser = argument_parser.get_or_create_group("Configuration execution",
                                                      "External command launching and reporting parameters")
 
-        parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
+        parser.add_argument("--steps-output", "-out", dest="output", choices=["console", "file"],
                             help="Define whether to print build logs to console or store to vcs. "
                                  "Log file names are generated based on the names of build steps. "
                                  "Possible values: 'console', 'file'. By default, logs are printed to console "
                                  "when the build is launched on Jenkins or TeamCity agent")
 
-        parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
+        parser.add_argument("--steps-config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
                             help="Project configs.py file location. Mandatory parameter")
 
-        parser.add_argument("--filter-step", "-filter", dest="step_filter",
-                            help="Allows to filter which steps to execute during launch. "
-                                 "String value representing single filter or a set of filters separated by ':'. "
-                                 "To define exclude pattern use '!' symbol at the beginning of pattern. "
-                                 "A universum step match specified pattern when 'filter' is a substring of step "
-                                 "'name'. "
-                                 "This functionality is similar to 'boosttest' and 'gtest' filtering. "
-                                 "Except using of special characters like '*', '?' etc. which are ignored. "
-                                 "Examples: "
-                                 "-filter='run test' - run only steps with 'run test' str in name "
-                                 "-filter='!run test' - run all steps except those which contain 'run test' in name "
-                                 "-filter='test 1:test 2' - run all steps with 'test 1' OR 'test 2' in name "
-                                 "-filter='test 1:!unit test 1' - run all steps with 'test 1' except 'unit test 1' ")
+        parser.add_argument("--steps-filter", "-f", dest="step_filter", action='append',
+                            help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
+                                 "Exlude using '!' symbol before filter. "
+                                 "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
+                                 "See online docs for more details. ")
+
+        parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
+                            help="Deprecated option. Please use '--steps-output' instead.")
+        parser.add_argument("--launcher-config-path", "-lcp", dest="config_path",
+                            help="Deprecated option. Please use '--steps-config' instead.")
 
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)
