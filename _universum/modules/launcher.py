@@ -145,12 +145,12 @@ def get_match_patterns(filters):
     ["f"], ["f 1"]
     """
     if not isinstance(filters, str):
-        filters = ":".join(filters)
+        filters = ":".join(filters) if filters else ""
 
     expected = []
     unexpected = []
 
-    filters = filters.split(':') if filters else []
+    filters = filters.split(':')
     for f in filters:
         if f.startswith('!'):
             if len(f) > 1:
