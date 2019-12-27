@@ -85,9 +85,9 @@ def check_if_env_set(configuration):
     return True
 
 
-def check_str_match(string, expected_substrings, unexpected_substrings):
-    """The function to check whether specified string contains 'expected' and
-    does NOT contain 'unexpected' substrings.
+def check_str_match(string, include_substrings, exclude_substrings):
+    """The function to check whether specified string contains 'include' and
+    does NOT contain 'exclude' substrings.
 
     >>> check_str_match("step 1", [], [])
     True
@@ -106,13 +106,13 @@ def check_str_match(string, expected_substrings, unexpected_substrings):
 
     :rtype: bool
     """
-    result = False if expected_substrings else True
-    for substr in expected_substrings:
+    result = False if include_substrings else True
+    for substr in include_substrings:
         if substr in string:
             result = True
             break
 
-    for substr in unexpected_substrings:
+    for substr in exclude_substrings:
         if substr in string:
             result = False
             break
@@ -121,7 +121,7 @@ def check_str_match(string, expected_substrings, unexpected_substrings):
 
 def get_match_patterns(filters):
     """The function to parse 'filters' defined as a single string into the lists
-    of 'expected' and 'unexpected' patterns.
+    of 'include' and 'exclude' patterns.
 
     >>> get_match_patterns("")
     ([], [])
@@ -147,17 +147,17 @@ def get_match_patterns(filters):
     if not isinstance(filters, str):
         filters = ":".join(filters) if filters else ""
 
-    expected = []
-    unexpected = []
+    include = []
+    exclude = []
 
     filters = filters.split(':')
     for f in filters:
         if f.startswith('!'):
             if len(f) > 1:
-                unexpected.append(f[1:])
+                exclude.append(f[1:])
         elif f:
-            expected.append(f)
-    return expected, unexpected
+            include.append(f)
+    return include, exclude
 
 
 class Step(object):
@@ -345,7 +345,7 @@ class Launcher(ProjectDirectory):
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
-        self.expected_patterns, self.unexpected_patterns = get_match_patterns(self.settings.step_filter)
+        self.include_patterns, self.exclude_patterns = get_match_patterns(self.settings.step_filter)
 
     @make_block("Processing project configs")
     def process_project_configs(self):
@@ -366,8 +366,8 @@ class Launcher(ProjectDirectory):
 
             configs = self.source_project_configs.filter(check_if_env_set)
             self.project_configs = configs.filter(lambda config: check_str_match(config['name'],
-                                                                                 self.expected_patterns,
-                                                                                 self.unexpected_patterns))
+                                                                                 self.include_patterns,
+                                                                                 self.exclude_patterns))
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
