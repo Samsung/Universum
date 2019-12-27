@@ -298,28 +298,30 @@ class Launcher(ProjectDirectory):
 
     @staticmethod
     def define_arguments(argument_parser):
+        output_parser = argument_parser.get_or_create_group("Output")
+        output_parser.add_argument("--out", "-o", dest="output", choices=["console", "file"],
+                                   help="Define whether to print build logs to console or file. "
+                                        "Log file names are generated based on the names of build steps. "
+                                        "By default, logs are printed to console when the build is launched on "
+                                        "Jenkins or TeamCity agent")
+
         parser = argument_parser.get_or_create_group("Configuration execution",
                                                      "External command launching and reporting parameters")
 
-        parser.add_argument("--steps-output", "-out", dest="output", choices=["console", "file"],
-                            help="Define whether to print build logs to console or store to vcs. "
-                                 "Log file names are generated based on the names of build steps. "
-                                 "Possible values: 'console', 'file'. By default, logs are printed to console "
-                                 "when the build is launched on Jenkins or TeamCity agent")
+        parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
+                            help="Path to project config file (example: -cfg=my/prject/my_conf.py). "
+                                 "Mandatory parameter.")
 
-        parser.add_argument("--steps-config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
-                            help="Project configs.py file location. Mandatory parameter")
-
-        parser.add_argument("--steps-filter", "-f", dest="step_filter", action='append',
+        parser.add_argument("--filter", "-f", dest="step_filter", action='append',
                             help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
                                  "Exlude using '!' symbol before filter. "
                                  "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
                                  "See online docs for more details.")
 
-        parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
-                            help="Deprecated option. Please use '--steps-output' instead.")
-        parser.add_argument("--launcher-config-path", "-lcp", dest="config_path",
-                            help="Deprecated option. Please use '--steps-config' instead.")
+        parser.add_hidden_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
+                                   help="Deprecated option. Please use '--out' instead.", is_hidden=True)
+        parser.add_hidden_argument("--launcher-config-path", "-lcp", dest="config_path", is_hidden=True,
+                                   help="Deprecated option. Please use '--steps-config' instead.")
 
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)

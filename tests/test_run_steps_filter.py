@@ -29,7 +29,7 @@ configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))
     ["!", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []], ))
 @pytest.mark.nonci_applicable
 def test_steps_filter(universum_runner, filters, expected_logs, unexpected_logs):
-    console_out_log = universum_runner.run(config, additional_parameters="-lo console -f='{}'".format(filters))
+    console_out_log = universum_runner.run(config, additional_parameters="-o console -f='{}'".format(filters))
     for log_str in expected_logs:
         assert log_str in console_out_log
 
@@ -40,7 +40,7 @@ def test_steps_filter(universum_runner, filters, expected_logs, unexpected_logs)
 @pytest.mark.nonci_applicable
 def test_steps_filter_few_flags(universum_runner):
     console_out_log = universum_runner.run(config,
-                                           additional_parameters="-lo console -f='parent 1:parent 2' -f='!step 1'")
+                                           additional_parameters="-o console -f='parent 1:parent 2' -f='!step 1'")
     for log_str in ["parent 1", "step 2", "parent 2"]:
         assert log_str in console_out_log
 
