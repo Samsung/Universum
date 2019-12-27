@@ -120,7 +120,7 @@ def check_str_match(string, expected_substrings, unexpected_substrings):
 
 
 def get_match_patterns(filters):
-    """The function to parse 'filters' defined as a single string into a lists
+    """The function to parse 'filters' defined as a single string into the lists
     of 'expected' and 'unexpected' patterns.
 
     >>> get_match_patterns("")
@@ -314,7 +314,7 @@ class Launcher(ProjectDirectory):
                             help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
                                  "Exlude using '!' symbol before filter. "
                                  "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
-                                 "See online docs for more details. ")
+                                 "See online docs for more details.")
 
         parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
                             help="Deprecated option. Please use '--steps-output' instead.")

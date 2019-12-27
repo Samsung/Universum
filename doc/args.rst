@@ -24,13 +24,15 @@ All command-line parameters, general and module-related, are passed to this main
         |
         | A universum step match specified pattern when 'filter' is a substring of step 'name'.
          This functionality is similar to 'boosttest' and 'gtest' filtering.
-         Except using of special characters like '*', '?', etc. which are ignored.
+         Except using of special characters (like '*', '?', etc.) are ignored.
         |
         | Examples:
-        | * -f='run test'               - run only steps which contain 'run test' string in name
-        | * -f='!run test'              - run all steps except those which contain 'run test' string in name
-        | * -f='test 1:test 2'          - run all steps with 'test 1' OR 'test 2' in name
-        | * -f='test 1:!unit test 1'    - run all steps with 'test 1' in name except those which contain 'unit test 1'
+        | * -f='run test'               - run only steps that contain 'run test' substring in their names
+        | * -f='!run test'              - run all steps except those which containing 'run test' substring in in their
+         names
+        | * -f='test 1:test 2'          - run all steps with 'test 1' OR 'test 2' substring in their names
+        | * -f='test 1:!unit test 1'    - run all steps with 'test 1' substring in their names except those which
+         containing 'unit test 1'
 
     {poll,submit,nonci} : @replace
         | :doc:`universum poll <args_poll>`
