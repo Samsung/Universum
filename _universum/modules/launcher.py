@@ -124,25 +124,25 @@ def get_match_patterns(filters):
     of 'expected' and 'unexpected' patterns.
 
     >>> get_match_patterns("")
-    [], []
+    ([], [])
 
     >>> get_match_patterns(":")
-    [], []
+    ([], [])
 
     >>> get_match_patterns(":!")
-    [], []
+    ([], [])
 
     >>> get_match_patterns("f:")
-    ["f"], []
+    (['f'], [])
 
     >>> get_match_patterns("f:!f 1")
-    ["f"], ["f 1"]
+    (['f'], ['f 1'])
 
     >>> get_match_patterns("f:!f 1:f 2:!f 3")
-    ["f", "f 2"], ["f 1", "f 3"]
+    (['f', 'f 2'], ['f 1', 'f 3'])
 
     >>> get_match_patterns(["f", "!f 1"])
-    ["f"], ["f 1"]
+    (['f'], ['f 1'])
     """
     if not isinstance(filters, str):
         filters = ":".join(filters) if filters else ""
