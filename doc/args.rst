@@ -23,8 +23,8 @@ All command-line parameters, general and module-related, are passed to this main
          To define exclude pattern use '**!**' symbol at the beginning of pattern.
         |
         | A universum step match specified pattern when 'filter' is a substring of step 'name'.
-         This functionality is similar to 'boosttest' and 'gtest' filtering.
-         Except using of special characters (like '*', '?', etc.) are ignored.
+         This functionality is similar to 'boosttest' and 'gtest' filtering, except special characters
+         (like '*', '?', etc.) are ignored.
         |
         | Examples:
         | * -f='run test'               - run only steps that contain 'run test' substring in their names
