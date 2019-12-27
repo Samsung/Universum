@@ -129,7 +129,7 @@ def get_match_patterns(filters):
     >>> get_match_patterns(":")
     [], []
 
-    >>> get_match_patterns("!:")
+    >>> get_match_patterns(":!")
     [], []
 
     >>> get_match_patterns("f:")
