@@ -348,11 +348,11 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
     def handle_out(line):
         print line.rstrip()
 
-    process = cmd(*(["-lo", "console", "-vt", "none",
+    process = cmd(*(["-o", "console", "-vt", "none",
                      "-pr", unicode(tmpdir.join("project_root")),
                      "-ad", unicode(tmpdir.join("artifacts")),
                      "-fsd", unicode(local_sources.root_directory),
-                     "-lcp", unicode(config_file)]),
+                     "-cfg", unicode(config_file)]),
                   _iter=True, _bg_exc=False, _bg=True, _out=handle_out, _err=handle_out)
     time.sleep(5)
     process.signal(terminate_type)

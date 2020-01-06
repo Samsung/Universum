@@ -85,6 +85,81 @@ def check_if_env_set(configuration):
     return True
 
 
+def check_str_match(string, include_substrings, exclude_substrings):
+    """The function to check whether specified string contains 'include' and
+    does NOT contain 'exclude' substrings.
+
+    >>> check_str_match("step 1", [], [])
+    True
+
+    >>> check_str_match("step 1", ["step 1"], [])
+    True
+
+    >>> check_str_match("step 1", ["step 1"], ["step 1"])
+    False
+
+    >>> check_str_match("step 1", [], ["step 1"])
+    False
+
+    >>> check_str_match("step 1", ["step "], ["1"])
+    False
+
+    :rtype: bool
+    """
+    result = False if include_substrings else True
+    for substr in include_substrings:
+        if substr in string:
+            result = True
+            break
+
+    for substr in exclude_substrings:
+        if substr in string:
+            result = False
+            break
+    return result
+
+
+def get_match_patterns(filters):
+    """The function to parse 'filters' defined as a single string into the lists
+    of 'include' and 'exclude' patterns.
+
+    >>> get_match_patterns("")
+    ([], [])
+
+    >>> get_match_patterns(":")
+    ([], [])
+
+    >>> get_match_patterns(":!")
+    ([], [])
+
+    >>> get_match_patterns("f:")
+    (['f'], [])
+
+    >>> get_match_patterns("f:!f 1")
+    (['f'], ['f 1'])
+
+    >>> get_match_patterns("f:!f 1:f 2:!f 3")
+    (['f', 'f 2'], ['f 1', 'f 3'])
+
+    >>> get_match_patterns(["f", "!f 1"])
+    (['f'], ['f 1'])
+    """
+    if not isinstance(filters, str):
+        filters = ":".join(filters) if filters else ""
+
+    include = []
+    exclude = []
+
+    filters = filters.split(':')
+    for f in filters:
+        if f.startswith('!'):
+            if len(f) > 1:
+                exclude.append(f[1:])
+        elif f:
+            include.append(f)
+    return include, exclude
+
+
 class Step(object):
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
@@ -223,17 +298,30 @@ class Launcher(ProjectDirectory):
 
     @staticmethod
     def define_arguments(argument_parser):
+        output_parser = argument_parser.get_or_create_group("Output")
+        output_parser.add_argument("--out", "-o", dest="output", choices=["console", "file"],
+                                   help="Define whether to print build logs to console or file. "
+                                        "Log file names are generated based on the names of build steps. "
+                                        "By default, logs are printed to console when the build is launched on "
+                                        "Jenkins or TeamCity agent")
+
         parser = argument_parser.get_or_create_group("Configuration execution",
                                                      "External command launching and reporting parameters")
 
-        parser.add_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
-                            help="Define whether to print build logs to console or store to vcs. "
-                                 "Log file names are generated based on the names of build steps. "
-                                 "Possible values: 'console', 'file'. By default, logs are printed to console "
-                                 "when the build is launched on Jenkins or TeamCity agent")
+        parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
+                            help="Path to project config file (example: -cfg=my/prject/my_conf.py). "
+                                 "Mandatory parameter.")
 
-        parser.add_argument("--launcher-config-path", "-lcp", dest="config_path", metavar="CONFIG_PATH",
-                            help="Project configs.py file location. Mandatory parameter")
+        parser.add_argument("--filter", "-f", dest="step_filter", action='append',
+                            help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
+                                 "Exlude using '!' symbol before filter. "
+                                 "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
+                                 "See online docs for more details.")
+
+        parser.add_hidden_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
+                                   help="Deprecated option. Please use '--out' instead.", is_hidden=True)
+        parser.add_hidden_argument("--launcher-config-path", "-lcp", dest="config_path", is_hidden=True,
+                                   help="Deprecated option. Please use '--steps-config' instead.")
 
     def __init__(self, *args, **kwargs):
         super(Launcher, self).__init__(*args, **kwargs)
@@ -259,10 +347,10 @@ class Launcher(ProjectDirectory):
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
         self.code_report_collector = self.code_report_collector()
+        self.include_patterns, self.exclude_patterns = get_match_patterns(self.settings.step_filter)
 
     @make_block("Processing project configs")
     def process_project_configs(self):
-
         config_path = utils.parse_path(self.settings.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
         config_globals = {}
@@ -278,7 +366,10 @@ class Launcher(ProjectDirectory):
             dump_file.write(self.source_project_configs.dump())
             dump_file.close()
 
-            self.project_configs = self.source_project_configs.filter(check_if_env_set)
+            configs = self.source_project_configs.filter(check_if_env_set)
+            self.project_configs = configs.filter(lambda config: check_str_match(config['name'],
+                                                                                 self.include_patterns,
+                                                                                 self.exclude_patterns))
 
         except IOError as e:
             text = unicode(e) + "\nPossible reasons of this error:\n" + \
