@@ -1,7 +1,7 @@
 {
   "name": "e2e_test",
   "scripts": {
-    "test": "jest"
+    "test": "jest --verbose"
   },
   "jest": {
     "preset": "jest-puppeteer"
