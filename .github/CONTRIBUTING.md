@@ -99,7 +99,7 @@ $ git commit -m "fix(docs): update TeamCity guide according to new functionality
 ### 9. Pull the latest Universum code from upstream into your branch
 
 ```sh
-$ git pull upstream master
+$ git pull --rebase upstream master
 ```
 This ensures you have the latest code in your branch before you open your pull request.
 If there are any merge conflicts, you should fix them now and commit the changes again.
