@@ -30,7 +30,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private List<PaddingItem> paddings = new ArrayList<>();
     private boolean universumLogActive = false;
 
-    private Pattern sectionStartPattern = Pattern.compile("(^[|\\s]*)(\\d+)\\..*");
+    private Pattern sectionStartPattern = Pattern.compile("^([|\\s]*)(\\d+)\\..*");
     private Pattern sectionEndPattern = Pattern.compile("^[|\\s]*└.*\\[[a-zA-Z]+].*");
     private Pattern sectionFailPattern = Pattern.compile("^[|\\s]*└.*\\[Failed].*");
     /*
@@ -40,8 +40,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
         content without content processing.
      */
     private Pattern ignoredSectionPattern = Pattern.compile(".*Reporting build result.*");
-    private Pattern universumLogStartPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution$");
-    private Pattern universumLogEndPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ finished execution$");
+    private Pattern universumLogStartPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ started execution$");
+    private Pattern universumLogEndPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
     private Pattern jenkinsLogEndPattern = Pattern.compile("^Finished: [A-Z_]+$");
     private Pattern healthyLogPattern = Pattern.compile("^\\s+[|└]\\s+.*");
 
@@ -85,7 +85,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
     */
     @Override
     public Annotator annotate(Object context, MarkupText text) {
-        String textStr = text.toString(true);
+        String textStr = text.getText();
         logger.info(textStr);
 
         Matcher jenkinsLogEndMatcher = jenkinsLogEndPattern.matcher(textStr);
