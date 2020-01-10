@@ -1,6 +1,22 @@
 Change log
 ==========
 
+0.18.3 (2020-01-10)
+-------------------
+
+New features
+~~~~~~~~~~~~
+* **nonci:** add :doc:`nonci <args_nonci>` mode of running Universum
+* **launcher:**  add '--run-step' option filtering steps to be executed
+* **jenkins_plugin:** expand failed steps by default
+* **test:** add Java & JS tests for Jenkins plugin
+
+Bug fixes
+~~~~~~~~~
+
+* **jenkins_plugin:** fix collapsing with timestamps plugin usage
+
+
 0.18.2 (2019-10-09)
 -------------------
 
