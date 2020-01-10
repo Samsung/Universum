@@ -6,8 +6,13 @@ Change log
 
 New features
 ~~~~~~~~~~~~
+
+* **launcher command line arguments renamed**
+   * see :doc:`'Output' and 'Configuration execution' arguments <args>` for new options list
+   * old options `--launcher-config-path` and `--launcher-output` are still supported
+     but not recommended to use any more
+* **launcher:**  add '--filter' option filtering steps to be executed
 * **nonci:** add :doc:`nonci <args_nonci>` mode of running Universum
-* **launcher:**  add '--run-step' option filtering steps to be executed
 * **jenkins_plugin:** expand failed steps by default
 * **test:** add Java & JS tests for Jenkins plugin
 
