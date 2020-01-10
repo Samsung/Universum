@@ -3,18 +3,18 @@ package io.jenkins.plugins.universum_log_collapser;
 import hudson.MarkupText;
 import hudson.console.ConsoleAnnotator;
 
-import java.util.logging.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.List;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class PaddingItem implements Serializable {
-    public int position;
-    public int spacesNumber;
+    int position;
+    int spacesNumber;
 
-    public PaddingItem(int p, int s) {
+    PaddingItem(int p, int s) {
         position = p;
         spacesNumber = s;
     }
@@ -30,9 +30,10 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private List<PaddingItem> paddings = new ArrayList<>();
     private boolean universumLogActive = false;
 
-    private Pattern sectionStartPattern = Pattern.compile("(^[|\\s]*)(\\d+\\.).*");
-    private Pattern sectionEndPattern = Pattern.compile("^[|\\s]*└.*\\[.+\\].*");
-    private Pattern sectionFailPattern = Pattern.compile("^[|\\s]*└.*\\[Failed\\].*");
+    private String patternOptional = "(\\[[\\w-:\\.]+\\] )?";
+    private Pattern sectionStartPattern = Pattern.compile("^" + patternOptional + "([|\\s]*)(\\d+)\\..*");
+    private Pattern sectionEndPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[[a-zA-Z]+].*");
+    private Pattern sectionFailPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[Failed].*");
     /*
         "Reporting build result" section is showing summarized results of all
         build steps. Each line of this section is treated as section start, but
@@ -40,12 +41,10 @@ public class Annotator extends ConsoleAnnotator<Object> {
         content without content processing.
      */
     private Pattern ignoredSectionPattern = Pattern.compile(".*Reporting build result.*");
-    private Pattern universumLogStartPattern = Pattern.compile("^==&gt; Universum \\d+\\.\\d+\\.\\d+ started execution$");
-    private Pattern universumLogEndPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
-    private Pattern jenkinsLogEndPattern = Pattern.compile(".*Finished: .*");
-    private Pattern healthyLogPattern = Pattern.compile("^\\s+[\\|└]\\s+.*");
-
-    public Annotator(Object context) {}
+    private Pattern universumLogStartPattern = Pattern.compile("^" + patternOptional + "==> Universum \\d+\\.\\d+\\.\\d+ started execution$");
+    private Pattern universumLogEndPattern = Pattern.compile("^" + patternOptional + "==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
+    private Pattern jenkinsLogEndPattern = Pattern.compile("^" + patternOptional + "Finished: [A-Z_]+$");
+    private Pattern healthyLogPattern = Pattern.compile("^" + patternOptional + "\\s+[|└]\\s+.*");
 
     /*
     Before:
@@ -87,8 +86,14 @@ public class Annotator extends ConsoleAnnotator<Object> {
     */
     @Override
     public Annotator annotate(Object context, MarkupText text) {
-        String textStr = text.toString(true);
+        String textStr = text.getText();
         logger.info(textStr);
+
+        Matcher jenkinsLogEndMatcher = jenkinsLogEndPattern.matcher(textStr);
+        if (jenkinsLogEndMatcher.find()) {
+            logger.info("Jenkins log end found");
+            text.addMarkup(text.length(), "<iframe onload=\"finishColoring()\" style=\"display:none\"></iframe>");
+        }
 
         universumLogActive = universumLogActive || universumLogStartPattern.matcher(textStr).find();
         if (!universumLogActive) {
@@ -102,7 +107,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
         for (PaddingItem p : paddings) {
             if (!healthyLogPattern.matcher(textStr).find()) {
-                logger.info("Log is broken, identation expected");
+                logger.info("Log is broken, indentation expected");
                 universumLogActive = false;
                 return this;
             }
@@ -122,12 +127,6 @@ public class Annotator extends ConsoleAnnotator<Object> {
             return this;
         }
 
-        Matcher jenkinsLogEndMatcher = jenkinsLogEndPattern.matcher(textStr);
-        if (jenkinsLogEndMatcher.find()) {
-            text.addMarkup(text.length(), "<iframe onload=\"finishColoring()\" style=\"display:none\"></iframe>");
-            return this;
-        }
-
         return this;
     }
 
@@ -143,22 +142,35 @@ public class Annotator extends ConsoleAnnotator<Object> {
             isIgnoredSection = true;
         }
         
-        int sectionNumberStartPosition = sectionStartMatcher.end(1);
-        int sectionNumberEndPosition = sectionStartMatcher.end(2);
+        // Fix first section, broken by pipeline execution. See JS sources for details.
+        if (sectionStartMatcher.group(3).equals("2")) {
+            text.addMarkup(0, "<iframe onload=\"fix_pipeline()\" style=\"display:none\"></iframe>");
+        }
+        
+        int sectionNumberStartPosition = sectionStartMatcher.end(2);
+        int sectionNumberEndPosition = sectionStartMatcher.end(3) + 1;
         paddings.add(new PaddingItem(sectionNumberStartPosition, 
             sectionNumberEndPosition - sectionNumberStartPosition));
 
         String inputId = "hide-block-" + labelsCnt++;
-        text.addMarkup(0, "<input type=\"checkbox\" id=\"" + inputId + 
+
+        int checkboxInsertPosition = sectionStartMatcher.end(1);
+        // if timestamp is absent, position is -1
+        checkboxInsertPosition = (checkboxInsertPosition < 0) ? 0 : checkboxInsertPosition;
+        logger.info("insert position: " + checkboxInsertPosition);
+
+        text.addMarkup(checkboxInsertPosition, "<input type=\"checkbox\" id=\"" + inputId + 
             "\" class=\"hide\"/><label for=\"" + inputId + "\">");
         text.addMarkup(sectionNumberStartPosition, "<span class=\"sectionLbl\">");
-        text.addMarkup(text.length(), "</label></span><div>");
+        text.addMarkup(text.length(), "</span></label><div>");
     }
 
     private void processSectionEnd(MarkupText text, Matcher sectionFailMatcher) {
         logger.info("Section end found");
-        paddings.remove(paddings.size() - 1);
-        
+        if (paddings.size() > 0) {
+            paddings.remove(paddings.size() - 1);
+        }
+
         if (sectionFailMatcher.find()) {
             logger.info("Failed section found");
             text.addMarkup(0, "<span class=\"failed_result\">");

@@ -3,6 +3,7 @@
 
 import json
 import os
+import pytest
 
 
 config = """
@@ -13,6 +14,7 @@ configs = Variations([dict(name="Run script", artifacts="output.json",
 """
 
 
+@pytest.mark.nonci_applicable
 def test_error_wrong_environment(universum_runner):
     log = universum_runner.environment.assert_unsuccessful_execution("universum api file-diff")
     assert "Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment" in log

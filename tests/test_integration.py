@@ -16,6 +16,7 @@ def get_line_with_text(text, log):
     return ""
 
 
+@pytest.mark.nonci_applicable
 def test_minimal_execution(universum_runner):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -55,6 +56,7 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file.sh"))
 
 
+@pytest.mark.nonci_applicable
 def test_background_steps(universum_runner):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -82,10 +84,12 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       background=True, artifacts="file")])
 """)
     assert "All ongoing background steps completed" in log
-    assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file"))
+    artifacts_must_collect = not universum_runner.nonci
+    assert artifacts_must_collect == os.path.exists(os.path.join(universum_runner.artifact_dir, "file"))
 
     # Test TC step failing
-    universum_runner.clean_artifacts()
+    if artifacts_must_collect:
+        universum_runner.clean_artifacts()
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
 
@@ -94,7 +98,8 @@ configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], bac
     assert "##teamcity[buildProblem description" in log
 
     # Test multiple failing background steps
-    universum_runner.clean_artifacts()
+    if artifacts_must_collect:
+        universum_runner.clean_artifacts()
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
 
@@ -104,6 +109,7 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
+@pytest.mark.nonci_applicable
 def test_critical_steps(universum_runner):
     # Test linear
     log = universum_runner.run("""
@@ -298,6 +304,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
     assert url_error not in log
 
 
+@pytest.mark.nonci_applicable
 def test_environment(universum_runner):
     script = universum_runner.local.root_directory.join("script.sh")
     script.write("""#!/bin/bash
@@ -341,11 +348,11 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
     def handle_out(line):
         print line.rstrip()
 
-    process = cmd(*(["-lo", "console", "-vt", "none",
+    process = cmd(*(["-o", "console", "-vt", "none",
                      "-pr", unicode(tmpdir.join("project_root")),
                      "-ad", unicode(tmpdir.join("artifacts")),
                      "-fsd", unicode(local_sources.root_directory),
-                     "-lcp", unicode(config_file)]),
+                     "-cfg", unicode(config_file)]),
                   _iter=True, _bg_exc=False, _bg=True, _out=handle_out, _err=handle_out)
     time.sleep(5)
     process.signal(terminate_type)

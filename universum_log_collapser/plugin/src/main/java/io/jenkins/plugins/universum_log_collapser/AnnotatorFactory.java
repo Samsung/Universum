@@ -8,6 +8,6 @@ import hudson.console.ConsoleAnnotatorFactory;
 public class AnnotatorFactory<T> extends ConsoleAnnotatorFactory<T> {
     @Override
     public Annotator newInstance(T context) {
-        return new Annotator(context);
+        return new Annotator();
     }
 }
