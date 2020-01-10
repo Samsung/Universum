@@ -30,9 +30,10 @@ public class Annotator extends ConsoleAnnotator<Object> {
     private List<PaddingItem> paddings = new ArrayList<>();
     private boolean universumLogActive = false;
 
-    private Pattern sectionStartPattern = Pattern.compile("^([|\\s]*)(\\d+)\\..*");
-    private Pattern sectionEndPattern = Pattern.compile("^[|\\s]*└.*\\[[a-zA-Z]+].*");
-    private Pattern sectionFailPattern = Pattern.compile("^[|\\s]*└.*\\[Failed].*");
+    private String patternOptional = "(\\[[\\w-:\\.]+\\] )?";
+    private Pattern sectionStartPattern = Pattern.compile("^" + patternOptional + "([|\\s]*)(\\d+)\\..*");
+    private Pattern sectionEndPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[[a-zA-Z]+].*");
+    private Pattern sectionFailPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[Failed].*");
     /*
         "Reporting build result" section is showing summarized results of all
         build steps. Each line of this section is treated as section start, but
@@ -40,10 +41,10 @@ public class Annotator extends ConsoleAnnotator<Object> {
         content without content processing.
      */
     private Pattern ignoredSectionPattern = Pattern.compile(".*Reporting build result.*");
-    private Pattern universumLogStartPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ started execution$");
-    private Pattern universumLogEndPattern = Pattern.compile("^==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
-    private Pattern jenkinsLogEndPattern = Pattern.compile("^Finished: [A-Z_]+$");
-    private Pattern healthyLogPattern = Pattern.compile("^\\s+[|└]\\s+.*");
+    private Pattern universumLogStartPattern = Pattern.compile("^" + patternOptional + "==> Universum \\d+\\.\\d+\\.\\d+ started execution$");
+    private Pattern universumLogEndPattern = Pattern.compile("^" + patternOptional + "==> Universum \\d+\\.\\d+\\.\\d+ finished execution$");
+    private Pattern jenkinsLogEndPattern = Pattern.compile("^" + patternOptional + "Finished: [A-Z_]+$");
+    private Pattern healthyLogPattern = Pattern.compile("^" + patternOptional + "\\s+[|└]\\s+.*");
 
     /*
     Before:
@@ -142,20 +143,26 @@ public class Annotator extends ConsoleAnnotator<Object> {
         }
         
         // Fix first section, broken by pipeline execution. See JS sources for details.
-        if (sectionStartMatcher.group(2).equals("2")) {
+        if (sectionStartMatcher.group(3).equals("2")) {
             text.addMarkup(0, "<iframe onload=\"fix_pipeline()\" style=\"display:none\"></iframe>");
         }
         
-        int sectionNumberStartPosition = sectionStartMatcher.end(1);
-        int sectionNumberEndPosition = sectionStartMatcher.end(2) + 1;
+        int sectionNumberStartPosition = sectionStartMatcher.end(2);
+        int sectionNumberEndPosition = sectionStartMatcher.end(3) + 1;
         paddings.add(new PaddingItem(sectionNumberStartPosition, 
             sectionNumberEndPosition - sectionNumberStartPosition));
 
         String inputId = "hide-block-" + labelsCnt++;
-        text.addMarkup(0, "<input type=\"checkbox\" id=\"" + inputId + 
+
+        int checkboxInsertPosition = sectionStartMatcher.end(1);
+        // if timestamp is absent, position is -1
+        checkboxInsertPosition = (checkboxInsertPosition < 0) ? 0 : checkboxInsertPosition;
+        logger.info("insert position: " + checkboxInsertPosition);
+
+        text.addMarkup(checkboxInsertPosition, "<input type=\"checkbox\" id=\"" + inputId + 
             "\" class=\"hide\"/><label for=\"" + inputId + "\">");
         text.addMarkup(sectionNumberStartPosition, "<span class=\"sectionLbl\">");
-        text.addMarkup(text.length(), "</label></span><div>");
+        text.addMarkup(text.length(), "</span></label><div>");
     }
 
     private void processSectionEnd(MarkupText text, Matcher sectionFailMatcher) {
