@@ -9,7 +9,7 @@ class TestSuite {
     static final String logStartLine = "==> Universum 1.2.3 started execution";
     static final String logEndLine = "==> Universum 1.2.3 finished execution";
 
-    static final String sectionStartClose = "</label></span><div>";
+    static final String sectionStartClose = "</span></label><div>";
     static final String sectionEndClose = "</div><span class=\"nl\"></span>";
     static final String sectionSpan = "<span class=\"sectionLbl\">";
     static final String paddingSpan = "<span style=\"display: inline-block;  width: 4ch;\"></span>";
