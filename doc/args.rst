@@ -17,7 +17,7 @@ All command-line parameters, general and module-related, are passed to this main
     --version : @replace
         Display product name & version instead of launching.
 
-    --steps-filter -f : @replace
+    --filter -f : @replace
         | Allows to filter which steps to execute during launch.
          String value representing single filter or a set of filters separated by '**:**'.
          To define exclude pattern use '**!**' symbol at the beginning of the pattern.
