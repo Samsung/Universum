@@ -45,6 +45,38 @@ public class SectionsTest extends TestSuite {
         }
 
         @Test
+        public void ignoredSectionTimestamps() {
+            String[] in = new String[] {
+                    timestampCorrect + " " + logStartLine,
+                    timestampCorrect + " 1. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + "  └ [Success]",
+                    timestampCorrect + " 3. Reporting build result",
+                    timestampCorrect + "  | 1. Step name - Success",
+                    timestampCorrect + "  | 2. Step name2 - Failed",
+                    timestampCorrect + "  └ [Success]",
+                    timestampCorrect + " 5. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + "  └ [Success]"
+
+            };
+            String[] out = new String[] {
+                    replaceWithHtmlEntities(timestampCorrect + " " + logStartLine),
+                    timestampCorrect + " " + sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " |   step data",
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
+                    timestampCorrect + " " + sectionStartOpen(2) + "3. Reporting build result" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " | 1. Step name - Success",
+                    timestampCorrect + " " + paddingSpan + " | 2. Step name2 - Failed",
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
+                    timestampCorrect + " " + sectionStartOpen(3) + "5. Step name" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " |   step data",
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
+            };
+            checkAnnotation(in, out);
+        }
+
+        @Test
         public void pipelineFix() {
             String[] in = new String[] {
                     logStartLine,
@@ -53,12 +85,29 @@ public class SectionsTest extends TestSuite {
                     " └ [Success]",
 
             };
-            String pipelineFix = "<iframe onload=\"fix_pipeline()\" style=\"display:none\"></iframe>";
             String[] out = new String[] {
                     replaceWithHtmlEntities(logStartLine),
-                    pipelineFix + sectionStartOpen(1) + "2. Step name" + sectionStartClose,
+                    pipelineJsFix + sectionStartOpen(1) + "2. Step name" + sectionStartClose,
                     paddingSpan + " |   step data",
                     paddingSpan + " └ [Success]" + sectionEndClose,
+            };
+            checkAnnotation(in, out);
+        }
+
+        @Test
+        public void pipelineFixTimestamps() {
+            String[] in = new String[] {
+                    timestampCorrect + " " + logStartLine,
+                    timestampCorrect + " 2. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + "  └ [Success]",
+
+            };
+            String[] out = new String[] {
+                    replaceWithHtmlEntities(timestampCorrect + " " + logStartLine),
+                    pipelineJsFix + timestampCorrect + " " + sectionStartOpen(1) + "2. Step name" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " |   step data",
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -92,6 +141,19 @@ public class SectionsTest extends TestSuite {
                     paddingSpan + " | " + paddingSpan + "   └ [Success]" + sectionEndClose,
                     paddingSpan + " | step1 data",
                     paddingSpan + " └ [Success]" + sectionEndClose,
+            };
+            checkAnnotation(in, out);
+        }
+
+        @Test
+        public void sectionStartTimestampPositive() {
+            String[] in = new String[]{
+                logStartLine,
+                timestampCorrect + " 1. Section"
+            };
+            String[] out = new String[] {
+                    replaceWithHtmlEntities(logStartLine),
+                    timestampCorrect + " " + sectionStartOpen(1) + "1. Section" + sectionStartClose
             };
             checkAnnotation(in, out);
         }
@@ -141,7 +203,11 @@ public class SectionsTest extends TestSuite {
                     "asdf | 1. Section",
                     ". Section",
                     "3 Section",
-                    "4asdfas"
+                    "4asdfas",
+                    timestampCorrect + "1. Section",
+                    timestampEmpty + " 1. Section",
+                    timestampNoBraces + " 1. Section",
+                    timestampIllegalSymbols + " 1. Section"
             );
         }
 
@@ -173,7 +239,8 @@ public class SectionsTest extends TestSuite {
                     "└ [ResULT]",
                     "└ [r]",
                     "└ [result] some random text  ",
-                    "└ some random text [result]"
+                    "└ some random text [result]",
+                    timestampCorrect + " └ [result]"
             );
         }
 
@@ -207,7 +274,11 @@ public class SectionsTest extends TestSuite {
                     "└ []",
                     "└ [result",
                     "└ result]",
-                    "└ result"
+                    "└ result",
+                    timestampCorrect + "└ [result]",
+                    timestampEmpty + " └ [result]",
+                    timestampNoBraces + " └ [result]",
+                    timestampIllegalSymbols + " └ [result]"
             );
         }
 
@@ -236,7 +307,8 @@ public class SectionsTest extends TestSuite {
             return Arrays.asList(
                     "└ [Failed]",
                     "  || └ [Failed]",
-                    "└ [Failed] some random text  "
+                    "└ [Failed] some random text  ",
+                    timestampCorrect + " └ [Failed]"
             );
         }
 
@@ -270,7 +342,7 @@ public class SectionsTest extends TestSuite {
                     "└ [Fail]",
                     "└ [FAIL]",
                     "└ [FAILED]"
-            );
+            );  
         }
 
         @Test

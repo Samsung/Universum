@@ -65,7 +65,11 @@ public class LogActiveTest extends TestSuite {
                     "some random line",
                     "1. Step name",
                     " |   step data",
-                    " └ [Success]"
+                    " └ [Success]",
+                    timestampCorrect + " some random line",
+                    timestampCorrect + " 1. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + "  └ [Success]"
             };
             String[] out = new String[] {
                     replaceWithHtmlEntities(logStartLine),
@@ -76,6 +80,10 @@ public class LogActiveTest extends TestSuite {
                     sectionStartOpen(2) + "1. Step name" + sectionStartClose,
                     paddingSpan + " |   step data",
                     paddingSpan + " └ [Success]" + sectionEndClose,
+                    timestampCorrect + " some random line",
+                    timestampCorrect + " " + sectionStartOpen(3) + "1. Step name" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " |   step data",
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -104,6 +112,31 @@ public class LogActiveTest extends TestSuite {
             };
             checkAnnotation(in, out);
         }
+
+        @Test
+        public void logBrokenTimestamps() {
+            String[] in = new String[] {
+                    timestampCorrect + " " + logStartLine,
+                    timestampCorrect + " 1. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + " some random line",
+                    timestampCorrect + "  └ [Success]",
+                    timestampCorrect + " 1. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + "  └ [Success]"
+            };
+            String[] out = new String[] {
+                    replaceWithHtmlEntities(timestampCorrect + " " + logStartLine),
+                    timestampCorrect + " " + sectionStartOpen(1) + "1. Step name" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " |   step data",
+                    timestampCorrect + " some random line",
+                    timestampCorrect + "  └ [Success]",
+                    timestampCorrect + " 1. Step name",
+                    timestampCorrect + "  |   step data",
+                    timestampCorrect + "  └ [Success]"
+            };
+            checkAnnotation(in, out);
+        }
     }
 
     @RunWith(Parameterized.class)
@@ -117,7 +150,8 @@ public class LogActiveTest extends TestSuite {
             return Arrays.asList(
                     "==> Universum 1.2.3 started execution",
                     "==> Universum 0.0.0 started execution",
-                    "==> Universum 1234.234521.952 started execution"
+                    "==> Universum 1234.234521.952 started execution",
+                    timestampCorrect + " ==> Universum 1.2.3 started execution"
             );
         }
 
@@ -159,7 +193,11 @@ public class LogActiveTest extends TestSuite {
                     "=< Universum 1.2.3 started execution",
                     "==> universum 1.2.3 started execution",
                     "==> Universum 1.2 started execution",
-                    "==> Universum 1.2 started execution now"
+                    "==> Universum 1.2 started execution now",
+                    timestampCorrect +  "==> Universum 1.2.3 started execution",
+                    timestampEmpty + " ==> Universum 1.2.3 started execution",
+                    timestampNoBraces + "==> Universum 1.2.3 started execution",
+                    timestampIllegalSymbols + " ==> Universum 1.2.3 started execution"
             );
         }
 
@@ -198,7 +236,8 @@ public class LogActiveTest extends TestSuite {
             return Arrays.asList(
                     "==> Universum 1.2.3 finished execution",
                     "==> Universum 0.0.0 finished execution",
-                    "==> Universum 1234.234521.952 finished execution"
+                    "==> Universum 1234.234521.952 finished execution",
+                    timestampCorrect + " ==> Universum 1.2.3 finished execution"
             );
         }
 
@@ -248,7 +287,11 @@ public class LogActiveTest extends TestSuite {
                     "=< Universum 1.2.3 finished execution",
                     "==> universum 1.2.3 finished execution",
                     "==> Universum 1.2 finished execution",
-                    "==> Universum 1.2 finished execution now"
+                    "==> Universum 1.2 finished execution now",
+                    timestampCorrect + "==> Universum 1.2.3 finished execution",
+                    timestampEmpty + " ==> Universum 1.2.3 finished execution",
+                    timestampNoBraces + " ==> Universum 1.2.3 finished execution",
+                    timestampIllegalSymbols + " ==> Universum 1.2.3 finished execution"
             );
         }
 
@@ -298,7 +341,8 @@ public class LogActiveTest extends TestSuite {
                     "Finished: ABORTED",
                     "Finished: FAILURE",
                     "Finished: NOT_BUILT",
-                    "Finished: UNSTABLE"
+                    "Finished: UNSTABLE",
+                    timestampCorrect + " Finished: SUCCESS"
             );
         }
 
@@ -332,7 +376,11 @@ public class LogActiveTest extends TestSuite {
                     "Finished: SUCCESS ",
                     "Finished: ",
                     "finish",
-                    "Finished: success"
+                    "Finished: success",
+                    timestampCorrect + "Finished: SUCCESS",
+                    timestampEmpty + " Finished: SUCCESS",
+                    timestampNoBraces + " Finished: SUCCESS",
+                    timestampIllegalSymbols + " Finished: SUCCESS"
             );
         }
 
