@@ -7,7 +7,10 @@ function colorLblsAscendant(el) {
     }
     var sectionLbl = el.getElementsByClassName("sectionLbl")[0];
     sectionLbl.style.color = "red";
-    sectionLbl.getElementsByTagName("span")[0].style.cssText = "color:red !important";
+    var innerSpans = sectionLbl.getElementsByTagName("span")
+    if (innerSpans.length > 0) {
+        innerSpans[0].style.cssText = "color:red !important";
+    }
     sectionLbl.parentElement.previousSibling.checked = true // expand failed section
     var parent = el.parentNode;
     if (parent.className != "console-output") {

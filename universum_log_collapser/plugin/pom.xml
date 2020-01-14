@@ -4,7 +4,7 @@
     <parent> 
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.4</version>
+        <version>3.5</version>
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
@@ -35,4 +35,22 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>io.jenkins.plugins.universum_log_collapser.Main</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

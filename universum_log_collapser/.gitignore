@@ -5,3 +5,5 @@
 target
 *.iml
 node_modules
+plugin-jar-with-dependencies.jar
+generated.html
