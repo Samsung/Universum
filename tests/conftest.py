@@ -124,4 +124,3 @@ def check_output(xxx_todo_changeme):
 def detect_fails(capsys):
     yield capsys
     check_output(capsys.readouterr())
-    check_output(capsys._outerr)

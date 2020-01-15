@@ -135,7 +135,7 @@ def import_module(name, path=None, target_name=None):
 
 def trim_and_convert_to_unicode(line):
     if isinstance(line, str):
-        line = line.decode("utf-8", "replace")
+        pass
     elif not isinstance(line, six.text_type):
         line = six.text_type(line)
 
