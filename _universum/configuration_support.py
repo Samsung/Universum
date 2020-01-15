@@ -28,10 +28,10 @@ def combine(dictionary_a, dictionary_b):
     For example:
 
     >>> combine(dict(attr_a = "a1", attr_b = ["b11", "b12"]), dict(attr_a = "a2", attr_b = ["b2"]))
-    {'attr_b': ['b11', 'b12', 'b2'], 'attr_a': 'a1a2'}
+    {'attr_a': 'a1a2', 'attr_b': ['b11', 'b12', 'b2']}
 
     >>> combine(dict(attr_a = {"a1": "v1"}, attr_b = {"b1": "v1"}), dict(attr_a = {"a2": "v2"}))
-    {'attr_b': {'b1': 'v1'}, 'attr_a': {'a1': 'v1', 'a2': 'v2'}}
+    {'attr_a': {'a1': 'v1', 'a2': 'v2'}, 'attr_b': {'b1': 'v1'}}
 
     """
 
