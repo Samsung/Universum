@@ -11,3 +11,4 @@ htmlcov
 temp
 artifacts
 temp_config.py
+.venv
