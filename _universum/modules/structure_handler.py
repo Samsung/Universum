@@ -26,11 +26,8 @@ def needs_structure(klass):
     return klass
 
 
-class Block(object):
+class Block:
     """
-    :type name: str
-    :type parent: Block
-
     >>> b1 = Block('Build for all supported platforms')
     >>> str(b1)
     ' Build for all supported platforms - Success'
@@ -54,29 +51,30 @@ class Block(object):
     '1.1. Run tests - Success'
     >>> b4.is_successful()
     True
+    >>> b2 is b4.parent
+    True
     """
 
-    def __init__(self, name, parent=None):
+    def __init__(self, name: str, parent: 'Block' = None):
         self.name = name
         self.status = "Success"
         self.children = []
 
         self._parent = parent
+        self.number = ''
         if self.parent:
             self.parent.children.append(self)
             self.number = '{}{}.'.format(parent.number, len(parent.children))
-        else:
-            self.number = ''
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = self.number + ' ' + self.name
         return '{} - {}'.format(result, self.status) if not self.children else result
 
     @property  # getter
-    def parent(self):
+    def parent(self) -> 'Block':
         return self._parent
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
         return self.status == "Success"
 
 
