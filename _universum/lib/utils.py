@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import codecs
 import imp
 import inspect
@@ -10,6 +11,7 @@ import traceback
 from _universum.lib.ci_exception import CiException
 from .ci_exception import CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
+import six
 
 __all__ = [
     "strip_path_start",
@@ -109,9 +111,9 @@ def catch_exception(exception_name, ignore_if=None):
                 if not type(e).__name__ == exception_name:
                     raise
                 if ignore_if is not None:
-                    if ignore_if in unicode(e):
+                    if ignore_if in six.text_type(e):
                         return result
-                raise CriticalCiException(unicode(e))
+                raise CriticalCiException(six.text_type(e))
         return function_to_run
     return decorated_function
 
@@ -134,8 +136,8 @@ def import_module(name, path=None, target_name=None):
 def trim_and_convert_to_unicode(line):
     if isinstance(line, str):
         line = line.decode("utf-8", "replace")
-    elif not isinstance(line, unicode):
-        line = unicode(line)
+    elif not isinstance(line, six.text_type):
+        line = six.text_type(line)
 
     if line.endswith("\n"):
         line = line[:-1]
@@ -146,7 +148,7 @@ def trim_and_convert_to_unicode(line):
 def convert_to_str(line):
     if isinstance(line, str):
         return line
-    if not isinstance(line, unicode):
+    if not isinstance(line, six.text_type):
         return str(line)
 
     return line.encode("utf8", "replace")
@@ -214,6 +216,6 @@ def make_block(block_name, pass_errors=True):
 
 def check_request_result(result):
     if result.status_code != 200:
-        text = "Invalid return code " + unicode(result.status_code) + ". Response is:\n"
+        text = "Invalid return code " + six.text_type(result.status_code) + ". Response is:\n"
         text += result.text
         raise CiException(text)

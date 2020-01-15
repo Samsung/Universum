@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 import atexit
 import signal
 import sys
@@ -15,6 +17,7 @@ from _universum.lib.ci_exception import SilentAbortException
 from _universum.lib.gravity import define_arguments_recursive, construct_component
 from _universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
 from _universum.lib.utils import Uninterruptible, format_traceback
+import six
 
 
 def define_arguments():
@@ -79,7 +82,7 @@ def main(args=None):
     except IncorrectParameterError as e:
         settings.command_parser.error(e.message)
     except ImportError as e:
-        print unicode(e)
+        print(six.text_type(e))
         return 2
 
 

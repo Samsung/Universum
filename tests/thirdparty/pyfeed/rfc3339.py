@@ -53,12 +53,14 @@ Please send questions, comments, and bug reports to: pyfeed@langri.com
 
 
 
+from __future__ import absolute_import
+from __future__ import print_function
 import re
 import time
 
 from calendar import timegm
-from tools import tf_utc
-from tools import parse_time_offset
+from .tools import tf_utc
+from .tools import parse_time_offset
 
 
 
@@ -269,11 +271,11 @@ if __name__ == "__main__":
 
         if result != correct:
             failed_tests += 1
-            print module_banner
-            print "test failed:", message
-            print "    correct:", correct
-            print "    result: ", result
-            print
+            print(module_banner)
+            print("test failed:", message)
+            print("    correct:", correct)
+            print("    result: ", result)
+            print()
 
 
     # The default is to make time stamps in local time with appropriate
@@ -319,11 +321,11 @@ if __name__ == "__main__":
     from sys import exit
     s_module = module_name + " " + module_version
     if failed_tests == 0:
-        print s_module + ": self-test: all tests succeeded!"
+        print(s_module + ": self-test: all tests succeeded!")
         exit(0)
     elif failed_tests == 1:
-        print s_module + " self-test: 1 test failed."
+        print(s_module + " self-test: 1 test failed.")
         exit(1)
     else:
-        print s_module + " self-test: %d tests failed." % failed_tests
+        print(s_module + " self-test: %d tests failed." % failed_tests)
         exit(1)

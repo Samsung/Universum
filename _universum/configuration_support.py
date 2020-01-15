@@ -1,7 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import copy
 import os
+import six
 
 __all__ = [
     "Variations",
@@ -139,7 +141,7 @@ class Variations(list):
         :return: new `Variations` object, consisting of the list of combined configurations
         """
 
-        if isinstance(other, (int, long)):
+        if isinstance(other, six.integer_types):
             result_list = list.__mul__(list(self), other)
         else:
             result_list = []

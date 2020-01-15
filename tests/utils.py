@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import datetime
 import os
 import random
@@ -10,6 +11,8 @@ from _universum import submit, poll, main
 from _universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
+import six
+from six.moves import range
 
 __all__ = [
     "Params",
@@ -88,19 +91,19 @@ class TestEnvironment(object):
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
-            self.settings.ProjectDirectory.project_root = unicode(self.temp_dir.mkdir("project_root"))
+            self.settings.ProjectDirectory.project_root = six.text_type(self.temp_dir.mkdir("project_root"))
         elif test_type == "submit":
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
-            self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
+            self.settings.ProjectDirectory.project_root = six.text_type(self.vcs_cooking_dir)
         elif test_type == "main":
             configs_file = self.temp_dir.join("configs.py")
             configs_file.write(simple_test_config)
-            self.settings.Launcher.config_path = unicode(configs_file)
-            self.settings.ArtifactCollector.artifact_dir = unicode(self.temp_dir.mkdir("artifacts"))
+            self.settings.Launcher.config_path = six.text_type(configs_file)
+            self.settings.ArtifactCollector.artifact_dir = six.text_type(self.temp_dir.mkdir("artifacts"))
             # The project_root directory must not exist before launching main
-            self.settings.ProjectDirectory.project_root = unicode(self.temp_dir.join("project_root"))
+            self.settings.ProjectDirectory.project_root = six.text_type(self.temp_dir.join("project_root"))
 
         self.settings.Output.type = "term"
 
