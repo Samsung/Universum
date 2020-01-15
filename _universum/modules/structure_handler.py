@@ -28,30 +28,30 @@ def needs_structure(klass):
 
 class Block(object):
     """
-    :type name: six.text_type
+    :type name: str
     :type parent: Block
 
     >>> b1 = Block('Build for all supported platforms')
-    >>> six.text_type( b1 )
-    u' Build for all supported platforms - Success'
+    >>> str(b1)
+    ' Build for all supported platforms - Success'
 
     >>> b2 = Block('Build Android', b1)
-    >>> six.text_type( b2 )
-    u'1. Build Android - Success'
+    >>> str(b2)
+    '1. Build Android - Success'
 
     >>> b3 = Block('Build Tizen', b1)
-    >>> six.text_type( b3 )
-    u'2. Build Tizen - Success'
+    >>> str(b3)
+    '2. Build Tizen - Success'
 
     >>> b3.status = 'Failed'
-    >>> six.text_type( b3 )
-    u'2. Build Tizen - Failed'
+    >>> str(b3)
+    '2. Build Tizen - Failed'
     >>> b3.is_successful()
     False
 
     >>> b4 = Block('Run tests', b2)
-    >>> six.text_type( b4 )
-    u'1.1. Run tests - Success'
+    >>> str(b4)
+    '1.1. Run tests - Success'
     >>> b4.is_successful()
     True
     """
@@ -68,7 +68,7 @@ class Block(object):
         else:
             self.number = ''
 
-    def __unicode__(self):
+    def __str__(self):
         result = self.number + ' ' + self.name
         return '{} - {}'.format(result, self.status) if not self.children else result
 
@@ -134,13 +134,13 @@ class StructureHandler(Module):
         except (SilentAbortException, StepException):
             raise
         except CriticalCiException as e:
-            self.fail_current_block(six.text_type(e))
+            self.fail_current_block(str(e))
             raise SilentAbortException()
         except Exception as e:
             if pass_errors is True:
                 raise
             else:
-                self.fail_current_block(six.text_type(e))
+                self.fail_current_block(str(e))
         finally:
             self.close_block()
         return result
@@ -175,7 +175,7 @@ class StructureHandler(Module):
         if parent is None:
             parent = dict()
 
-        step_num_len = len(six.text_type(self.configs_total_count))
+        step_num_len = len(str(self.configs_total_count))
         child_step_failed = False
         for obj_a in variations:
             try:
@@ -193,9 +193,9 @@ class StructureHandler(Module):
                 else:
                     self.configs_current_number += 1
                     numbering = " [ {:>{}}/{} ] ".format(
-                        six.text_type(self.configs_current_number),
+                        str(self.configs_current_number),
                         step_num_len,
-                        six.text_type(self.configs_total_count)
+                        str(self.configs_total_count)
                     )
                     step_name = numbering + item.get("name", ' ')
                     if skipped:
