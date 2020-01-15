@@ -6,11 +6,11 @@ import copy
 import os
 import shutil
 import pytest
+import six
+from six.moves import range
 
 import universum
 from . import git_utils, perforce_utils, utils
-import six
-from six.moves import range
 
 
 def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_workspace, tmpdir):
@@ -78,7 +78,7 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
 # ----------------------------------------------------------------------------------------------
 
 
-class PollerParameters(object):
+class PollerParameters:
     def __init__(self, log_exception_checker, stdout_checker, http_check, environment):
         self.log_exception_checker = log_exception_checker
         self.stdout_checker = stdout_checker
@@ -209,7 +209,7 @@ def test_submit_error_no_repo(submit_environment, stdout_checker):
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
 
-class SubmitterParameters(object):
+class SubmitterParameters:
     def __init__(self, stdout_checker, environment):
         self.stdout_checker = stdout_checker
         self.submit_settings = environment.settings

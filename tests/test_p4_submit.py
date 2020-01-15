@@ -4,9 +4,9 @@
 
 from __future__ import absolute_import
 import pytest
+import six
 
 from . import perforce_utils, utils
-import six
 
 
 @pytest.fixture()

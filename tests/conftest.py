@@ -2,14 +2,14 @@
 # pylint: disable = redefined-outer-name
 
 from __future__ import absolute_import
+from unittest import mock
 import httpretty
 import pytest
-import mock
 
 pytest_plugins = ['tests.perforce_utils', 'tests.git_utils', 'tests.deployment_utils']
 
 
-class FuzzyCallChecker(object):
+class FuzzyCallChecker:
     def __init__(self, mock_object):
         self.mock_object = mock_object
 
@@ -52,7 +52,7 @@ def log_exception_checker(request):
         yield result
 
 
-class HttpChecker(object):
+class HttpChecker:
     @staticmethod
     def assert_request_was_made(query):
         queries = []

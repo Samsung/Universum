@@ -4,10 +4,10 @@
 from __future__ import absolute_import
 import git
 import pytest
+import six
 
 import universum
 from . import git_utils, perforce_utils, utils
-import six
 
 
 @pytest.fixture

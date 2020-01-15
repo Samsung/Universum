@@ -4,11 +4,12 @@
 from __future__ import absolute_import
 import os
 import pytest
+import six
+
+from six.moves import filter
 
 from _universum.configuration_support import Variations
 from _universum.modules.launcher import check_if_env_set
-import six
-from six.moves import filter
 
 
 @pytest.fixture(autouse=True)

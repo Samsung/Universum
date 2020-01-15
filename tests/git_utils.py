@@ -10,12 +10,12 @@ import git
 from git.remote import RemoteProgress
 import pytest
 import sh
-
-from . import utils
 import six
 
+from . import utils
 
-class GitServer(object):
+
+class GitServer:
     def __init__(self, working_directory, branch_name):
         self.target_branch = branch_name
         self.target_file = "readme.txt"
