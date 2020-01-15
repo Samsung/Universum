@@ -173,7 +173,7 @@ def test_define_arguments_inheritance(mock_module, capsys):
     parser = _universum.lib.module_arguments.ModuleArgumentParser()
     with pytest.raises(ArgumentError) as exception_info:
         define_arguments_recursive(WrongInheritedModule, parser)
-    assert "conflicting option string(s): --parent" in str(exception_info.value)
+    assert "conflicting option string: --parent" in str(exception_info.value)
 
 
 def test_settings_access(mock_module):
