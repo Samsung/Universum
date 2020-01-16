@@ -178,13 +178,14 @@ def test_if_env_set_not_in_config():
 # if_env_set for multiplication
 ##########################################################################
 
-def assert_equal_multiplication(result, env_vars=None):
+def assert_equal_multiplication(expected, env_vars=None):
     if env_vars:
         setup_env_vars(env_vars)
     var1 = Variations([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
     var2 = Variations([dict(if_env_set=" && VAR_3 == value_3")])
     configs = var1 * var2
-    assert list(filter(check_if_env_set, [i for i in configs.all()])) == result
+    result = list(filter(check_if_env_set, configs.all()))
+    assert expected == result
 
 
 def test_multiplication_filter_no_env_vars():
