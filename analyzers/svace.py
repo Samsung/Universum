@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import argparse
 import os
 import sys
@@ -9,6 +10,7 @@ import sh
 from lxml import etree
 
 from . import utils
+import six
 
 
 class SvaceAnalyzer(object):
@@ -68,7 +70,7 @@ class SvaceAnalyzer(object):
             sys.stderr.write(e.error_log)
             return 2
         except Exception as e:
-            sys.stderr.write(unicode(e))
+            sys.stderr.write(six.text_type(e))
             return 2
         return 0
 
@@ -89,7 +91,7 @@ class SvaceAnalyzer(object):
             sys.stderr.write("Svace exited with error code 255. No build object found.\n")
             return 2
         except Exception as e:
-            sys.stderr.write(unicode(e))
+            sys.stderr.write(six.text_type(e))
             return 2
         return self.analyze()
 

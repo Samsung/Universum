@@ -1,8 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import sys
 
 from .base_output import BaseOutput
+from six.moves import range
 
 __all__ = [
     "TerminalBasedOutput"

@@ -1,6 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 from setuptools import setup, find_packages
 
 import _universum
@@ -37,7 +39,7 @@ setup(
         'universum_svace = analyzers.svace:main',
         'universum_uncrustify = analyzers.uncrustify:main'
     ]},
-    python_requires='>=2.7.6, <3',
+    python_requires='>=2.7.6, >=3.8.1',
     setup_requires=['setuptools'],
     install_requires=[
         'glob2',
@@ -66,4 +68,4 @@ setup(
 
 
 if __name__ == "__main__":
-    print "Please use 'sudo pip install .' instead of launching this script"
+    print("Please use 'sudo pip install .' instead of launching this script")

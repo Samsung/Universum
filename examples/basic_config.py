@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os.path
 from _universum.configuration_support import Variations, get_project_root
 
@@ -28,4 +30,4 @@ bits64 = Variations([dict(name='64 bits', command=['--64'])])
 configs += build64 * (platforms32 + platforms64) * bits64
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

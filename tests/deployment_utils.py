@@ -1,16 +1,19 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
+from __future__ import print_function
 import getpass
 from pwd import getpwnam
 import os
 import py
 from requests.exceptions import ReadTimeout
 
-import docker
+from . import docker
 
 import pytest
 from . import utils
+import six
 
 
 class ExecutionEnvironment(object):
@@ -76,9 +79,9 @@ class ExecutionEnvironment(object):
         if not environment:
             environment = []
         process_id = self._client.api.exec_create(self._container.id, cmd, environment=environment)
-        print "$ " + cmd
+        print("$ " + cmd)
         log = self._client.api.exec_start(process_id)
-        print log
+        print(log)
 
         exit_code = self._client.api.exec_inspect(process_id)['ExitCode']
         if result:
@@ -182,7 +185,7 @@ class UniversumRunner(object):
         self.environment.add_environment_variables([
             "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
         ])
-        self.environment.add_bind_dirs([unicode(self.local.root_directory)])
+        self.environment.add_bind_dirs([six.text_type(self.local.root_directory)])
 
         if self.environment.start_container():
             self.environment.install_python_module(self.working_dir)
@@ -196,7 +199,7 @@ class UniversumRunner(object):
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd '{}'".format(unicode(self.local.root_directory))
+            return " -vt none --no-diff -fsd '{}'".format(six.text_type(self.local.root_directory))
 
         if vcs_type == "git":
             return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)

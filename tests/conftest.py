@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
 import httpretty
 import pytest
 import mock
@@ -111,7 +112,8 @@ def http_check(request):
     yield HttpChecker()
 
 
-def check_output((out, err)):
+def check_output(xxx_todo_changeme):
+    (out, err) = xxx_todo_changeme
     assert not err, "Stderr detected!"
     for text in ["Traceback", "Exception"]:
         assert text not in out, text + " detected in stdout!"

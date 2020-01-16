@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import glob
 import os
 
@@ -10,6 +11,7 @@ from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block, convert_to_str
+import six
 
 __all__ = [
     "GitMainVcs",
@@ -281,7 +283,7 @@ class GitSubmitVcs(GitVcs):
             return 0
 
         self.out.log(self.repo.git.commit(m=description))
-        commit_id = unicode(self.repo.head.commit)
+        commit_id = six.text_type(self.repo.head.commit)
         self.out.log("Full commit ID is " + commit_id)
         return commit_id
 

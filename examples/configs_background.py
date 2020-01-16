@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 from _universum.configuration_support import Variations
 
 background = Variations([dict(name="Background", background=True)])
@@ -15,4 +17,4 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
 
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())
