@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 from _universum.configuration_support import Variations
 
@@ -32,4 +34,4 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                            command=["npm", "test"], directory="universum_log_collapser/e2e")])
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

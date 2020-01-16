@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import argparse
 import difflib
 import sys
@@ -10,6 +11,7 @@ import re
 import sh
 
 from . import utils
+from six.moves import zip
 
 # The maximum number of lines to write separate comments for
 # If exceeded, summarized comment will be provided instead

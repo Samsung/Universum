@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import codecs
 import distutils
 from distutils import dir_util, errors
@@ -18,6 +19,7 @@ from .output import needs_output
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import needs_structure
+import six
 
 __all__ = [
     "ArtifactCollector"
@@ -102,7 +104,7 @@ class ArtifactCollector(ProjectDirectory):
             file_name = self.make_file_name(name)
 
             # File system interaction modules only work with encoded unicode strings
-            if isinstance(file_name, unicode):
+            if isinstance(file_name, six.text_type):
                 encoded_name = file_name.encode("utf-8")
             else:
                 encoded_name = str(file_name)
@@ -118,7 +120,7 @@ class ArtifactCollector(ProjectDirectory):
             self.out.log("Adding file " + file_path + " to artifacts...")
             return codecs.open(encoded_name, "a", encoding="utf-8")
         except IOError as e:
-            raise CiException("The following error occurred while working with file: " + unicode(e))
+            raise CiException("The following error occurred while working with file: " + six.text_type(e))
 
     def preprocess_artifact_list(self, artifact_list, ignore_already_existing=False):
         """

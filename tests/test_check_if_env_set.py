@@ -1,11 +1,14 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
 import os
 import pytest
 
 from _universum.configuration_support import Variations
 from _universum.modules.launcher import check_if_env_set
+import six
+from six.moves import filter
 
 
 @pytest.fixture(autouse=True)
@@ -17,7 +20,7 @@ def os_environ():
 
 
 def setup_env_vars(env_vars):
-    for var, val in env_vars.iteritems():
+    for var, val in six.iteritems(env_vars):
         os.environ[var] = val
 
 
@@ -180,7 +183,7 @@ def assert_equal_multiplication(result, env_vars=None):
     var1 = Variations([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
     var2 = Variations([dict(if_env_set=" && VAR_3 == value_3")])
     configs = var1 * var2
-    assert filter(check_if_env_set, [i for i in configs.all()]) == result
+    assert list(filter(check_if_env_set, [i for i in configs.all()])) == result
 
 
 def test_multiplication_filter_no_env_vars():

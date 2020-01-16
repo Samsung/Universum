@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import copy
 
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
 from .output import needs_output
+import six
 
 __all__ = [
     "needs_structure"
@@ -24,57 +26,55 @@ def needs_structure(klass):
     return klass
 
 
-class Block(object):
+class Block:
     """
-    :type name: unicode
-    :type parent: Block
-
     >>> b1 = Block('Build for all supported platforms')
-    >>> unicode( b1 )
-    u' Build for all supported platforms - Success'
+    >>> str(b1)
+    ' Build for all supported platforms - Success'
 
     >>> b2 = Block('Build Android', b1)
-    >>> unicode( b2 )
-    u'1. Build Android - Success'
+    >>> str(b2)
+    '1. Build Android - Success'
 
     >>> b3 = Block('Build Tizen', b1)
-    >>> unicode( b3 )
-    u'2. Build Tizen - Success'
+    >>> str(b3)
+    '2. Build Tizen - Success'
 
     >>> b3.status = 'Failed'
-    >>> unicode( b3 )
-    u'2. Build Tizen - Failed'
+    >>> str(b3)
+    '2. Build Tizen - Failed'
     >>> b3.is_successful()
     False
 
     >>> b4 = Block('Run tests', b2)
-    >>> unicode( b4 )
-    u'1.1. Run tests - Success'
+    >>> str(b4)
+    '1.1. Run tests - Success'
     >>> b4.is_successful()
+    True
+    >>> b2 is b4.parent
     True
     """
 
-    def __init__(self, name, parent=None):
+    def __init__(self, name: str, parent: 'Block' = None):
         self.name = name
         self.status = "Success"
         self.children = []
 
         self._parent = parent
+        self.number = ''
         if self.parent:
             self.parent.children.append(self)
             self.number = '{}{}.'.format(parent.number, len(parent.children))
-        else:
-            self.number = ''
 
-    def __unicode__(self):
+    def __str__(self) -> str:
         result = self.number + ' ' + self.name
         return '{} - {}'.format(result, self.status) if not self.children else result
 
     @property  # getter
-    def parent(self):
+    def parent(self) -> 'Block':
         return self._parent
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
         return self.status == "Success"
 
 
@@ -132,13 +132,13 @@ class StructureHandler(Module):
         except (SilentAbortException, StepException):
             raise
         except CriticalCiException as e:
-            self.fail_current_block(unicode(e))
+            self.fail_current_block(str(e))
             raise SilentAbortException()
         except Exception as e:
             if pass_errors is True:
                 raise
             else:
-                self.fail_current_block(unicode(e))
+                self.fail_current_block(str(e))
         finally:
             self.close_block()
         return result
@@ -173,7 +173,7 @@ class StructureHandler(Module):
         if parent is None:
             parent = dict()
 
-        step_num_len = len(unicode(self.configs_total_count))
+        step_num_len = len(str(self.configs_total_count))
         child_step_failed = False
         for obj_a in variations:
             try:
@@ -191,9 +191,9 @@ class StructureHandler(Module):
                 else:
                     self.configs_current_number += 1
                     numbering = " [ {:>{}}/{} ] ".format(
-                        unicode(self.configs_current_number),
+                        str(self.configs_current_number),
                         step_num_len,
-                        unicode(self.configs_total_count)
+                        str(self.configs_total_count)
                     )
                     step_name = numbering + item.get("name", ' ')
                     if skipped:

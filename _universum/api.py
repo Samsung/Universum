@@ -1,10 +1,13 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 
 from .modules.api_support import ApiSupport
 from .lib.gravity import Module, Dependency
 from .lib.utils import format_traceback
+import six
 
 __all__ = ["Api"]
 
@@ -23,7 +26,7 @@ class Api(Module):
         try:
             self.api_support = self.api_support_factory(api_mode=True)
         except EnvironmentError as error:
-            sys.stderr.write(unicode(error) + u"\n")
+            sys.stderr.write(six.text_type(error) + u"\n")
             sys.exit(2)
 
         class MinimalOut(object):
@@ -44,7 +47,7 @@ class Api(Module):
 
     def execute(self):
         if self.settings.action == "file-diff":
-            print self.api_support.get_file_diff()
+            print(self.api_support.get_file_diff())
         else:
             raise NotImplementedError()
 

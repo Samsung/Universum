@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
 import re
 import sys
@@ -15,6 +16,7 @@ from . import automation_server, api_support, artifact_collector, reporter, code
 from .output import needs_output
 from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
+import six
 
 __all__ = [
     "Launcher",
@@ -199,7 +201,7 @@ class Step(object):
                 command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
                 self.cmd = make_command(command_name)
         except CiException as ex:
-            self.fail_block(unicode(ex))
+            self.fail_block(six.text_type(ex))
             raise StepException()
         return True
 
@@ -259,11 +261,11 @@ class Step(object):
                 self.process.wait()
             except Exception as e:
                 if isinstance(e, sh.ErrorReturnCode):
-                    text = "Module sh got exit code " + unicode(e.exit_code) + "\n"
+                    text = "Module sh got exit code " + six.text_type(e.exit_code) + "\n"
                     if e.stderr:
                         text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
                 else:
-                    text = unicode(e) + "\n"
+                    text = six.text_type(e) + "\n"
 
             self._handle_postponed_out()
             if text:
@@ -372,14 +374,14 @@ class Launcher(ProjectDirectory):
                                                                                  self.exclude_patterns))
 
         except IOError as e:
-            text = unicode(e) + "\nPossible reasons of this error:\n" + \
+            text = six.text_type(e) + "\nPossible reasons of this error:\n" + \
                    " * There is no file named 'configs.py' in project repository\n" + \
                    " * Config path, passed to the script ('" + self.settings.config_path + \
                    "'), does not lead to actual 'configs.py' location\n" + \
                    " * Some problems occurred while downloading or copying the repository"
             raise CriticalCiException(text)
         except KeyError as e:
-            text = "KeyError: " + unicode(e) + \
+            text = "KeyError: " + six.text_type(e) + \
                    "\nPossible reason of this error: variable 'configs' is not defined in 'configs.py'"
             raise CriticalCiException(text)
         except Exception as e:

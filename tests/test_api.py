@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import json
 import os
 import pytest
+import six
+from six.moves import range
 
 
 config = """
@@ -25,9 +28,9 @@ def test_p4_file_diff(universum_runner):
     p4_directory = universum_runner.perforce.root_directory
     p4_file = universum_runner.perforce.repo_file
 
-    p4.run_edit(unicode(p4_file))
+    p4.run_edit(six.text_type(p4_file))
     p4_file.write("This line is added to the file.\n")
-    p4.run_move(unicode(p4_file), unicode(p4_directory.join("some_new_file_name.txt")))
+    p4.run_move(six.text_type(p4_file), six.text_type(p4_directory.join("some_new_file_name.txt")))
     change = p4.fetch_change()
     change["Description"] = "Rename basic config"
     shelve_cl = p4.save_change(change)[0].split()[1]
@@ -52,9 +55,9 @@ def test_multiple_p4_file_diff(universum_runner):
     p4_directory = universum_runner.perforce.root_directory
 
     for index in range(0, 10000):
-        new_file = p4_directory.join("new_file_" + unicode(index) + ".txt")
-        new_file.write("This is file #" + unicode(index) + "\n")
-        p4.run_add(unicode(new_file))
+        new_file = p4_directory.join("new_file_" + six.text_type(index) + ".txt")
+        new_file.write("This is file #" + six.text_type(index) + "\n")
+        p4.run_add(six.text_type(new_file))
     change = p4.fetch_change()
     change["Description"] = "Add 10000 files"
     shelve_cl = p4.save_change(change)[0].split()[1]
@@ -81,8 +84,8 @@ def test_git_file_diff(universum_runner):
 
     repo.git.checkout(server.target_branch)
     repo.git.checkout("new_testing_branch", b=True)
-    repo.git.mv(unicode(git_file), unicode(git_directory.join("some_new_file_name.txt")))
-    change = unicode(repo.index.commit("Special commit for testing"))
+    repo.git.mv(six.text_type(git_file), six.text_type(git_directory.join("some_new_file_name.txt")))
+    change = six.text_type(repo.index.commit("Special commit for testing"))
     repo.remotes.origin.push(progress=logger, all=True)
 
     log = universum_runner.run(config, vcs_type="git",
@@ -108,11 +111,11 @@ def test_multiple_git_file_diff(universum_runner):
     repo.git.checkout("new_testing_branch", b=True)
     files = []
     for index in range(0, 10000):
-        new_file = git_directory.join("new_file_" + unicode(index) + ".txt")
-        new_file.write("This is file #" + unicode(index) + "\n")
-        files.append(unicode(new_file))
+        new_file = git_directory.join("new_file_" + six.text_type(index) + ".txt")
+        new_file.write("This is file #" + six.text_type(index) + "\n")
+        files.append(six.text_type(new_file))
     repo.index.add(files)
-    change = unicode(repo.index.commit("Special commit for testing"))
+    change = six.text_type(repo.index.commit("Special commit for testing"))
     repo.remotes.origin.push(progress=logger, all=True)
 
     log = universum_runner.run(config, vcs_type="git",

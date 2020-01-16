@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
 import copy
 import os
 import shutil
@@ -8,13 +9,15 @@ import pytest
 
 import universum
 from . import git_utils, perforce_utils, utils
+import six
+from six.moves import range
 
 
 def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "p4",
-                             "-f", unicode(db_file),
+                             "-f", six.text_type(db_file),
                              "-p4p", perforce_workspace.p4.port,
                              "-p4u", perforce_workspace.p4.user,
                              "-p4P", perforce_workspace.p4.password,
@@ -28,7 +31,7 @@ def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tm
     db_file = tmpdir.join("gitpoll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "git",
-                             "-f", unicode(db_file),
+                             "-f", six.text_type(db_file),
                              "-gr", git_server.url,
                              "-grs", git_server.target_branch,
                              "-jtu", "https://localhost/?%s"])
@@ -51,7 +54,7 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "p4",
-                             "-f", unicode(db_file),
+                             "-f", six.text_type(db_file),
                              "-p4p", "127.0.0.1:1024",
                              "-p4u", perforce_workspace.p4.user,
                              "-p4P", perforce_workspace.p4.password,
@@ -65,7 +68,7 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "git",
-                             "-f", unicode(db_file),
+                             "-f", six.text_type(db_file),
                              "-gr", "file:///non-existing-directory",
                              "-grs", git_server.target_branch,
                              "-jtu", "https://localhost/?%s"])
@@ -261,7 +264,7 @@ def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, sub
 
     file_name = utils.randomize_name("new_file") + ".txt"
     temp_file = parameters.environment.vcs_cooking_dir.join(file_name)
-    file_path = unicode(temp_file)
+    file_path = six.text_type(temp_file)
 
     # Add a file
     temp_file.write("This is a new file" + "\n")
@@ -286,18 +289,18 @@ def test_submit_success_ignore_new_and_deleted_while_edit_only(submit_parameters
     new_file_name = utils.randomize_name("new_file") + ".txt"
     temp_file = parameters.environment.vcs_cooking_dir.join(new_file_name)
     temp_file.write("This is a new temp file" + "\n")
-    deleted_file_path = unicode(parameters.environment.repo_file)
+    deleted_file_path = six.text_type(parameters.environment.repo_file)
     deleted_file_name = os.path.basename(deleted_file_path)
     os.remove(deleted_file_path)
 
-    result = parameters.submit_path_list([unicode(temp_file), deleted_file_path], edit_only=True)
+    result = parameters.submit_path_list([six.text_type(temp_file), deleted_file_path], edit_only=True)
     assert result == 0
 
     parameters.stdout_checker.assert_has_calls_with_param("Skipping '{}'".format(new_file_name))
     parameters.stdout_checker.assert_has_calls_with_param("Skipping '{}'".format(deleted_file_name))
     parameters.stdout_checker.assert_has_calls_with_param("Nothing to submit")
     assert parameters.file_present(deleted_file_path)
-    assert not parameters.file_present(unicode(temp_file))
+    assert not parameters.file_present(six.text_type(temp_file))
 
 
 def test_submit_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
@@ -307,8 +310,8 @@ def test_submit_success_commit_modified_while_edit_only(submit_parameters, submi
     text = utils.randomize_name("This is change ")
     target_file.write(text + "\n")
 
-    parameters.assert_submit_success([unicode(target_file)], edit_only=True)
-    assert parameters.text_in_file(text, unicode(target_file))
+    parameters.assert_submit_success([six.text_type(target_file)], edit_only=True)
+    assert parameters.text_in_file(text, six.text_type(target_file))
 
 
 def test_submit_error_review(submit_parameters, submit_environment):
@@ -317,7 +320,7 @@ def test_submit_error_review(submit_parameters, submit_environment):
     target_file = parameters.environment.repo_file
     target_file.write("This is some change")
 
-    result = parameters.submit_path_list([unicode(target_file)], review=True)
+    result = parameters.submit_path_list([six.text_type(target_file)], review=True)
     assert result != 0
     parameters.stdout_checker.assert_has_calls_with_param("not supported")
 
@@ -333,19 +336,19 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir) + "/"])
+    parameters.assert_submit_success([six.text_type(tmp_dir) + "/"])
 
     for i in range(0, 9):
         file_path = tmp_dir.join("new_file{}.txt".format(i))
-        assert parameters.file_present(unicode(file_path))
+        assert parameters.file_present(six.text_type(file_path))
 
     # Create and reconcile a directory in a directory
     another_dir = tmp_dir.mkdir("another_directory")
     tmp_file = another_dir.join("new_file.txt")
     tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir) + "/"])
-    assert parameters.file_present(unicode(tmp_file))
+    parameters.assert_submit_success([six.text_type(tmp_dir) + "/"])
+    assert parameters.file_present(six.text_type(tmp_file))
 
     # Modify some vcs
     text = utils.randomize_name("This is change ")
@@ -353,16 +356,16 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
         tmp_file = tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write(text + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir) + "/"], edit_only=True)
+    parameters.assert_submit_success([six.text_type(tmp_dir) + "/"], edit_only=True)
 
     for i in range(0, 9, 2):
         file_path = tmp_dir.join("/new_file{}.txt".format(i))
-        assert parameters.text_in_file(text, unicode(file_path))
+        assert parameters.text_in_file(text, six.text_type(file_path))
 
     # Delete a directory
-    shutil.rmtree(unicode(tmp_dir))
-    parameters.assert_submit_success([unicode(tmp_dir)])
-    assert not parameters.file_present(unicode(tmp_dir))
+    shutil.rmtree(six.text_type(tmp_dir))
+    parameters.assert_submit_success([six.text_type(tmp_dir)])
+    assert not parameters.file_present(six.text_type(tmp_dir))
 
 
 def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment):
@@ -382,17 +385,17 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         tmp_file = inner_dir.join("new_file{}.txt".format(i))
         tmp_file.write(text)
 
-    parameters.assert_submit_success([unicode(tmp_dir) + "/new_file*.txt"])
+    parameters.assert_submit_success([six.text_type(tmp_dir) + "/new_file*.txt"])
 
     for i in range(0, 9):
         file_name = "new_file{}.txt".format(i)
         file_path = tmp_dir.join(file_name)
-        assert parameters.file_present(unicode(file_path))
+        assert parameters.file_present(six.text_type(file_path))
         file_path = inner_dir.join(file_name)
-        assert not parameters.file_present(unicode(file_path))
+        assert not parameters.file_present(six.text_type(file_path))
         file_name = "another_file{}.txt".format(i)
         file_path = tmp_dir.join(file_name)
-        assert not parameters.file_present(unicode(file_path))
+        assert not parameters.file_present(six.text_type(file_path))
 
     # Create one more directory
     other_dir_name = utils.randomize_name("new_directory")
@@ -401,17 +404,17 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         tmp_file = other_tmp_dir.join("new_file{}.txt".format(i))
         tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([unicode(parameters.environment.vcs_cooking_dir) + "/new_directory*/"])
+    parameters.assert_submit_success([six.text_type(parameters.environment.vcs_cooking_dir) + "/new_directory*/"])
 
     for i in range(0, 9):
         file_name = "new_file{}.txt".format(i)
         file_path = other_tmp_dir.join(file_name)
-        assert parameters.file_present(unicode(file_path))
+        assert parameters.file_present(six.text_type(file_path))
         file_path = inner_dir.join(file_name)
-        assert parameters.file_present(unicode(file_path))
+        assert parameters.file_present(six.text_type(file_path))
         file_name = "another_file{}.txt".format(i)
         file_path = tmp_dir.join(file_name)
-        assert parameters.file_present(unicode(file_path))
+        assert parameters.file_present(six.text_type(file_path))
 
     # Modify some vcs
     text = utils.randomize_name("This is change ")
@@ -423,15 +426,15 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         tmp_file = tmp_dir.join("another_file{}.txt".format(i))
         tmp_file.write(text + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir) + "/new_file*.txt"], edit_only=True)
+    parameters.assert_submit_success([six.text_type(tmp_dir) + "/new_file*.txt"], edit_only=True)
 
     for i in range(0, 9, 2):
         file_path = tmp_dir.join("/new_file{}.txt".format(i))
-        assert parameters.text_in_file(text, unicode(file_path))
+        assert parameters.text_in_file(text, six.text_type(file_path))
         file_path = inner_dir.join("/new_file{}.txt".format(i))
-        assert not parameters.text_in_file(text, unicode(file_path))
+        assert not parameters.text_in_file(text, six.text_type(file_path))
         file_path = tmp_dir.join("/another_file{}.txt".format(i))
-        assert not parameters.text_in_file(text, unicode(file_path))
+        assert not parameters.text_in_file(text, six.text_type(file_path))
 
     # Test subdirectory wildcard
     text = utils.randomize_name("This is change ")
@@ -443,15 +446,15 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         tmp_file = tmp_dir.join("another_file{}.txt".format(i))
         tmp_file.write(text + "\n")
 
-    parameters.assert_submit_success([unicode(tmp_dir) + "/*/*.txt"])
+    parameters.assert_submit_success([six.text_type(tmp_dir) + "/*/*.txt"])
 
     for i in range(1, 9, 2):
         file_path = inner_dir.join("new_file{}.txt".format(i))
-        assert parameters.text_in_file(text, unicode(file_path))
+        assert parameters.text_in_file(text, six.text_type(file_path))
         file_path = tmp_dir.join("new_file{}.txt".format(i))
-        assert not parameters.text_in_file(text, unicode(file_path))
+        assert not parameters.text_in_file(text, six.text_type(file_path))
         file_path = tmp_dir.join("another_file{}.txt".format(i))
-        assert not parameters.text_in_file(text, unicode(file_path))
+        assert not parameters.text_in_file(text, six.text_type(file_path))
 
     # Test edit-only subdirectory wildcard
     text = utils.randomize_name("This is change ")
@@ -463,19 +466,19 @@ def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment
         tmp_file = tmp_dir.join("another_file{}.txt".format(i))
         tmp_file.write(text + "\n")
 
-        parameters.assert_submit_success([unicode(tmp_dir) + "/*/*.txt"], edit_only=True)
+        parameters.assert_submit_success([six.text_type(tmp_dir) + "/*/*.txt"], edit_only=True)
 
     for i in range(0, 9, 3):
         file_path = inner_dir.join("new_file{}.txt".format(i))
-        assert parameters.text_in_file(text, unicode(file_path))
+        assert parameters.text_in_file(text, six.text_type(file_path))
         file_path = tmp_dir.join("new_file{}.txt".format(i))
-        assert not parameters.text_in_file(text, unicode(file_path))
+        assert not parameters.text_in_file(text, six.text_type(file_path))
         file_path = tmp_dir.join("another_file{}.txt".format(i))
-        assert not parameters.text_in_file(text, unicode(file_path))
+        assert not parameters.text_in_file(text, six.text_type(file_path))
 
     # Clean up the repo
-    shutil.rmtree(unicode(tmp_dir))
-    shutil.rmtree(unicode(other_tmp_dir))
-    parameters.assert_submit_success([unicode(parameters.environment.vcs_cooking_dir) + "/*"])
-    assert not parameters.file_present(unicode(tmp_dir))
-    assert not parameters.file_present(unicode(other_tmp_dir))
+    shutil.rmtree(six.text_type(tmp_dir))
+    shutil.rmtree(six.text_type(other_tmp_dir))
+    parameters.assert_submit_success([six.text_type(parameters.environment.vcs_cooking_dir) + "/*"])
+    assert not parameters.file_present(six.text_type(tmp_dir))
+    assert not parameters.file_present(six.text_type(other_tmp_dir))

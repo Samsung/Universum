@@ -50,6 +50,8 @@ Please send questions, comments, and bug reports to: pyfeed@langri.com
 """
 
 
+from __future__ import absolute_import
+from __future__ import print_function
 import re
 import time
 
@@ -126,14 +128,14 @@ def parse_time_offset(s):
     try:
         s = s.lstrip().rstrip().lower()
     except AttributeError:
-        raise TypeError, "time offset must be a string"
+        raise TypeError("time offset must be a string")
 
     if s in _tz_offset_dict:
         return _tz_offset_dict[s] * 3600
 
     m = _pat_time_offset.search(s)
     if not m:
-        raise ValueError, "invalid time offset string"
+        raise ValueError("invalid time offset string")
 
     sign = m.group(1)
     offset_hour = int(m.group(2))
@@ -210,11 +212,11 @@ if __name__ == "__main__":
 
         if result != correct:
             failed_tests += 1
-            print module_banner
-            print "test failed:", message
-            print "    correct:", correct
-            print "    result: ", result
-            print
+            print(module_banner)
+            print("test failed:", message)
+            print("    correct:", correct)
+            print("    result: ", result)
+            print()
 
 
     correct = 1141607495.0
@@ -237,11 +239,11 @@ if __name__ == "__main__":
     from sys import exit
     s_module = module_name + " " + module_version
     if failed_tests == 0:
-        print s_module + " self-test: all tests succeeded!"
+        print(s_module + " self-test: all tests succeeded!")
         exit(0)
     elif failed_tests == 1:
-        print s_module + " self-test: 1 test failed."
+        print(s_module + " self-test: 1 test failed.")
         exit(1)
     else:
-        print s_module + " self-test: %d tests failed." % failed_tests
+        print(s_module + " self-test: %d tests failed." % failed_tests)
         exit(1)

@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
 import shutil
 
@@ -10,6 +11,7 @@ from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
 from . import base_vcs
+import six
 
 __all__ = [
     "LocalMainVcs"
@@ -48,7 +50,7 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs):
             shutil.copytree(self.source_dir, self.settings.project_root)
             self.append_repo_status("Got sources from: " + self.source_dir + "\n")
         except OSError as e:
-            text = unicode(e) + "\nPossible reasons of this error:"
+            text = six.text_type(e) + "\nPossible reasons of this error:"
             text += "\n * Sources path, passed to the script ('" + self.settings.source_dir + \
                     "'), does not lead to actual sources or was processed incorrectly"
             text += "\n * Directory '" + os.path.basename(self.settings.project_root) + \

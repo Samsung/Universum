@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
 import shutil
 import warnings
@@ -17,6 +18,9 @@ from ..output import needs_output
 from ..structure_handler import needs_structure
 from . import base_vcs
 from .swarm import Swarm
+import six
+from six.moves import range
+from six.moves import zip
 
 __all__ = [
     "PerforceMainVcs",
@@ -347,7 +351,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             swarm_cls = self.get_related_cls(self.swarm.settings.change)
             cls.extend(swarm_cls)
         for x in range(1, 6):
-            cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
+            cls.append(os.getenv("SHELVE_CHANGELIST_" + six.text_type(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
 
     def p4report(self, report):
@@ -408,13 +412,13 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             try:
                 result = self.p4.run_sync("-f", line)
             except P4Exception as e:
-                if "not in client view" in unicode(e):
-                    text = unicode(e) + "Possible reasons of this error:"
+                if "not in client view" in six.text_type(e):
+                    text = six.text_type(e) + "Possible reasons of this error:"
                     text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
                     text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
                     raise CriticalCiException(text)
                 else:
-                    raise CriticalCiException(unicode(e))
+                    raise CriticalCiException(six.text_type(e))
 
             self.append_repo_status("    " + line + "\n")
             self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
@@ -423,7 +427,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         try:
             result = self.p4.run_unshelve(*args, **kwargs)
         except P4Exception as e:
-            if "already committed" in unicode(e) and self.swarm and len(self.shelve_cls) == 1:
+            if "already committed" in six.text_type(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
@@ -471,7 +475,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
         result = []
         # Both 'p4 opened' and 'p4 where' entries have same key 'depotFile'
-        for entry in self.p4.run_where(action_list.keys()):
+        for entry in self.p4.run_where(list(action_list.keys())):
             result.append({"action": action_list[entry["depotFile"]],
                            "repo_path": entry["depotFile"],
                            "local_path": entry["path"]})
@@ -538,7 +542,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             for item, path in zip(unshelved_filtered, unshelved_path):
                 relative, copied, absolute = path
                 if item["action"] == "move/add":
-                    for local, depot in self.mappings_dict.iteritems():
+                    for local, depot in six.iteritems(self.mappings_dict):
                         if depot == item["movedFile"]:
                             absolute = local
                 self.diff_in_files.append((relative, copied, absolute))
@@ -597,7 +601,7 @@ class PerforcePollVcs(PerforceWithMappings, base_vcs.BasePollVcs):
             reference_cl = changes_reference.get(depot_path, last_cl)
 
             rev_range_string = depot_path + "@" + reference_cl + ",#head"
-            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + unicode(max_number), rev_range_string)
+            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + six.text_type(max_number), rev_range_string)
 
             submitted_cls.reverse()
             for cl in submitted_cls:

@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import shutil
 
 from ...lib.ci_exception import CiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 from ..project_directory import ProjectDirectory
+import six
 
 __all__ = [
     "BaseDownloadVcs",
@@ -35,7 +37,7 @@ class BaseVcs(ProjectDirectory):
         try:
             shutil.rmtree(self.settings.project_root)
         except OSError as e:
-            text = unicode(e) + "\nPossible reasons of this error:" + \
+            text = six.text_type(e) + "\nPossible reasons of this error:" + \
                    "\n * Sources were not copied due to runtime errors" + \
                    "\n * Copied sources are already deleted while executing generated scenario" + \
                    "\n * Source vcs permissions do not allow deleting"

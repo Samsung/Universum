@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import signal
 import time
 
 import pytest
 import sh
+import six
 
 
 def get_line_with_text(text, log):
@@ -310,7 +313,7 @@ def test_environment(universum_runner):
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
-    script.chmod(0777)
+    script.chmod(0o777)
 
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -346,13 +349,13 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
     cmd = sh.Command(os.path.join(os.getcwd(), "universum.py"))
 
     def handle_out(line):
-        print line.rstrip()
+        print(line.rstrip())
 
     process = cmd(*(["-o", "console", "-vt", "none",
-                     "-pr", unicode(tmpdir.join("project_root")),
-                     "-ad", unicode(tmpdir.join("artifacts")),
-                     "-fsd", unicode(local_sources.root_directory),
-                     "-cfg", unicode(config_file)]),
+                     "-pr", six.text_type(tmpdir.join("project_root")),
+                     "-ad", six.text_type(tmpdir.join("artifacts")),
+                     "-fsd", six.text_type(local_sources.root_directory),
+                     "-cfg", six.text_type(config_file)]),
                   _iter=True, _bg_exc=False, _bg=True, _out=handle_out, _err=handle_out)
     time.sleep(5)
     process.signal(terminate_type)

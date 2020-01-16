@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 from typing import Union, List
 import pytest
 
@@ -77,7 +79,7 @@ def assert_incorrect_parameter(settings, match):
     with pytest.raises(IncorrectParameterError, match=match) as exception_info:
         universum.run(settings)
 
-    print exception_info
+    print(exception_info)
 
 
 missing_params = []
