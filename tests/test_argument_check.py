@@ -79,8 +79,6 @@ def assert_incorrect_parameter(settings, match):
     with pytest.raises(IncorrectParameterError, match=match) as exception_info:
         universum.run(settings)
 
-    print(exception_info)
-
 
 missing_params = []
 
