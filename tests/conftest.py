@@ -112,15 +112,14 @@ def http_check(request):
     yield HttpChecker()
 
 
-def check_output(xxx_todo_changeme):
-    (out, err) = xxx_todo_changeme
+@pytest.fixture(autouse=True)
+def detect_fails(capsys, request):
+    yield capsys
+
+    out, err = capsys.readouterr()
     assert not err, "Stderr detected!"
     for text in ["Traceback", "Exception"]:
-        assert text not in out, text + " detected in stdout!"
+        assert text not in out, "'{}' detected in stdout!".format(text)
 
-
-# pylint: disable = protected-access
-@pytest.fixture(autouse=True)
-def detect_fails(capsys):
-    yield capsys
-    check_output(capsys.readouterr())
+    if request.node.name == 'test_teardown_fixture_output_verification':
+        assert out == "TearDown fixture output must be handled by 'detect_fails' fixture\n"

@@ -76,7 +76,7 @@ def parametrize_unset(parameter_name="unset"):
 
 
 def assert_incorrect_parameter(settings, match):
-    with pytest.raises(IncorrectParameterError, match=match) as exception_info:
+    with pytest.raises(IncorrectParameterError, match=match):
         universum.run(settings)
 
 
