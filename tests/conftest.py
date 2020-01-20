@@ -117,7 +117,7 @@ def detect_fails(capsys, request):
     yield capsys
 
     out, err = capsys.readouterr()
-    assert not err, "Stderr detected!"
+    assert not err, "Error detected: {}".format(err)
     for text in ["Traceback", "Exception"]:
         assert text not in out, "'{}' detected in stdout!".format(text)
 
