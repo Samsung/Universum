@@ -4,16 +4,16 @@
 from __future__ import absolute_import
 import os
 import pytest
+from six.moves import zip
 
 import universum
 from _universum.lib.gravity import construct_component
 from _universum.modules.vcs import perforce_vcs
 from .perforce_utils import P4Environment
 from . import utils
-from six.moves import zip
 
 
-class DiffParameters(object):
+class DiffParameters:
     def __init__(self, perforce_workspace):
         self.perforce_workspace = perforce_workspace
 

@@ -31,7 +31,7 @@ def create_settings(test_type, vcs_type):
         settings.TeamcityServer.user_id = "TeamCityUser"
         settings.TeamcityServer.passwd = "TeamCityPassword"
 
-    if vcs_type == "git" or vcs_type == "gerrit" or vcs_type == "github":
+    if vcs_type in ("git", "gerrit", "github",):
         settings.GitVcs.repo = "ssh://user@127.0.0.1"
         # the refspec is crafted to satisfy requirements of our gerrit module, and others don't care
         settings.GitVcs.refspec = "refs/changes/00/000000/0"
@@ -58,7 +58,7 @@ def create_settings(test_type, vcs_type):
             settings.Swarm.change = "456"
             settings.Swarm.server_url = "https://swarm"
 
-        if test_type == "main" or test_type == "poll":
+        if test_type in ("main", "poll",):
             settings.PerforceWithMappings.project_depot_path = "//depot"
 
         if test_type == "submit":
@@ -76,10 +76,8 @@ def parametrize_unset(parameter_name="unset"):
 
 
 def assert_incorrect_parameter(settings, match):
-    with pytest.raises(IncorrectParameterError, match=match) as exception_info:
+    with pytest.raises(IncorrectParameterError, match=match):
         universum.run(settings)
-
-    print(exception_info)
 
 
 missing_params = []

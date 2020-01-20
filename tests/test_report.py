@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import
 import pytest
+import six
 
 import universum
 from . import utils
-import six
 
 
 class ReportEnvironment(utils.TestEnvironment):

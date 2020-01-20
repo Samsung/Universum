@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import
 import pytest
+from six.moves import range
 
 import universum
 from .git_utils import GitEnvironment
-from six.moves import range
 
 
 @pytest.fixture()

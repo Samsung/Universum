@@ -191,9 +191,9 @@ class StructureHandler(Module):
                 else:
                     self.configs_current_number += 1
                     numbering = " [ {:>{}}/{} ] ".format(
-                        str(self.configs_current_number),
+                        self.configs_current_number,
                         step_num_len,
-                        str(self.configs_total_count)
+                        self.configs_total_count
                     )
                     step_name = numbering + item.get("name", ' ')
                     if skipped:
