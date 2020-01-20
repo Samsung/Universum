@@ -12,7 +12,7 @@ import sh
 from analyzers import utils
 
 
-class PylintAnalyzer(object):
+class PylintAnalyzer:
     """
     Pylint runner.
     Specify parameters such as project folders, config file for code report tool.
@@ -62,8 +62,7 @@ class PylintAnalyzer(object):
             if e.stderr and not e.stdout:
                 sys.stderr.write(e.stderr)
                 return 2
-            elif e.stdout:
-                issues = e.stdout
+            issues = e.stdout
 
         try:
             issues_loads = []

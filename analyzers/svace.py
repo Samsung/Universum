@@ -7,13 +7,13 @@ import os
 import sys
 
 import sh
+import six
 from lxml import etree
 
 from . import utils
-import six
 
 
-class SvaceAnalyzer(object):
+class SvaceAnalyzer:
 
     @staticmethod
     def define_arguments():
