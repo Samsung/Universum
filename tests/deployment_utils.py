@@ -9,14 +9,13 @@ import os
 import py
 from requests.exceptions import ReadTimeout
 
-from . import docker
-
+import docker
 import pytest
-from . import utils
 import six
+from . import utils
 
 
-class ExecutionEnvironment(object):
+class ExecutionEnvironment:
     def __init__(self, request, work_dir, force_clean=False):
         self.request = request
         self._force_clean = force_clean
@@ -161,7 +160,7 @@ def local_sources(tmpdir):
     yield utils.Params(root_directory=source_dir, repo_file=local_file)
 
 
-class UniversumRunner(object):
+class UniversumRunner:
     def __init__(self, perforce_workspace, git_client, local_sources, nonci):
         self.perforce = perforce_workspace
         self.git = git_client

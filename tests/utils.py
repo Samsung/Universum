@@ -6,13 +6,13 @@ import os
 import random
 import socket
 import string
+import six
+from six.moves import range
 
 from _universum import submit, poll, main
 from _universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
-import six
-from six.moves import range
 
 __all__ = [
     "Params",
@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class Params(object):
+class Params:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -83,7 +83,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
 
-class TestEnvironment(object):
+class TestEnvironment:
     def __init__(self, temp_dir, test_type):
         self.temp_dir = temp_dir
         self.settings = create_empty_settings(test_type)

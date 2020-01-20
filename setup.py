@@ -39,7 +39,7 @@ setup(
         'universum_svace = analyzers.svace:main',
         'universum_uncrustify = analyzers.uncrustify:main'
     ]},
-    python_requires='>=2.7.6, >=3.8.1',
+    python_requires='>=3.7.5',
     setup_requires=['setuptools'],
     install_requires=[
         'glob2',

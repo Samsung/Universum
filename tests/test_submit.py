@@ -6,11 +6,11 @@ import copy
 import os
 import shutil
 import pytest
+import six
+from six.moves import range
 
 import universum
 from . import git_utils, perforce_utils, utils
-import six
-from six.moves import range
 
 
 def test_error_no_repo(submit_environment, stdout_checker):
@@ -49,7 +49,7 @@ def test_fail_forbidden_branch(p4_submit_environment, branch):
     assert not p4.run_opened("-C", p4_submit_environment.client_name)
 
 
-class SubmitterParameters(object):
+class SubmitterParameters:
     def __init__(self, stdout_checker, environment):
         self.stdout_checker = stdout_checker
         self.submit_settings = environment.settings

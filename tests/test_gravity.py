@@ -5,19 +5,19 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from argparse import ArgumentError
-import mock
+from unittest import mock
 import pytest
+import six
 
 from _universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
 from _universum.lib.gravity import get_dependencies
 import _universum.lib.module_arguments
 import _universum.lib.gravity
-import six
 
 
 @pytest.fixture()
 def mock_module():
-    class MockedModule(object):
+    class MockedModule:
         def __new__(cls, *args, **kwargs):
             return old_module.__new__(cls, *args, **kwargs)
 
@@ -173,7 +173,7 @@ def test_define_arguments_inheritance(mock_module, capsys):
     parser = _universum.lib.module_arguments.ModuleArgumentParser()
     with pytest.raises(ArgumentError) as exception_info:
         define_arguments_recursive(WrongInheritedModule, parser)
-    assert "conflicting option string(s): --parent" in str(exception_info.value)
+    assert "conflicting option string: --parent" in str(exception_info.value)
 
 
 def test_settings_access(mock_module):
@@ -389,7 +389,7 @@ def test_construct_component_multiple_inheritance(mock_module):
             self.base1_option = self.settings.base1_option
             self.base1_param = base1_param
 
-    class Base2(object):
+    class Base2:
         def __init__(self, base2_param, **kwargs):
             super(Base2, self).__init__(**kwargs)
             self.base2_param = base2_param

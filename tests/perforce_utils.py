@@ -2,15 +2,17 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 from __future__ import absolute_import
+
 import time
+import six
+import pytest
+import docker
 
 from P4 import P4, P4Exception
-from . import docker
-import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
-import six
+
 
 p4_user = "p4user"
 p4_password = "abcdefgh123456"

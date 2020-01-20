@@ -6,6 +6,7 @@ from __future__ import print_function
 import atexit
 import signal
 import sys
+import six
 
 from _universum import __version__, __title__
 from _universum.api import Api
@@ -17,7 +18,6 @@ from _universum.lib.ci_exception import SilentAbortException
 from _universum.lib.gravity import define_arguments_recursive, construct_component
 from _universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
 from _universum.lib.utils import Uninterruptible, format_traceback
-import six
 
 
 def define_arguments():

@@ -2,14 +2,14 @@
 # pylint: disable = redefined-outer-name
 
 from __future__ import absolute_import
+from unittest import mock
 import httpretty
 import pytest
-import mock
 
 pytest_plugins = ['tests.perforce_utils', 'tests.git_utils', 'tests.deployment_utils']
 
 
-class FuzzyCallChecker(object):
+class FuzzyCallChecker:
     def __init__(self, mock_object):
         self.mock_object = mock_object
 
@@ -52,7 +52,7 @@ def log_exception_checker(request):
         yield result
 
 
-class HttpChecker(object):
+class HttpChecker:
     @staticmethod
     def assert_request_was_made(query):
         queries = []
@@ -112,16 +112,14 @@ def http_check(request):
     yield HttpChecker()
 
 
-def check_output(xxx_todo_changeme):
-    (out, err) = xxx_todo_changeme
+@pytest.fixture(autouse=True)
+def detect_fails(capsys, request):
+    yield capsys
+
+    out, err = capsys.readouterr()
     assert not err, "Stderr detected!"
     for text in ["Traceback", "Exception"]:
-        assert text not in out, text + " detected in stdout!"
+        assert text not in out, "'{}' detected in stdout!".format(text)
 
-
-# pylint: disable = protected-access
-@pytest.fixture(autouse=True)
-def detect_fails(capsys):
-    yield capsys
-    check_output(capsys.readouterr())
-    check_output(capsys._outerr)
+    if request.node.name == 'test_teardown_fixture_output_verification':
+        assert out == "TearDown fixture output must be handled by 'detect_fails' fixture\n"
