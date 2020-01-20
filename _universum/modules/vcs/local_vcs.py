@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import os
 import shutil
+import six
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
@@ -11,7 +12,6 @@ from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
 from . import base_vcs
-import six
 
 __all__ = [
     "LocalMainVcs"

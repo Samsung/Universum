@@ -5,6 +5,7 @@ from copy import deepcopy
 import glob
 import json
 import os
+import six
 
 from _universum.configuration_support import Variations
 from .output import needs_output
@@ -14,7 +15,6 @@ from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from .structure_handler import needs_structure
-import six
 
 
 @needs_output

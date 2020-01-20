@@ -2,13 +2,15 @@
 
 from __future__ import absolute_import
 import os
-import six.moves.urllib.request, six.moves.urllib.error, six.moves.urllib.parse
+import six.moves.urllib.request
+import six.moves.urllib.error
+import six.moves.urllib.parse
+import six
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
 from ..output import needs_output
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
-import six
 
 __all__ = [
     "JenkinsServerForTrigger",

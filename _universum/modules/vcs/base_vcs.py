@@ -2,12 +2,12 @@
 
 from __future__ import absolute_import
 import shutil
+import six
 
 from ...lib.ci_exception import CiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 from ..project_directory import ProjectDirectory
-import six
 
 __all__ = [
     "BaseDownloadVcs",

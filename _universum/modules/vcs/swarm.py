@@ -2,9 +2,12 @@
 
 from __future__ import absolute_import
 import os
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import six.moves.urllib.request
+import six.moves.urllib.parse
+import six.moves.urllib.error
 import urllib3
 import requests
+import six
 
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Module, Dependency
@@ -12,7 +15,6 @@ from ...lib.module_arguments import IncorrectParameterError
 from ...lib import utils
 from ..reporter import ReportObserver, Reporter
 from ..output import needs_output
-import six
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
 
@@ -57,7 +59,7 @@ class Swarm(ReportObserver, Module):
             the URL of the Swarm server is not specified.
 
             The URL is needed for communicating with swarm code review system:
-            getting review revision, posting comments, voting. Please specify 
+            getting review revision, posting comments, voting. Please specify
             the server URL by using '--swarm-server-url' ('-ssu') command
             line parameter or by setting SWARM_SERVER environment variable.""")
         utils.check_required_option(self.settings, "review_id", """
@@ -67,10 +69,10 @@ class Swarm(ReportObserver, Module):
             getting review revision, posting comments, voting. Please specify the number
             by using '--swarm-review-id' ('-sre') command line parameter or by setting
             REVIEW environment variable.
-            
+
             In order to setup sending of the review number for pre-commit in Swarm,
             please use the '{review}' argument in Automated Tests field of the Project
-            Settings.              
+            Settings.
             """)
         utils.check_required_option(self.settings, "change", """
             the Swarm changelist for unshelving is not specified.
@@ -82,7 +84,7 @@ class Swarm(ReportObserver, Module):
 
             In order to setup sending of the review number for pre-commit in Swarm,
             please use the '{change}' argument in Automated Tests field of the Project
-            Settings.              
+            Settings.
             """)
 
         if " " in self.settings.change or "," in self.settings.change:

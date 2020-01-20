@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import sh
+import six
 
 from .. import configuration_support
 from ..lib import utils
@@ -16,7 +17,6 @@ from . import automation_server, api_support, artifact_collector, reporter, code
 from .output import needs_output
 from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
-import six
 
 __all__ = [
     "Launcher",
@@ -108,7 +108,7 @@ def check_str_match(string, include_substrings, exclude_substrings):
 
     :rtype: bool
     """
-    result = False if include_substrings else True
+    result = not include_substrings
     for substr in include_substrings:
         if substr in string:
             result = True
@@ -162,7 +162,7 @@ def get_match_patterns(filters):
     return include, exclude
 
 
-class Step(object):
+class Step:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
         super(Step, self).__init__()
@@ -183,15 +183,16 @@ class Step(object):
         self._is_background = False
         self._postponed_out = []
 
-    def prepare_command(self):
+    def prepare_command(self): #FIXME: refactor
         try:
             command_name = utils.strip_path_start(self.configuration["command"][0])
+
         except KeyError as e:
-            if e.message == "command":
-                self.out.log("No 'command' found. Nothing to execute")
-                return False
-            else:
+            if not e.message == "command":
                 raise
+
+            self.out.log("No 'command' found. Nothing to execute")
+            return False
         try:
             try:
                 self.cmd = make_command(command_name)
@@ -275,8 +276,8 @@ class Step(object):
                 self.fail_block(text)
                 self.add_tag(self.configuration.get("fail_tag", False))
                 raise StepException()
-            else:
-                self.add_tag(self.configuration.get("pass_tag", False))
+
+            self.add_tag(self.configuration.get("pass_tag", False))
         finally:
             self.handle_stdout()
             if self.file:

@@ -7,11 +7,11 @@ import inspect
 import os
 import sys
 import traceback
+import six
 
 from _universum.lib.ci_exception import CiException
 from .ci_exception import CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
-import six
 
 __all__ = [
     "strip_path_start",
@@ -50,13 +50,12 @@ def parse_path(path, starting_point):
     return os.path.abspath(path)
 
 
-def calculate_file_absolute_path(target_directory, file_basename):
+def calculate_file_absolute_path(target_directory: str, file_basename: str) -> str:
     name = file_basename.replace(" ", "_")
     name = name.replace("/", "\\")
     if name.startswith('_'):
         name = name[1:]
-    name = os.path.join(target_directory, name)
-    return name
+    return os.path.join(target_directory, name)
 
 
 def detect_environment():
@@ -78,15 +77,17 @@ def detect_environment():
 
 
 def create_driver(local_factory, teamcity_factory, jenkins_factory, default=None):
-    if default:
-        env_type = default
-    else:
+    env_type = default
+    if not env_type:
         env_type = detect_environment()
+
     if env_type == "tc":
-        return teamcity_factory()
+        result = teamcity_factory()
     elif env_type == "jenkins":
-        return jenkins_factory()
-    return local_factory()
+        result = jenkins_factory()
+    else:
+        result = local_factory()
+    return result
 
 
 def format_traceback(exc, trace):
@@ -151,7 +152,7 @@ def convert_to_str(line):
     if not isinstance(line, six.text_type):
         return str(line)
 
-    return line.encode("utf8", "replace")
+    return line.decode("utf8", "replace")
 
 
 def unify_argument_list(source_list, separator=',', additional_list=None):
@@ -177,7 +178,7 @@ def unify_argument_list(source_list, separator=',', additional_list=None):
     return resulting_list
 
 
-class Uninterruptible(object):
+class Uninterruptible:
     def __init__(self, error_logger):
         self.return_code = 0
         self.error_logger = error_logger

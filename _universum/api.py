@@ -3,11 +3,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import sys
+import six
 
 from .modules.api_support import ApiSupport
 from .lib.gravity import Module, Dependency
 from .lib.utils import format_traceback
-import six
 
 __all__ = ["Api"]
 
@@ -29,7 +29,7 @@ class Api(Module):
             sys.stderr.write(six.text_type(error) + u"\n")
             sys.exit(2)
 
-        class MinimalOut(object):
+        class MinimalOut:
             @staticmethod
             def log(line):
                 pass

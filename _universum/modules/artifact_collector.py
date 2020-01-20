@@ -9,6 +9,7 @@ import shutil
 import zipfile
 
 import glob2
+import six
 
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
@@ -19,7 +20,6 @@ from .output import needs_output
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import needs_structure
-import six
 
 __all__ = [
     "ArtifactCollector"
@@ -99,18 +99,16 @@ class ArtifactCollector(ProjectDirectory):
     def make_file_name(self, name):
         return utils.calculate_file_absolute_path(self.artifact_dir, name)
 
-    def create_text_file(self, name):
+    def create_text_file(self, name: str):
         try:
             file_name = self.make_file_name(name)
 
-            # File system interaction modules only work with encoded unicode strings
             if isinstance(file_name, six.text_type):
-                encoded_name = file_name.encode("utf-8")
-            else:
-                encoded_name = str(file_name)
+                file_name = str(file_name)
+            assert str == type(file_name)
 
             if file_name not in self.file_list:
-                if os.path.exists(encoded_name):
+                if os.path.exists(file_name):
                     text = "File '" + os.path.basename(file_name) + "' already exists in artifact directory." + \
                            "\nPossible reason of this error: previous build artifacts are not cleaned"
                     raise CriticalCiException(text)
@@ -118,7 +116,8 @@ class ArtifactCollector(ProjectDirectory):
             self.file_list.add(file_name)
             file_path = self.automation_server.artifact_path(self.artifact_dir, os.path.basename(file_name))
             self.out.log("Adding file " + file_path + " to artifacts...")
-            return codecs.open(encoded_name, "a", encoding="utf-8")
+            return codecs.open(file_name, "a", encoding="utf-8")
+
         except IOError as e:
             raise CiException("The following error occurred while working with file: " + six.text_type(e))
 
@@ -139,7 +138,7 @@ class ArtifactCollector(ProjectDirectory):
                         try:
                             os.remove(matching_path)
                         except OSError as e:
-                            if "Is a directory" not in e:
+                            if "Is a directory" not in e.strerror:
                                 raise
                             shutil.rmtree(matching_path)
                 elif not ignore_already_existing:
@@ -191,14 +190,13 @@ class ArtifactCollector(ProjectDirectory):
         self.out.log("Processing '" + path + "'")
         matches = glob2.glob(path)
         if not matches:
-            if is_report:
-                self.out.log("No artifacts found.")
-                return
-            else:
+            if not is_report:
                 text = "No artifacts found!" + "\nPossible reasons of this error:\n" + \
                        " * Artifact was not created while building the project due to some internal errors\n" + \
                        " * Artifact path was not specified correctly in 'configs.py'"
                 raise CiException(text)
+
+            self.out.log("No artifacts found.")
 
         for matching_path in matches:
             artifact_name = os.path.basename(matching_path)

@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import glob
 import os
+import six
 
 from .base_vcs import BaseVcs, BaseDownloadVcs
 from ..output import needs_output
@@ -11,7 +12,6 @@ from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block, convert_to_str
-import six
 
 __all__ = [
     "GitMainVcs",
@@ -60,7 +60,7 @@ class GitVcs(BaseVcs):
             the git repo is not specified.
 
             The repo defines the location of project source codes.
-            Please specify the git repo by using '--git-repo' ('-gr') 
+            Please specify the git repo by using '--git-repo' ('-gr')
             command line parameter or by setting GIT_REPO environment
             variable.""")
 

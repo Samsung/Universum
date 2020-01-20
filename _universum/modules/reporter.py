@@ -2,13 +2,13 @@
 
 from __future__ import absolute_import
 from collections import defaultdict
+import six
 
 from ..lib.gravity import Module, Dependency
 from ..lib.utils import make_block
 from . import automation_server
 from .output import needs_output
 from .structure_handler import needs_structure
-import six
 
 __all__ = [
     "ReportObserver",
@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class ReportObserver(object):
+class ReportObserver:
     """
     Abstract base class for reporting modules
     """
