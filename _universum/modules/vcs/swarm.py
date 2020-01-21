@@ -199,9 +199,9 @@ class Swarm(ReportObserver, Module):
                              "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         except IOError as e:
             if e.args[0] == "http error":
-                text = "HTTP error " + six.text_type(e.args[1]) + ": " + e.args[2]
+                text = "HTTP error {}: {}".format(e.args[1], e.args[2])
             else:
-                text = six.text_type(e)
+                text = str(e)
             text += "\nPossible reasons of this error:" + \
                     "\n * Network errors" + \
                     "\n * Swarm parameters ('PASS'/'FAIL' links) retrieved or parsed incorrectly"

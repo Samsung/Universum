@@ -109,9 +109,9 @@ def catch_exception(exception_name, ignore_if=None):
                 if not type(e).__name__ == exception_name:
                     raise
                 if ignore_if is not None:
-                    if ignore_if in six.text_type(e):
+                    if ignore_if in str(e):
                         return result
-                raise CriticalCiException(six.text_type(e))
+                raise CriticalCiException(six.text_type(e)) #TODO: try to remove 'six.text_type' usage
         return function_to_run
     return decorated_function
 

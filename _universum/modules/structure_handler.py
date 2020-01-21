@@ -109,7 +109,7 @@ class StructureHandler(Module):
         self.out.report_skipped(new_skipped_block.number + " " + name +
                                 " skipped because of critical step failure")
 
-    def fail_current_block(self, error=None):
+    def fail_current_block(self, error=None): #TODO: why don't used empty str by default?
         block = self.get_current_block()
         self.fail_block(block, error)
 

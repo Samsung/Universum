@@ -119,7 +119,7 @@ class ArtifactCollector(ProjectDirectory):
             return codecs.open(file_name, "a", encoding="utf-8")
 
         except IOError as e:
-            raise CiException("The following error occurred while working with file: " + six.text_type(e))
+            raise CiException("The following error occurred while working with file: {}".format(e))
 
     def preprocess_artifact_list(self, artifact_list, ignore_already_existing=False):
         """
@@ -136,7 +136,7 @@ class ArtifactCollector(ProjectDirectory):
                 if item["clean"]:
                     for matching_path in matches:
                         try:
-                            os.remove(matching_path)
+                            os.remove(matching_path) #TODO: use shutil by default
                         except OSError as e:
                             if "Is a directory" not in e.strerror:
                                 raise

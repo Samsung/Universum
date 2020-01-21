@@ -50,19 +50,16 @@ class PylintAnalyzer:
         for pattern in self.settings.file_list:
             files.extend(glob.glob(pattern))
         try:
-            if self.settings.version == "3":
-                cmd = sh.Command("python3")
-            else:
-                cmd = sh.Command("python2")
+            cmd = sh.Command("python{}".format(self.settings.version))
             issues = cmd("-m", "pylint", "-f", "json", "--rcfile=" + self.settings.rcfile, *files).stdout
         except sh.CommandNotFound as e:
             sys.stderr.write("No such file or command as '" + str(e) + "'. "
                              "Make sure, that required code report tool is installed.\n")
-        except Exception as e:
+        except Exception as e: #FIXME: handle by this way is possible with 'subprocess.run' usage instead of 'sh'
             if e.stderr and not e.stdout:
-                sys.stderr.write(e.stderr)
+                sys.stderr.write(str(e))
                 return 2
-            issues = e.stdout
+            issues = str(e)
 
         try:
             issues_loads = []
@@ -78,7 +75,7 @@ class PylintAnalyzer:
             if issues_loads:
                 return 1
         except ValueError as e:
-            sys.stderr.write(e.message)
+            sys.stderr.write(str(e))
             sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
             sys.stderr.write(issues)
             return 2

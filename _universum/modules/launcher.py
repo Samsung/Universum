@@ -28,8 +28,7 @@ def make_command(name):
     try:
         return sh.Command(name)
     except sh.CommandNotFound:
-        text = "No such file or command as '" + name + "'"
-        raise CiException(text)
+        raise CiException("No such file or command as '{}'".format(name))
 
 
 def check_if_env_set(configuration):
@@ -184,11 +183,11 @@ class Step:
         self._postponed_out = []
 
     def prepare_command(self): #FIXME: refactor
-        try:
+        try: #TODO: move try-catch block in a separate method
             command_name = utils.strip_path_start(self.configuration["command"][0])
 
         except KeyError as e:
-            if not e.message == "command":
+            if str(e) != "command":
                 raise
 
             self.out.log("No 'command' found. Nothing to execute")
@@ -202,7 +201,7 @@ class Step:
                 command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
                 self.cmd = make_command(command_name)
         except CiException as ex:
-            self.fail_block(six.text_type(ex))
+            self.fail_block(str(ex))
             raise StepException()
         return True
 
@@ -262,11 +261,11 @@ class Step:
                 self.process.wait()
             except Exception as e:
                 if isinstance(e, sh.ErrorReturnCode):
-                    text = "Module sh got exit code " + six.text_type(e.exit_code) + "\n"
+                    text = "Module sh got exit code {}\n".format(e.exit_code)
                     if e.stderr:
                         text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
                 else:
-                    text = six.text_type(e) + "\n"
+                    text = "{}\n".format(e)
 
             self._handle_postponed_out()
             if text:
@@ -375,15 +374,16 @@ class Launcher(ProjectDirectory):
                                                                                  self.exclude_patterns))
 
         except IOError as e:
-            text = six.text_type(e) + "\nPossible reasons of this error:\n" + \
-                   " * There is no file named 'configs.py' in project repository\n" + \
-                   " * Config path, passed to the script ('" + self.settings.config_path + \
-                   "'), does not lead to actual 'configs.py' location\n" + \
-                   " * Some problems occurred while downloading or copying the repository"
+            text = "{}\n".format(e)
+            text += "Possible reasons of this error:\n"
+            text += " * There is no file named 'configs.py' in project repository\n"
+            text += " * Config path, passed to the script ('{}'), does not lead to actual 'configs.py' location\n" + \
+                    "".format(self.settings.config_path)
+            text +=" * Some problems occurred while downloading or copying the repository"
             raise CriticalCiException(text)
         except KeyError as e:
-            text = "KeyError: " + six.text_type(e) + \
-                   "\nPossible reason of this error: variable 'configs' is not defined in 'configs.py'"
+            text = "KeyError: {}\n".format(e)
+            text += "Possible reason of this error: variable 'configs' is not defined in 'configs.py'"
             raise CriticalCiException(text)
         except Exception as e:
             ex_traceback = sys.exc_info()[2]

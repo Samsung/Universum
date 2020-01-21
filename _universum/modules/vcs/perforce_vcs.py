@@ -412,10 +412,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             try:
                 result = self.p4.run_sync("-f", line)
             except P4Exception as e:
-                if "not in client view" not in six.text_type(e):
-                    raise CriticalCiException(six.text_type(e))
+                if "not in client view" not in str(e):
+                    raise CriticalCiException(str(e))
 
-                text = six.text_type(e) + "Possible reasons of this error:"
+                text = "{}\nPossible reasons of this error:".format(e)
                 text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
                 text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
                 raise CriticalCiException(text)
@@ -427,7 +427,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         try:
             result = self.p4.run_unshelve(*args, **kwargs)
         except P4Exception as e:
-            if "already committed" in six.text_type(e) and self.swarm and len(self.shelve_cls) == 1:
+            if "already committed" in str(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None

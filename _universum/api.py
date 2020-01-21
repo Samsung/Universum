@@ -26,7 +26,7 @@ class Api(Module):
         try:
             self.api_support = self.api_support_factory(api_mode=True)
         except EnvironmentError as error:
-            sys.stderr.write(six.text_type(error) + u"\n")
+            sys.stderr.write("{}\n".format(error))
             sys.exit(2)
 
         class MinimalOut:

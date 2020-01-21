@@ -37,7 +37,8 @@ class BaseVcs(ProjectDirectory):
         try:
             shutil.rmtree(self.settings.project_root)
         except OSError as e:
-            text = six.text_type(e) + "\nPossible reasons of this error:" + \
+            text = "{}\n".format(e)
+            text += "\nPossible reasons of this error:" + \
                    "\n * Sources were not copied due to runtime errors" + \
                    "\n * Copied sources are already deleted while executing generated scenario" + \
                    "\n * Source vcs permissions do not allow deleting"

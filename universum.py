@@ -82,7 +82,7 @@ def main(args=None):
     except IncorrectParameterError as e:
         settings.command_parser.error(e)
     except ImportError as e:
-        print(six.text_type(e))
+        print(e)
         return 2
 
 
