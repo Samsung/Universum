@@ -71,8 +71,7 @@ def construct_component(klass, main_settings, *args, **kwargs):
 
 
 class Dependency:
-    def __init__(self, klass, *args, **kwargs):
-        super(Dependency, self).__init__(*args, **kwargs)
+    def __init__(self, klass):
         self.klass = klass
 
     def __get__(self, instance, owner):
