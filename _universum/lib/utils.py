@@ -31,9 +31,6 @@ __all__ = [
     "check_request_result"
 ]
 
-# For proper unicode symbols processing
-sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
-
 
 def strip_path_start(line):
     if line.startswith("./"):
