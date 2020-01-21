@@ -80,7 +80,7 @@ def main(args=None):
     try:
         return run(settings)
     except IncorrectParameterError as e:
-        settings.command_parser.error(e.message)
+        settings.command_parser.error(e)
     except ImportError as e:
         print(six.text_type(e))
         return 2

@@ -107,7 +107,7 @@ class PerforceVcs(base_vcs.BaseVcs):
             self.p4.disconnect()
             if not w:
                 return
-            if "Not connected" in w[0].message.message:
+            if "Not connected" in str(w[0].message):
                 text = "Perforce client is not connected on disconnect. Something must have gone wrong"
                 self.structure.fail_current_block(text)
             else:
