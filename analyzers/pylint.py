@@ -50,7 +50,7 @@ class PylintAnalyzer:
         for pattern in self.settings.file_list:
             files.extend(glob.glob(pattern))
         try:
-            cmd = sh.Command("python{}".format(self.settings.version))
+            cmd = sh.Command(f"python{self.settings.version}")
             issues = cmd("-m", "pylint", "-f", "json", "--rcfile=" + self.settings.rcfile, *files).stdout
         except sh.CommandNotFound as e:
             sys.stderr.write("No such file or command as '" + str(e) + "'. "

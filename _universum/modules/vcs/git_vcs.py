@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 import glob
 import os
-import six
 
 from .base_vcs import BaseVcs, BaseDownloadVcs
 from ..output import needs_output
@@ -283,7 +282,7 @@ class GitSubmitVcs(GitVcs):
             return 0
 
         self.out.log(self.repo.git.commit(m=description))
-        commit_id = six.text_type(self.repo.head.commit)
+        commit_id = str(self.repo.head.commit)
         self.out.log("Full commit ID is " + commit_id)
         return commit_id
 

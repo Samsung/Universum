@@ -11,7 +11,6 @@ from requests.exceptions import ReadTimeout
 
 import docker
 import pytest
-import six
 from . import utils
 
 
@@ -187,7 +186,7 @@ class UniversumRunner:
         self.environment.add_environment_variables([
             "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
         ])
-        self.environment.add_bind_dirs([six.text_type(self.local.root_directory)])
+        self.environment.add_bind_dirs([str(self.local.root_directory)])
 
         if self.environment.start_container():
             self.environment.install_python_module(self.working_dir)
@@ -201,7 +200,7 @@ class UniversumRunner:
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd '{}'".format(six.text_type(self.local.root_directory))
+            return " -vt none --no-diff -fsd '{}'".format(str(self.local.root_directory))
 
         if vcs_type == "git":
             return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
@@ -217,7 +216,6 @@ class UniversumRunner:
         file_path = os.path.join(self.working_dir, "temp_config.py")
         with open(file_path, 'w+') as f:
             f.write(config)
-            f.close()
         return file_path
 
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",

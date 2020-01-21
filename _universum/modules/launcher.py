@@ -5,7 +5,6 @@ import os
 import re
 import sys
 import sh
-import six
 
 from .. import configuration_support
 from ..lib import utils
@@ -377,9 +376,9 @@ class Launcher(ProjectDirectory):
             text = "{}\n".format(e)
             text += "Possible reasons of this error:\n"
             text += " * There is no file named 'configs.py' in project repository\n"
-            text += " * Config path, passed to the script ('{}'), does not lead to actual 'configs.py' location\n" + \
-                    "".format(self.settings.config_path)
-            text +=" * Some problems occurred while downloading or copying the repository"
+            text += f" * Config path, passed to the script ('{self.settings.config_path}')," + \
+                    " does not lead to actual 'configs.py' location\n"
+            text += " * Some problems occurred while downloading or copying the repository"
             raise CriticalCiException(text)
         except KeyError as e:
             text = "KeyError: {}\n".format(e)

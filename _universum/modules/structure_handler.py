@@ -2,7 +2,6 @@
 
 from __future__ import absolute_import
 import copy
-import six
 
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException

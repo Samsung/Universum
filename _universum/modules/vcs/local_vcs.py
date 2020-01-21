@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 import os
 import shutil
-import six
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
@@ -51,9 +50,9 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs):
             self.append_repo_status("Got sources from: " + self.source_dir + "\n")
         except OSError as e:
             text = "{}\nPossible reasons of this error:".format(e)
-            text += "\n * Sources path, passed to the script ('{}')," + \
-                    " does not lead to actual sources or was processed incorrectly".format(self.settings.source_dir)
-            text += "\n * Directory '{}' already exists in working dir (e.g. due to previous builds)" + \
-                    "".format(os.path.basename(self.settings.project_root))
+            text += "\n * Sources path, passed to the script ('{}'),".format(self.settings.source_dir) + \
+                    " does not lead to actual sources or was processed incorrectly"
+            text += "\n * Directory '{}' already exists in working dir (e.g. due to previous builds)".format(
+                os.path.basename(self.settings.project_root))
             text += "\n * File reading permissions troubles"
             raise CriticalCiException(text)

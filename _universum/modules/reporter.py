@@ -2,7 +2,6 @@
 
 from __future__ import absolute_import
 from collections import defaultdict
-import six
 
 from ..lib.gravity import Module, Dependency
 from ..lib.utils import make_block
@@ -146,11 +145,11 @@ class Reporter(Module):
 
     def _report_steps_recursively(self, block, text, indent):
         if not self.settings.only_fails:
-            text += indent + six.text_type(block) + '\n'
-            self.out.report_step(indent + six.text_type(block), block.status)
+            text += indent + str(block) + '\n'
+            self.out.report_step(indent + str(block), block.status)
         elif not block.is_successful():
-            text += six.text_type(block) + '\n'
-            self.out.report_step(six.text_type(block), block.status)
+            text += str(block) + '\n'
+            self.out.report_step(str(block), block.status)
 
         is_successful = block.is_successful()
         for substep in block.children:

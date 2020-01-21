@@ -7,7 +7,6 @@ import os
 import sys
 
 import sh
-import six
 from lxml import etree
 
 from . import utils

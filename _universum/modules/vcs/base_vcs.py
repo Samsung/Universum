@@ -2,7 +2,6 @@
 
 from __future__ import absolute_import
 import shutil
-import six
 
 from ...lib.ci_exception import CiException
 from ...lib.module_arguments import IncorrectParameterError
