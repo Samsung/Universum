@@ -1,12 +1,10 @@
-#!/usr/bin/env python2
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3
 
 from __future__ import absolute_import
 from __future__ import print_function
 import atexit
 import signal
 import sys
-import six
 
 from _universum import __version__, __title__
 from _universum.api import Api
