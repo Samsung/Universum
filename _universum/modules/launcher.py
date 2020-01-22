@@ -6,6 +6,8 @@ import re
 import sys
 import sh
 
+from inspect import cleandoc
+
 from .. import configuration_support
 from ..lib import utils
 from ..lib.ci_exception import CiException, CriticalCiException, StepException
@@ -27,7 +29,7 @@ def make_command(name):
     try:
         return sh.Command(name)
     except sh.CommandNotFound:
-        raise CiException("No such file or command as '{}'".format(name))
+        raise CiException(f"No such file or command as '{name}'")
 
 
 def check_if_env_set(configuration):
@@ -260,11 +262,11 @@ class Step:
                 self.process.wait()
             except Exception as e:
                 if isinstance(e, sh.ErrorReturnCode):
-                    text = "Module sh got exit code {}\n".format(e.exit_code)
+                    text = f"Module sh got exit code {e.exit_code}\n"
                     if e.stderr:
                         text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
                 else:
-                    text = "{}\n".format(e)
+                    text = str(e) + '\n'
 
             self._handle_postponed_out()
             if text:
@@ -373,15 +375,16 @@ class Launcher(ProjectDirectory):
                                                                                  self.exclude_patterns))
 
         except IOError as e:
-            text = "{}\n".format(e)
-            text += "Possible reasons of this error:\n"
-            text += " * There is no file named 'configs.py' in project repository\n"
-            text += f" * Config path, passed to the script ('{self.settings.config_path}')," + \
-                    " does not lead to actual 'configs.py' location\n"
-            text += " * Some problems occurred while downloading or copying the repository"
-            raise CriticalCiException(text)
+            text = f"""{e}\n
+                Possible reasons of this error:\n
+                * There is no file named 'configs.py' in project repository\n
+                * Config path, passed to the script ('{self.settings.config_path}'), does not lead to
+                 actual 'configs.py' location\n
+                * Some problems occurred while downloading or copying the repository
+                """
+            raise CriticalCiException(cleandoc(text))
         except KeyError as e:
-            text = "KeyError: {}\n".format(e)
+            text = "KeyError: " + str(e) + '\n'
             text += "Possible reason of this error: variable 'configs' is not defined in 'configs.py'"
             raise CriticalCiException(text)
         except Exception as e:

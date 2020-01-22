@@ -102,11 +102,6 @@ class ArtifactCollector(ProjectDirectory):
     def create_text_file(self, name: str):
         try:
             file_name = self.make_file_name(name)
-
-            if isinstance(file_name, six.text_type):
-                file_name = str(file_name)
-            assert str == type(file_name)
-
             if file_name not in self.file_list:
                 if os.path.exists(file_name):
                     text = "File '" + os.path.basename(file_name) + "' already exists in artifact directory." + \
@@ -119,7 +114,7 @@ class ArtifactCollector(ProjectDirectory):
             return codecs.open(file_name, "a", encoding="utf-8")
 
         except IOError as e:
-            raise CiException("The following error occurred while working with file: {}".format(e))
+            raise CiException("The following error occurred while working with file: " + str(e))
 
     def preprocess_artifact_list(self, artifact_list, ignore_already_existing=False):
         """

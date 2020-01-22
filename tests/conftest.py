@@ -117,9 +117,9 @@ def detect_fails(capsys, request):
     yield capsys
 
     out, err = capsys.readouterr()
-    assert not err, "Error detected: {}".format(err)
+    assert not err, f"Error detected: {err}"
     for text in ["Traceback", "Exception"]:
-        assert text not in out, "'{}' detected in stdout!".format(text)
+        assert text not in out, f"'{text}' detected in stdout!"
 
     if request.node.name == 'test_teardown_fixture_output_verification':
         assert out == "TearDown fixture output must be handled by 'detect_fails' fixture\n"

@@ -415,13 +415,13 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 if "not in client view" not in str(e):
                     raise CriticalCiException(str(e))
 
-                text = "{}\nPossible reasons of this error:".format(e)
+                text = f"{e}\nPossible reasons of this error:"
                 text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
                 text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
                 raise CriticalCiException(text)
 
-            self.append_repo_status("    " + line + "\n")
-            self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
+            self.append_repo_status(f"    {line}\n")
+            self.out.log(f"Downloaded {result[0]['totalFileCount']} files.")
 
     def p4unshelve(self, *args, **kwargs):
         try:

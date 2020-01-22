@@ -43,9 +43,9 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
         try:
             six.moves.urllib.request.urlopen(processed_url)
         except six.moves.urllib.error.URLError as url_error:
-            raise CriticalCiException("Error opening URL, error message {}".format(url_error.reason))
+            raise CriticalCiException(f"Error opening URL, error message {url_error.reason}")
         except ValueError as value_error:
-            raise CriticalCiException("Error opening URL, error message {}".format(value_error))
+            raise CriticalCiException(f"Error opening URL, error message {value_error}")
 
         return True
 

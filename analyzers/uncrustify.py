@@ -186,7 +186,7 @@ class UncrustifyAnalyzer:
             cmd = sh.Command("uncrustify")
             cmd("-c", self.settings.cfg_file, "--prefix", self.settings.output_directory, files)
         except sh.ErrorReturnCode as e:
-            sys.stderr.write("{}\n".format(e))
+            sys.stderr.write(str(e) + '\n')
 
         issues_loads = []
         for file_name in files:

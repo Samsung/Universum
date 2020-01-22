@@ -199,7 +199,7 @@ class Swarm(ReportObserver, Module):
                              "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         except IOError as e:
             if e.args[0] == "http error":
-                text = "HTTP error {}: {}".format(e.args[1], e.args[2])
+                text = f"HTTP error {e.args[1]}: {e.args[2]}" #TODO: test this case
             else:
                 text = str(e)
             text += "\nPossible reasons of this error:" + \

@@ -41,7 +41,7 @@ class Output(Module):
                                           jenkins_factory=self.terminal_driver_factory,
                                           default=self.settings.type)
 
-    def log(self, line: str):
+    def log(self, line):
         self.driver.log(line)
 
     def log_external_command(self, command):

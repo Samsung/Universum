@@ -47,7 +47,7 @@ def parse_path(path, starting_point):
     return os.path.abspath(path)
 
 
-def calculate_file_absolute_path(target_directory: str, file_basename: str) -> str:
+def calculate_file_absolute_path(target_directory, file_basename):
     name = file_basename.replace(" ", "_")
     name = name.replace("/", "\\")
     if name.startswith('_'):
@@ -144,12 +144,10 @@ def trim_and_convert_to_unicode(line):
 
 
 def convert_to_str(line):
-    if isinstance(line, str):
-        return line
-    if not isinstance(line, six.text_type):
-        return str(line)
+    if isinstance(line, bytes):
+        return line.decode("utf8", "replace")
+    return str(line)
 
-    return line.decode("utf8", "replace")
 
 
 def unify_argument_list(source_list, separator=',', additional_list=None):
