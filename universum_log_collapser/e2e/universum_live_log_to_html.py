@@ -9,10 +9,7 @@ def run_universum():
     os.environ["PYTHONUNBUFFERED"] = "1"
     cmd = """universum --clean-build --vcs-type=none --server-type=local --out-type=term 
         --launcher-output=console --file-source-dir=. --launcher-config-path=./universum_config/configs.py"""
-    popen = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert popen.wait() == 0, popen.stderr.read().decode()
-    stdout = popen.stdout.read().decode()
-    assert stdout
+    stdout = launch_process(*cmd.split())
     return re.sub("\\[.+?m", "", stdout)
 
 
@@ -21,8 +18,11 @@ def run_plugin_cli(log):
     for jar in os.listdir(os.path.join(os.getcwd(), "jar")):
         java_cmd += "./jar/" + jar + ":"
     java_cmd += " io.jenkins.plugins.universum_log_collapser.Main"
+    return launch_process(*java_cmd.split(), log)
 
-    popen = subprocess.Popen([*java_cmd.split(), log], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+def launch_process(*args):
+    popen = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert popen.wait() == 0, popen.stderr.read().decode()
     stdout = popen.stdout.read().decode()
     assert stdout
