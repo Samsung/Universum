@@ -73,18 +73,15 @@ def detect_environment():
     return "terminal"
 
 
-def create_driver(local_factory, teamcity_factory, jenkins_factory, default=None):
-    env_type = default
+def create_driver(local_factory, teamcity_factory, jenkins_factory, env_type=""):
     if not env_type:
         env_type = detect_environment()
 
     if env_type == "tc":
-        result = teamcity_factory()
-    elif env_type == "jenkins":
-        result = jenkins_factory()
-    else:
-        result = local_factory()
-    return result
+        return teamcity_factory()
+    if env_type == "jenkins":
+        return jenkins_factory()
+    return local_factory()
 
 
 def format_traceback(exc, trace):
