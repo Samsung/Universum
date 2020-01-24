@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 from __future__ import absolute_import
-import codecs
 import imp
 import inspect
 import os
@@ -108,7 +107,7 @@ def catch_exception(exception_name, ignore_if=None):
                 if ignore_if is not None:
                     if ignore_if in str(e):
                         return result
-                raise CriticalCiException(six.text_type(e)) #TODO: try to remove 'six.text_type' usage
+                raise CriticalCiException(str(e))
         return function_to_run
     return decorated_function
 

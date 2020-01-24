@@ -48,7 +48,7 @@ class GerritVcs(git_vcs.GitVcs):
         try:
             return self.ssh(line, _in=stdin, _out=stdout)
         except sh.ErrorReturnCode as e:
-            text = "Got exit code {} while executing the following command:\n{}".format(e.exit_code, e.full_cmd)
+            text = f"Got exit code {e.exit_code} while executing the following command:\n{e.full_cmd}"
             if e.stderr:
                 text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
             raise CiException(text)

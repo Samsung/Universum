@@ -99,7 +99,7 @@ class ArtifactCollector(ProjectDirectory):
     def make_file_name(self, name):
         return utils.calculate_file_absolute_path(self.artifact_dir, name)
 
-    def create_text_file(self, name: str):
+    def create_text_file(self, name):
         try:
             file_name = self.make_file_name(name)
             if file_name not in self.file_list:
