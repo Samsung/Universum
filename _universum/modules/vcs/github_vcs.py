@@ -4,12 +4,12 @@ from __future__ import absolute_import
 import datetime
 import six.moves.urllib.parse
 import requests
+import six
 
 from ...lib.gravity import Dependency
 from ...lib import utils
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
-import six
 
 __all__ = [
     "GithubMainVcs"
@@ -50,7 +50,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     Please specify the checkout id by using '--git-checkout-id' ('-gco')
                     command line parameter or by setting GIT_CHECKOUT_ID environment variable.
 
-                    In CI builds commit ID is usually extracted from webhook and handled automatically.  
+                    In CI builds commit ID is usually extracted from webhook and handled automatically.
                 """)
         utils.check_required_option(self.settings, "token", """
                     github api token is not specified.

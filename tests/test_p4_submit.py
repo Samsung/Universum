@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import
 import pytest
-import six
 
 from . import perforce_utils, utils
 
@@ -22,7 +21,7 @@ def test_fail_changing_non_checked_out_file(p4_submit_environment):
         with open(str(target_file), "w") as tmpfile:
             tmpfile.write(text + "\n")
 
-    assert "Permission denied" in six.text_type(excinfo.value)
+    assert "Permission denied" in str(excinfo.value)
 
 
 def test_success_changing_checked_out_file(p4_submit_environment):

@@ -9,9 +9,9 @@ import os
 
 import re
 import sh
+from six.moves import zip
 
 from . import utils
-from six.moves import zip
 
 # The maximum number of lines to write separate comments for
 # If exceeded, summarized comment will be provided instead
@@ -75,7 +75,7 @@ def get_mismatching_block(first_match, second_match, src_lines, fixed_lines):
     return block
 
 
-class UncrustifyAnalyzer(object):
+class UncrustifyAnalyzer:
     """
     Uncrustify runner.
     Specify parameters such as file list, config file for code report tool.
@@ -186,7 +186,7 @@ class UncrustifyAnalyzer(object):
             cmd = sh.Command("uncrustify")
             cmd("-c", self.settings.cfg_file, "--prefix", self.settings.output_directory, files)
         except sh.ErrorReturnCode as e:
-            sys.stderr.write(str(e)+"\n")
+            sys.stderr.write(str(e) + '\n')
 
         issues_loads = []
         for file_name in files:

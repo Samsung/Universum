@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import json
 import six.moves.urllib.parse
 import sh
+import six
 
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Dependency
@@ -11,7 +12,6 @@ from ...lib.module_arguments import IncorrectParameterError
 from ...lib import utils
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
-import six
 
 __all__ = [
     "GerritMainVcs",
@@ -48,8 +48,7 @@ class GerritVcs(git_vcs.GitVcs):
         try:
             return self.ssh(line, _in=stdin, _out=stdout)
         except sh.ErrorReturnCode as e:
-            text = "Got exit code " + six.text_type(e.exit_code) + \
-                   " while executing the following command:\n" + six.text_type(e.full_cmd)
+            text = f"Got exit code {e.exit_code} while executing the following command:\n{e.full_cmd}"
             if e.stderr:
                 text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
             raise CiException(text)
@@ -63,14 +62,14 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
 
         utils.check_required_option(self.settings, "refspec", """
             git refspec for gerrit is not specified.
-            
+
             For gerrit the git refspec defines the branch to download and the review to
             work with. Please specify the refspec by using '--git-refspec' ('-grs')
             command line parameter or by setting GIT_REFSPEC environment variable.
-            
+
             Usually, it is enough to set refspec to 'refs/changes/<path>'. For example,
             on a TeamCity server it is enough to set GIT_REFSPEC variable to
-            %teamcity.build.branch% for the entire project.  
+            %teamcity.build.branch% for the entire project.
         """)
 
         refspec = self.settings.refspec

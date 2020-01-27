@@ -7,7 +7,6 @@ import sys
 from .modules.api_support import ApiSupport
 from .lib.gravity import Module, Dependency
 from .lib.utils import format_traceback
-import six
 
 __all__ = ["Api"]
 
@@ -26,10 +25,10 @@ class Api(Module):
         try:
             self.api_support = self.api_support_factory(api_mode=True)
         except EnvironmentError as error:
-            sys.stderr.write(six.text_type(error) + u"\n")
+            sys.stderr.write(str(error) + '\n')
             sys.exit(2)
 
-        class MinimalOut(object):
+        class MinimalOut:
             @staticmethod
             def log(line):
                 pass

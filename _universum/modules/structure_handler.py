@@ -7,7 +7,6 @@ from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
 from .output import needs_output
-import six
 
 __all__ = [
     "needs_structure"
@@ -109,7 +108,7 @@ class StructureHandler(Module):
         self.out.report_skipped(new_skipped_block.number + " " + name +
                                 " skipped because of critical step failure")
 
-    def fail_current_block(self, error=None):
+    def fail_current_block(self, error=None): #TODO: why don't used empty str by default?
         block = self.get_current_block()
         self.fail_block(block, error)
 
@@ -137,8 +136,7 @@ class StructureHandler(Module):
         except Exception as e:
             if pass_errors is True:
                 raise
-            else:
-                self.fail_current_block(str(e))
+            self.fail_current_block(str(e))
         finally:
             self.close_block()
         return result
@@ -183,8 +181,7 @@ class StructureHandler(Module):
                     # Here pass_errors=True, because any exception outside executing build step
                     # is not step-related and should stop script executing
 
-                    numbering = " [ {:{}}+{:{}} ] ".format("", step_num_len,
-                                                           "", step_num_len)
+                    numbering = " [ {:{length}}+{:{length}} ] ".format("", "", length=step_num_len)
                     step_name = numbering + item.get("name", ' ')
                     self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a["children"], step_executor, skipped)

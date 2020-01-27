@@ -7,12 +7,12 @@ import pytest
 
 
 @pytest.mark.nonci_applicable
-def test_code_report(universum_runner):
+def test_code_report(universum_runner): #TODO: parametrize test for different versions of python
     config = """
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run static pylint", code_report=True,
-                           command=["universum_pylint", "--python-version=2", "--files", "source_file.py",
+                           command=["universum_pylint", "--python-version=3", "--files", "source_file.py",
                            "--result-file", "${CODE_REPORT_FILE}"])])
 """
 

@@ -31,7 +31,7 @@ def create_settings(test_type, vcs_type):
         settings.TeamcityServer.user_id = "TeamCityUser"
         settings.TeamcityServer.passwd = "TeamCityPassword"
 
-    if vcs_type in ("git", "gerrit", "github",):
+    if vcs_type in ["git", "gerrit", "github"]:
         settings.GitVcs.repo = "ssh://user@127.0.0.1"
         # the refspec is crafted to satisfy requirements of our gerrit module, and others don't care
         settings.GitVcs.refspec = "refs/changes/00/000000/0"

@@ -3,15 +3,15 @@
 from __future__ import absolute_import
 import sys
 
-from .base_output import BaseOutput
 from six.moves import range
+from .base_output import BaseOutput
 
 __all__ = [
     "TerminalBasedOutput"
 ]
 
 
-class Colors(object):
+class Colors:
     red = "\033[1;31m"
     dark_red = "\033[0;31m"
     green = "\033[1;32m"
@@ -34,11 +34,11 @@ class TerminalBasedOutput(BaseOutput):
 
     def indent(self):
         for x in range(0, self.block_level):
-            stdout("  " * x, u" |   ", no_enter=True)
+            stdout("  " * x, " |   ", no_enter=True)
 
     def print_lines(self, *args):
         result = ''.join(args)
-        lines = result.split("\n")
+        lines = result.splitlines(False)
         for line in lines:
             self.indent()
             stdout(line)
@@ -53,9 +53,9 @@ class TerminalBasedOutput(BaseOutput):
         self.indent()
 
         if status == "Failed":
-            stdout(self.block_level * "  ", u" \u2514 ", Colors.red, "[Failed]", Colors.reset)
+            stdout(self.block_level * "  ", " \u2514 ", Colors.red, "[Failed]", Colors.reset)
         else:
-            stdout(self.block_level * "  ", u" \u2514 ", Colors.green, "[Success]", Colors.reset)
+            stdout(self.block_level * "  ", " \u2514 ", Colors.green, "[Success]", Colors.reset)
         self.indent()
         stdout()
 

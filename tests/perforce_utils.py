@@ -4,7 +4,6 @@
 from __future__ import absolute_import
 
 import time
-import six
 import pytest
 import docker
 
@@ -25,7 +24,7 @@ def ignore_p4_exception(ignore_if, func, *args, **kwargs):
     try:
         result = func(*args, **kwargs)
     except P4Exception as e:
-        if ignore_if not in six.text_type(e):
+        if ignore_if not in str(e):
             raise
     return result
 
@@ -216,7 +215,7 @@ def perforce_workspace(request, perforce_connection, tmpdir):
 class P4Environment(utils.TestEnvironment):
     def __init__(self, perforce_workspace, directory, test_type):
         db_file = directory.join("p4poll.json")
-        self.db_file = six.text_type(db_file)
+        self.db_file = str(db_file)
         self.vcs_cooking_dir = perforce_workspace.root_directory
         self.repo_file = perforce_workspace.repo_file
         self.nonwritable_file = perforce_workspace.nonwritable_file

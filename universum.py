@@ -1,12 +1,10 @@
-#!/usr/bin/env python2
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3
 
 from __future__ import absolute_import
 from __future__ import print_function
 import atexit
 import signal
 import sys
-import six
 
 from _universum import __version__, __title__
 from _universum.api import Api
@@ -80,9 +78,9 @@ def main(args=None):
     try:
         return run(settings)
     except IncorrectParameterError as e:
-        settings.command_parser.error(e.message)
+        settings.command_parser.error(e)
     except ImportError as e:
-        print(six.text_type(e))
+        print(e)
         return 2
 
 
