@@ -89,10 +89,9 @@ def test_git_file_diff(universum_runner):
     with open(path.join(universum_runner.artifact_dir, "output.json")) as f:
         result = json.load(f)
 
-    assert result[0]["action"] == "delete"
+    assert result[0]["action"] == "rename"
     assert result[0]["repo_path"] == "readme.txt"
-    assert result[1]["action"] == "add"
-    assert result[1]["repo_path"] == "some_new_file_name.txt"
+    assert 'some_new_file_name.txt' in result[0]["local_path"]
 
 
 def test_multiple_git_file_diff(universum_runner):
