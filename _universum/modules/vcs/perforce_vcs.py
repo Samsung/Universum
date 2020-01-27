@@ -6,6 +6,9 @@ import shutil
 import warnings
 
 import sh
+import six
+from six.moves import range
+from six.moves import zip
 
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
@@ -18,9 +21,6 @@ from ..output import needs_output
 from ..structure_handler import needs_structure
 from . import base_vcs
 from .swarm import Swarm
-import six
-from six.moves import range
-from six.moves import zip
 
 __all__ = [
     "PerforceMainVcs",
@@ -58,7 +58,7 @@ class PerforceVcs(base_vcs.BaseVcs):
 
         utils.check_required_option(self.settings, "port", """
             the perforce 'port' is not specified.
-            
+
             The perforce port defines protocol, host and listening port
             of the perforce server. Please specify perforce port by
             using '--p4-port' ('-p4p') command line parameter or
@@ -107,7 +107,7 @@ class PerforceVcs(base_vcs.BaseVcs):
             self.p4.disconnect()
             if not w:
                 return
-            if "Not connected" in w[0].message.message:
+            if "Not connected" in str(w[0].message):
                 text = "Perforce client is not connected on disconnect. Something must have gone wrong"
                 self.structure.fail_current_block(text)
             else:
@@ -412,22 +412,22 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             try:
                 result = self.p4.run_sync("-f", line)
             except P4Exception as e:
-                if "not in client view" in six.text_type(e):
-                    text = six.text_type(e) + "Possible reasons of this error:"
-                    text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
-                    text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
-                    raise CriticalCiException(text)
-                else:
-                    raise CriticalCiException(six.text_type(e))
+                if "not in client view" not in str(e):
+                    raise CriticalCiException(str(e))
 
-            self.append_repo_status("    " + line + "\n")
-            self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
+                text = f"{e}\nPossible reasons of this error:"
+                text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
+                text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
+                raise CriticalCiException(text)
+
+            self.append_repo_status(f"    {line}\n")
+            self.out.log(f"Downloaded {result[0]['totalFileCount']} files.")
 
     def p4unshelve(self, *args, **kwargs):
         try:
             result = self.p4.run_unshelve(*args, **kwargs)
         except P4Exception as e:
-            if "already committed" in six.text_type(e) and self.swarm and len(self.shelve_cls) == 1:
+            if "already committed" in str(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None

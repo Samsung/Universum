@@ -11,7 +11,6 @@ from ...lib import utils
 from ..output import needs_output
 from ..structure_handler import needs_structure
 from . import base_vcs
-import six
 
 __all__ = [
     "LocalMainVcs"
@@ -50,10 +49,10 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs):
             shutil.copytree(self.source_dir, self.settings.project_root)
             self.append_repo_status("Got sources from: " + self.source_dir + "\n")
         except OSError as e:
-            text = six.text_type(e) + "\nPossible reasons of this error:"
-            text += "\n * Sources path, passed to the script ('" + self.settings.source_dir + \
-                    "'), does not lead to actual sources or was processed incorrectly"
-            text += "\n * Directory '" + os.path.basename(self.settings.project_root) + \
-                    "' already exists in working dir (e.g. due to previous builds)"
+            text = f"{e}\nPossible reasons of this error:"
+            text += f"\n * Sources path, passed to the script ('{self.settings.source_dir}')," + \
+                    " does not lead to actual sources or was processed incorrectly"
+            text += "\n * Directory '{}' already exists in working dir (e.g. due to previous builds)".format(
+                os.path.basename(self.settings.project_root))
             text += "\n * File reading permissions troubles"
             raise CriticalCiException(text)

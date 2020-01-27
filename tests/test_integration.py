@@ -9,7 +9,6 @@ import time
 
 import pytest
 import sh
-import six
 
 
 def get_line_with_text(text, log):
@@ -352,10 +351,10 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
         print(line.rstrip())
 
     process = cmd(*(["-o", "console", "-vt", "none",
-                     "-pr", six.text_type(tmpdir.join("project_root")),
-                     "-ad", six.text_type(tmpdir.join("artifacts")),
-                     "-fsd", six.text_type(local_sources.root_directory),
-                     "-cfg", six.text_type(config_file)]),
+                     "-pr", str(tmpdir.join("project_root")),
+                     "-ad", str(tmpdir.join("artifacts")),
+                     "-fsd", str(local_sources.root_directory),
+                     "-cfg", str(config_file)]),
                   _iter=True, _bg_exc=False, _bg=True, _out=handle_out, _err=handle_out)
     time.sleep(5)
     process.signal(terminate_type)

@@ -14,7 +14,6 @@ from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from .structure_handler import needs_structure
-import six
 
 
 @needs_output
@@ -74,10 +73,10 @@ class CodeReportCollector(ProjectDirectory):
                 self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
 
             if report:
-                text = six.text_type(len(report)) + " issues"
+                text = str(len(report)) + " issues"
                 self.out.log_stderr("Found " + text)
                 self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
             elif report == []:
                 self.out.log("Issues not found.")
             else:  # if nothing was written to file
-                self.stderr.write("There are no results in code report file. Something went wrong.")
+                self.out.log_stderr("There are no results in code report file. Something went wrong.")
