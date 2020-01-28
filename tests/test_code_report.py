@@ -32,20 +32,18 @@ log_success = r'Run static pylint - [^\n]*Success'
 
 
 @pytest.mark.parametrize('args, tested_content, expected_log', [
-    [["--python-version=3", "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}"],
-     source_code, log_success],
-    [["--python-version=3", "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}"],
-     source_code + '\n', log_fail],
+    [["--result-file", "${CODE_REPORT_FILE}"], source_code, log_success],
+    [["--result-file", "${CODE_REPORT_FILE}"], source_code + '\n', log_fail],
 
-    [["--python-version=3", "--files", "source_file.py"], source_code, log_success],
-    [["--python-version=3", "--files", "source_file.py"], source_code + '\n', log_fail],
+    [[], source_code, log_success],
+    [[], source_code + '\n', log_fail],
     #TODO: add test with rcfile
     #TODO: parametrize test for different versions of python
 ])
 @pytest.mark.nonci_applicable
 def test_code_report(runner_with_pylint, args, tested_content, expected_log):
     runner_with_pylint.local.root_directory.join("source_file.py").write(tested_content)
-    config = get_config(args)
+    config = get_config(["--python-version=3", "--files", "source_file.py"] + args)
 
     log = runner_with_pylint.run(config)
     assert re.findall(expected_log, log)

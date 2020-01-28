@@ -38,7 +38,6 @@ class PylintAnalyzer:
 
     def __init__(self, settings):
         self.settings = settings
-        self.json_file = settings.result_file
 
     def execute(self):
         cmd = [f"python{self.settings.version}", '-m', 'pylint', '-f', 'json']
@@ -48,7 +47,8 @@ class PylintAnalyzer:
         for pattern in self.settings.file_list:
             cmd.append(" ".join(glob.glob(pattern)))
 
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        result = subprocess.run(cmd, universal_newlines=True, #pylint: disable=subprocess-run-check
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if result.returncode == 0:
             return 0
@@ -72,7 +72,7 @@ class PylintAnalyzer:
                 issues_loads.append(issue)
 
             if issues_loads:
-                utils.analyzers_output(self.json_file, issues_loads)
+                utils.analyzers_output(self.settings.result_file, issues_loads)
                 return 1
             return 0
 
