@@ -8,8 +8,6 @@ import json
 import sys
 import subprocess
 
-import sh
-
 from analyzers import utils
 
 

@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+
 import os
 from _universum.configuration_support import Variations
 
@@ -7,7 +6,7 @@ env_name = "virtual_universe"
 
 
 def run_virtual(cmd):
-    return ["env", "-i", "PATH=" + os.getenv("PATH"), "bash", "-c", "source {}/bin/activate; {}".format(env_name, cmd)]
+    return ["env", "-i", "PATH=" + os.getenv("PATH"), "bash", "-c", f"source {env_name}/bin/activate; {cmd}"]
 
 
 pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
