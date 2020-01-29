@@ -2,6 +2,7 @@
 
 from typing import List
 import re
+import inspect
 import pytest
 
 
@@ -12,13 +13,13 @@ def fixture_runner_with_pylint(universum_runner):
 
 
 def get_config(args: List[str]):
-    config = """
-from _universum.configuration_support import Variations
+    args = [f", '{arg}'" for arg in args]
+    return inspect.cleandoc(f"""
+        from _universum.configuration_support import Variations
 
-configs = Variations([dict(name="Run static pylint", code_report=True, command=['universum_pylint'"""
-    for arg in args:
-        config += f", '{arg}'"
-    return f"{config}])])"
+        configs = Variations([dict(name="Run static pylint", code_report=True,
+            command=['universum_pylint'{''.join(args)}])])
+    """)
 
 
 source_code = """
