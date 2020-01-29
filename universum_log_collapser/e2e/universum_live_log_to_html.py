@@ -15,11 +15,9 @@ def run_universum():
 
 
 def run_plugin_cli(log):
-    java_cmd = "java -cp "
-    for jar in os.listdir(os.path.join(os.getcwd(), "jar")):
-        java_cmd += "./jar/" + jar + ":"
-    java_cmd += " io.jenkins.plugins.universum_log_collapser.Main"
-    return launch_process(*java_cmd.split(), log)
+    jar_path = os.path.join(os.getcwd(), "..", "plugin", "target", "plugin-jar-with-dependencies.jar")
+    assert os.path.exists(jar_path), "Run maven build for CLI jar first"
+    return launch_process("java", "-cp", jar_path, "io.jenkins.plugins.universum_log_collapser.Main", log)
 
 
 def launch_process(*args, env=None):
