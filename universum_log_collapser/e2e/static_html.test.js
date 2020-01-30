@@ -34,17 +34,19 @@ test("failed steps names colored", async() => {
     let spanColors = await page.$$eval(".sectionLbl", labels => {
         let result = [];
         for (let i = 0; i < labels.length; i++) {
-            result.push(labels[i].querySelector("span").style.color);
+            let innerSpan = labels[i].querySelector("span");
+            if (innerSpan != null) {
+                result.push(innerSpan.style.color);
+            }
         }
         return result;
     })
 
-    expect(spanColors).toHaveLength(5);
+    expect(spanColors).toHaveLength(4);
     expect(spanColors[0]).not.toBe("red");
     expect(spanColors[1]).toBe("red");
-    expect(spanColors[2]).toBe("red");
-    expect(spanColors[3]).not.toBe("red");
-    expect(spanColors[4]).toBe("red");
+    expect(spanColors[2]).not.toBe("red");
+    expect(spanColors[3]).toBe("red");
 });
 
 
