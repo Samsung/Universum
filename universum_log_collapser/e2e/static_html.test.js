@@ -1,12 +1,12 @@
 const utils = require("./utils");
 
-beforeAll(async () => {
+beforeAll(async() => {
     await utils.openPage("test.html");
     const expFailedStepsCount = 2; // depends on test HTML content
     await utils.waitForHandledResults(expFailedStepsCount);
 });
 
-test('failed steps class changed', async () => {
+test('failed steps class changed', async() => {
     await utils.checkFailedStepsHandled();
 });
 
