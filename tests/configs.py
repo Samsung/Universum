@@ -29,9 +29,12 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Run Jenkins plugin CLI version",
                            command=["mvn", "-B", "compile", "assembly:single"],
                            directory="universum_log_collapser/plugin"),
-                      dict(name="Prepare Jenkins plugin Javascript tests project",
+                      dict(name="Generate HTML for JavaScript tests",
+                           command=["./universum_live_log_to_html.py"],
+                           directory="universum_log_collapser/e2e"),
+                      dict(name="Prepare Jenkins plugin JavaScript tests project",
                            command=["npm", "install"], directory="universum_log_collapser/e2e"),
-                      dict(name="Run Jenkins plugin Javascript tests",
+                      dict(name="Run Jenkins plugin JavaScript tests",
                            command=["npm", "test"], directory="universum_log_collapser/e2e")])
 
 if __name__ == '__main__':
