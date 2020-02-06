@@ -15,7 +15,8 @@ def run_universum():
 
 
 def run_plugin_cli(log):
-    jar_path = os.path.join(os.getcwd(), "..", "plugin", "target", "plugin-jar-with-dependencies.jar")
+    jar_path = os.path.join(os.getcwd(), "..", "universum_log_collapser", "target", 
+        "universum_log_collapser-jar-with-dependencies.jar")
     assert os.path.exists(jar_path), "Run maven build for CLI jar first"
     return launch_process("java", "-cp", jar_path, "io.jenkins.plugins.universum_log_collapser.Main", log)
 
@@ -32,8 +33,8 @@ def write_to_html(log):
     html_start = """
     <html>
         <body>
-            <script src="../plugin/src/main/resources/io/jenkins/plugins/universum_log_collapser/Note/script.js"></script>
-            <link rel="stylesheet" type="text/css" href="../plugin/src/main/resources/io/jenkins/plugins/universum_log_collapser/Note/style.css">
+            <script src="../universum_log_collapser/src/main/resources/io/jenkins/plugins/universum_log_collapser/Note/script.js"></script>
+            <link rel="stylesheet" type="text/css" href="../universum_log_collapser/src/main/resources/io/jenkins/plugins/universum_log_collapser/Note/style.css">
             <pre class="console-output">
     """
     html_end = """
