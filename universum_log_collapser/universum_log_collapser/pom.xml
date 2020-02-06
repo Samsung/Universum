@@ -8,7 +8,7 @@
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
-    <artifactId>plugin</artifactId>
+    <artifactId>universum_log_collapser</artifactId>
     <version>1.6</version>
     <packaging>hpi</packaging>
     <properties>
