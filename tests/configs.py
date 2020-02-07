@@ -9,12 +9,12 @@ def run_virtual(cmd):
     return ["env", "-i", "PATH=" + os.getenv("PATH"), "bash", "-c", "source {}/bin/activate; {}".format(env_name, cmd)]
 
 
-pylint_cmd = "universum_pylint --python-version 2 --rcfile pylintrc " + \
+pylint_cmd = "universum_pylint --python-version 3 --rcfile pylintrc " + \
              "--files *.py _universum/ tests/ analyzers/ --result-file '${CODE_REPORT_FILE}'"
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
                       dict(name="Create virtual environment",
-                           command=["python2", "-m", "virtualenv", env_name, "--system-site-packages"]),
+                           command=["python3.7", "-m", "virtualenv", env_name, "--system-site-packages"]),
                       dict(name="Install development",
                            command=run_virtual("pip --default-timeout=1200 install .[development]")),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
