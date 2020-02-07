@@ -19,7 +19,6 @@ mypy==0.761
 mypy-extensions==0.4.3
 p4python==2019.1.1858224
 packaging==20.1
-pkg-resources==0.0.0
 pluggy==0.13.1
 py==1.8.1
 pylint==2.4.4
