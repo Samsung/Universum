@@ -14,7 +14,7 @@ pylint_cmd = "universum_pylint --python-version 3 --rcfile pylintrc " + \
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
                       dict(name="Create virtual environment",
-                           command=["python3.7", "-m", "venv", env_name, "--system-site-packages"]),
+                           command=["python3.7", "-m", "virtualenv", env_name, "--system-site-packages"]),
                       dict(name="Install development",
                            command=run_virtual("pip --default-timeout=1200 install .[development]")),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
