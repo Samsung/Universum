@@ -17,7 +17,7 @@ mock==3.0.5
 more-itertools==8.1.0
 mypy==0.761
 mypy-extensions==0.4.3
-p4python==2019.1.1858224
+p4python>=2019.1
 packaging==20.1
 pluggy==0.13.1
 py==1.8.1

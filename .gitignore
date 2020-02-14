@@ -15,3 +15,4 @@ temp_config.py
 .work
 .mypy_cache
 .devcontainer
+.venv*
