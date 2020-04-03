@@ -563,7 +563,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             shelves = p4.run_changes("-c", self.client_name, "-s", "shelved")
             for item in shelves:
                 self.out.log("Deleting shelve from CL " + item["change"])
-                p4.run_shelve("-d" , "-c", item["change"])
+                p4.run_shelve("-d", "-c", item["change"])
             self.p4.run_revert("//...")
             all_cls = p4.run_changes("-c", self.client_name, "-s", "pending")
             for item in all_cls:
