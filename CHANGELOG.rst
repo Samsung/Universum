@@ -4,19 +4,12 @@ Change log
 0.18.4 (2020-04-06)
 -------------------
 
-New features
-~~~~~~~~~~~~
-* **test:** add JS tests on generated HTML
-* **test:** add Java tests for timestamps usage
-
-
 Bug fixes
 ~~~~~~~~~
 
-* **p4:** delete CLs too in case of force clean
-* **jenkins_plugin**: update mkdrip and packages to mitigate vulnerability
-* **jenkins_plugin:** fix JS crash at steps coloring
-* **docs:** incorrect flag name
+* **p4:** force clean not deleting CLs leading to buid failures when client exists and contains CLs
+* **jenkins_plugin:** steps coloring not working when not using Jenkins Pipeline
+* **docs:** update command line arguments in docs to correspond to real ones
 
 
 0.18.3 (2020-01-10)
