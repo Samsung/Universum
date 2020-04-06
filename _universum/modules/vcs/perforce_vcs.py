@@ -560,15 +560,15 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.p4.client = self.client_name
             report = self.p4.run_revert("//...")
             self.p4report(report)
-            shelves = p4.run_changes("-c", self.client_name, "-s", "shelved")
+            shelves = self.p4.run_changes("-c", self.client_name, "-s", "shelved")
             for item in shelves:
                 self.out.log("Deleting shelve from CL " + item["change"])
-                p4.run_shelve("-d", "-c", item["change"])
+                self.p4.run_shelve("-d", "-c", item["change"])
             self.p4.run_revert("//...")
-            all_cls = p4.run_changes("-c", self.client_name, "-s", "pending")
+            all_cls = self.p4.run_changes("-c", self.client_name, "-s", "pending")
             for item in all_cls:
                 self.out.log("Deleting CL " + item["change"])
-                p4.run_change("-d", item["change"])
+                self.p4.run_change("-d", item["change"])
         except P4Exception as e:
             if "Client '{}' unknown".format(self.client_name) not in e.value \
                     and "file(s) not opened on this client" not in e.value:
