@@ -24,11 +24,17 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Run static pylint", code_report=True,
                            command=run_virtual("pip uninstall -y universum; " + pylint_cmd)),
                       dict(name="Run Jenkins plugin Java tests",
-                           artifacts="universum_log_collapser/plugin/target/surefire-reports/*.xml",
-                           command=["mvn", "-B", "test"], directory="universum_log_collapser/plugin"),
-                      dict(name="Prepare Jenkins plugin Javascript tests project",
+                           artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",
+                           command=["mvn", "-B", "test"], directory="universum_log_collapser/universum_log_collapser"),
+                      dict(name="Run Jenkins plugin CLI version",
+                           command=["mvn", "-B", "compile", "assembly:single"],
+                           directory="universum_log_collapser/universum_log_collapser"),
+                      dict(name="Generate HTML for JavaScript tests",
+                           command=["./universum_live_log_to_html.py"],
+                           directory="universum_log_collapser/e2e"),
+                      dict(name="Prepare Jenkins plugin JavaScript tests project",
                            command=["npm", "install"], directory="universum_log_collapser/e2e"),
-                      dict(name="Run Jenkins plugin Javascript tests",
+                      dict(name="Run Jenkins plugin JavaScript tests",
                            command=["npm", "test"], directory="universum_log_collapser/e2e")])
 
 if __name__ == '__main__':

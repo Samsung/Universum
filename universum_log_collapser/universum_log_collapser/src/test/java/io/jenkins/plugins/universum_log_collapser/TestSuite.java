@@ -13,6 +13,12 @@ class TestSuite {
     static final String sectionEndClose = "</div><span class=\"nl\"></span>";
     static final String sectionSpan = "<span class=\"sectionLbl\">";
     static final String paddingSpan = "<span style=\"display: inline-block;  width: 4ch;\"></span>";
+    static final String pipelineJsFix = "<iframe onload=\"fix_pipeline()\" style=\"display:none\"></iframe>";
+
+    static final String timestampCorrect = "[2020-01-10T07:47:57.954Z]";
+    static final String timestampEmpty = "[]";
+    static final String timestampNoBraces = "2020-01-10T07:47:57.954Z";
+    static final String timestampIllegalSymbols = "[2020=01=10T07:47:57,954Z]";
 
 
     static void checkAnnotation(String[] in, String[] out) {
