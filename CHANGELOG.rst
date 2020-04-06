@@ -1,6 +1,24 @@
 Change log
 ==========
 
+0.18.4 (2020-04-06)
+-------------------
+
+New features
+~~~~~~~~~~~~
+* **test:** add JS tests on generated HTML
+* **test:** add Java tests for timestamps usage
+
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** delete CLs too in case of force clean
+* **jenkins_plugin**: update mkdrip and packages to mitigate vulnerability
+* **jenkins_plugin:** fix JS crash at steps coloring
+* **docs:** incorrect flag name
+
+
 0.18.3 (2020-01-10)
 -------------------
 
