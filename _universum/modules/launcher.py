@@ -354,12 +354,13 @@ class Launcher(ProjectDirectory):
         config_path = utils.parse_path(self.settings.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
         config_globals = {}
+        config_locals = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
         try:
             with open(config_path) as config:
-                exec(config.read(), config_globals)  # pylint: disable=exec-used
+                exec config.read in config_globals, config_locals  # pylint: disable=exec-used
 
             self.source_project_configs = config_globals["configs"]
             dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
