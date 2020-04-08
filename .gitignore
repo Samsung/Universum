@@ -12,3 +12,7 @@ temp
 artifacts
 temp_config.py
 .venv
+.work
+.mypy_cache
+.devcontainer
+.venv*

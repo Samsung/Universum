@@ -267,7 +267,23 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
     assert "This line should be in file." in log
 
 
-def test_empty_required_params(universum_runner):
+def empty_required_params_ids(param):
+    if isinstance(param, bool): # url_error_expected
+        return 'negative' if param else 'positive'
+    return str(param)
+
+@pytest.mark.parametrize('url_error_expected, parameters, env', [
+    [True, "", []],
+    [True, " -ssu=''", []],
+    [True, "", ["SWARM_SERVER="]],
+    [True, " --build-only-latest -ssu=''", []],
+
+    # negative Test cases
+    [False, " -ssu=http://swarm", []],
+    [False, "", ["SWARM_SERVER=http://swarm"]],
+    [False, " --build-only-latest -ssu=http://swarm", []]
+], ids=empty_required_params_ids)
+def test_empty_required_params(universum_runner, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
     config = """
 from _universum.configuration_support import Variations
@@ -276,34 +292,11 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
     log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review")
-    assert url_error in log
-
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review -ssu=''")
-    assert url_error in log
-
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review -ssu=http://swarm")
-    assert url_error not in log
-
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review",
-                               environment=["SWARM_SERVER="])
-    assert url_error in log
-
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review",
-                               environment=["SWARM_SERVER=http://swarm"])
-    assert url_error not in log
-
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review --build-only-latest -ssu=''")
-    assert url_error in log
-
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review --build-only-latest -ssu=http://swarm")
-    assert url_error not in log
+                               additional_parameters=" --report-to-review" + parameters, environment=env)
+    if url_error_expected:
+        assert url_error in log
+    else:
+        assert url_error not in log
 
 
 @pytest.mark.nonci_applicable

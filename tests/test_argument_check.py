@@ -1,7 +1,4 @@
-# -*- coding: UTF-8 -*-
 
-from __future__ import absolute_import
-from __future__ import print_function
 from typing import Union, List
 import pytest
 
@@ -83,8 +80,9 @@ def assert_incorrect_parameter(settings, match):
 missing_params = []
 
 
-def param(test_type, module, field, vcs_type="*", error_match=None):
-    # type: (str, str, str, Union[str, List[str]], str) -> None
+def param(test_type: str, module: str, field: str,
+          vcs_type: Union[str, List[str]] = "*", error_match: str = None) -> None:
+
     global missing_params
 
     if isinstance(vcs_type, list):
