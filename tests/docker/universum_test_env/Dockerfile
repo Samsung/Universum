@@ -18,3 +18,4 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && 
     apt update
 
 RUN apt install -y helix-cli && apt-get install -y perforce-p4python3-python3.7
+RUN ln -sfn /usr/bin/python3.7 /usr/bin/python3

@@ -148,6 +148,11 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
         self.append_repo_status("\n")
 
     def _diff_against_reference_commit(self, commit_id):
+        """Details. Depending on a 'git' version 'rename file' operation generates
+        different output. It could be sequence of 'add' and 'delete' or single
+        'rename' operation.
+        """
+
         status_mapping = {
             'A': "add",
             'C': "copy",

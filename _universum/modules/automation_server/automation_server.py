@@ -33,7 +33,7 @@ class AutomationServerForHostingBuild(AutomationServer):
         self.driver = utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                           jenkins_factory=self.jenkins_driver_factory,
                                           local_factory=self.local_driver_factory,
-                                          default=self.settings.type)
+                                          env_type=self.settings.type)
 
     def report_build_location(self):
         return self.driver.report_build_location()
@@ -55,7 +55,7 @@ class AutomationServerForTrigger(AutomationServer):
         self.driver = utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                           jenkins_factory=self.jenkins_driver_factory,
                                           local_factory=self.local_driver_factory,
-                                          default=self.settings.type)
+                                          env_type=self.settings.type)
 
     def trigger_build(self, revision):
         return self.driver.trigger_build(revision)

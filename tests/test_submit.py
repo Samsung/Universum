@@ -203,9 +203,9 @@ def test_success_reconcile_directory(submit_parameters, submit_environment):
         assert parameters.text_in_file(text, six.text_type(file_path))
 
     # Delete a directory
-    shutil.rmtree(six.text_type(tmp_dir))
-    parameters.assert_submit_success([six.text_type(tmp_dir)])
-    assert not parameters.file_present(six.text_type(tmp_dir))
+    shutil.rmtree(tmp_dir)
+    parameters.assert_submit_success([str(tmp_dir)])
+    assert not parameters.file_present(str(tmp_dir))
 
 
 def test_success_reconcile_wildcard(submit_parameters, submit_environment):
