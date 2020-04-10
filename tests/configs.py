@@ -14,16 +14,18 @@ pylint_cmd = "universum_pylint --python-version 3 --rcfile pylintrc " + \
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
                       dict(name="Create virtual environment",
-                           command=["python3.7", "-m", "venv", env_name, "--system-site-packages"]),
+                           command=["python3.7", "-m", "venv", env_name]),
                       dict(name="Install development",
                            command=run_virtual("python3.7 -m pip --default-timeout=1200 install .[development]")),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
+
                       dict(name="Install tests", artifacts="junit_results.xml",
                            command=run_virtual("python3.7 -m pip --default-timeout=1200 install .[test]")),
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
                       dict(name="Run static pylint", code_report=True,
                            command=run_virtual("python3.7 -m pip uninstall -y universum; " + pylint_cmd)),
+
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/plugin/target/surefire-reports/*.xml",
                            command=["mvn", "-B", "test"], directory="universum_log_collapser/plugin"),
