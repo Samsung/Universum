@@ -4,9 +4,9 @@ from __future__ import absolute_import
 import os
 import re
 import sys
-import sh
-
 from inspect import cleandoc
+
+import sh
 
 from .. import configuration_support
 from ..lib import utils
