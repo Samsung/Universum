@@ -20,8 +20,8 @@ docs = (
 )
 
 vcs = (
-    'gitpython>=2.1.8',
-    'P4'
+    'gitpython>=3.0.5',
+    'p4python>=2019.1'
 )
 
 setup(
