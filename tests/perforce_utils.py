@@ -194,6 +194,10 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         change["Description"] = "Test submit"
         p4.run_submit(change)
 
+        permissions = p4.fetch_protect()
+        permissions['Protections'] = ['write user * * //...', 'super user p4user * //...', 'list user * * -//spec/...']
+        p4.save_protect(permissions)
+
         yield utils.Params(p4=p4,
                            client_name=client_name,
                            depot=depot,
