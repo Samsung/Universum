@@ -40,8 +40,8 @@ def test_success_changing_checked_out_file(p4_submit_environment):
     assert p4_submit_environment.file_present(str(target_file))
 
 
-def test_fail_protected_branch(p4_submit_environment):
-    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir("protected")
+def test_fail_write_protected_branch(p4_submit_environment):
+    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir("write-protected")
     file_to_add = protected_dir.join("new_file.txt")
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
@@ -54,3 +54,21 @@ def test_fail_protected_branch(p4_submit_environment):
 
     p4 = p4_submit_environment.p4
     assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
+    assert not p4.run_opened("-C", p4_submit_environment.client_name)
+
+
+def test_fail_open_protected_branch(p4_submit_environment):
+    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir("open-protected")
+    file_to_add = protected_dir.join("new_file.txt")
+    text = "This is a new line in the file"
+    file_to_add.write(text + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
+
+    result = universum.run(settings)
+    assert result == 0
+
+    p4 = p4_submit_environment.p4
+    assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
+    assert not p4.run_opened("-C", p4_submit_environment.client_name)

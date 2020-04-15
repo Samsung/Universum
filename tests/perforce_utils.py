@@ -199,7 +199,8 @@ def perforce_workspace(request, perforce_connection, tmpdir):
             'write user * * //...',
             'list user * * -//spec/...',
             'super user p4user * //...',
-            '=write user p4user * -//depot/protected/...'
+            '=write user p4user * -//depot/write-protected/...',
+            '=open user p4user * -//depot/open-protected/...'
         ]
         p4.save_protect(permissions)
 
