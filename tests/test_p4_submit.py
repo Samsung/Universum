@@ -53,4 +53,4 @@ def test_fail_protected_branch(p4_submit_environment):
     assert result != 0
 
     p4 = p4_submit_environment.p4
-    print p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
+    assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
