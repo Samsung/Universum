@@ -42,12 +42,18 @@ def test_success_changing_checked_out_file(p4_submit_environment):
 
 def test_fail_protected_branch(p4_submit_environment):
     spec_dir = p4_submit_environment.vcs_cooking_dir.mkdir("spec")
+    #spec_dir = p4_submit_environment.vcs_cooking_dir.join("spec")
     file_to_add = spec_dir.join("new_file.txt")
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", unicode(file_to_add))
+    # setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
+    setattr(settings.Submit, "reconcile_list", ["spec/"])
 
+    #spec_dir.remove(rec=True)
     result = universum.run(settings)
     assert result != 0
+
+    p4 = p4_submit_environment.p4
+    print p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")

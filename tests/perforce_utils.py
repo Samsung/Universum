@@ -195,7 +195,10 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         p4.run_submit(change)
 
         permissions = p4.fetch_protect()
-        permissions['Protections'] = ['write user * * //...', 'super user p4user * //...', 'list user * * -//spec/...']
+        permissions['Protections'] = [
+            'super user p4user * //...',
+            'open user p4user * -//spec/...'
+        ]
         p4.save_protect(permissions)
 
         yield utils.Params(p4=p4,
