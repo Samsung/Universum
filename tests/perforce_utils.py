@@ -204,6 +204,9 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         ]
         p4.save_protect(permissions)
 
+        triggers = {'Triggers': ['my.check change-submit //depot/review-protected/... "/bin/cp . ."']}
+        p4.save_triggers(triggers)
+
         yield utils.Params(p4=p4,
                            client_name=client_name,
                            depot=depot,
