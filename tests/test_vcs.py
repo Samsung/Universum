@@ -206,6 +206,34 @@ def test_submit_error_no_repo(submit_environment, stdout_checker):
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
 
+@pytest.fixture()
+def p4_submit_environment(perforce_workspace, tmpdir):
+    yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
+
+
+@pytest.mark.parametrize("branch,expected",
+                         [("open-protected", 0), ("write-protected", 1), ("trigger-protected", 1)],
+                         ids=["open", "write", "trigger"])
+def test_fail_protected_branch(p4_submit_environment, branch, expected):
+    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir(branch)
+    file_to_add = protected_dir.join("new_file.txt")
+    text = "This is a new line in the file"
+    file_to_add.write(text + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
+
+    result = universum.run(settings)
+    # submit to 'open-protected' succeeds because 'Nothing to submit' is not considered a fail scenario
+    assert result == expected
+
+    p4 = p4_submit_environment.p4
+    # make sure submitter didn't leave any pending CLs in the workspace
+    assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
+    # make sure submitter didn't leave any pending changes in default CL
+    assert not p4.run_opened("-C", p4_submit_environment.client_name)
+
+
 class SubmitterParameters(object):
     def __init__(self, stdout_checker, environment):
         self.stdout_checker = stdout_checker

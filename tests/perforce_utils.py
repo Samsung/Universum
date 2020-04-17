@@ -198,14 +198,14 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         permissions['Protections'] = [
             'write user * * //...',
             'list user * * -//spec/...',
-            'super user p4user * //...',
-            '=write user p4user * -//depot/write-protected/...',
-            '=open user p4user * -//depot/open-protected/...'
+            'super user p4user * //...',                          # first three rows are default
+            '=write user p4user * -//depot/write-protected/...',  # prohibit p4user to submit changes to this branch
+            '=open user p4user * -//depot/open-protected/...'     # prohibit p4user to check out any files in this branch
         ]
         p4.save_protect(permissions)
 
         triggers = {'Triggers': [
-            'test.check change-submit //depot/review-protected/... "/bin/cp . ."'
+            'test.check change-submit //depot/trigger-protected/... "/bin/cp . ."'
         ]}
         p4.save_triggers(triggers)
 
