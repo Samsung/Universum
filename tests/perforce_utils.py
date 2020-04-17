@@ -198,9 +198,8 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         permissions['Protections'] = [
             'write user * * //...',
             'list user * * -//spec/...',
-            'super user p4user * //...',                          # first three rows are default
-            '=write user p4user * -//depot/write-protected/...',  # prohibit p4user to submit changes to this branch
-            '=open user p4user * -//depot/open-protected/...'     # prohibit p4user to check out any files in this branch
+            'super user p4user * //...',                         # first three rows are default
+            '=write user p4user * -//depot/write-protected/...'  # prohibit p4user to submit changes to this branch
         ]
         p4.save_protect(permissions)
 

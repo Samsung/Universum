@@ -27,10 +27,8 @@ def p4_submit_environment(perforce_workspace, tmpdir):
     yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 
 
-@pytest.mark.parametrize("branch,expected",
-                         [("open-protected", 0), ("write-protected", 1), ("trigger-protected", 1)],
-                         ids=["open", "write", "trigger"])
-def test_fail_protected_branch(p4_submit_environment, branch, expected):
+@pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
+def test_fail_forbidden_branch(p4_submit_environment, branch):
     protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir(branch)
     file_to_add = protected_dir.join("new_file.txt")
     text = "This is a new line in the file"
@@ -39,9 +37,7 @@ def test_fail_protected_branch(p4_submit_environment, branch, expected):
     settings = copy.deepcopy(p4_submit_environment.settings)
     setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
 
-    result = universum.run(settings)
-    # submit to 'open-protected' succeeds because 'Nothing to submit' is not considered a fail scenario
-    assert result == expected
+    assert universum.run(settings)
 
     p4 = p4_submit_environment.p4
     # make sure submitter didn't leave any pending CLs in the workspace
