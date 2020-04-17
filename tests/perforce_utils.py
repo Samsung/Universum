@@ -205,7 +205,7 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         p4.save_protect(permissions)
 
         triggers = {'Triggers': [
-            'test.check change-submit //depot/trigger-protected/... "/bin/cp . ."'
+            'test.check change-submit //depot/trigger-protected/... "false"' # trigger to prevent any submits to this branch
         ]}
         p4.save_triggers(triggers)
 
