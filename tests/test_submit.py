@@ -10,7 +10,7 @@ import universum
 from . import git_utils, perforce_utils, utils
 
 
-def test_submit_error_no_repo(submit_environment, stdout_checker):
+def test_error_no_repo(submit_environment, stdout_checker):
     settings = copy.deepcopy(submit_environment.settings)
     if settings.Vcs.type == "git":
         settings.ProjectDirectory.project_root = "non_existing_repo"
@@ -67,12 +67,12 @@ def submit_environment(request, perforce_workspace, git_client, tmpdir):
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 
 
-def test_submit_success_no_changes(submit_parameters, submit_environment):
+def test_success_no_changes(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
     assert parameters.submit_path_list([]) == 0
 
 
-def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
+def test_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     file_name = utils.randomize_name("new_file") + ".txt"
@@ -96,7 +96,7 @@ def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, sub
     assert not parameters.file_present(file_path)
 
 
-def test_submit_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submit_environment):
+def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     new_file_name = utils.randomize_name("new_file") + ".txt"
@@ -116,7 +116,7 @@ def test_submit_success_ignore_new_and_deleted_while_edit_only(submit_parameters
     assert not parameters.file_present(unicode(temp_file))
 
 
-def test_submit_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
+def test_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.repo_file
@@ -127,7 +127,7 @@ def test_submit_success_commit_modified_while_edit_only(submit_parameters, submi
     assert parameters.text_in_file(text, unicode(target_file))
 
 
-def test_submit_error_review(submit_parameters, submit_environment):
+def test_error_review(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.repo_file
@@ -138,7 +138,7 @@ def test_submit_error_review(submit_parameters, submit_environment):
     parameters.stdout_checker.assert_has_calls_with_param("not supported")
 
 
-def test_submit_success_reconcile_directory(submit_parameters, submit_environment):
+def test_success_reconcile_directory(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     dir_name = utils.randomize_name("new_directory")
@@ -181,7 +181,7 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
     assert not parameters.file_present(unicode(tmp_dir))
 
 
-def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment):
+def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     dir_name = utils.randomize_name("new_directory")

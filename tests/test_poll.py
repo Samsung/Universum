@@ -7,7 +7,7 @@ import universum
 from . import git_utils, perforce_utils
 
 
-def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_workspace, tmpdir):
+def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "p4",
@@ -21,7 +21,7 @@ def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_worksp
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
-def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tmpdir):
+def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "git",
@@ -86,7 +86,7 @@ def poll_environment(request, perforce_workspace, git_client, tmpdir):
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="poll")
 
 
-def test_poll_error_one_change(poll_parameters, poll_environment):
+def test_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
@@ -104,7 +104,7 @@ def test_poll_error_one_change(poll_parameters, poll_environment):
     parameters.log_exception_checker.assert_has_calls_with_param("[Errno 111] Connection refused")
 
 
-def test_poll_success_one_change(poll_parameters, poll_environment):
+def test_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
@@ -118,7 +118,7 @@ def test_poll_success_one_change(poll_parameters, poll_environment):
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
 
-def test_poll_success_two_changes(poll_parameters, poll_environment):
+def test_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
@@ -138,7 +138,7 @@ def test_poll_success_two_changes(poll_parameters, poll_environment):
     parameters.http_check.assert_request_was_made({"cl": [change2]})
 
 
-def test_poll_changes_several_times(poll_parameters, poll_environment):
+def test_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
