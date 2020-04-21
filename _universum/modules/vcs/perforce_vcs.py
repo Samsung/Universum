@@ -554,17 +554,17 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.swarm.client_root = self.client_root
             self.swarm.mappings_dict = self.mappings_dict
 
-    @make_block("Cleaning workspace", pass_errors=False)
+    @make_block("Cleaning workspace")
     def clean_workspace(self):
         try:
             self.p4.client = self.client_name
-            report = self.p4.run_revert("//...")
+            report = self.p4.run_revert("-C", self.client_name, "-k", "//...")
             self.p4report(report)
             shelves = self.p4.run_changes("-c", self.client_name, "-s", "shelved")
             for item in shelves:
                 self.out.log("Deleting shelve from CL " + item["change"])
                 self.p4.run_shelve("-d", "-c", item["change"])
-            self.p4.run_revert("//...")
+            self.p4.run_revert("-C", self.client_name, "-k","//...")
             all_cls = self.p4.run_changes("-c", self.client_name, "-s", "pending")
             for item in all_cls:
                 self.out.log("Deleting CL " + item["change"])

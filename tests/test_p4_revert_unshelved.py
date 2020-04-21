@@ -140,7 +140,7 @@ def perforce_environment(perforce_workspace, tmpdir):
     yield P4Environment(perforce_workspace, tmpdir, test_type="main")
 
 
-def test_p4_error_revert(perforce_environment, stdout_checker, capsys):
+def test_p4_error_revert(perforce_environment, capsys):
     p4 = perforce_environment.p4
     p4_file = perforce_environment.repo_file
 
@@ -168,9 +168,4 @@ configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555
     perforce_environment.temp_dir.remove(rec=1)
 
     assert result != 0
-    # The following checks make sure all following actions were triggered despite unsuccessful:
-    # full revert, client deleting and sources clean up
-    stdout_checker.assert_has_calls_with_param("Errors during command execution( \"p4 revert //...\" )")
-    stdout_checker.assert_has_calls_with_param(
-        "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
     assert "[Errno 13] Permission denied" in capsys.readouterr().err
