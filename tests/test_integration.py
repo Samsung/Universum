@@ -6,6 +6,7 @@ from __future__ import print_function
 import os
 import signal
 import time
+import subprocess
 
 import pytest
 import sh
@@ -338,19 +339,12 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
     config_file = tmpdir.join("configs.py")
     config_file.write(config)
 
-    cmd = sh.Command(os.path.join(os.getcwd(), "universum.py"))
-
-    def handle_out(line):
-        print(line.rstrip())
-
-    process = cmd(*(["-o", "console", "-vt", "none",
-                     "-pr", str(tmpdir.join("project_root")),
-                     "-ad", str(tmpdir.join("artifacts")),
-                     "-fsd", str(local_sources.root_directory),
-                     "-cfg", str(config_file)]),
-                  _iter=True, _bg_exc=False, _bg=True, _out=handle_out, _err=handle_out)
+    process = subprocess.Popen(["python", os.path.join(os.getcwd(), "universum.py"),
+                                "-o", "console", "-vt", "none",
+                                "-pr", str(tmpdir.join("project_root")),
+                                "-ad", str(tmpdir.join("artifacts")),
+                                "-fsd", str(local_sources.root_directory),
+                                "-cfg", str(config_file)])
     time.sleep(5)
-    process.signal(terminate_type)
-    with pytest.raises(sh.ErrorReturnCode):
-        process.wait()
-    assert process.exit_code == 3
+    process.send_signal(terminate_type)
+    assert process.wait(5) == 3
