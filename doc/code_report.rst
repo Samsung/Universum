@@ -43,15 +43,15 @@ Config example for ``universum_pylint``:
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 This file will get us the following list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
@@ -80,15 +80,15 @@ Config example for ``universum_svace``:
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will produce this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
@@ -119,15 +119,15 @@ Config example for ``universum_uncrustify``:
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will produce this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 

@@ -17,7 +17,7 @@ to this module in `config_path` member of its input settings.
 
     Generally there should be no need to implement complex logic in the configuration file,
     however the `Universum` doesn't limit what project uses its configuration file for. Also,
-    there are no restriction on using of external python modules, libraries or on the 
+    there are no restriction on using of external python modules, libraries or on the
     structure of the configuration file itself.
 
     The project is free to use whatever it needs in the configuration file for its needs.
@@ -320,8 +320,8 @@ pass_tag, fail_tag
     .. testcode::
         :hide:
 
-        print "$ ./configs.py"
-        print configs.dump()
+        print("$ ./configs.py")
+        print(configs.dump())
 
     .. testoutput::
 
@@ -368,7 +368,7 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 The combination of ``#!/usr/bin/env python`` and ``if __name__ == '__main__':`` allows launching
 the `configs.py` script from shell.
@@ -385,8 +385,8 @@ it includes. For example, running the script, given above, will result in the fo
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
@@ -427,7 +427,7 @@ See the following example:
     configs = one + two
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 The addition operator will just concatenate two lists into one, so
 the `result <Dump configurations list_>`_ of such configuration file will be
@@ -436,8 +436,8 @@ the following list of configurations:
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
@@ -482,15 +482,15 @@ For example, this configuration file:
     configs = make * target
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will `produce <Dump configurations list_>`_ this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
@@ -536,15 +536,15 @@ can be combined in any required way. For example:
     configs = make * target + test * target * debug
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 This file `will get us <Dump configurations list_>`_ the following list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
