@@ -554,7 +554,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.swarm.client_root = self.client_root
             self.swarm.mappings_dict = self.mappings_dict
 
-    @make_block("Cleaning workspace")
+    @make_block("Cleaning workspace", pass_errors=False)
     def clean_workspace(self):
         try:
             self.p4.client = self.client_name
