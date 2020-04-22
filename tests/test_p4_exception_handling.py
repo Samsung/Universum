@@ -41,13 +41,13 @@ configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555
     assert result != 0
 
     assert "[Errno 13] Permission denied" in capsys.readouterr().err
-    # make sure submitter didn't leave any pending CLs in the workspace
+    # make sure there are no pending CLs in the workspace
     assert not p4.run_changes("-c", perforce_environment.client_name, "-s", "pending")
-    # make sure submitter didn't leave any pending changes in default CL
+    # make sure there are no pending changes in default CL
     assert not p4.run_opened("-C", perforce_environment.client_name)
 
 
-def test_p4_print_exception(perforce_environment, stdout_checker):
+def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
     p4 = perforce_environment.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
@@ -64,3 +64,25 @@ def test_p4_print_exception(perforce_environment, stdout_checker):
     assert result != 0
     stdout_checker.assert_has_calls_with_param(
         "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
+
+
+def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker, capsys):
+    p4 = perforce_environment.p4
+    client = p4.fetch_client(perforce_environment.client_name)
+    client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
+    p4.save_client(client)
+
+    settings = perforce_environment.settings
+    settings.Main.finalize_only = True
+    result = universum.run(settings)
+
+    # Update client at once to make sure it doesn't remain locked even if some assert fails
+    client = p4.fetch_client(perforce_environment.client_name)
+    client["Options"] = "noallwrite noclobber nocompress unlocked nomodtime normdir"
+    p4.save_client(client)
+
+    assert result != 0
+    stdout_checker.assert_has_calls_with_param(
+        "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
+    assert "CiException: [Errno 2] No such file or directory" in capsys.readouterr().err
+
