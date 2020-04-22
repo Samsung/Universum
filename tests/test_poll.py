@@ -11,7 +11,7 @@ def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, 
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "p4",
-                             "-f", unicode(db_file),
+                             "-f", str(db_file),
                              "-p4p", perforce_workspace.p4.port,
                              "-p4u", perforce_workspace.p4.user,
                              "-p4P", perforce_workspace.p4.password,
@@ -25,7 +25,7 @@ def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir)
     db_file = tmpdir.join("gitpoll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "git",
-                             "-f", unicode(db_file),
+                             "-f", str(db_file),
                              "-gr", git_server.url,
                              "-grs", git_server.target_branch,
                              "-jtu", "https://localhost/?%s"])
@@ -37,7 +37,7 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
     db_file = tmpdir.join("p4poll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "p4",
-                             "-f", unicode(db_file),
+                             "-f", str(db_file),
                              "-p4p", "127.0.0.1:1024",
                              "-p4u", perforce_workspace.p4.user,
                              "-p4P", perforce_workspace.p4.password,
@@ -51,7 +51,7 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
     result = universum.main(["poll", "-ot", "term",
                              "-vt", "git",
-                             "-f", unicode(db_file),
+                             "-f", str(db_file),
                              "-gr", "file:///non-existing-directory",
                              "-grs", git_server.target_branch,
                              "-jtu", "https://localhost/?%s"])
