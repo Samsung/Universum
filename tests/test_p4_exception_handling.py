@@ -39,7 +39,6 @@ configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555
     perforce_environment.temp_dir.remove(rec=1)
 
     assert result != 0
-    assert result != 0
 
     assert "[Errno 13] Permission denied" in capsys.readouterr().err
     # make sure submitter didn't leave any pending CLs in the workspace
@@ -55,9 +54,9 @@ def test_p4_print_exception(perforce_environment, stdout_checker):
     p4.save_client(client)
 
     settings = perforce_environment.settings
-
     result = universum.run(settings)
-    # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
+
+    # Update client at once to make sure it doesn't remain locked even if some assert fails
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress unlocked nomodtime normdir"
     p4.save_client(client)
