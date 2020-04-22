@@ -85,4 +85,3 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker, ca
     stdout_checker.assert_has_calls_with_param(
         "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
     assert "CiException: [Errno 2] No such file or directory" in capsys.readouterr().err
-
