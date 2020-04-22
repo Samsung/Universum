@@ -362,7 +362,7 @@ class Launcher(ProjectDirectory):
 
         try:
             with open(config_path) as config:
-                exec(config.read(), config_globals)  # pylint: disable=exec-used
+                exec config.read() in config_globals  # pylint: disable=exec-used
 
             self.source_project_configs = config_globals["configs"]
             dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")

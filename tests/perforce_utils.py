@@ -197,6 +197,20 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         change["Description"] = "Test submit"
         p4.run_submit(change)
 
+        permissions = p4.fetch_protect()
+        permissions['Protections'] = [
+            'write user * * //...',
+            'list user * * -//spec/...',
+            'super user p4user * //...',                         # first three rows are default
+            '=write user p4user * -//depot/write-protected/...'  # prohibit p4user to submit changes to this branch
+        ]
+        p4.save_protect(permissions)
+
+        triggers = {'Triggers': [
+            'test.check change-submit //depot/trigger-protected/... "false"' # trigger to prevent any submits to this branch
+        ]}
+        p4.save_triggers(triggers)
+
         yield utils.Params(p4=p4,
                            client_name=client_name,
                            depot=depot,
