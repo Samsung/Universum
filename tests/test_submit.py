@@ -38,7 +38,7 @@ def test_fail_forbidden_branch(p4_submit_environment, branch):
     file_to_add.write(text + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
+    setattr(settings.Submit, "reconcile_list", [str(file_to_add)])
 
     assert universum.run(settings)
 
