@@ -46,6 +46,29 @@ def test_fail_forbidden_branch(p4_submit_environment, branch):
     assert not p4.run_opened("-C", p4_submit_environment.client_name)
 
 
+def test_p4_success_files_in_default(p4_submit_environment):
+    p4 = p4_submit_environment.p4
+    p4_file = p4_submit_environment.repo_file
+    p4.run_edit(unicode(p4_file))
+    text = "This text should be in file"
+    p4_file.write(text + "\n")
+
+    file_name = utils.randomize_name("new_file") + ".txt"
+    new_file = p4_submit_environment.vcs_cooking_dir.join(file_name)
+    new_file.write("This is a new file" + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+
+    assert not universum.run(settings)
+
+    check = False
+    for line in p4_file.readlines():
+        if text in line:
+            check = True
+    assert check
+
+
 class SubmitterParameters(object):
     def __init__(self, stdout_checker, environment):
         self.stdout_checker = stdout_checker

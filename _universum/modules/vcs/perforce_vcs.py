@@ -146,6 +146,29 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
                 raise
             return []
 
+    def reconcile_one_path(self, file_path, workspace_root, change_id, edit_only):
+        # TODO: cover 'not file_path.startswith("/")' case with tests
+        if not file_path.startswith("/"):
+            file_path = workspace_root + "/" + file_path
+        if file_path.endswith("/"):
+            file_path += "..."
+        if edit_only:
+            reconcile_result = self.p4reconcile("-c", change_id, "-e", convert_to_str(file_path))
+            if not reconcile_result:
+                self.out.log(
+                    "The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
+        else:
+            reconcile_result = self.p4reconcile("-c", change_id, convert_to_str(file_path))
+
+        for line in reconcile_result:
+            # p4reconcile returns list of dicts AND strings if file is opened in another workspace
+            # so we catch TypeError if line is not dict
+            try:
+                if line["action"] == "add":
+                    self.p4.run_reopen("-c", change_id, "-t", "+w", line["depotFile"])
+            except TypeError:
+                self.out.log(line)
+
     @catch_p4exception()
     def submit_new_change(self, description, file_list, review=False, edit_only=False):
         self.connect()
@@ -166,26 +189,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
 
         try:
             for file_path in file_list:
-                # TODO: cover 'not file_path.startswith("/")' case with tests
-                if not file_path.startswith("/"):
-                    file_path = workspace_root + "/" + file_path
-                if file_path.endswith("/"):
-                    file_path += "..."
-                if edit_only:
-                    reconcile_result = self.p4reconcile("-c", change_id, "-e", convert_to_str(file_path))
-                    if not reconcile_result:
-                        self.out.log("The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
-                else:
-                    reconcile_result = self.p4reconcile("-c", change_id, convert_to_str(file_path))
-
-                for line in reconcile_result:
-                    # p4reconcile returns list of dicts AND strings if file is opened in another workspace
-                    # so we catch TypeError if line is not dict
-                    try:
-                        if line["action"] == "add":
-                            self.p4.run_reopen("-c", change_id, "-t", "+w", line["depotFile"])
-                    except TypeError:
-                        self.out.log(line)
+                self.reconcile_one_path(file_path, workspace_root, change_id, edit_only)
 
             current_cl = self.p4.fetch_change(change_id)
             # If no changes were reconciled, there will be no file records in CL dictionary
