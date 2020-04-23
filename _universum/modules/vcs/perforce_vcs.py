@@ -159,18 +159,10 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         client = self.p4.fetch_client(self.settings.client)
         workspace_root = client['Root']
 
-        # Make sure default CL is empty
-        try:
-            change = self.p4.fetch_change()
-            if "Files" in change:
-                text = "Default CL already contains the following files before reconciling:\n"
-                for line in change["Files"]:
-                    text += " * " + line + "\n"
-                text += "Submitting skipped"
-                self.out.log(text)
-                return 0
-        except P4Exception:
-            pass
+        change = self.p4.fetch_change()
+        change["Files"] = []
+        change["Description"] = description
+        change_id = self.p4.save_change(change)[0].split()[1]
 
         for file_path in file_list:
             # TODO: cover 'not file_path.startswith("/")' case with tests
@@ -179,32 +171,35 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             if file_path.endswith("/"):
                 file_path += "..."
             if edit_only:
-                reconcile_result = self.p4reconcile("-e", convert_to_str(file_path))
+                reconcile_result = self.p4reconcile("-c", change_id, "-e", convert_to_str(file_path))
                 if not reconcile_result:
                     self.out.log("The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
             else:
-                reconcile_result = self.p4reconcile(convert_to_str(file_path))
+                reconcile_result = self.p4reconcile("-c", change_id, convert_to_str(file_path))
 
             for line in reconcile_result:
                 # p4reconcile returns list of dicts AND strings if file is opened in another workspace
                 # so we catch TypeError if line is not dict
                 try:
                     if line["action"] == "add":
-                        self.p4.run_reopen("-t", "+w", line["depotFile"])
+                        self.p4.run_reopen("-c", change_id, "-t", "+w", line["depotFile"])
                 except TypeError:
                     self.out.log(line)
 
-        current_cl = self.p4.fetch_change()
-        current_cl['Description'] = description
-
+        current_cl = self.p4.fetch_change(change_id)
         # If no changes were reconciled, there will be no file records in CL dictionary
         if "Files" not in current_cl:
+            self.p4.run_change("-d", change_id)
             return 0
 
-        result = self.p4.run_submit(current_cl, "-f", "revertunchanged")
-        cl_number = result[-1]['submittedChange']
+        try:
+            self.p4.run_submit(current_cl, "-f", "revertunchanged")
+        except Exception:
+            self.p4.run_revert("-k", "-c", change_id)
+            self.p4.run_change("-d", change_id)
+            raise
 
-        return cl_number
+        return change_id
 
 
 class PerforceWithMappings(PerforceVcs):
