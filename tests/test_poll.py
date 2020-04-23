@@ -59,7 +59,7 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     stdout_checker.assert_has_calls_with_param("Cmd('git') failed due to: exit code(128)")
 
 
-class PollerParameters(object):
+class PollerParameters:
     def __init__(self, log_exception_checker, stdout_checker, http_check, environment):
         self.log_exception_checker = log_exception_checker
         self.stdout_checker = stdout_checker
