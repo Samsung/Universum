@@ -14,7 +14,7 @@ Bug fixes
 
 * **p4:** do not try to revert local files as they can be no longer accessible for write
    to avoid creation of undeletable CLs and workspaces
-* **launcher:** fix unsuccessful  step launch in Ubuntu 14.04 (Python 2.7.6)
+* **launcher:** fix unsuccessful step launch in Ubuntu 14.04 (Python 2.7.6)
 
 
 0.18.4 (2020-04-06)
