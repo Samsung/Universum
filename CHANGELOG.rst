@@ -12,8 +12,9 @@ New features
 Bug fixes
 ~~~~~~~~~
 
-* **p4:** correctly revert files that may no longer be accessible
-* **launcher:** change exec syntax to one supported by Python 2.7.6 (Ubuntu 14.04)
+* **p4:** do not try to revert local files as they can be no longer accessible for write
+   to avoid creation of undeletable CLs and workspaces
+* **launcher:** fix unsuccessful  step launch in Ubuntu 14.04 (Python 2.7.6)
 
 
 0.18.4 (2020-04-06)
