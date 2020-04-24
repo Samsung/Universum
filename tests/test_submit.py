@@ -47,12 +47,14 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
 
 
 def test_p4_success_files_in_default(p4_submit_environment):
+    # This file should not be submitted, it should remain unchanged in default CL
     p4 = p4_submit_environment.p4
     p4_file = p4_submit_environment.repo_file
     p4.run_edit(unicode(p4_file))
     text = "This text should be in file"
     p4_file.write(text + "\n")
 
+    # This file should be successfully submitted
     file_name = utils.randomize_name("new_file") + ".txt"
     new_file = p4_submit_environment.vcs_cooking_dir.join(file_name)
     new_file.write("This is a new file" + "\n")
@@ -61,21 +63,18 @@ def test_p4_success_files_in_default(p4_submit_environment):
     setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
 
     assert not universum.run(settings)
-
-    check = False
-    for line in p4_file.readlines():
-        if text in line:
-            check = True
-    assert check
+    assert text in p4_file.read()
 
 
 def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
+    # This file should not be submitted, it should remain unchanged in default CL
     p4 = p4_submit_environment.p4
     p4_file = p4_submit_environment.repo_file
     p4.run_edit(unicode(p4_file))
     text_default = "This text should be in file"
     p4_file.write(text_default + "\n")
 
+    # This file must fail submit and remain unchanged while not checked out any more
     protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir("write-protected")
     new_file = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text_new = "This is a new line in the file"
@@ -85,18 +84,8 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
 
     assert universum.run(settings)
-
-    check = False
-    for line in p4_file.readlines():
-        if text_default in line:
-            check = True
-    assert check
-
-    check = False
-    for line in new_file.readlines():
-        if text_new in line:
-            check = True
-    assert check
+    assert text_default in p4_file.read()
+    assert text_new in new_file.read()
 
 
 class SubmitterParameters(object):
