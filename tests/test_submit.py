@@ -28,9 +28,9 @@ def p4_submit_environment(perforce_workspace, tmpdir):
 
 
 @pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
-def test_fail_forbidden_branch(p4_submit_environment, branch):
+def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir(branch)
-    file_to_add = protected_dir.join("new_file.txt")
+    file_to_add = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
 
@@ -44,6 +44,48 @@ def test_fail_forbidden_branch(p4_submit_environment, branch):
     assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
     # make sure submitter didn't leave any pending changes in default CL
     assert not p4.run_opened("-C", p4_submit_environment.client_name)
+
+
+def test_p4_success_files_in_default(p4_submit_environment):
+    # This file should not be submitted, it should remain unchanged in default CL
+    p4 = p4_submit_environment.p4
+    p4_file = p4_submit_environment.repo_file
+    p4.run_edit(unicode(p4_file))
+    text = "This text should be in file"
+    p4_file.write(text + "\n")
+
+    # This file should be successfully submitted
+    file_name = utils.randomize_name("new_file") + ".txt"
+    new_file = p4_submit_environment.vcs_cooking_dir.join(file_name)
+    new_file.write("This is a new file" + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+
+    assert not universum.run(settings)
+    assert text in p4_file.read()
+
+
+def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
+    # This file should not be submitted, it should remain unchanged in default CL
+    p4 = p4_submit_environment.p4
+    p4_file = p4_submit_environment.repo_file
+    p4.run_edit(unicode(p4_file))
+    text_default = "This text should be in file"
+    p4_file.write(text_default + "\n")
+
+    # This file must fail submit and remain unchanged while not checked out any more
+    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir("write-protected")
+    new_file = protected_dir.join(utils.randomize_name("new_file") + ".txt")
+    text_new = "This is a new line in the file"
+    new_file.write(text_new + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+
+    assert universum.run(settings)
+    assert text_default in p4_file.read()
+    assert text_new in new_file.read()
 
 
 class SubmitterParameters(object):
