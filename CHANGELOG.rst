@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.18.5 (2020-04-24)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **submit:**  create and delete real CL to not interfere with any changes in default CL
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** correctly revert files that may no longer be accessible
+* **launcher:** change exec syntax to one supported by Python 2.7.6 (Ubuntu 14.04)
+
+
 0.18.4 (2020-04-06)
 -------------------
 
