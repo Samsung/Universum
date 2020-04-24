@@ -7,7 +7,7 @@ Change log
 New features
 ~~~~~~~~~~~~
 
-* **submit:**  create and delete real CL to not interfere with any changes in default CL
+* **submit:** create and delete real CL to not interfere with any changes in default CL
 
 Bug fixes
 ~~~~~~~~~
