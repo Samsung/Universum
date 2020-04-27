@@ -199,7 +199,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
 
             self.p4.run_submit(current_cl, "-f", "revertunchanged")
         except Exception:
-            self.p4.run_revert("-k", "-c", change_id)
+            self.p4.run_revert("-k", "-c", change_id, "//...")
             self.p4.run_change("-d", change_id)
             raise
 
