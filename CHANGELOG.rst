@@ -1,6 +1,19 @@
 Change log
 ==========
 
+0.18.6 (2020-04-27)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** fix fix the bug with failing workspace cleanup on attempt to revert entire workspace,
+   because it requires admin access to the perforce server.
+   The buggy code was introduced by the fix of the issue with reverting files,
+   when there is no file system access to them.
+
+
+
 0.18.5 (2020-04-24)
 -------------------
 

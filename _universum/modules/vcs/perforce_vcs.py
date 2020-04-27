@@ -199,7 +199,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
 
             self.p4.run_submit(current_cl, "-f", "revertunchanged")
         except Exception:
-            self.p4.run_revert("-k", "-c", change_id)
+            self.p4.run_revert("-k", "-c", change_id, "//...")
             self.p4.run_change("-d", change_id)
             raise
 
@@ -557,16 +557,16 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def clean_workspace(self):
         try:
             self.p4.client = self.client_name
-            report = self.p4.run_revert("-C", self.client_name, "-k", "//...")
+            report = self.p4.run_revert("-k", "-c", "default", "//...")
             self.p4report(report)
             shelves = self.p4.run_changes("-c", self.client_name, "-s", "shelved")
             for item in shelves:
                 self.out.log("Deleting shelve from CL " + item["change"])
                 self.p4.run_shelve("-d", "-c", item["change"])
-            self.p4.run_revert("-C", self.client_name, "-k", "//...")
             all_cls = self.p4.run_changes("-c", self.client_name, "-s", "pending")
             for item in all_cls:
                 self.out.log("Deleting CL " + item["change"])
+                self.p4.run_revert("-k", "-c", item["change"], "//...")
                 self.p4.run_change("-d", item["change"])
         except P4Exception as e:
             if "Client '{}' unknown".format(self.client_name) not in e.value \
