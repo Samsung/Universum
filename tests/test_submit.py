@@ -38,7 +38,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     file_to_add.write(text + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
+    setattr(settings.Submit, "reconcile_list", [str(file_to_add)])
 
     assert universum.run(settings)
 
@@ -53,7 +53,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
     # This file should not be submitted, it should remain unchanged in default CL
     p4 = p4_submit_environment.p4
     p4_file = p4_submit_environment.repo_file
-    p4.run_edit(unicode(p4_file))
+    p4.run_edit(str(p4_file))
     text = "This text should be in file"
     p4_file.write(text + "\n")
 
@@ -63,7 +63,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
     new_file.write("This is a new file" + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+    setattr(settings.Submit, "reconcile_list", [str(new_file)])
 
     assert not universum.run(settings)
     assert text in p4_file.read()
@@ -73,7 +73,7 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     # This file should not be submitted, it should remain unchanged in default CL
     p4 = p4_submit_environment.p4
     p4_file = p4_submit_environment.repo_file
-    p4.run_edit(unicode(p4_file))
+    p4.run_edit(str(p4_file))
     text_default = "This text should be in file"
     p4_file.write(text_default + "\n")
 
@@ -84,7 +84,7 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     new_file.write(text_new + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+    setattr(settings.Submit, "reconcile_list", [str(new_file)])
 
     assert universum.run(settings)
     assert text_default in p4_file.read()

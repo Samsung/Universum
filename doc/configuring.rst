@@ -326,8 +326,8 @@ pass_tag, fail_tag
     .. testoutput::
 
         $ ./configs.py
-        [{'command': 'make --platform Linux', 'name': 'Make Linux', 'pass_tag': 'pass_Linux'},
-        {'command': 'make --platform Windows', 'name': 'Make Windows', 'pass_tag': 'pass_Windows'}]
+        [{'name': 'Make Linux', 'command': 'make --platform Linux', 'pass_tag': 'pass_Linux'},
+        {'name': 'Make Windows', 'command': 'make --platform Windows', 'pass_tag': 'pass_Windows'}]
 
     This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
 
@@ -391,9 +391,9 @@ it includes. For example, running the script, given above, will result in the fo
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make -C SpecialModule/', 'name': 'Make Special Module'},
-    {'command': 'scripts/run_tests.sh', 'name': 'Run internal tests'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests', 'name': 'Run external tests'}]
+    [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
+    {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
+    {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
 
 As second and third build configurations have the same names, if log files are created,
 only two logs will be created: one for the first build step, another for both second and third,
@@ -442,8 +442,8 @@ the following list of configurations:
 .. testoutput::
 
     $ ./configs.py
-    [{'command': 'make', 'name': 'Make project'},
-    {'command': 'run_tests.sh', 'name': 'Run tests'}]
+    [{'name': 'Make project', 'command': 'make'},
+    {'name': 'Run tests', 'command': 'run_tests.sh'}]
 
 
 Multiplying build configurations
@@ -495,8 +495,8 @@ will `produce <Dump configurations list_>`_ this list of configurations:
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make --platform A', 'name': 'Make Platform A'},
-    {'artifacts': 'out', 'command': 'make --platform B', 'name': 'Make Platform B'}]
+    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
 
 * `command` and `name` values are produced of `command` and `name` values of each of two configurations
 * `artifacts` value, united with no corresponding value in second configuration, remains unchanged
@@ -549,12 +549,12 @@ This file `will get us <Dump configurations list_>`_ the following list of confi
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make --platform A', 'name': 'Make Platform A'},
-    {'artifacts': 'out', 'command': 'make --platform B', 'name': 'Make Platform B'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A', 'name': 'Run tests for Platform A - Release'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d', 'name': 'Run tests for Platform A - Debug'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B', 'name': 'Run tests for Platform B - Release'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d', 'name': 'Run tests for Platform B - Debug'}]
+    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
+    {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
+    {'name': 'Run tests for Platform A - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d'},
+    {'name': 'Run tests for Platform B - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B'},
+    {'name': 'Run tests for Platform B - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d'}]
 
 As in common arithmetic, multiplication is done before addition. To change the operations
 order, use parentheses:
