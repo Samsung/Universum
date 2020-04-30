@@ -13,191 +13,7 @@ import universum
 from . import git_utils, perforce_utils, utils
 
 
-def test_p4_success_command_line_poll_no_changes(stdout_checker, perforce_workspace, tmpdir):
-    db_file = tmpdir.join("p4poll.json")
-    result = universum.main(["poll", "-ot", "term",
-                             "-vt", "p4",
-                             "-f", six.text_type(db_file),
-                             "-p4p", perforce_workspace.p4.port,
-                             "-p4u", perforce_workspace.p4.user,
-                             "-p4P", perforce_workspace.p4.password,
-                             "-p4d", "//depot/...",
-                             "-jtu", "https://localhost/?%s"])
-    assert result == 0
-    stdout_checker.assert_has_calls_with_param("==> No changes detected")
-
-
-def test_git_success_command_line_poll_no_changes(stdout_checker, git_server, tmpdir):
-    db_file = tmpdir.join("gitpoll.json")
-    result = universum.main(["poll", "-ot", "term",
-                             "-vt", "git",
-                             "-f", six.text_type(db_file),
-                             "-gr", git_server.url,
-                             "-grs", git_server.target_branch,
-                             "-jtu", "https://localhost/?%s"])
-    assert result == 0
-    stdout_checker.assert_has_calls_with_param("==> No changes detected")
-
-
-def test_vcs_error_no_vcs_type(capsys):
-    try:
-        del os.environ["VCS_TYPE"]
-    except KeyError:
-        pass
-    with pytest.raises(SystemExit):
-        universum.main(["-ot", "term"])
-
-    assert "The repository (VCS) type is not set" in capsys.readouterr().err
-
-
-def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
-    db_file = tmpdir.join("p4poll.json")
-    result = universum.main(["poll", "-ot", "term",
-                             "-vt", "p4",
-                             "-f", six.text_type(db_file),
-                             "-p4p", "127.0.0.1:1024",
-                             "-p4u", perforce_workspace.p4.user,
-                             "-p4P", perforce_workspace.p4.password,
-                             "-p4d", "//depot/...",
-                             "-jtu", "https://localhost/?%s"])
-    assert result != 0
-    stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
-
-
-def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
-    db_file = tmpdir.join("gitpoll.json")
-    result = universum.main(["poll", "-ot", "term",
-                             "-vt", "git",
-                             "-f", six.text_type(db_file),
-                             "-gr", "file:///non-existing-directory",
-                             "-grs", git_server.target_branch,
-                             "-jtu", "https://localhost/?%s"])
-    assert result != 0
-    stdout_checker.assert_has_calls_with_param("Cmd('git') failed due to: exit code(128)")
-
-# ----------------------------------------------------------------------------------------------
-
-
-class PollerParameters:
-    def __init__(self, log_exception_checker, stdout_checker, http_check, environment):
-        self.log_exception_checker = log_exception_checker
-        self.stdout_checker = stdout_checker
-        self.http_check = http_check
-        self.poll_settings = environment.settings
-        self.environment = environment
-
-    def make_a_change(self):
-        return self.environment.make_a_change()
-
-
-@pytest.fixture()
-def poll_parameters(log_exception_checker, stdout_checker, http_check):
-    def inner(environment):
-        return PollerParameters(log_exception_checker, stdout_checker, http_check, environment)
-    yield inner
-
-
-@pytest.fixture(params=["git", "p4"])
-def poll_environment(request, perforce_workspace, git_client, tmpdir):
-    if request.param == "git":
-        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="poll")
-    else:
-        yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="poll")
-
-
-def test_poll_error_one_change(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
-    # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    # make change in workspace
-    change = parameters.make_a_change()
-
-    # run poll again and fail triggering url because there is no server
-    assert universum.run(parameters.poll_settings) != 0
-
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
-
-    # there is no listening server
-    parameters.log_exception_checker.assert_has_calls_with_param("[Errno 111] Connection refused")
-
-
-def test_poll_success_one_change(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
-    # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    # make change in workspace
-    change = parameters.make_a_change()
-
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-    parameters.http_check.assert_request_was_made({"cl": [change]})
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
-
-
-def test_poll_success_two_changes(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
-    # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    # make changes in workspace
-    change1 = parameters.make_a_change()
-    change2 = parameters.make_a_change()
-
-    # run poll again and trigger the url twice
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
-
-    parameters.http_check.assert_request_was_made({"cl": [change1]})
-    parameters.http_check.assert_request_was_made({"cl": [change2]})
-
-
-def test_poll_changes_several_times(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
-    # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    # make changes in workspace
-    change1 = parameters.make_a_change()
-    change2 = parameters.make_a_change()
-
-    # run poll and trigger the urls
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
-
-    parameters.http_check.assert_request_was_made({"cl": [change1]})
-    parameters.http_check.assert_request_was_made({"cl": [change2]})
-
-    # make more changes in workspace
-    parameters.stdout_checker.reset()
-    change3 = parameters.make_a_change()
-    change4 = parameters.make_a_change()
-
-    # run poll and trigger urls for the new changes only
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
-
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
-    parameters.stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change1)
-    parameters.stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change2)
-
-    parameters.http_check.assert_request_was_made({"cl": [change3]})
-    parameters.http_check.assert_request_was_made({"cl": [change4]})
-    parameters.http_check.assert_request_was_not_made({"cl": [change1]})
-    parameters.http_check.assert_request_was_not_made({"cl": [change2]})
-
-# ----------------------------------------------------------------------------------------------
-
-
-def test_submit_error_no_repo(submit_environment, stdout_checker):
+def test_error_no_repo(submit_environment, stdout_checker):
     settings = copy.deepcopy(submit_environment.settings)
     if settings.Vcs.type == "git":
         settings.ProjectDirectory.project_root = "non_existing_repo"
@@ -207,6 +23,72 @@ def test_submit_error_no_repo(submit_environment, stdout_checker):
         settings.PerforceSubmitVcs.client = "non_existing_client"
         universum.run(settings)
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
+
+
+@pytest.fixture()
+def p4_submit_environment(perforce_workspace, tmpdir):
+    yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
+
+
+@pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
+def test_p4_error_forbidden_branch(p4_submit_environment, branch):
+    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir(branch)
+    file_to_add = protected_dir.join(utils.randomize_name("new_file") + ".txt")
+    text = "This is a new line in the file"
+    file_to_add.write(text + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(file_to_add)])
+
+    assert universum.run(settings)
+
+    p4 = p4_submit_environment.p4
+    # make sure submitter didn't leave any pending CLs in the workspace
+    assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
+    # make sure submitter didn't leave any pending changes in default CL
+    assert not p4.run_opened("-C", p4_submit_environment.client_name)
+
+
+def test_p4_success_files_in_default(p4_submit_environment):
+    # This file should not be submitted, it should remain unchanged in default CL
+    p4 = p4_submit_environment.p4
+    p4_file = p4_submit_environment.repo_file
+    p4.run_edit(unicode(p4_file))
+    text = "This text should be in file"
+    p4_file.write(text + "\n")
+
+    # This file should be successfully submitted
+    file_name = utils.randomize_name("new_file") + ".txt"
+    new_file = p4_submit_environment.vcs_cooking_dir.join(file_name)
+    new_file.write("This is a new file" + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+
+    assert not universum.run(settings)
+    assert text in p4_file.read()
+
+
+def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
+    # This file should not be submitted, it should remain unchanged in default CL
+    p4 = p4_submit_environment.p4
+    p4_file = p4_submit_environment.repo_file
+    p4.run_edit(unicode(p4_file))
+    text_default = "This text should be in file"
+    p4_file.write(text_default + "\n")
+
+    # This file must fail submit and remain unchanged while not checked out any more
+    protected_dir = p4_submit_environment.vcs_cooking_dir.mkdir("write-protected")
+    new_file = protected_dir.join(utils.randomize_name("new_file") + ".txt")
+    text_new = "This is a new line in the file"
+    new_file.write(text_new + "\n")
+
+    settings = copy.deepcopy(p4_submit_environment.settings)
+    setattr(settings.Submit, "reconcile_list", [unicode(new_file)])
+
+    assert universum.run(settings)
+    assert text_default in p4_file.read()
+    assert text_new in new_file.read()
 
 
 class SubmitterParameters:
@@ -254,12 +136,12 @@ def submit_environment(request, perforce_workspace, git_client, tmpdir):
         yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
 
 
-def test_submit_success_no_changes(submit_parameters, submit_environment):
+def test_success_no_changes(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
     assert parameters.submit_path_list([]) == 0
 
 
-def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
+def test_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     file_name = utils.randomize_name("new_file") + ".txt"
@@ -283,7 +165,7 @@ def test_submit_success_commit_add_modify_remove_one_file(submit_parameters, sub
     assert not parameters.file_present(file_path)
 
 
-def test_submit_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submit_environment):
+def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     new_file_name = utils.randomize_name("new_file") + ".txt"
@@ -303,7 +185,7 @@ def test_submit_success_ignore_new_and_deleted_while_edit_only(submit_parameters
     assert not parameters.file_present(six.text_type(temp_file))
 
 
-def test_submit_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
+def test_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.repo_file
@@ -314,7 +196,7 @@ def test_submit_success_commit_modified_while_edit_only(submit_parameters, submi
     assert parameters.text_in_file(text, six.text_type(target_file))
 
 
-def test_submit_error_review(submit_parameters, submit_environment):
+def test_error_review(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.repo_file
@@ -325,7 +207,7 @@ def test_submit_error_review(submit_parameters, submit_environment):
     parameters.stdout_checker.assert_has_calls_with_param("not supported")
 
 
-def test_submit_success_reconcile_directory(submit_parameters, submit_environment):
+def test_success_reconcile_directory(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     dir_name = utils.randomize_name("new_directory")
@@ -368,7 +250,7 @@ def test_submit_success_reconcile_directory(submit_parameters, submit_environmen
     assert not parameters.file_present(str(tmp_dir))
 
 
-def test_submit_success_reconcile_wildcard(submit_parameters, submit_environment):
+def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
     dir_name = utils.randomize_name("new_directory")

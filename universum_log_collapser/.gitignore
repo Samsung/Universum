@@ -5,3 +5,4 @@
 target
 *.iml
 node_modules
+generated.html

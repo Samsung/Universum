@@ -1,6 +1,46 @@
 Change log
 ==========
 
+0.18.6 (2020-04-27)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** fix fix the bug with failing workspace cleanup on attempt to revert entire workspace,
+   because it requires admin access to the perforce server.
+   The buggy code was introduced by the fix of the issue with reverting files,
+   when there is no file system access to them.
+
+
+
+0.18.5 (2020-04-24)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **submit:** create and delete real CL to not interfere with any changes in default CL
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** do not try to revert local files as they can be no longer accessible for write
+   to avoid creation of undeletable CLs and workspaces
+* **launcher:** fix unsuccessful step launch in Ubuntu 14.04 (Python 2.7.6)
+
+
+0.18.4 (2020-04-06)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** force clean not deleting CLs leading to buid failures when client exists and contains CLs
+* **jenkins_plugin:** steps coloring not working when not using Jenkins Pipeline
+* **docs:** update command line arguments in docs to correspond to real ones
+
+
 0.18.3 (2020-01-10)
 -------------------
 
