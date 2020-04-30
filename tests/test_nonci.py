@@ -33,7 +33,7 @@ def test_launcher_output(universum_runner_nonci):
     assert "Cleaning artifacts..." in console_out_log           # nonci cleans artifacts on project launch
     assert "Old artifact" not in console_out_log                # the artifacts are actually deleted
     assert file_output_expected not in console_out_log          # nonci doesn't write logs to the file by default
-    assert "Reporting build start" not in config                # nonci doesn't report build start
+    assert "Reporting build start" not in console_out_log       # nonci doesn't report build start
     assert "Copying sources" not in console_out_log             # nonci doesn't copy sources
     assert pwd_string_in_logs in console_out_log                # nonci launches step in the same directory
     assert "Cleaning copied sources" not in console_out_log     # nonci doesn't delete sources after work is done
