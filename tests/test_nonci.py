@@ -31,13 +31,17 @@ def test_launcher_output(universum_runner_nonci):
         "bash -c 'mkdir /artifacts; echo \"Old artifact\" > /artifacts/test_nonci.txt'")
 
     console_out_log = universum_runner_nonci.run(config)
-    assert "Cleaning artifacts..." in console_out_log           # nonci cleans artifacts on project launch
-    assert "Old artifact" not in console_out_log                # the artifacts are actually deleted
+
+    # the following logs are only present in the default mode of the universum
     assert file_output_expected not in console_out_log          # nonci doesn't write logs to the file by default
     assert "Reporting build start" not in console_out_log       # nonci doesn't report build start
     assert "Copying sources" not in console_out_log             # nonci doesn't copy sources
-    assert pwd_string_in_logs in console_out_log                # nonci launches step in the same directory
     assert "Cleaning copied sources" not in console_out_log     # nonci doesn't delete sources after work is done
+
+    # the following logs are specific to the nonci mode of the universum
+    assert "Cleaning artifacts..." in console_out_log           # nonci cleans artifacts on project launch
+    assert "Old artifact" not in console_out_log                # the artifacts are actually deleted
+    assert pwd_string_in_logs in console_out_log                # nonci launches step in the same directory
 
     # nonci doesn't require to clean artifacts between calls
     log = universum_runner_nonci.run(config, additional_parameters='-lo file')
