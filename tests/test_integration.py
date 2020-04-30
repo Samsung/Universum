@@ -19,7 +19,7 @@ def get_line_with_text(text, log):
     return ""
 
 
-@pytest.mark.nonci_applicable
+@pytest.mark.nonci_and_main
 def test_minimal_execution(universum_runner):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -59,7 +59,7 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
     assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file.sh"))
 
 
-@pytest.mark.nonci_applicable
+@pytest.mark.nonci_and_main
 def test_background_steps(universum_runner):
     log = universum_runner.run("""
 from _universum.configuration_support import Variations
@@ -112,7 +112,7 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
-@pytest.mark.nonci_applicable
+@pytest.mark.nonci_and_main
 def test_critical_steps(universum_runner):
     # Test linear
     log = universum_runner.run("""
@@ -204,27 +204,27 @@ configs += Variations([dict(name="Additional step", command=["echo", "This shoul
     assert "This should be in log - 3" in log
 
 
-def test_minimal_git(universum_runner):
-    log = universum_runner.run("""
+def test_minimal_git(universum_runner_with_vcs):
+    log = universum_runner_with_vcs.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="git")
-    assert universum_runner.git.repo_file.basename in log
+    assert universum_runner_with_vcs.git.repo_file.basename in log
 
 
-def test_minimal_p4(universum_runner):
-    log = universum_runner.run("""
+def test_minimal_p4(universum_runner_with_vcs):
+    log = universum_runner_with_vcs.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="p4")
-    assert universum_runner.perforce.repo_file.basename in log
+    assert universum_runner_with_vcs.perforce.repo_file.basename in log
 
 
-def test_p4_params(universum_runner):
-    p4 = universum_runner.perforce.p4
-    p4_file = universum_runner.perforce.repo_file
+def test_p4_params(universum_runner_with_vcs):
+    p4 = universum_runner_with_vcs.perforce.p4
+    p4_file = universum_runner_with_vcs.perforce.repo_file
     config = """
 from _universum.configuration_support import Variations
 
@@ -232,15 +232,15 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
 """.format(p4_file.basename)
 
     # Prepare SYNC_CHANGELIST
-    sync_cl = p4.run_changes("-s", "submitted", "-m1", universum_runner.perforce.depot)[0]["change"]
-    p4.run_edit(universum_runner.perforce.depot)
+    sync_cl = p4.run_changes("-s", "submitted", "-m1", universum_runner_with_vcs.perforce.depot)[0]["change"]
+    p4.run_edit(universum_runner_with_vcs.perforce.depot)
     p4_file.write("This line shouldn't be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "Rename basic config"
     p4.run_submit(change)
 
     # Prepare SHELVE_CHANGELIST
-    p4.run_edit(universum_runner.perforce.depot)
+    p4.run_edit(universum_runner_with_vcs.perforce.depot)
     p4_file.write("This line should be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
@@ -248,22 +248,22 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
     p4.run_shelve("-fc", shelve_cl)
 
     # Do not pass params
-    log = universum_runner.run(config, vcs_type="p4")
+    log = universum_runner_with_vcs.run(config, vcs_type="p4")
     assert "This line shouldn't be in file." in log
     assert "This line should be in file." not in log
 
     # Pass params via command line
 
-    universum_runner.clean_artifacts()
-    log = universum_runner.run(config, vcs_type="p4",
-                               additional_parameters=" -p4h=" + sync_cl + " -p4s=" + shelve_cl)
+    universum_runner_with_vcs.clean_artifacts()
+    log = universum_runner_with_vcs.run(config, vcs_type="p4",
+                                        additional_parameters=" -p4h=" + sync_cl + " -p4s=" + shelve_cl)
     assert "This line shouldn't be in file." not in log
     assert "This line should be in file." in log
 
     # Pass params via environment variables
-    universum_runner.clean_artifacts()
-    log = universum_runner.run(config, vcs_type="p4", environment=["SYNC_CHANGELIST=" + sync_cl,
-                                                                   "SHELVE_CHANGELIST_1=" + shelve_cl])
+    universum_runner_with_vcs.clean_artifacts()
+    log = universum_runner_with_vcs.run(config, vcs_type="p4", environment=["SYNC_CHANGELIST=" + sync_cl,
+                                                                            "SHELVE_CHANGELIST_1=" + shelve_cl])
     assert "This line shouldn't be in file." not in log
     assert "This line should be in file." in log
 
@@ -284,7 +284,7 @@ def empty_required_params_ids(param):
     [False, "", ["SWARM_SERVER=http://swarm"]],
     [False, " --build-only-latest -ssu=http://swarm", []]
 ], ids=empty_required_params_ids)
-def test_empty_required_params(universum_runner, url_error_expected, parameters, env):
+def test_empty_required_params(universum_runner_with_vcs, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
     config = """
 from _universum.configuration_support import Variations
@@ -292,7 +292,7 @@ from _universum.configuration_support import Variations
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
-    log = universum_runner.run(config, vcs_type="p4", expected_to_fail=True,
+    log = universum_runner_with_vcs.run(config, vcs_type="p4", expected_to_fail=True,
                                additional_parameters=" --report-to-review" + parameters, environment=env)
     if url_error_expected:
         assert url_error in log
@@ -300,7 +300,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
         assert url_error not in log
 
 
-@pytest.mark.nonci_applicable
+@pytest.mark.nonci_and_main
 def test_environment(universum_runner):
     script = universum_runner.local.root_directory.join("script.sh")
     script.write("""#!/bin/bash

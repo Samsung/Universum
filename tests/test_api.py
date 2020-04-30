@@ -1,8 +1,6 @@
-
 from os import path
 import json
 import pytest
-
 
 config = """
 from _universum.configuration_support import Variations
@@ -12,16 +10,16 @@ configs = Variations([dict(name="Run script", artifacts="output.json",
 """
 
 
-@pytest.mark.nonci_applicable
+@pytest.mark.nonci_and_main
 def test_error_wrong_environment(universum_runner):
     log = universum_runner.environment.assert_unsuccessful_execution("universum api file-diff")
     assert "Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment" in log
 
 
-def test_p4_file_diff(universum_runner):
-    p4 = universum_runner.perforce.p4
-    p4_directory = universum_runner.perforce.root_directory
-    p4_file = universum_runner.perforce.repo_file
+def test_p4_file_diff(universum_runner_with_vcs):
+    p4 = universum_runner_with_vcs.perforce.p4
+    p4_directory = universum_runner_with_vcs.perforce.root_directory
+    p4_file = universum_runner_with_vcs.perforce.repo_file
 
     p4.run_edit(p4_file)
     p4_file.write("This line is added to the file.\n")
@@ -31,11 +29,11 @@ def test_p4_file_diff(universum_runner):
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
 
-    log = universum_runner.run(config, vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
-                               additional_parameters=" --p4-force-clean")
+    log = universum_runner_with_vcs.run(config, vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
+                                        additional_parameters=" --p4-force-clean")
     assert "Module sh got exit code" not in log
 
-    with open(path.join(universum_runner.artifact_dir, "output.json")) as f:
+    with open(path.join(universum_runner_with_vcs.artifact_dir, "output.json")) as f:
         result = json.load(f)
 
     assert result[0]["action"] == "move/add"
@@ -44,9 +42,9 @@ def test_p4_file_diff(universum_runner):
     assert result[1]["repo_path"] == "//depot/writeable_file.txt"
 
 
-def test_multiple_p4_file_diff(universum_runner):
-    p4 = universum_runner.perforce.p4
-    p4_directory = universum_runner.perforce.root_directory
+def test_multiple_p4_file_diff(universum_runner_with_vcs):
+    p4 = universum_runner_with_vcs.perforce.p4
+    p4_directory = universum_runner_with_vcs.perforce.root_directory
 
     for index in range(0, 10000):
         new_file = p4_directory.join(f"new_file_{index}.txt")
@@ -57,23 +55,23 @@ def test_multiple_p4_file_diff(universum_runner):
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
 
-    log = universum_runner.run(config, vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
-                               additional_parameters=" --p4-force-clean")
+    log = universum_runner_with_vcs.run(config, vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
+                                        additional_parameters=" --p4-force-clean")
     assert "Module sh got exit code" not in log
 
-    with open(path.join(universum_runner.artifact_dir, "output.json")) as f:
+    with open(path.join(universum_runner_with_vcs.artifact_dir, "output.json")) as f:
         result = json.load(f)
     assert len(result) == 10000
     for entry in result:
         assert entry["action"] == "add"
 
 
-def test_git_file_diff(universum_runner):
-    repo = universum_runner.git.repo
-    server = universum_runner.git.server
-    logger = universum_runner.git.logger
-    git_directory = universum_runner.git.root_directory
-    git_file = universum_runner.git.repo_file
+def test_git_file_diff(universum_runner_with_vcs):
+    repo = universum_runner_with_vcs.git.repo
+    server = universum_runner_with_vcs.git.server
+    logger = universum_runner_with_vcs.git.logger
+    git_directory = universum_runner_with_vcs.git.root_directory
+    git_file = universum_runner_with_vcs.git.repo_file
 
     repo.git.checkout(server.target_branch)
     repo.git.checkout("new_testing_branch", b=True)
@@ -81,11 +79,12 @@ def test_git_file_diff(universum_runner):
     change = repo.index.commit("Special commit for testing")
     repo.remotes.origin.push(progress=logger, all=True)
 
-    log = universum_runner.run(config, vcs_type="git",
-                               environment=[f"GIT_CHERRYPICK_ID={change}", f"GIT_REFSPEC={server.target_branch}"])
+    log = universum_runner_with_vcs.run(config, vcs_type="git",
+                                        environment=[f"GIT_CHERRYPICK_ID={change}",
+                                                     f"GIT_REFSPEC={server.target_branch}"])
     assert "Module sh got exit code" not in log
 
-    with open(path.join(universum_runner.artifact_dir, "output.json")) as f:
+    with open(path.join(universum_runner_with_vcs.artifact_dir, "output.json")) as f:
         result = json.load(f)
 
     assert result[0]["action"] == "rename"
@@ -93,11 +92,11 @@ def test_git_file_diff(universum_runner):
     assert 'some_new_file_name.txt' in result[0]["local_path"]
 
 
-def test_multiple_git_file_diff(universum_runner):
-    repo = universum_runner.git.repo
-    server = universum_runner.git.server
-    logger = universum_runner.git.logger
-    git_directory = universum_runner.git.root_directory
+def test_multiple_git_file_diff(universum_runner_with_vcs):
+    repo = universum_runner_with_vcs.git.repo
+    server = universum_runner_with_vcs.git.server
+    logger = universum_runner_with_vcs.git.logger
+    git_directory = universum_runner_with_vcs.git.root_directory
 
     repo.git.checkout(server.target_branch)
     repo.git.checkout("new_testing_branch", b=True)
@@ -110,11 +109,12 @@ def test_multiple_git_file_diff(universum_runner):
     change = repo.index.commit("Special commit for testing")
     repo.remotes.origin.push(progress=logger, all=True)
 
-    log = universum_runner.run(config, vcs_type="git",
-                               environment=[f"GIT_CHERRYPICK_ID={change}", f"GIT_REFSPEC={server.target_branch}"])
+    log = universum_runner_with_vcs.run(config, vcs_type="git",
+                                        environment=[f"GIT_CHERRYPICK_ID={change}",
+                                                     f"GIT_REFSPEC={server.target_branch}"])
     assert "Module sh got exit code" not in log
 
-    with open(path.join(universum_runner.artifact_dir, "output.json")) as f:
+    with open(path.join(universum_runner_with_vcs.artifact_dir, "output.json")) as f:
         result = json.load(f)
     assert len(result) == 10000
     for entry in result:

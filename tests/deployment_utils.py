@@ -259,15 +259,15 @@ def runner_without_environment(perforce_workspace, git_client, local_sources, no
 
 
 @pytest.fixture()
-def universum_runner(execution_environment, runner_without_environment):
+def universum_runner_with_vcs(execution_environment, runner_without_environment):
     execution_environment.set_image("universum_test_env")
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def universum_runner_nonci(execution_environment, local_sources):
-    runner = UniversumRunner(None, None, local_sources, True)
+def universum_runner(execution_environment, local_sources, nonci):
+    runner = UniversumRunner(None, None, local_sources, nonci)
     execution_environment.set_image("universum_test_env")
     runner.set_environment(execution_environment)
     yield runner
@@ -301,5 +301,7 @@ def nonci(request):
 
 
 def pytest_generate_tests(metafunc):
-    if metafunc.definition.get_closest_marker('nonci_applicable'):
-        metafunc.parametrize('nonci', (False, True), ids=('no subcmd', 'subcmd: nonci',))
+    if metafunc.definition.get_closest_marker('nonci_and_main'):
+        metafunc.parametrize('nonci', (False, True), ids=('main', 'nonci',))
+    elif metafunc.definition.get_closest_marker('nonci_only'):
+        metafunc.parametrize('nonci', (True,), ids=('nonci',))
