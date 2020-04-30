@@ -5,7 +5,6 @@ import re
 import pytest
 
 
-@pytest.mark.nonci_applicable
 def test_code_report(universum_runner):
     config = """
 from _universum.configuration_support import Variations

@@ -50,7 +50,6 @@ class CodeReportCollector(ProjectDirectory):
                     item["command"][enum] = item["command"][enum].replace(temp_filename, actual_filename)
 
             afterall_item = deepcopy(item)
-            afterall_item.update({"afterall": True})
             afterall_steps.append(afterall_item)
         return Variations(afterall_steps)
 
