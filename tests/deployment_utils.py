@@ -221,8 +221,11 @@ class UniversumRunner:
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
             additional_parameters="", environment=None, expected_to_fail=False):
 
-        cmd = "coverage run --branch --append --source='{0}' '{0}/universum.py'" \
-            .format(self.working_dir)
+        if utils.is_pycharm():
+            cmd = "{0}/universum.py".format(self.working_dir)
+        else:
+            cmd = "coverage run --branch --append --source='{0}' '{0}/universum.py'" \
+                .format(self.working_dir)
 
         # We cannot collect coverage from installed module, so we run it only if specifically told so
         if force_installed:
