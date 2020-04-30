@@ -27,7 +27,8 @@ def test_launcher_output(universum_runner_nonci):
     file_output_expected = "Adding file /artifacts/test_step_log.txt to artifacts"
     pwd_string_in_logs = "pwd:[" + universum_runner_nonci.local.root_directory.strpath + "]"
 
-    universum_runner_nonci.environment.assert_successful_execution("bash -c 'mkdir /artifacts; echo \"Old artifact\" > /artifacts/test_nonci.txt'")
+    universum_runner_nonci.environment.assert_successful_execution(
+        "bash -c 'mkdir /artifacts; echo \"Old artifact\" > /artifacts/test_nonci.txt'")
 
     console_out_log = universum_runner_nonci.run(config)
     assert "Cleaning artifacts..." in console_out_log           # nonci cleans artifacts on project launch
