@@ -39,9 +39,9 @@ class GitServer:
                               _iter=True, _bg_exc=False, _bg=True,
                               _out=std_redirect, _err=std_redirect)
 
-        configurator = self._repo.config_writer()
-        configurator.set_value("user", "name", "Testing user")
-        configurator.set_value("user", "email", "some@email.com")
+        with self._repo.config_writer() as configurator:
+            configurator.set_value("user", "name", "Testing user")
+            configurator.set_value("user", "email", "some@email.com")
         self._file = self._working_directory.join(self.target_file)
         self._file.write("")
 
