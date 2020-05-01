@@ -339,7 +339,7 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
     config_file = tmpdir.join("configs.py")
     config_file.write(config)
 
-    process = subprocess.Popen(["python", os.path.join(os.getcwd(), "universum.py"),
+    process = subprocess.Popen(["python3.7", os.path.join(os.getcwd(), "universum.py"),
                                 "-o", "console", "-vt", "none",
                                 "-pr", str(tmpdir.join("project_root")),
                                 "-ad", str(tmpdir.join("artifacts")),
