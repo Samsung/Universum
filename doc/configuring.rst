@@ -17,7 +17,7 @@ to this module in `config_path` member of its input settings.
 
     Generally there should be no need to implement complex logic in the configuration file,
     however the `Universum` doesn't limit what project uses its configuration file for. Also,
-    there are no restriction on using of external python modules, libraries or on the 
+    there are no restriction on using of external python modules, libraries or on the
     structure of the configuration file itself.
 
     The project is free to use whatever it needs in the configuration file for its needs.
@@ -320,14 +320,14 @@ pass_tag, fail_tag
     .. testcode::
         :hide:
 
-        print "$ ./configs.py"
-        print configs.dump()
+        print("$ ./configs.py")
+        print(configs.dump())
 
     .. testoutput::
 
         $ ./configs.py
-        [{'command': 'make --platform Linux', 'name': 'Make Linux', 'pass_tag': 'pass_Linux'},
-        {'command': 'make --platform Windows', 'name': 'Make Windows', 'pass_tag': 'pass_Windows'}]
+        [{'name': 'Make Linux', 'command': 'make --platform Linux', 'pass_tag': 'pass_Linux'},
+        {'name': 'Make Windows', 'command': 'make --platform Windows', 'pass_tag': 'pass_Windows'}]
 
     This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
 
@@ -368,7 +368,7 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 The combination of ``#!/usr/bin/env python`` and ``if __name__ == '__main__':`` allows launching
 the `configs.py` script from shell.
@@ -385,15 +385,15 @@ it includes. For example, running the script, given above, will result in the fo
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make -C SpecialModule/', 'name': 'Make Special Module'},
-    {'command': 'scripts/run_tests.sh', 'name': 'Run internal tests'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests', 'name': 'Run external tests'}]
+    [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
+    {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
+    {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
 
 As second and third build configurations have the same names, if log files are created,
 only two logs will be created: one for the first build step, another for both second and third,
@@ -427,7 +427,7 @@ See the following example:
     configs = one + two
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 The addition operator will just concatenate two lists into one, so
 the `result <Dump configurations list_>`_ of such configuration file will be
@@ -436,14 +436,14 @@ the following list of configurations:
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'command': 'make', 'name': 'Make project'},
-    {'command': 'run_tests.sh', 'name': 'Run tests'}]
+    [{'name': 'Make project', 'command': 'make'},
+    {'name': 'Run tests', 'command': 'run_tests.sh'}]
 
 
 Multiplying build configurations
@@ -482,21 +482,21 @@ For example, this configuration file:
     configs = make * target
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will `produce <Dump configurations list_>`_ this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make --platform A', 'name': 'Make Platform A'},
-    {'artifacts': 'out', 'command': 'make --platform B', 'name': 'Make Platform B'}]
+    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
 
 * `command` and `name` values are produced of `command` and `name` values of each of two configurations
 * `artifacts` value, united with no corresponding value in second configuration, remains unchanged
@@ -536,25 +536,25 @@ can be combined in any required way. For example:
     configs = make * target + test * target * debug
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 This file `will get us <Dump configurations list_>`_ the following list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make --platform A', 'name': 'Make Platform A'},
-    {'artifacts': 'out', 'command': 'make --platform B', 'name': 'Make Platform B'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A', 'name': 'Run tests for Platform A - Release'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d', 'name': 'Run tests for Platform A - Debug'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B', 'name': 'Run tests for Platform B - Release'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d', 'name': 'Run tests for Platform B - Debug'}]
+    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
+    {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
+    {'name': 'Run tests for Platform A - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d'},
+    {'name': 'Run tests for Platform B - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B'},
+    {'name': 'Run tests for Platform B - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d'}]
 
 As in common arithmetic, multiplication is done before addition. To change the operations
 order, use parentheses:

@@ -1,9 +1,13 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
-import urllib
+import six.moves.urllib.request
+import six.moves.urllib.parse
+import six.moves.urllib.error
 import urllib3
 import requests
+import six
 
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Module, Dependency
@@ -55,7 +59,7 @@ class Swarm(ReportObserver, Module):
             the URL of the Swarm server is not specified.
 
             The URL is needed for communicating with swarm code review system:
-            getting review revision, posting comments, voting. Please specify 
+            getting review revision, posting comments, voting. Please specify
             the server URL by using '--swarm-server-url' ('-ssu') command
             line parameter or by setting SWARM_SERVER environment variable.""")
         utils.check_required_option(self.settings, "review_id", """
@@ -65,10 +69,10 @@ class Swarm(ReportObserver, Module):
             getting review revision, posting comments, voting. Please specify the number
             by using '--swarm-review-id' ('-sre') command line parameter or by setting
             REVIEW environment variable.
-            
+
             In order to setup sending of the review number for pre-commit in Swarm,
             please use the '{review}' argument in Automated Tests field of the Project
-            Settings.              
+            Settings.
             """)
         utils.check_required_option(self.settings, "change", """
             the Swarm changelist for unshelving is not specified.
@@ -80,7 +84,7 @@ class Swarm(ReportObserver, Module):
 
             In order to setup sending of the review number for pre-commit in Swarm,
             please use the '{change}' argument in Automated Tests field of the Project
-            Settings.              
+            Settings.
             """)
 
         if " " in self.settings.change or "," in self.settings.change:
@@ -99,7 +103,7 @@ class Swarm(ReportObserver, Module):
         if self.review_version:
             return
 
-        result = requests.get(self.settings.server_url + "/api/v2/reviews/" + unicode(self.settings.review_id),
+        result = requests.get(self.settings.server_url + "/api/v2/reviews/" + six.text_type(self.settings.review_id),
                               data={"id": self.settings.review_id}, auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
@@ -108,11 +112,11 @@ class Swarm(ReportObserver, Module):
             text += result.text
             raise CiException(text)
 
-        self.review_latest_version = unicode(len(versions))
+        self.review_latest_version = six.text_type(len(versions))
 
         for index, entry in enumerate(versions):
             if int(entry["change"]) == int(self.settings.change):
-                self.review_version = unicode(index + 1)
+                self.review_version = six.text_type(index + 1)
                 return
 
         try:
@@ -135,7 +139,7 @@ class Swarm(ReportObserver, Module):
 
     def post_comment(self, text, filename=None, line=None, version=None, no_notification=False):
         request = {"body": text,
-                   "topic": "reviews/" + unicode(self.settings.review_id)}
+                   "topic": "reviews/" + six.text_type(self.settings.review_id)}
         if filename:
             request["context[file]"] = filename
             if line:
@@ -169,7 +173,7 @@ class Swarm(ReportObserver, Module):
         self.post_comment(report_text)
 
     def code_report_to_review(self, report):
-        for path, issues in report.iteritems():
+        for path, issues in six.iteritems(report):
             abs_path = os.path.join(self.client_root, path)
             if abs_path in self.mappings_dict:
                 for issue in issues:
@@ -189,15 +193,15 @@ class Swarm(ReportObserver, Module):
         try:
             if link is not None:
                 self.out.log("Swarm will be informed about build status by URL " + link)
-                urllib.urlopen(link)
+                six.moves.urllib.request.urlopen(link)
             else:
                 self.out.log("Swarm will not be informed about build status because " + \
                              "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         except IOError as e:
             if e.args[0] == "http error":
-                text = "HTTP error " + unicode(e.args[1]) + ": " + e.args[2]
+                text = f"HTTP error {e.args[1]}: {e.args[2]}" #TODO: test this case
             else:
-                text = unicode(e)
+                text = str(e)
             text += "\nPossible reasons of this error:" + \
                     "\n * Network errors" + \
                     "\n * Swarm parameters ('PASS'/'FAIL' links) retrieved or parsed incorrectly"

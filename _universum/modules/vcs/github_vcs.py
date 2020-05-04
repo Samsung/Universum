@@ -1,8 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import datetime
-import urlparse
+import six.moves.urllib.parse
 import requests
+import six
 
 from ...lib.gravity import Dependency
 from ...lib import utils
@@ -48,7 +50,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     Please specify the checkout id by using '--git-checkout-id' ('-gco')
                     command line parameter or by setting GIT_CHECKOUT_ID environment variable.
 
-                    In CI builds commit ID is usually extracted from webhook and handled automatically.  
+                    In CI builds commit ID is usually extracted from webhook and handled automatically.
                 """)
         utils.check_required_option(self.settings, "token", """
                     github api token is not specified.
@@ -71,13 +73,13 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     command line parameter or by setting GITHUB_CHECK_ID environment variable.
                 """)
 
-        parsed_repo = urlparse.urlsplit(self.settings.repo)
-        repo_path = unicode(parsed_repo.path).rsplit(".git", 1)[0]
+        parsed_repo = six.moves.urllib.parse.urlsplit(self.settings.repo)
+        repo_path = six.text_type(parsed_repo.path).rsplit(".git", 1)[0]
         self.check_url = self.settings.api_url + "repos" + repo_path + "/check-runs/" + self.settings.check_id
         if parsed_repo.scheme == "https" and not parsed_repo.username:
             new_netloc = "x-access-token:{}@{}".format(self.settings.token, parsed_repo.netloc)
             parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
-        self.clone_url = urlparse.urlunsplit(parsed_repo)
+        self.clone_url = six.moves.urllib.parse.urlunsplit(parsed_repo)
         self.headers = {
             "Accept": "application/vnd.github.antiope-preview+json",
             "Authorization": "token " + self.settings.token
@@ -112,7 +114,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         # first line consists of commit id and commit comment, so it's skipped
         commit_files = self.repo.git.show("--name-only", "--oneline", self.settings.checkout_id).split('\n')[1:]
         comments = []
-        for path, issues in report.iteritems():
+        for path, issues in six.iteritems(report):
             if path in commit_files:
                 for issue in issues:
                     comments.append(dict(path=path,

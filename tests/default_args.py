@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import _universum.lib.module_arguments
 
 

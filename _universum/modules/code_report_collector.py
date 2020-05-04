@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 from copy import deepcopy
 import glob
 import json
@@ -72,10 +73,10 @@ class CodeReportCollector(ProjectDirectory):
                 self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
 
             if report:
-                text = unicode(len(report)) + " issues"
+                text = str(len(report)) + " issues"
                 self.out.log_stderr("Found " + text)
                 self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
             elif report == []:
                 self.out.log("Issues not found.")
             else:  # if nothing was written to file
-                self.stderr.write("There are no results in code report file. Something went wrong.")
+                self.out.log_stderr("There are no results in code report file. Something went wrong.")

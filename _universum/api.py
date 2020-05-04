@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 
 from .modules.api_support import ApiSupport
@@ -23,10 +25,10 @@ class Api(Module):
         try:
             self.api_support = self.api_support_factory(api_mode=True)
         except EnvironmentError as error:
-            sys.stderr.write(unicode(error) + u"\n")
+            sys.stderr.write(str(error) + '\n')
             sys.exit(2)
 
-        class MinimalOut(object):
+        class MinimalOut:
             @staticmethod
             def log(line):
                 pass
@@ -44,7 +46,7 @@ class Api(Module):
 
     def execute(self):
         if self.settings.action == "file-diff":
-            print self.api_support.get_file_diff()
+            print(self.api_support.get_file_diff())
         else:
             raise NotImplementedError()
 

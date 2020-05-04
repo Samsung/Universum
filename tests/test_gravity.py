@@ -2,9 +2,12 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, invalid-name
 
+from __future__ import absolute_import
+from __future__ import print_function
 from argparse import ArgumentError
-import mock
+from unittest import mock
 import pytest
+import six
 
 from _universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
 from _universum.lib.gravity import get_dependencies
@@ -14,7 +17,7 @@ import _universum.lib.gravity
 
 @pytest.fixture()
 def mock_module():
-    class MockedModule(object):
+    class MockedModule:
         def __new__(cls, *args, **kwargs):
             return old_module.__new__(cls, *args, **kwargs)
 
@@ -170,7 +173,7 @@ def test_define_arguments_inheritance(mock_module, capsys):
     parser = _universum.lib.module_arguments.ModuleArgumentParser()
     with pytest.raises(ArgumentError) as exception_info:
         define_arguments_recursive(WrongInheritedModule, parser)
-    assert "conflicting option string(s): --parent" in str(exception_info.value)
+    assert "conflicting option string: --parent" in str(exception_info.value)
 
 
 def test_settings_access(mock_module):
@@ -196,12 +199,12 @@ def test_settings_access(mock_module):
 
     # get non-existing settings
     with pytest.raises(AttributeError) as exception_info:
-        print r.settings.option
+        print(r.settings.option)
     assert "'R' object has no setting 'option'" in str(exception_info.value)
 
     # get non-existing option
     with pytest.raises(AttributeError) as exception_info:
-        print r.s.settings.another_option
+        print(r.s.settings.another_option)
     assert "'S' object has no setting 'another_option'" in str(exception_info.value)
 
     # set non-existing option
@@ -220,7 +223,7 @@ def make_settings(name, value):
     child_settings = _universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = value
 
-    if not isinstance(name, basestring):
+    if not isinstance(name, six.string_types):
         name = name.__name__
     setattr(settings, name, child_settings)
     return settings
@@ -386,7 +389,7 @@ def test_construct_component_multiple_inheritance(mock_module):
             self.base1_option = self.settings.base1_option
             self.base1_param = base1_param
 
-    class Base2(object):
+    class Base2:
         def __init__(self, base2_param, **kwargs):
             super(Base2, self).__init__(**kwargs)
             self.base2_param = base2_param
@@ -464,11 +467,11 @@ def test_construct_component_multiple_instance(mock_module):
     assert w2.nz.settings.zparam == "def"
 
     with pytest.raises(AttributeError) as exception_info:
-        print w1.nz.settings.zparam
+        print(w1.nz.settings.zparam)
     assert "'W' object has no attribute 'nz'" in str(exception_info.value)
 
     with pytest.raises(AttributeError) as exception_info:
-        print w2.z.settings.zparam
+        print(w2.z.settings.zparam)
     assert "'W' object has no attribute 'z'" in str(exception_info.value)
 
     w1.settings.wparam = "new_value"
@@ -509,11 +512,11 @@ def test_settings_access_multiple_inheritance(mock_module):
     assert b2.settings.basetwo == "def"
 
     with pytest.raises(AttributeError) as exception_info:
-        print b1.settings.derived
+        print(b1.settings.derived)
     assert "'BaseOne' object has no setting 'derived'" in str(exception_info.value)
 
     with pytest.raises(AttributeError) as exception_info:
-        print b2.settings.baseone
+        print(b2.settings.baseone)
     assert "'BaseTwo' object has no setting 'baseone'" in str(exception_info.value)
 
     b1.settings.baseone = "zyx"

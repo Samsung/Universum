@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-class ModuleSettings(object):
+class ModuleSettings:
     def __init__(self, cls, main_settings):
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
@@ -40,7 +40,7 @@ class ModuleSettings(object):
         raise AttributeError("'" + cls.__name__ + "' object has no setting '" + key + "'")
 
 
-class Settings(object):
+class Settings:
     def __init__(self, cls):
         self.cls = cls
 
@@ -51,7 +51,7 @@ class Settings(object):
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
-class Module(object):
+class Module:
     def __new__(cls, main_settings, *args, **kwargs):
         instance = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
@@ -70,9 +70,8 @@ def construct_component(klass, main_settings, *args, **kwargs):
     return main_settings.active_modules[klass]
 
 
-class Dependency(object):
-    def __init__(self, klass, *args, **kwargs):
-        super(Dependency, self).__init__(*args, **kwargs)
+class Dependency:
+    def __init__(self, klass):
         self.klass = klass
 
     def __get__(self, instance, owner):

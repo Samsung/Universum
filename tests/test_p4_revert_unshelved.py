@@ -1,15 +1,17 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
 import os
 import pytest
+from six.moves import zip
 
 from _universum.lib.gravity import construct_component
 from _universum.modules.vcs import perforce_vcs
 from . import utils
 
 
-class DiffParameters(object):
+class DiffParameters:
     def __init__(self, perforce_workspace):
         self.perforce_workspace = perforce_workspace
 

@@ -1,7 +1,11 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
-import urllib2
+import six.moves.urllib.request
+import six.moves.urllib.error
+import six.moves.urllib.parse
+import six
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
@@ -37,11 +41,11 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
 
         self.out.log("Triggering url %s" % processed_url)
         try:
-            urllib2.urlopen(processed_url)
-        except urllib2.URLError as url_error:
-            raise CriticalCiException("Error opening URL, error message " + unicode(url_error.reason))
+            six.moves.urllib.request.urlopen(processed_url)
+        except six.moves.urllib.error.URLError as url_error:
+            raise CriticalCiException(f"Error opening URL, error message {url_error.reason}")
         except ValueError as value_error:
-            raise CriticalCiException("Error opening URL, error message " + unicode(value_error))
+            raise CriticalCiException(f"Error opening URL, error message {value_error}")
 
         return True
 

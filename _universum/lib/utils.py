@@ -1,11 +1,12 @@
 # -*- coding: UTF-8 -*-
 
-import codecs
+from __future__ import absolute_import
 import imp
 import inspect
 import os
 import sys
 import traceback
+import six
 
 from _universum.lib.ci_exception import CiException
 from .ci_exception import CriticalCiException, SilentAbortException
@@ -29,9 +30,6 @@ __all__ = [
     "check_request_result"
 ]
 
-# For proper unicode symbols processing
-sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
-
 
 def strip_path_start(line):
     if line.startswith("./"):
@@ -53,8 +51,7 @@ def calculate_file_absolute_path(target_directory, file_basename):
     name = name.replace("/", "\\")
     if name.startswith('_'):
         name = name[1:]
-    name = os.path.join(target_directory, name)
-    return name
+    return os.path.join(target_directory, name)
 
 
 def detect_environment():
@@ -75,14 +72,13 @@ def detect_environment():
     return "terminal"
 
 
-def create_driver(local_factory, teamcity_factory, jenkins_factory, default=None):
-    if default:
-        env_type = default
-    else:
+def create_driver(local_factory, teamcity_factory, jenkins_factory, env_type=""):
+    if not env_type:
         env_type = detect_environment()
+
     if env_type == "tc":
         return teamcity_factory()
-    elif env_type == "jenkins":
+    if env_type == "jenkins":
         return jenkins_factory()
     return local_factory()
 
@@ -109,9 +105,9 @@ def catch_exception(exception_name, ignore_if=None):
                 if not type(e).__name__ == exception_name:
                     raise
                 if ignore_if is not None:
-                    if ignore_if in unicode(e):
+                    if ignore_if in str(e):
                         return result
-                raise CriticalCiException(unicode(e))
+                raise CriticalCiException(str(e))
         return function_to_run
     return decorated_function
 
@@ -133,9 +129,9 @@ def import_module(name, path=None, target_name=None):
 
 def trim_and_convert_to_unicode(line):
     if isinstance(line, str):
-        line = line.decode("utf-8", "replace")
-    elif not isinstance(line, unicode):
-        line = unicode(line)
+        pass
+    elif not isinstance(line, six.text_type):
+        line = six.text_type(line)
 
     if line.endswith("\n"):
         line = line[:-1]
@@ -144,12 +140,10 @@ def trim_and_convert_to_unicode(line):
 
 
 def convert_to_str(line):
-    if isinstance(line, str):
-        return line
-    if not isinstance(line, unicode):
-        return str(line)
+    if isinstance(line, bytes):
+        return line.decode("utf8", "replace")
+    return str(line)
 
-    return line.encode("utf8", "replace")
 
 
 def unify_argument_list(source_list, separator=',', additional_list=None):
@@ -175,7 +169,7 @@ def unify_argument_list(source_list, separator=',', additional_list=None):
     return resulting_list
 
 
-class Uninterruptible(object):
+class Uninterruptible:
     def __init__(self, error_logger):
         self.return_code = 0
         self.error_logger = error_logger
@@ -214,6 +208,6 @@ def make_block(block_name, pass_errors=True):
 
 def check_request_result(result):
     if result.status_code != 200:
-        text = "Invalid return code " + unicode(result.status_code) + ". Response is:\n"
+        text = "Invalid return code " + six.text_type(result.status_code) + ". Response is:\n"
         text += result.text
         raise CiException(text)

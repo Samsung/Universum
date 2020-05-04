@@ -43,20 +43,20 @@ Config example for ``universum_pylint``:
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 This file will get us the following list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'command': 'universum_pylint --python-version 3 --result-file ${CODE_REPORT_FILE} --files *.py examples/', 'name': 'pylint', 'code_report': True}]
+    [{'name': 'pylint', 'code_report': True, 'command': 'universum_pylint --python-version 3 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
 
 
 .. _code_report#svace:
@@ -80,20 +80,20 @@ Config example for ``universum_svace``:
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will produce this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'command': 'universum_svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}', 'name': 'svace', 'code_report': True}]
+    [{'name': 'svace', 'code_report': True, 'command': 'universum_svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}'}]
 
 
 .. _code_report#uncrustify:
@@ -119,17 +119,17 @@ Config example for ``universum_uncrustify``:
                           ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will produce this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'command': 'universum_uncrustify --files project_root_directory --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify', 'name': 'uncrustify', 'code_report': True}]
+    [{'name': 'uncrustify', 'code_report': True, 'command': 'universum_uncrustify --files project_root_directory --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]

@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 from collections import defaultdict
 
 from ..lib.gravity import Module, Dependency
@@ -14,7 +15,7 @@ __all__ = [
 ]
 
 
-class ReportObserver(object):
+class ReportObserver:
     """
     Abstract base class for reporting modules
     """
@@ -144,11 +145,11 @@ class Reporter(Module):
 
     def _report_steps_recursively(self, block, text, indent):
         if not self.settings.only_fails:
-            text += indent + unicode(block) + '\n'
-            self.out.report_step(indent + unicode(block), block.status)
+            text += indent + str(block) + '\n'
+            self.out.report_step(indent + str(block), block.status)
         elif not block.is_successful():
-            text += unicode(block) + '\n'
-            self.out.report_step(unicode(block), block.status)
+            text += str(block) + '\n'
+            self.out.report_step(str(block), block.status)
 
         is_successful = block.is_successful()
         for substep in block.children:

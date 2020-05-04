@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
+from __future__ import print_function
 import getpass
 from pwd import getpwnam
 import os
@@ -8,12 +10,11 @@ import py
 from requests.exceptions import ReadTimeout
 
 import docker
-
 import pytest
 from . import utils
 
 
-class ExecutionEnvironment(object):
+class ExecutionEnvironment:
     def __init__(self, request, work_dir, force_clean=False):
         self.request = request
         self._force_clean = force_clean
@@ -76,9 +77,12 @@ class ExecutionEnvironment(object):
         if not environment:
             environment = []
         process_id = self._client.api.exec_create(self._container.id, cmd, environment=environment)
-        print "$ " + cmd
+        print("$ " + cmd)
         log = self._client.api.exec_start(process_id)
-        print log
+        assert not isinstance(str, type(log)), "Looks like it's a bug in a docker 4.1.0. According to documentation " \
+            "this function must return 'str'. However it returns 'bytes'"
+        log = log.decode("utf-8")
+        print(log)
 
         exit_code = self._client.api.exec_inspect(process_id)['ExitCode']
         if result:
@@ -97,7 +101,7 @@ class ExecutionEnvironment(object):
     def install_python_module(self, name):
         if os.path.exists(name):
             module_name = 'universum'
-            name = "'" + name + "'"
+            name = f"'{name}'"
         else:
             module_name = name
         if not utils.is_pycharm() or self._force_clean:
@@ -125,7 +129,7 @@ class ExecutionEnvironment(object):
 
 
 @pytest.fixture()
-def execution_environment(request):
+def execution_environment(request) -> ExecutionEnvironment:
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd())
@@ -158,7 +162,7 @@ def local_sources(tmpdir):
     yield utils.Params(root_directory=source_dir, repo_file=local_file)
 
 
-class UniversumRunner(object):
+class UniversumRunner:
     def __init__(self, perforce_workspace, git_client, local_sources, nonci):
         self.perforce = perforce_workspace
         self.git = git_client
@@ -167,7 +171,7 @@ class UniversumRunner(object):
 
         # Need to be initialized in 'set_environment'
         self.environment = None
-        self.working_dir = None
+        self.working_dir: str = None
         self.project_root = None
         self.artifact_dir = None
 
@@ -182,7 +186,7 @@ class UniversumRunner(object):
         self.environment.add_environment_variables([
             "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
         ])
-        self.environment.add_bind_dirs([unicode(self.local.root_directory)])
+        self.environment.add_bind_dirs([str(self.local.root_directory)])
 
         if self.environment.start_container():
             self.environment.install_python_module(self.working_dir)
@@ -196,7 +200,7 @@ class UniversumRunner(object):
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd '{}'".format(unicode(self.local.root_directory))
+            return " -vt none --no-diff -fsd '{}'".format(str(self.local.root_directory))
 
         if vcs_type == "git":
             return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
@@ -208,14 +212,13 @@ class UniversumRunner(object):
                     self.perforce.depot,
                     "my_disposable_p4_client")
 
-    def _create_temp_config(self, config):
+    def _create_temp_config(self, config: str):
         file_path = os.path.join(self.working_dir, "temp_config.py")
-        with open(file_path, 'wb+') as f:
+        with open(file_path, 'w+') as f:
             f.write(config)
-            f.close()
         return file_path
 
-    def run(self, config, force_installed=False, vcs_type="none",
+    def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
             additional_parameters="", environment=None, expected_to_fail=False):
 
         cmd = "coverage run --branch --append --source='{0}' '{0}/universum.py'" \
@@ -245,7 +248,7 @@ class UniversumRunner(object):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources, nonci):
+def runner_without_environment(perforce_workspace, git_client, local_sources, nonci) -> UniversumRunner:
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci)
     yield runner
     runner.clean_artifacts()

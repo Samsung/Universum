@@ -1,10 +1,14 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
 import shutil
 import warnings
 
 import sh
+import six
+from six.moves import range
+from six.moves import zip
 
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
@@ -54,7 +58,7 @@ class PerforceVcs(base_vcs.BaseVcs):
 
         utils.check_required_option(self.settings, "port", """
             the perforce 'port' is not specified.
-            
+
             The perforce port defines protocol, host and listening port
             of the perforce server. Please specify perforce port by
             using '--p4-port' ('-p4p') command line parameter or
@@ -103,7 +107,7 @@ class PerforceVcs(base_vcs.BaseVcs):
             self.p4.disconnect()
             if not w:
                 return
-            if "Not connected" in w[0].message.message:
+            if "Not connected" in str(w[0].message):
                 text = "Perforce client is not connected on disconnect. Something must have gone wrong"
                 self.structure.fail_current_block(text)
             else:
@@ -346,7 +350,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             swarm_cls = self.get_related_cls(self.swarm.settings.change)
             cls.extend(swarm_cls)
         for x in range(1, 6):
-            cls.append(os.getenv("SHELVE_CHANGELIST_" + unicode(x)))
+            cls.append(os.getenv("SHELVE_CHANGELIST_" + six.text_type(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
 
     def p4report(self, report):
@@ -407,22 +411,22 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             try:
                 result = self.p4.run_sync("-f", line)
             except P4Exception as e:
-                if "not in client view" in unicode(e):
-                    text = unicode(e) + "Possible reasons of this error:"
-                    text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
-                    text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
-                    raise CriticalCiException(text)
-                else:
-                    raise CriticalCiException(unicode(e))
+                if "not in client view" not in str(e):
+                    raise CriticalCiException(str(e))
 
-            self.append_repo_status("    " + line + "\n")
-            self.out.log("Downloaded {} files.".format(result[0]["totalFileCount"]))
+                text = f"{e}\nPossible reasons of this error:"
+                text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
+                text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
+                raise CriticalCiException(text)
+
+            self.append_repo_status(f"    {line}\n")
+            self.out.log(f"Downloaded {result[0]['totalFileCount']} files.")
 
     def p4unshelve(self, *args, **kwargs):
         try:
             result = self.p4.run_unshelve(*args, **kwargs)
         except P4Exception as e:
-            if "already committed" in unicode(e) and self.swarm and len(self.shelve_cls) == 1:
+            if "already committed" in str(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
@@ -470,7 +474,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
         result = []
         # Both 'p4 opened' and 'p4 where' entries have same key 'depotFile'
-        for entry in self.p4.run_where(action_list.keys()):
+        for entry in self.p4.run_where(list(action_list.keys())):
             result.append({"action": action_list[entry["depotFile"]],
                            "repo_path": entry["depotFile"],
                            "local_path": entry["path"]})
@@ -537,7 +541,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             for item, path in zip(unshelved_filtered, unshelved_path):
                 relative, copied, absolute = path
                 if item["action"] == "move/add":
-                    for local, depot in self.mappings_dict.iteritems():
+                    for local, depot in six.iteritems(self.mappings_dict):
                         if depot == item["movedFile"]:
                             absolute = local
                 self.diff_in_files.append((relative, copied, absolute))
@@ -605,7 +609,7 @@ class PerforcePollVcs(PerforceWithMappings, base_vcs.BasePollVcs):
             reference_cl = changes_reference.get(depot_path, last_cl)
 
             rev_range_string = depot_path + "@" + reference_cl + ",#head"
-            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + unicode(max_number), rev_range_string)
+            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + six.text_type(max_number), rev_range_string)
 
             submitted_cls.reverse()
             for cl in submitted_cls:

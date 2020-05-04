@@ -1,8 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import json
-import urlparse
+import six.moves.urllib.parse
 import sh
+import six
 
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Dependency
@@ -31,7 +33,7 @@ class GerritVcs(git_vcs.GitVcs):
                                           "Please change the git repo to ssh protocol by using '--git-repo' ('-gr')\n"
                                           "command line parameter or by setting GIT_REPO environment variable.")
 
-        parsed_repo = urlparse.urlparse(self.settings.repo)
+        parsed_repo = six.moves.urllib.parse.urlparse(self.settings.repo)
         self.hostname = parsed_repo.hostname
         if not parsed_repo.username:
             raise IncorrectParameterError("the user name for accessing gerrit is not specified.\n\n"
@@ -46,8 +48,7 @@ class GerritVcs(git_vcs.GitVcs):
         try:
             return self.ssh(line, _in=stdin, _out=stdout)
         except sh.ErrorReturnCode as e:
-            text = "Got exit code " + unicode(e.exit_code) + \
-                   " while executing the following command:\n" + unicode(e.full_cmd)
+            text = f"Got exit code {e.exit_code} while executing the following command:\n{e.full_cmd}"
             if e.stderr:
                 text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
             raise CiException(text)
@@ -61,14 +62,14 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
 
         utils.check_required_option(self.settings, "refspec", """
             git refspec for gerrit is not specified.
-            
+
             For gerrit the git refspec defines the branch to download and the review to
             work with. Please specify the refspec by using '--git-refspec' ('-grs')
             command line parameter or by setting GIT_REFSPEC environment variable.
-            
+
             Usually, it is enough to set refspec to 'refs/changes/<path>'. For example,
             on a TeamCity server it is enough to set GIT_REFSPEC variable to
-            %teamcity.build.branch% for the entire project.  
+            %teamcity.build.branch% for the entire project.
         """)
 
         refspec = self.settings.refspec
@@ -103,7 +104,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
 
     def _get_patch_set_description(self, reference):
         request = "gerrit query --current-patch-set --format json " + reference
-        response = unicode(self.run_ssh_command(request))
+        response = six.text_type(self.run_ssh_command(request))
 
         # response is expected to consist of two json objects: patch set description and query summary
         # JSONDecoder.raw_decode() decodes first json object and ignores all that follows
@@ -134,7 +135,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
         review_description = self._get_patch_set_description("commit:" + self.commit_id)
         target_branch = review_description["branch"]
         reference_commit = self.repo.git.merge_base(target_branch, self.commit_id)
-        return self._diff_against_reference_commit(unicode(reference_commit))
+        return self._diff_against_reference_commit(six.text_type(reference_commit))
 
     def code_report_to_review(self, report):
         # git show returns string, each file separated by \n,
@@ -142,7 +143,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
         commit_files = self.repo.git.show("--name-only", "--oneline", self.commit_id).split('\n')[1:]
         stdin = {'comments': {}}
         text = "gerrit review " + self.commit_id + ' --json '
-        for path, issues in report.iteritems():
+        for path, issues in six.iteritems(report):
             if path in commit_files:
                 stdin['comments'].update({path: issues})
         self.run_ssh_command(text, json.dumps(stdin))
@@ -168,7 +169,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
 
     def prepare_repository(self):
         super(GerritMainVcs, self).prepare_repository()
-        self.commit_id = unicode(self.repo.head.commit)
+        self.commit_id = six.text_type(self.repo.head.commit)
 
 
 class GerritSubmitVcs(GerritVcs, git_vcs.GitSubmitVcs):
