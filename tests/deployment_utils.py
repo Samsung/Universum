@@ -297,5 +297,5 @@ def nonci(request):
 
 
 def pytest_generate_tests(metafunc):
-    if hasattr(metafunc.function, 'nonci_applicable'):
+    if metafunc.definition.get_closest_marker('nonci_applicable'):
         metafunc.parametrize('nonci', (False, True), ids=('no subcmd', 'subcmd: nonci',))
