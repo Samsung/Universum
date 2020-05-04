@@ -267,9 +267,9 @@ class GitSubmitVcs(GitVcs):
         except git.exc.InvalidGitRepositoryError:
             raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
-        configurator = self.repo.config_writer()
-        configurator.set_value("user", "name", self.settings.user)
-        configurator.set_value("user", "email", self.settings.email)
+        with self.repo.config_writer() as configurator:
+            configurator.set_value("user", "name", self.settings.user)
+            configurator.set_value("user", "email", self.settings.email)
 
         file_list = [utils.parse_path(item, self.settings.project_root) for item in file_list]
         relative_path_list = [os.path.relpath(item, self.settings.project_root) for item in file_list]
