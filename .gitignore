@@ -16,3 +16,5 @@ temp_config.py
 .mypy_cache
 .devcontainer
 .venv*
+build
+Universum.egg-info
