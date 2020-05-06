@@ -28,7 +28,7 @@ doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	python3.7 -m pylint --rcfile=pylintrc *.py _universum/ tests/
+	python3.7 -m pylint --rcfile=pylintrc *.py _universum/ tests/ analyzers/
 
 images:
 	+$(MAKE) -C tests/docker all
