@@ -51,8 +51,6 @@ class PylintAnalyzer:
         result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if result.returncode == 0:
-            return 0
         if result.stderr and not result.stdout:
             sys.stderr.write(result.stderr)
             return result.returncode
@@ -60,9 +58,6 @@ class PylintAnalyzer:
         return self._handle_pylint_output(result.stdout)
 
     def _handle_pylint_output(self, issues: str) -> int:
-        if not issues:
-            return 0
-
         try:
             loads = json.loads(issues)
             issues_loads = []
@@ -72,10 +67,11 @@ class PylintAnalyzer:
                 issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                 issues_loads.append(issue)
 
+            utils.analyzers_output(self.settings.result_file, issues_loads)
             if issues_loads:
-                utils.analyzers_output(self.settings.result_file, issues_loads)
                 return 1
-            return 0
+            else:
+                return 0
 
         except ValueError as e:
             sys.stderr.write(str(e))
