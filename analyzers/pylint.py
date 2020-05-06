@@ -25,11 +25,12 @@ class PylintAnalyzer:
     def define_arguments():
         parser = argparse.ArgumentParser(description="Pylint analyzer")
         parser.add_argument("--files", dest="file_list", nargs='+', required=True,
-                            help="Python files and Python packages for Pylint. " + \
-                                 "Files could be defined as a single python file" + \
+                            help="Python files and Python packages for Pylint. " +
+                                 "Files could be defined as a single python file" +
                                  " *.py or directories with __init__.py file in the directory.")
         parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
-        parser.add_argument("--python-version", dest="version", default="3", choices=["2", "3"],
+        parser.add_argument("--python-version", dest="version", default="3",
+                            choices=["2", "3", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8", "3.9"],
                             help="Version of Python")
         utils.add_common_arguments(parser)
         return parser
@@ -45,7 +46,7 @@ class PylintAnalyzer:
         for pattern in self.settings.file_list:
             cmd.append(" ".join(glob.glob(pattern)))
 
-        result = subprocess.run(cmd, universal_newlines=True, #pylint: disable=subprocess-run-check
+        result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if result.returncode == 0:
@@ -79,7 +80,6 @@ class PylintAnalyzer:
             sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
             sys.stderr.write(issues)
             return 2
-
 
 
 def form_arguments_for_documentation():
