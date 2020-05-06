@@ -25,13 +25,15 @@ class PylintAnalyzer:
     def define_arguments():
         parser = argparse.ArgumentParser(description="Pylint analyzer")
         parser.add_argument("--files", dest="file_list", nargs='+', required=True,
-                            help="Python files and Python packages for Pylint. " +
-                                 "Files could be defined as a single python file" +
+                            help="Python files and Python packages for Pylint. "
+                                 "Files could be defined as a single python file"
                                  " *.py or directories with __init__.py file in the directory.")
         parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
         parser.add_argument("--python-version", dest="version", default="3",
-                            choices=["2", "3", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8", "3.9"],
-                            help="Version of Python")
+                            help="Version of the python interpreter, such as 2, 3 or 3.7. "
+                                 "Pylint analyzer uses this parameter to select python binary for launching pylint. "
+                                 "For example, if the version is 3.7, it uses the following command: "
+                                 "'python3.7 -m pylint <...>'")
         utils.add_common_arguments(parser)
         return parser
 
