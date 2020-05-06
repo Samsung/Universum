@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = protected-access
 
+from __future__ import absolute_import
 import argparse
 import os
 import sys
@@ -17,15 +18,16 @@ class ModuleNamespace(argparse.Namespace):
             self.__dict__[name] = value
 
     def __getattr__(self, name):
-        if '.' in name:
-            group, name = name.split('.', 1)
-            try:
-                ns = self.__dict__[group]
-            except KeyError:
-                raise AttributeError("No attribute '" + name + "' in module arguments")
-            return getattr(ns, name)
-        else:
+        if not '.' in name:
             raise AttributeError("No attribute '" + name + "' in module arguments")
+
+        group, name = name.split('.', 1)
+        try:
+            ns = self.__dict__[group]
+        except KeyError:
+            raise AttributeError("No attribute '" + name + "' in module arguments")
+        return getattr(ns, name)
+
 
 
 # noinspection PyProtectedMember

@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import json
 import sys
 
@@ -11,10 +12,9 @@ def add_common_arguments(parser):
                              "script separately from Universum, just name the result file or leave it empty.")
 
 
-def analyzers_output(json_file, issues_loads):
+def analyzers_output(json_file: str, issues_loads) -> None:
     issues = json.dumps(issues_loads, indent=4)
-    if not json_file:
-        sys.stdout.write(issues)
+    if json_file:
+        open(json_file, "w").write(issues)
     else:
-        with open(json_file, "wb") as outfile:
-            outfile.write(issues)
+        sys.stdout.write(issues)

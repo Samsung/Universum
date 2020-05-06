@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import glob
 import os
 
@@ -58,7 +59,7 @@ class GitVcs(BaseVcs):
             the git repo is not specified.
 
             The repo defines the location of project source codes.
-            Please specify the git repo by using '--git-repo' ('-gr') 
+            Please specify the git repo by using '--git-repo' ('-gr')
             command line parameter or by setting GIT_REPO environment
             variable.""")
 
@@ -147,6 +148,11 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
         self.append_repo_status("\n")
 
     def _diff_against_reference_commit(self, commit_id):
+        """Details. Depending on a 'git' version 'rename file' operation generates
+        different output. It could be sequence of 'add' and 'delete' or single
+        'rename' operation.
+        """
+
         status_mapping = {
             'A': "add",
             'C': "copy",
@@ -261,9 +267,9 @@ class GitSubmitVcs(GitVcs):
         except git.exc.InvalidGitRepositoryError:
             raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
-        configurator = self.repo.config_writer()
-        configurator.set_value("user", "name", self.settings.user)
-        configurator.set_value("user", "email", self.settings.email)
+        with self.repo.config_writer() as configurator:
+            configurator.set_value("user", "name", self.settings.user)
+            configurator.set_value("user", "email", self.settings.email)
 
         file_list = [utils.parse_path(item, self.settings.project_root) for item in file_list]
         relative_path_list = [os.path.relpath(item, self.settings.project_root) for item in file_list]
@@ -281,7 +287,7 @@ class GitSubmitVcs(GitVcs):
             return 0
 
         self.out.log(self.repo.git.commit(m=description))
-        commit_id = unicode(self.repo.head.commit)
+        commit_id = str(self.repo.head.commit)
         self.out.log("Full commit ID is " + commit_id)
         return commit_id
 

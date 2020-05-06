@@ -3,7 +3,7 @@ TEST_TARGETS = pytest doc_doctest
 
 .PHONY: all doc test $(TEST_TARGETS) pylint images
 
-all: doc 
+all: doc
 
 clean: doc_clean
 
@@ -20,7 +20,7 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	python2 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
+	python3.7 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
 	--cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
 	--ignore=universum_log_collapser
 
@@ -28,7 +28,7 @@ doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	python2 -m pylint --rcfile=pylintrc *.py _universum/ tests/
+	python3.7 -m pylint --rcfile=pylintrc *.py _universum/ tests/ analyzers/
 
 images:
 	+$(MAKE) -C tests/docker all

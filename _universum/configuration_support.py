@@ -1,7 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import copy
 import os
+import six
 
 __all__ = [
     "Variations",
@@ -26,10 +28,10 @@ def combine(dictionary_a, dictionary_b):
     For example:
 
     >>> combine(dict(attr_a = "a1", attr_b = ["b11", "b12"]), dict(attr_a = "a2", attr_b = ["b2"]))
-    {'attr_b': ['b11', 'b12', 'b2'], 'attr_a': 'a1a2'}
+    {'attr_a': 'a1a2', 'attr_b': ['b11', 'b12', 'b2']}
 
     >>> combine(dict(attr_a = {"a1": "v1"}, attr_b = {"b1": "v1"}), dict(attr_a = {"a2": "v2"}))
-    {'attr_b': {'b1': 'v1'}, 'attr_a': {'a1': 'v1', 'a2': 'v2'}}
+    {'attr_a': {'a1': 'v1', 'a2': 'v2'}, 'attr_b': {'b1': 'v1'}}
 
     """
 
@@ -139,7 +141,7 @@ class Variations(list):
         :return: new `Variations` object, consisting of the list of combined configurations
         """
 
-        if isinstance(other, (int, long)):
+        if isinstance(other, six.integer_types):
             result_list = list.__mul__(list(self), other)
         else:
             result_list = []

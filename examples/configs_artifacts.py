@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 from _universum.configuration_support import Variations
+from six.moves import range
 
 mkdir = Variations([dict(name="Create directory", command=["mkdir", "-p"])])
 mkfile = Variations([dict(name="Create file", command=["touch"])])
@@ -20,4 +23,4 @@ artifacts = Variations([dict(name="Existing artifacts", artifacts="one/**/file*"
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

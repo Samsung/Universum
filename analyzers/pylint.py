@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import argparse
 import glob
 import json
 import sys
-
-import sh
+import subprocess
 
 from analyzers import utils
 
 
-class PylintAnalyzer(object):
+class PylintAnalyzer:
     """
     Pylint runner.
     Specify parameters such as project folders, config file for code report tool.
@@ -24,65 +24,59 @@ class PylintAnalyzer(object):
     @staticmethod
     def define_arguments():
         parser = argparse.ArgumentParser(description="Pylint analyzer")
-        parser.add_argument("--files", dest="file_list", nargs='+', help="Python files and Python packages for Pylint.")
-        parser.add_argument("--rcfile", dest="rcfile", help="Specify a configuration file.")
-        parser.add_argument("--python-version", dest="version", default="3", choices=["2", "3"],
-                            help="Version of Python")
+        parser.add_argument("--files", dest="file_list", nargs='+', required=True,
+                            help="Python files and Python packages for Pylint. "
+                                 "Files could be defined as a single python file"
+                                 " *.py or directories with __init__.py file in the directory.")
+        parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
+        parser.add_argument("--python-version", dest="version", default="3",
+                            help="Version of the python interpreter, such as 2, 3 or 3.7. "
+                                 "Pylint analyzer uses this parameter to select python binary for launching pylint. "
+                                 "For example, if the version is 3.7, it uses the following command: "
+                                 "'python3.7 -m pylint <...>'")
         utils.add_common_arguments(parser)
         return parser
 
     def __init__(self, settings):
         self.settings = settings
-        self.json_file = settings.result_file
 
     def execute(self):
-        if not self.settings.file_list:
-            sys.stderr.write("Please, specify [--files] option. Files could be defined as a single python file,"
-                             " *.py or directories with __init__.py file in the directory.\n")
-            return 2
-
-        issues = []
-        files = []
-        if not self.settings.rcfile:
-            self.settings.rcfile = ""
+        cmd = [f"python{self.settings.version}", '-m', 'pylint', '-f', 'json']
+        if self.settings.rcfile:
+            cmd.append(f'--rcfile={self.settings.rcfile}')
 
         for pattern in self.settings.file_list:
-            files.extend(glob.glob(pattern))
-        try:
-            if self.settings.version == "3":
-                cmd = sh.Command("python3")
-            else:
-                cmd = sh.Command("python2")
-            issues = cmd("-m", "pylint", "-f", "json", "--rcfile=" + self.settings.rcfile, *files).stdout
-        except sh.CommandNotFound as e:
-            sys.stderr.write("No such file or command as '" + str(e) + "'. "
-                             "Make sure, that required code report tool is installed.\n")
-        except Exception as e:
-            if e.stderr and not e.stdout:
-                sys.stderr.write(e.stderr)
-                return 2
-            elif e.stdout:
-                issues = e.stdout
+            cmd.append(" ".join(glob.glob(pattern)))
 
+        result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if result.stderr and not result.stdout:
+            sys.stderr.write(result.stderr)
+            return result.returncode
+
+        return self._handle_pylint_output(result.stdout)
+
+    def _handle_pylint_output(self, issues: str) -> int:
         try:
+            loads = json.loads(issues)
             issues_loads = []
-            loads = []
-            if issues:
-                loads = json.loads(issues)
             for issue in loads:
                 # pylint has its own escape rules for json output of "message" values.
                 # it uses cgi.escape lib and escapes symbols <>&
                 issue["message"] = issue["message"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                 issues_loads.append(issue)
-            utils.analyzers_output(self.json_file, issues_loads)
+
+            utils.analyzers_output(self.settings.result_file, issues_loads)
             if issues_loads:
                 return 1
+            return 0
+
         except ValueError as e:
-            sys.stderr.write(e.message)
+            sys.stderr.write(str(e))
             sys.stderr.write("The following string produced by the pylint launch cannot be parsed as JSON:\n")
             sys.stderr.write(issues)
             return 2
-        return 0
 
 
 def form_arguments_for_documentation():

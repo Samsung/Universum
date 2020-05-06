@@ -2,7 +2,9 @@
 # -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
+from __future__ import absolute_import
 import pytest
+from six.moves import range
 
 import universum
 from .git_utils import GitEnvironment

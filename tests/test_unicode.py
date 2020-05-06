@@ -10,7 +10,7 @@ from . import git_utils, perforce_utils, utils
 
 @pytest.fixture
 def unicode_dir(tmpdir):
-    yield tmpdir.mkdir(u"Юніко́д з пробелами")
+    yield tmpdir.mkdir("Юніко́д з пробелами")
 
 
 @pytest.mark.parametrize("vcs", ["git", "p4"])
@@ -19,7 +19,7 @@ def test_unicode(vcs, test_type, perforce_workspace, git_client, unicode_dir):
     if vcs == "git":
         # change git client root dir to unicode path
         work_dir = unicode_dir.mkdir("client")
-        git_client.repo = git.Repo.clone_from(git_client.server.url, unicode(work_dir).encode("utf8"))
+        git_client.repo = git.Repo.clone_from(git_client.server.url, work_dir)
         git_client.root_directory = work_dir
 
         env = git_utils.GitEnvironment(git_client, unicode_dir, test_type=test_type)
@@ -27,7 +27,7 @@ def test_unicode(vcs, test_type, perforce_workspace, git_client, unicode_dir):
         # change workspace root dir to unicode path
         root = unicode_dir.mkdir("workspace")
         client = perforce_workspace.p4.fetch_client(perforce_workspace.client_name)
-        client["Root"] = unicode(root).encode("utf8")
+        client["Root"] = str(root)
         perforce_workspace.root_directory = root
         perforce_workspace.p4.save_client(client)
         perforce_workspace.p4.run_sync("-f", "//depot/...")
@@ -39,7 +39,7 @@ def test_unicode(vcs, test_type, perforce_workspace, git_client, unicode_dir):
     if test_type == "submit":
         temp_file = env.vcs_cooking_dir.join(utils.randomize_name("new_file") + ".txt")
         temp_file.write("This is a new file" + "\n")
-        env.settings.Submit.reconcile_list = [unicode(temp_file)]
+        env.settings.Submit.reconcile_list = [str(temp_file)]
 
     res = universum.run(env.settings)
     assert res == 0
@@ -51,7 +51,7 @@ def test_unicode_main_local_vcs(unicode_dir):
 
     env = utils.TestEnvironment(unicode_dir, "main")
     env.settings.Vcs.type = "none"
-    env.settings.LocalMainVcs.source_dir = unicode(work_dir)
+    env.settings.LocalMainVcs.source_dir = str(work_dir)
 
     res = universum.run(env.settings)
     assert res == 0

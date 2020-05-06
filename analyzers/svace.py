@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import argparse
 import os
 import sys
@@ -11,7 +12,7 @@ from lxml import etree
 from . import utils
 
 
-class SvaceAnalyzer(object):
+class SvaceAnalyzer:
 
     @staticmethod
     def define_arguments():
@@ -65,10 +66,10 @@ class SvaceAnalyzer(object):
             if issues_loads:
                 return 1
         except etree.XMLSyntaxError as e:
-            sys.stderr.write(e.error_log)
+            sys.stderr.write(e.error_log) #TODO: check is it corerct
             return 2
         except Exception as e:
-            sys.stderr.write(unicode(e))
+            sys.stderr.write(str(e))
             return 2
         return 0
 
@@ -89,7 +90,7 @@ class SvaceAnalyzer(object):
             sys.stderr.write("Svace exited with error code 255. No build object found.\n")
             return 2
         except Exception as e:
-            sys.stderr.write(unicode(e))
+            sys.stderr.write(str(e))
             return 2
         return self.analyze()
 

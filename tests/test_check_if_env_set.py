@@ -1,7 +1,7 @@
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
 import os
+from typing import Optional
 import pytest
 
 from _universum.configuration_support import Variations
@@ -10,29 +10,30 @@ from _universum.modules.launcher import check_if_env_set
 
 @pytest.fixture(autouse=True)
 def os_environ():
-    env_variables = dict(os.environ)
+    env_backup = dict(os.environ)
     yield
-    for var in set(os.environ) - set(env_variables):
-        del os.environ[var]
+    os.environ = env_backup
 
 
-def setup_env_vars(env_vars):
-    for var, val in env_vars.iteritems():
+def setup_env_vars(env_vars: dict):
+    if not env_vars:
+        return
+
+    for var, val in env_vars.items():
         os.environ[var] = val
 
 
-def check(if_env_set_key, env_vars=None):
-    if env_vars:
-        setup_env_vars(env_vars)
+def check(if_env_set_key, env_vars: dict):
+    setup_env_vars(env_vars)
     if_env_set_var = dict(if_env_set=if_env_set_key)
     return check_if_env_set(if_env_set_var)
 
 
-def assert_true(if_env_set_key, env_vars=None):
+def assert_true(if_env_set_key, env_vars: Optional[dict] = None):
     assert check(if_env_set_key, env_vars) is True
 
 
-def assert_false(if_env_set_key, env_vars=None):
+def assert_false(if_env_set_key, env_vars: Optional[dict] = None):
     assert check(if_env_set_key, env_vars) is False
 
 
@@ -174,13 +175,13 @@ def test_if_env_set_not_in_config():
 # if_env_set for multiplication
 ##########################################################################
 
-def assert_equal_multiplication(result, env_vars=None):
-    if env_vars:
-        setup_env_vars(env_vars)
+def assert_equal_multiplication(expected, env_vars: Optional[dict] = None):
+    setup_env_vars(env_vars)
     var1 = Variations([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
     var2 = Variations([dict(if_env_set=" && VAR_3 == value_3")])
     configs = var1 * var2
-    assert filter(check_if_env_set, [i for i in configs.all()]) == result
+    result = list(filter(check_if_env_set, configs.all()))
+    assert expected == result
 
 
 def test_multiplication_filter_no_env_vars():

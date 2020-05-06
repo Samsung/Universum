@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 from _universum.configuration_support import Variations
 
 not_script = Variations([dict(name='Not script', command=["not_run.sh"])])
@@ -17,4 +19,4 @@ substep = Variations([dict(name=', failed substep', command=["fail"], artrifacts
 configs = not_script + script * step * (substep + additional_substep)
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

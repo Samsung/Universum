@@ -1,8 +1,11 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 import os
 import re
 import sys
+from inspect import cleandoc
+
 import sh
 
 from .. import configuration_support
@@ -26,8 +29,7 @@ def make_command(name):
     try:
         return sh.Command(name)
     except sh.CommandNotFound:
-        text = "No such file or command as '" + name + "'"
-        raise CiException(text)
+        raise CiException(f"No such file or command as '{name}'")
 
 
 def check_if_env_set(configuration):
@@ -106,7 +108,7 @@ def check_str_match(string, include_substrings, exclude_substrings):
 
     :rtype: bool
     """
-    result = False if include_substrings else True
+    result = not include_substrings
     for substr in include_substrings:
         if substr in string:
             result = True
@@ -160,7 +162,7 @@ def get_match_patterns(filters):
     return include, exclude
 
 
-class Step(object):
+class Step:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
         super(Step, self).__init__()
@@ -181,15 +183,16 @@ class Step(object):
         self._is_background = False
         self._postponed_out = []
 
-    def prepare_command(self):
-        try:
+    def prepare_command(self): #FIXME: refactor
+        try: #TODO: move try-catch block in a separate method
             command_name = utils.strip_path_start(self.configuration["command"][0])
+
         except KeyError as e:
-            if e.message == "command":
-                self.out.log("No 'command' found. Nothing to execute")
-                return False
-            else:
+            if str(e) != "command":
                 raise
+
+            self.out.log("No 'command' found. Nothing to execute")
+            return False
         try:
             try:
                 self.cmd = make_command(command_name)
@@ -199,7 +202,7 @@ class Step(object):
                 command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
                 self.cmd = make_command(command_name)
         except CiException as ex:
-            self.fail_block(unicode(ex))
+            self.fail_block(str(ex))
             raise StepException()
         return True
 
@@ -259,11 +262,11 @@ class Step(object):
                 self.process.wait()
             except Exception as e:
                 if isinstance(e, sh.ErrorReturnCode):
-                    text = "Module sh got exit code " + unicode(e.exit_code) + "\n"
+                    text = f"Module sh got exit code {e.exit_code}\n"
                     if e.stderr:
                         text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
                 else:
-                    text = unicode(e) + "\n"
+                    text = str(e) + '\n'
 
             self._handle_postponed_out()
             if text:
@@ -273,8 +276,8 @@ class Step(object):
                 self.fail_block(text)
                 self.add_tag(self.configuration.get("fail_tag", False))
                 raise StepException()
-            else:
-                self.add_tag(self.configuration.get("pass_tag", False))
+
+            self.add_tag(self.configuration.get("pass_tag", False))
         finally:
             self.handle_stdout()
             if self.file:
@@ -359,7 +362,7 @@ class Launcher(ProjectDirectory):
 
         try:
             with open(config_path) as config:
-                exec config.read() in config_globals  # pylint: disable=exec-used
+                exec(config.read(), config_globals)  # pylint: disable=exec-used
 
             self.source_project_configs = config_globals["configs"]
             dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
@@ -372,15 +375,17 @@ class Launcher(ProjectDirectory):
                                                                                  self.exclude_patterns))
 
         except IOError as e:
-            text = unicode(e) + "\nPossible reasons of this error:\n" + \
-                   " * There is no file named 'configs.py' in project repository\n" + \
-                   " * Config path, passed to the script ('" + self.settings.config_path + \
-                   "'), does not lead to actual 'configs.py' location\n" + \
-                   " * Some problems occurred while downloading or copying the repository"
-            raise CriticalCiException(text)
+            text = f"""{e}\n
+                Possible reasons of this error:\n
+                * There is no file named 'configs.py' in project repository\n
+                * Config path, passed to the script ('{self.settings.config_path}'), does not lead to
+                 actual 'configs.py' location\n
+                * Some problems occurred while downloading or copying the repository
+                """
+            raise CriticalCiException(cleandoc(text))
         except KeyError as e:
-            text = "KeyError: " + unicode(e) + \
-                   "\nPossible reason of this error: variable 'configs' is not defined in 'configs.py'"
+            text = "KeyError: " + str(e) + '\n'
+            text += "Possible reason of this error: variable 'configs' is not defined in 'configs.py'"
             raise CriticalCiException(text)
         except Exception as e:
             ex_traceback = sys.exc_info()[2]

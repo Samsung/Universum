@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
 from . import __title__
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import Module, Dependency

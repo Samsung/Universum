@@ -39,7 +39,7 @@ class Output(Module):
         self.driver = utils.create_driver(local_factory=self.terminal_driver_factory,
                                           teamcity_factory=self.teamcity_driver_factory,
                                           jenkins_factory=self.terminal_driver_factory,
-                                          default=self.settings.type)
+                                          env_type=self.settings.type)
 
     def log(self, line):
         self.driver.log(line)

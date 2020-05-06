@@ -1,6 +1,6 @@
-#!/usr/bin/env python2
-# -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+from __future__ import print_function
 from setuptools import setup, find_packages
 
 import _universum
@@ -18,8 +18,8 @@ docs = (
 )
 
 vcs = (
-    'gitpython>=2.1.8',
-    'P4'
+    'gitpython>=3.0.5',
+    'p4python>=2019.1'
 )
 
 setup(
@@ -37,13 +37,14 @@ setup(
         'universum_svace = analyzers.svace:main',
         'universum_uncrustify = analyzers.uncrustify:main'
     ]},
-    python_requires='>=2.7.6, <3',
+    python_requires='>=3.7.5',
     setup_requires=['setuptools'],
     install_requires=[
         'glob2',
         'requests',
         'sh',
-        'lxml'
+        'lxml',
+        'six',
     ],
     extras_require={
         'docs': [docs],
@@ -52,10 +53,10 @@ setup(
             docs,
             vcs,
             'docker',
-            'httpretty<=0.8',
+            'httpretty',
             'mock',
-            'pytest<3.7',
-            'pylint<2',
+            'pytest',
+            'pylint',
             'pytest-pylint',
             'teamcity-messages',
             'pytest-cov',
@@ -66,4 +67,4 @@ setup(
 
 
 if __name__ == "__main__":
-    print "Please use 'sudo pip install .' instead of launching this script"
+    print("Please use 'sudo pip install .' instead of launching this script")
