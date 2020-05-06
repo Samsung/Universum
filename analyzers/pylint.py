@@ -70,8 +70,7 @@ class PylintAnalyzer:
             utils.analyzers_output(self.settings.result_file, issues_loads)
             if issues_loads:
                 return 1
-            else:
-                return 0
+            return 0
 
         except ValueError as e:
             sys.stderr.write(str(e))
