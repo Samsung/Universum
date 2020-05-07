@@ -67,7 +67,8 @@ class ExecutionEnvironment:
                                                       volumes=self._volumes,
                                                       environment=self._environment,
                                                       auto_remove=True,
-                                                      detach=True)
+                                                      detach=True,
+                                                      security_opt=['seccomp=unconfined'])
         return True
 
     def get_working_directory(self):
