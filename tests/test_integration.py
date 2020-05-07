@@ -3,13 +3,13 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 import os
 import signal
-import time
 import subprocess
+import time
 
 import pytest
-import sh
 
 
 def get_line_with_text(text, log):
@@ -19,17 +19,16 @@ def get_line_with_text(text, log):
     return ""
 
 
-@pytest.mark.nonci_and_main
-def test_minimal_execution(universum_runner):
-    log = universum_runner.run("""
+def test_minimal_execution(docker_main_and_nonci):
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """)
-    assert universum_runner.local.repo_file.basename in log
+    assert docker_main_and_nonci.local.repo_file.basename in log
 
 
-def test_artifacts(universum_runner):
+def test_artifacts(docker_main):
     config = """
 from _universum.configuration_support import Variations
 
@@ -49,19 +48,18 @@ artifacts = Variations([dict(name="Existing artifacts", artifacts="one/**/file*"
 
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
     """
-    log = universum_runner.run(config)
+    log = docker_main.run(config)
     assert 'Failed' in get_line_with_text("Collecting 'something' - ", log)
     assert 'Success' in get_line_with_text("Collecting 'something_else' for report - ", log)
 
-    assert os.path.exists(os.path.join(universum_runner.artifact_dir, "three.zip"))
-    assert os.path.exists(os.path.join(universum_runner.artifact_dir, "two2.zip"))
-    assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file1.txt"))
-    assert os.path.exists(os.path.join(universum_runner.artifact_dir, "file.sh"))
+    assert os.path.exists(os.path.join(docker_main.artifact_dir, "three.zip"))
+    assert os.path.exists(os.path.join(docker_main.artifact_dir, "two2.zip"))
+    assert os.path.exists(os.path.join(docker_main.artifact_dir, "file1.txt"))
+    assert os.path.exists(os.path.join(docker_main.artifact_dir, "file.sh"))
 
 
-@pytest.mark.nonci_and_main
-def test_background_steps(universum_runner):
-    log = universum_runner.run("""
+def test_background_steps(docker_main_and_nonci):
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 background = Variations([dict(name="Background", background=True)])
@@ -78,8 +76,8 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
     assert 'Failed' in get_line_with_text("Background unsuccessful step - ", log)
 
     # Test background after failed foreground (regression)
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
@@ -87,13 +85,14 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       background=True, artifacts="file")])
 """)
     assert "All ongoing background steps completed" in log
-    artifacts_must_collect = not universum_runner.nonci
-    assert artifacts_must_collect == os.path.exists(os.path.join(universum_runner.artifact_dir, "file"))
+    artifacts_must_collect = not docker_main_and_nonci.nonci
+    assert artifacts_must_collect == os.path.exists(
+        os.path.join(docker_main_and_nonci.artifact_dir, "file"))
 
     # Test TC step failing
     if artifacts_must_collect:
-        universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+        docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
@@ -102,8 +101,8 @@ configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], bac
 
     # Test multiple failing background steps
     if artifacts_must_collect:
-        universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+        docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
@@ -112,10 +111,9 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
-@pytest.mark.nonci_and_main
-def test_critical_steps(universum_runner):
+def test_critical_steps(docker_main_and_nonci):
     # Test linear
-    log = universum_runner.run("""
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Good step", command=["echo", "step succeeded"]),
@@ -126,8 +124,8 @@ configs = Variations([dict(name="Good step", command=["echo", "step succeeded"])
     assert "This shouldn't be in log." not in log
 
     # Test embedded: critical step, critical substep
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 upper = Variations([dict(name="Group 1"),
@@ -144,8 +142,8 @@ configs = upper * lower
     assert "Group 2, step 1 skipped because of critical step failure" not in log
 
     # Test embedded: critical step, non-critical substep
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 upper = Variations([dict(name="Group 1", critical=True),
@@ -161,8 +159,8 @@ configs = upper * lower
     assert "This should be in log." in log
 
     # Test critical non-commands
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Group 1")])
@@ -177,8 +175,8 @@ configs += Variations([dict(name="Linear non-command", command=["this-is-not-a-c
     assert "This shouldn't be in log." not in log
 
     # Test background
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 group = Variations([dict(name="Group")])
@@ -204,27 +202,27 @@ configs += Variations([dict(name="Additional step", command=["echo", "This shoul
     assert "This should be in log - 3" in log
 
 
-def test_minimal_git(universum_runner_with_vcs):
-    log = universum_runner_with_vcs.run("""
+def test_minimal_git(docker_main_with_vcs):
+    log = docker_main_with_vcs.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="git")
-    assert universum_runner_with_vcs.git.repo_file.basename in log
+    assert docker_main_with_vcs.git.repo_file.basename in log
 
 
-def test_minimal_p4(universum_runner_with_vcs):
-    log = universum_runner_with_vcs.run("""
+def test_minimal_p4(docker_main_with_vcs):
+    log = docker_main_with_vcs.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="p4")
-    assert universum_runner_with_vcs.perforce.repo_file.basename in log
+    assert docker_main_with_vcs.perforce.repo_file.basename in log
 
 
-def test_p4_params(universum_runner_with_vcs):
-    p4 = universum_runner_with_vcs.perforce.p4
-    p4_file = universum_runner_with_vcs.perforce.repo_file
+def test_p4_params(docker_main_with_vcs):
+    p4 = docker_main_with_vcs.perforce.p4
+    p4_file = docker_main_with_vcs.perforce.repo_file
     config = """
 from _universum.configuration_support import Variations
 
@@ -232,15 +230,15 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
 """.format(p4_file.basename)
 
     # Prepare SYNC_CHANGELIST
-    sync_cl = p4.run_changes("-s", "submitted", "-m1", universum_runner_with_vcs.perforce.depot)[0]["change"]
-    p4.run_edit(universum_runner_with_vcs.perforce.depot)
+    sync_cl = p4.run_changes("-s", "submitted", "-m1", docker_main_with_vcs.perforce.depot)[0]["change"]
+    p4.run_edit(docker_main_with_vcs.perforce.depot)
     p4_file.write("This line shouldn't be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "Rename basic config"
     p4.run_submit(change)
 
     # Prepare SHELVE_CHANGELIST
-    p4.run_edit(universum_runner_with_vcs.perforce.depot)
+    p4.run_edit(docker_main_with_vcs.perforce.depot)
     p4_file.write("This line should be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
@@ -248,30 +246,31 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
     p4.run_shelve("-fc", shelve_cl)
 
     # Do not pass params
-    log = universum_runner_with_vcs.run(config, vcs_type="p4")
+    log = docker_main_with_vcs.run(config, vcs_type="p4")
     assert "This line shouldn't be in file." in log
     assert "This line should be in file." not in log
 
     # Pass params via command line
 
-    universum_runner_with_vcs.clean_artifacts()
-    log = universum_runner_with_vcs.run(config, vcs_type="p4",
-                                        additional_parameters=" -p4h=" + sync_cl + " -p4s=" + shelve_cl)
+    docker_main_with_vcs.clean_artifacts()
+    log = docker_main_with_vcs.run(config, vcs_type="p4",
+                                   additional_parameters=" -p4h=" + sync_cl + " -p4s=" + shelve_cl)
     assert "This line shouldn't be in file." not in log
     assert "This line should be in file." in log
 
     # Pass params via environment variables
-    universum_runner_with_vcs.clean_artifacts()
-    log = universum_runner_with_vcs.run(config, vcs_type="p4", environment=["SYNC_CHANGELIST=" + sync_cl,
-                                                                            "SHELVE_CHANGELIST_1=" + shelve_cl])
+    docker_main_with_vcs.clean_artifacts()
+    log = docker_main_with_vcs.run(config, vcs_type="p4", environment=["SYNC_CHANGELIST=" + sync_cl,
+                                                                       "SHELVE_CHANGELIST_1=" + shelve_cl])
     assert "This line shouldn't be in file." not in log
     assert "This line should be in file." in log
 
 
 def empty_required_params_ids(param):
-    if isinstance(param, bool): # url_error_expected
+    if isinstance(param, bool):  # url_error_expected
         return 'negative' if param else 'positive'
     return str(param)
+
 
 @pytest.mark.parametrize('url_error_expected, parameters, env', [
     [True, "", []],
@@ -284,7 +283,7 @@ def empty_required_params_ids(param):
     [False, "", ["SWARM_SERVER=http://swarm"]],
     [False, " --build-only-latest -ssu=http://swarm", []]
 ], ids=empty_required_params_ids)
-def test_empty_required_params(universum_runner_with_vcs, url_error_expected, parameters, env):
+def test_empty_required_params(docker_main_with_vcs, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
     config = """
 from _universum.configuration_support import Variations
@@ -292,23 +291,22 @@ from _universum.configuration_support import Variations
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
-    log = universum_runner_with_vcs.run(config, vcs_type="p4", expected_to_fail=True,
-                               additional_parameters=" --report-to-review" + parameters, environment=env)
+    log = docker_main_with_vcs.run(config, vcs_type="p4", expected_to_fail=True,
+                                   additional_parameters=" --report-to-review" + parameters, environment=env)
     if url_error_expected:
         assert url_error in log
     else:
         assert url_error not in log
 
 
-@pytest.mark.nonci_and_main
-def test_environment(universum_runner):
-    script = universum_runner.local.root_directory.join("script.sh")
+def test_environment(docker_main_and_nonci):
+    script = docker_main_and_nonci.local.root_directory.join("script.sh")
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
     script.chmod(0o777)
 
-    log = universum_runner.run("""
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["script.sh"],
@@ -316,8 +314,8 @@ configs = Variations([dict(name="Test configuration", command=["script.sh"],
 """)
     assert "This string should be in log" in log
 
-    universum_runner.clean_artifacts()
-    log = universum_runner.run("""
+    docker_main_and_nonci.clean_artifacts()
+    log = docker_main_and_nonci.run("""
 from _universum.configuration_support import Variations
 
 upper = Variations([dict(name="Test configuration",
