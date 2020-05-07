@@ -43,7 +43,8 @@ def define_arguments():
 def run(settings):
     result = 0
     main_module = construct_component(settings.main_class, settings)
-    main_module.out.log("{} {} started execution".format(__title__, __version__))
+    main_module.out.log("{} {} started execution\n"
+                        "THIS IS THE LAST RELEASE, WE NO LOGER SUPPORT PYTHON2".format(__title__, __version__))
 
     def signal_handler(signal_number, stack_frame):
         raise KeyboardInterrupt
