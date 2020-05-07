@@ -1,13 +1,14 @@
-from typing import List
-import re
 import inspect
+import re
+from typing import List
+
 import pytest
 
 
 @pytest.fixture(name='runner_with_pylint')
-def fixture_runner_with_pylint(universum_runner):
-    universum_runner.environment.install_python_module("pylint")
-    yield universum_runner
+def fixture_runner_with_pylint(docker_main):
+    docker_main.environment.install_python_module("pylint")
+    yield docker_main
 
 
 def get_config(args: List[str]):

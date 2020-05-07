@@ -3,14 +3,16 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 import getpass
-from pwd import getpwnam
 import os
-import py
-from requests.exceptions import ReadTimeout
+from pwd import getpwnam
 
 import docker
+import py
 import pytest
+from requests.exceptions import ReadTimeout
+
 from . import utils
 
 
@@ -81,7 +83,7 @@ class ExecutionEnvironment:
         print("$ " + cmd)
         log = self._client.api.exec_start(process_id)
         assert not isinstance(str, type(log)), "Looks like it's a bug in a docker 4.1.0. According to documentation " \
-            "this function must return 'str'. However it returns 'bytes'"
+                                               "this function must return 'str'. However it returns 'bytes'"
         log = log.decode("utf-8")
         print(log)
 
@@ -251,55 +253,50 @@ class UniversumRunner:
     def clean_artifacts(self):
         self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
 
+
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources, nonci) -> UniversumRunner:
-    runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci)
+def runner_without_environment(perforce_workspace, git_client, local_sources) -> UniversumRunner:
+    runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
     runner.clean_artifacts()
 
 
 @pytest.fixture()
-def universum_runner(execution_environment, runner_without_environment):
+def docker_main_with_vcs(execution_environment, runner_without_environment):
     execution_environment.set_image("universum_test_env")
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
 
 
-@pytest.fixture()
-def universum_runner_nonci(execution_environment, local_sources):
-    runner = UniversumRunner(None, None, local_sources, True)
+def docker_fixture_template(request, execution_environment, local_sources):
+    runner = UniversumRunner(None, None, local_sources, nonci=request.param)
     execution_environment.set_image("universum_test_env")
     runner.set_environment(execution_environment)
     yield runner
     runner.clean_artifacts()
 
 
+docker_main = pytest.fixture(params=[False])(docker_fixture_template)
+docker_nonci = pytest.fixture(params=[True])(docker_fixture_template)
+docker_main_and_nonci = pytest.fixture(params=[False, True], ids=["main", "nonci"])(docker_fixture_template)
+
+
 @pytest.fixture()
-def clean_universum_runner(clean_execution_environment, runner_without_environment):
+def clean_docker_main(clean_execution_environment, runner_without_environment):
     clean_execution_environment.set_image("universum_test_env")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_universum_runner_no_p4(clean_execution_environment, runner_without_environment):
+def clean_docker_main_no_p4(clean_execution_environment, runner_without_environment):
     clean_execution_environment.set_image("universum_test_env_no_p4")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_universum_runner_no_vcs(clean_execution_environment, runner_without_environment):
+def clean_docker_main_no_vcs(clean_execution_environment, runner_without_environment):
     clean_execution_environment.set_image("universum_test_env_no_vcs")
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
-
-
-@pytest.fixture
-def nonci(request):
-    return False
-
-
-def pytest_generate_tests(metafunc):
-    if metafunc.definition.get_closest_marker('nonci_applicable'):
-        metafunc.parametrize('nonci', (False, True), ids=('no subcmd', 'subcmd: nonci',))
