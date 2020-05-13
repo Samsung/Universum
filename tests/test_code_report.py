@@ -17,7 +17,7 @@ def get_config(args: List[str]):
         from _universum.configuration_support import Variations
 
         configs = Variations([dict(name="Run static pylint", code_report=True,
-            command=['universum_pylint'{''.join(args)}])])
+            command=['python3.7', '-m', 'analyzers.pylint'{''.join(args)}])])
     """)
 
 
