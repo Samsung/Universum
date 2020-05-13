@@ -8,7 +8,7 @@ import json
 import sys
 import subprocess
 
-from analyzers import utils
+from universum.analyzers import utils
 
 
 class PylintAnalyzer:

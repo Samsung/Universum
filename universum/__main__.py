@@ -1,21 +1,18 @@
 #!/usr/bin/env python3.7
 
-from __future__ import absolute_import
-from __future__ import print_function
-import atexit
 import signal
 import sys
 
-from _universum import __version__, __title__
-from _universum.api import Api
-from _universum.main import Main
-from _universum.poll import Poll
-from _universum.modules.launcher import Launcher
-from _universum.submit import Submit
-from _universum.lib.ci_exception import SilentAbortException
-from _universum.lib.gravity import define_arguments_recursive, construct_component
-from _universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
-from _universum.lib.utils import Uninterruptible, format_traceback
+from universum import __version__, __title__
+from universum.api import Api
+from universum.main import Main
+from universum.poll import Poll
+from universum.modules.launcher import Launcher
+from universum.submit import Submit
+from universum.lib.ci_exception import SilentAbortException
+from universum.lib.gravity import define_arguments_recursive, construct_component
+from universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
+from universum.lib.utils import Uninterruptible, format_traceback
 
 
 def define_arguments():

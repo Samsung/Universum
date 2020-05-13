@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 from six.moves import range
 
 mkdir = Variations([dict(name="Create directory", command=["mkdir", "-p"])])

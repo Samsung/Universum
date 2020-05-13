@@ -172,17 +172,17 @@ import os
 
 sys.path.append(os.path.dirname(__file__)+'/..')
 
-import _universum
+import universum
 
-project = _universum.__title__
+project = universum.__title__
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = _universum.__version__
+version = universum.__version__
 # The full version, including alpha/beta/rc tags.
-release = _universum.__version__
+release = universum.__version__
 
 autodoc_member_order = 'bysource'
 add_module_names = False

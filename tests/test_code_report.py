@@ -14,10 +14,10 @@ def fixture_runner_with_pylint(docker_main):
 def get_config(args: List[str]):
     args = [f", '{arg}'" for arg in args]
     return inspect.cleandoc(f"""
-        from _universum.configuration_support import Variations
+        from universum.configuration_support import Variations
 
         configs = Variations([dict(name="Run static pylint", code_report=True,
-            command=['python3.7', '-m', 'analyzers.pylint'{''.join(args)}])])
+            command=['python3.7', '-m', 'universum.analyzers.pylint'{''.join(args)}])])
     """)
 
 
@@ -48,7 +48,7 @@ def test_code_report(runner_with_pylint, args, tested_content, expected_log):
 
 def test_without_code_report_command(runner_with_pylint):
     log = runner_with_pylint.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run usual command", command=["ls", "-la"])])
     """)

@@ -9,8 +9,8 @@ import string
 import six
 from six.moves import range
 
-from _universum import submit, poll, main
-from _universum.lib import gravity
+from universum import submit, poll, main
+from universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
@@ -77,7 +77,7 @@ def create_empty_settings(test_type):
 
 
 simple_test_config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """

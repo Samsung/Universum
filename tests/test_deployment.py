@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
