@@ -232,7 +232,7 @@ class UniversumRunner:
 
         # We cannot collect coverage from installed module, so we run it only if specifically told so
         if force_installed:
-            cmd = "universum"
+            cmd = "python3.7 -m universum"
 
         if self.nonci:
             cmd += ' nonci'
