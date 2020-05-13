@@ -31,12 +31,6 @@ setup(
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum', 'analyzers.pylint', 'analyzers.svace', 'analyzers.uncrustify'],
-    entry_points={'console_scripts': [
-        'universum = universum:main',
-        'universum_pylint = analyzers.pylint:main',
-        'universum_svace = analyzers.svace:main',
-        'universum_uncrustify = analyzers.uncrustify:main'
-    ]},
     python_requires='>=3.7.5',
     setup_requires=['setuptools'],
     install_requires=[
