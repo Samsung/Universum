@@ -1,6 +1,6 @@
 
 import os
-from universum.configuration_support import Variations
+from _universum.configuration_support import Variations
 
 env_name = "virtual_universe"
 
