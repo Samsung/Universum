@@ -47,7 +47,7 @@ but all the dependency modules will remain in the system.
 
 ## Project contents
 
-`universum.py` is project executable. It uses the following modules from `_universum` directory:
+`__main__.py` is project executable. It uses the following modules from `universum` directory:
 * `main`/`poll`/`submit`/`api` - managing modules for different Universum modes
 * `configuration_support` - special module for [configuring the project](
 https://universum.readthedocs.io/en/latest/configuring.html)

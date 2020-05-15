@@ -3,13 +3,13 @@
 
 import pytest
 
-import universum
+from universum import __main__
 from . import git_utils, perforce_utils
 
 
 def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
-    result = universum.main(["poll", "-ot", "term",
+    result = __main__.main(["poll", "-ot", "term",
                              "-vt", "p4",
                              "-f", str(db_file),
                              "-p4p", perforce_workspace.p4.port,
@@ -23,7 +23,7 @@ def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, 
 
 def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
-    result = universum.main(["poll", "-ot", "term",
+    result = __main__.main(["poll", "-ot", "term",
                              "-vt", "git",
                              "-f", str(db_file),
                              "-gr", git_server.url,
@@ -35,7 +35,7 @@ def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir)
 
 def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
-    result = universum.main(["poll", "-ot", "term",
+    result = __main__.main(["poll", "-ot", "term",
                              "-vt", "p4",
                              "-f", str(db_file),
                              "-p4p", "127.0.0.1:1024",
@@ -49,7 +49,7 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
 
 def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
-    result = universum.main(["poll", "-ot", "term",
+    result = __main__.main(["poll", "-ot", "term",
                              "-vt", "git",
                              "-f", str(db_file),
                              "-gr", "file:///non-existing-directory",
@@ -90,13 +90,13 @@ def test_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     # make change in workspace
     change = parameters.make_a_change()
 
     # run poll again and fail triggering url because there is no server
-    assert universum.run(parameters.poll_settings) != 0
+    assert __main__.run(parameters.poll_settings) != 0
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -108,12 +108,12 @@ def test_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     # make change in workspace
     change = parameters.make_a_change()
 
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
     parameters.http_check.assert_request_was_made({"cl": [change]})
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -122,14 +122,14 @@ def test_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll again and trigger the url twice
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -142,14 +142,14 @@ def test_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll and trigger the urls
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -163,7 +163,7 @@ def test_changes_several_times(poll_parameters, poll_environment):
     change4 = parameters.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    parameters.http_check.assert_success_and_collect(universum.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)

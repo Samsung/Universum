@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from setuptools import setup, find_packages
 
-import _universum
+import universum
 
 
 def readme():
@@ -23,14 +23,14 @@ vcs = (
 )
 
 setup(
-    name=_universum.__title__,
-    version=_universum.__version__,
+    name=universum.__title__,
+    version=universum.__version__,
     description='Unifier of Continuous Integration',
     long_description=readme(),
     author='Ivan Keliukh <i.keliukh@samsung.com>, Kateryna Dovgan <k.dovgan@samsung.com>',
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
-    py_modules=['universum', 'analyzers.pylint', 'analyzers.svace', 'analyzers.uncrustify'],
+    py_modules=['universum'],
     python_requires='>=3.7.5',
     setup_requires=['setuptools'],
     install_requires=[

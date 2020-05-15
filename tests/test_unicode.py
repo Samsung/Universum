@@ -4,7 +4,7 @@
 import git
 import pytest
 
-import universum
+from universum import __main__
 from . import git_utils, perforce_utils, utils
 
 
@@ -41,7 +41,7 @@ def test_unicode(vcs, test_type, perforce_workspace, git_client, unicode_dir):
         temp_file.write("This is a new file" + "\n")
         env.settings.Submit.reconcile_list = [str(temp_file)]
 
-    res = universum.run(env.settings)
+    res = __main__.run(env.settings)
     assert res == 0
 
 
@@ -53,5 +53,5 @@ def test_unicode_main_local_vcs(unicode_dir):
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(work_dir)
 
-    res = universum.run(env.settings)
+    res = __main__.run(env.settings)
     assert res == 0

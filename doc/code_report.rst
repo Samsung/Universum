@@ -28,14 +28,14 @@ Pylint
 ------
 
 .. argparse::
-    :ref: analyzers.pylint.form_arguments_for_documentation
+    :ref: universum.analyzers.pylint.form_arguments_for_documentation
     :prog: universum_pylint
 
 Config example for ``universum_pylint``:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="pylint", code_report=True, command=["universum_pylint",
                                "--python-version", "3", "--result-file", "${CODE_REPORT_FILE}",
@@ -65,14 +65,14 @@ Svace
 -----
 
 .. argparse::
-    :ref: analyzers.svace.form_arguments_for_documentation
+    :ref: universum.analyzers.svace.form_arguments_for_documentation
     :prog: universum_svace
 
 Config example for ``universum_svace``:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="svace", code_report=True, command=["universum_svace",
                                "--build-cmd", "make", "--lang", "CXX",
@@ -102,7 +102,7 @@ Uncrustify
 ----------
 
 .. argparse::
-    :ref: analyzers.uncrustify.form_arguments_for_documentation
+    :ref: universum.analyzers.uncrustify.form_arguments_for_documentation
     :prog: universum_uncrustify
     :nodefault:
 
@@ -110,7 +110,7 @@ Config example for ``universum_uncrustify``:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="uncrustify", code_report=True, command=["universum_uncrustify",
                                "--files", "project_root_directory", "--cfg-file", "file_name.cfg",

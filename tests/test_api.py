@@ -2,7 +2,7 @@ import json
 from os import path
 
 config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run script", artifacts="output.json",
                            command=["bash", "-c", "python3.7 -m universum api file-diff > output.json"])])

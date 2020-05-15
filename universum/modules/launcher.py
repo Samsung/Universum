@@ -38,7 +38,7 @@ def check_if_env_set(configuration):
     used to decide whether this particular configuration should be executed in this
     particular environment. For more information see :ref:`filtering`
 
-    >>> from _universum.configuration_support import Variations
+    >>> from universum.configuration_support import Variations
     >>> c = Variations([dict(if_env_set="MY_VAR != some value")])
     >>> check_if_env_set(c[0])
     True

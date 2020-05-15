@@ -802,7 +802,7 @@ New features
 ~~~~~~~~~~~~
 
 * **docs:** add :doc:`system prerequisites page <prerequisites>` to user manual
-* **docs:** add documentation for :mod:`_universum.configuration_support` module
+* **docs:** add documentation for :mod:`universum.configuration_support` module
 * **launcher:** add support for more than one environment variable to
   :ref:`filter configurations <filtering>`
 

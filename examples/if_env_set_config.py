@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 script_name = './basic_build_script.sh'
 
