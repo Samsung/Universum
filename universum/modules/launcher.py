@@ -34,7 +34,7 @@ def make_command(name):
 
 def check_if_env_set(configuration):
     """
-    Predicate function for :func:`_universum.configuration_support.Variations.filter`,
+    Predicate function for :func:`universum.configuration_support.Variations.filter`,
     used to decide whether this particular configuration should be executed in this
     particular environment. For more information see :ref:`filtering`
 
@@ -52,7 +52,7 @@ def check_if_env_set(configuration):
     >>> check_if_env_set(c[0])
     True
 
-    :param configuration: :class:`~_universum.configuration_support.Variations`
+    :param configuration: :class:`~universum.configuration_support.Variations`
            object containing one leaf configuration
     :return: True if environment satisfies described requirements; False otherwise
     """
