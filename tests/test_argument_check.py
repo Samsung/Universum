@@ -2,8 +2,8 @@
 from typing import Union, List
 import pytest
 
-import universum
-from _universum.lib.module_arguments import IncorrectParameterError
+from universum import __main__
+from universum.lib.module_arguments import IncorrectParameterError
 from . import utils
 
 
@@ -74,7 +74,7 @@ def parametrize_unset(parameter_name="unset"):
 
 def assert_incorrect_parameter(settings, match):
     with pytest.raises(IncorrectParameterError, match=match):
-        universum.run(settings)
+        __main__.run(settings)
 
 
 missing_params = []

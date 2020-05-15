@@ -6,8 +6,8 @@ import os
 import pytest
 from six.moves import zip
 
-from _universum.lib.gravity import construct_component
-from _universum.modules.vcs import perforce_vcs
+from universum.lib.gravity import construct_component
+from universum.modules.vcs import perforce_vcs
 from . import utils
 
 

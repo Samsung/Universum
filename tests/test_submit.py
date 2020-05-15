@@ -9,7 +9,7 @@ import pytest
 import six
 from six.moves import range
 
-import universum
+from universum import __main__
 from . import git_utils, perforce_utils, utils
 
 
@@ -17,11 +17,11 @@ def test_error_no_repo(submit_environment, stdout_checker):
     settings = copy.deepcopy(submit_environment.settings)
     if settings.Vcs.type == "git":
         settings.ProjectDirectory.project_root = "non_existing_repo"
-        universum.run(settings)
+        __main__.run(settings)
         stdout_checker.assert_has_calls_with_param("No such directory")
     else:
         settings.PerforceSubmitVcs.client = "non_existing_client"
-        universum.run(settings)
+        __main__.run(settings)
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
 
@@ -40,7 +40,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     settings = copy.deepcopy(p4_submit_environment.settings)
     setattr(settings.Submit, "reconcile_list", [str(file_to_add)])
 
-    assert universum.run(settings)
+    assert __main__.run(settings)
 
     p4 = p4_submit_environment.p4
     # make sure submitter didn't leave any pending CLs in the workspace
@@ -65,7 +65,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
     settings = copy.deepcopy(p4_submit_environment.settings)
     setattr(settings.Submit, "reconcile_list", [str(new_file)])
 
-    assert not universum.run(settings)
+    assert not __main__.run(settings)
     assert text in p4_file.read()
 
 
@@ -86,7 +86,7 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     settings = copy.deepcopy(p4_submit_environment.settings)
     setattr(settings.Submit, "reconcile_list", [str(new_file)])
 
-    assert universum.run(settings)
+    assert __main__.run(settings)
     assert text_default in p4_file.read()
     assert text_new in new_file.read()
 
@@ -105,7 +105,7 @@ class SubmitterParameters:
             for key in kwargs:
                 setattr(settings.Submit, key, kwargs[key])
 
-        return universum.run(settings)
+        return __main__.run(settings)
 
     def assert_submit_success(self, path_list, **kwargs):
         result = self.submit_path_list(path_list, **kwargs)

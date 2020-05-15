@@ -1,7 +1,7 @@
 Configuring the project
 =======================
 
-.. currentmodule:: _universum.configuration_support
+.. currentmodule:: universum.configuration_support
 
 In order to use the `Universum`, the project should provide a configuration file.
 This file is a regular python script with specific interface, which is recognized
@@ -10,7 +10,7 @@ by the `Universum`.
 The path to the configuration file is supplied to the main script via the `CONFIG_PATH`
 environment variable or ``--launcher-config-path`` / ``-lcp`` `command-line parameter
 <args.html#launcher>`__.
-Internally the config file is processed by the :mod:`_universum.launcher` module. The path is passed
+Internally the config file is processed by the :mod:`universum.launcher` module. The path is passed
 to this module in `config_path` member of its input settings.
 
 .. note::
@@ -46,12 +46,12 @@ Below is an example of the configuration file in its most basic form:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="Build", command=["build.sh"])])
 
 This configuration file uses a :class:`Variations` class
-from the :mod:`_universum.configuration_support`
+from the :mod:`universum.configuration_support`
 module and defines one build configuration.
 
 .. note::
@@ -59,7 +59,7 @@ module and defines one build configuration.
     Creating a :class:`Variations` instance takes a list of dictionaries as an argument,
     where every new list member describes a new `project configuration`_.
 
-* The :mod:`_universum.configuration_support` module provides several functions to be used by project configuration files
+* The :mod:`universum.configuration_support` module provides several functions to be used by project configuration files
 * The `Universum` expects project configuration file to define global variable with
   name `configs`. This variable defines all project configurations to be used in a build.
 
@@ -91,7 +91,7 @@ using `directory` keyword:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="Make Special Module", directory="specialModule", command=["make"])])
 
@@ -107,7 +107,7 @@ arguments to ``make`` command, the launch directory is specified.
 By default for any launched external command `current directory` is the actual directory
 containing project files. So any internal relative paths for the project should not cause any troubles.
 But when, for any reason, there's a need to refer to project location absolute path, it is
-recommended to use :func:`get_project_root` function from :mod:`_universum.configuration_support` module.
+recommended to use :func:`get_project_root` function from :mod:`universum.configuration_support` module.
 
 .. note::
 
@@ -118,14 +118,14 @@ recommended to use :func:`get_project_root` function from :mod:`_universum.confi
     (not only the `working directory`, mentioned above), so the path to this directory
     can not be hardcoded too.
 
-The :mod:`_universum.configuration_support` module processes current `Universum` run settings and returns
+The :mod:`universum.configuration_support` module processes current `Universum` run settings and returns
 actual project root to the config processing module.
 
 See the following example configuration file:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Variations, get_project_root
 
     configs = Variations([dict(name="Run tests", directory="/home/scripts", command=["./run_tests.sh", "--directory", get_project_root()])])
 
@@ -145,7 +145,7 @@ Below is an example of the configuration file with three different configuration
 
 .. testcode::
 
-    from _universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Variations, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
@@ -303,7 +303,7 @@ pass_tag, fail_tag
 
         #!/usr/bin/env python
 
-        from _universum.configuration_support import Variations
+        from universum.configuration_support import Variations
 
     .. testcode::
 
@@ -351,14 +351,14 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
     def mock_project_root():
         return "/home/Project"
 
-    import _universum.configuration_support
-    _universum.configuration_support.get_project_root = mock_project_root
+    import universum.configuration_support
+    universum.configuration_support.get_project_root = mock_project_root
 
 .. testcode::
 
     #!/usr/bin/env python
 
-    from _universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Variations, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
@@ -373,7 +373,7 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
 The combination of ``#!/usr/bin/env python`` and ``if __name__ == '__main__':`` allows launching
 the `configs.py` script from shell.
 
-For ``from _universum.configuration_support import`` to work correctly, `configs.py` should be copied to
+For ``from universum.configuration_support import`` to work correctly, `configs.py` should be copied to
 `Universum` root directory and launched there.
 
 When launched from shell instead of being used by `Universum` system, :ref:`get_project_root` function
@@ -419,7 +419,7 @@ See the following example:
 
     #!/usr/bin/env python
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     one = Variations([dict(name="Make project", command=["make"])])
     two = Variations([dict(name="Run tests", command=["run_tests.sh"])])
@@ -471,7 +471,7 @@ For example, this configuration file:
 
     #!/usr/bin/env python
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     make = Variations([dict(name="Make ", command=["make"], artifacts="out")])
 
@@ -520,7 +520,7 @@ can be combined in any required way. For example:
 
     #!/usr/bin/env python
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     make = Variations([dict(name="Make ", command=["make"], artifacts="out")])
     test = Variations([dict(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])

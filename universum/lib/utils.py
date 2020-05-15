@@ -8,7 +8,7 @@ import sys
 import traceback
 import six
 
-from _universum.lib.ci_exception import CiException
+from universum.lib.ci_exception import CiException
 from .ci_exception import CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
 

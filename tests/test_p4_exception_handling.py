@@ -3,7 +3,7 @@
 
 import pytest
 
-import universum
+from universum import __main__
 from tests.perforce_utils import P4Environment
 
 
@@ -17,7 +17,7 @@ def test_p4_forbidden_local_revert(perforce_environment, capsys):
     p4_file = perforce_environment.repo_file
 
     config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555", "."]),
                       dict(name="Check", command=["ls", "-la"])])
@@ -33,7 +33,7 @@ configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555
     settings.PerforceMainVcs.shelve_cls = [shelve_cl]
     settings.Launcher.config_path = p4_file.basename
 
-    result = universum.run(settings)
+    result = __main__.run(settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
     perforce_environment.temp_dir.chmod(0o0777, rec=1)
     perforce_environment.temp_dir.remove(rec=1)
@@ -54,7 +54,7 @@ def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
     p4.save_client(client)
 
     settings = perforce_environment.settings
-    result = universum.run(settings)
+    result = __main__.run(settings)
 
     # Update client at once to make sure it doesn't remain locked even if some assert fails
     client = p4.fetch_client(perforce_environment.client_name)
@@ -74,7 +74,7 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker, ca
 
     settings = perforce_environment.settings
     settings.Main.finalize_only = True
-    result = universum.run(settings)
+    result = __main__.run(settings)
 
     # Update client at once to make sure it doesn't remain locked even if some assert fails
     client = p4.fetch_client(perforce_environment.client_name)

@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import os.path
-from _universum.configuration_support import Variations, get_project_root
+from universum.configuration_support import Variations, get_project_root
 
 #
 # One way to specify path to the script: add full path to the command

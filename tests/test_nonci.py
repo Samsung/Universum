@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="artifact check",
                            command=["bash", "-c", '''cat /artifacts/test_nonci.txt''']),
@@ -53,7 +53,7 @@ def test_launcher_output(docker_nonci):
 
     # second call of universum must not contain previous step log
     docker_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="test_step",
                            command=["bash", "-c", '''echo "Separate run"'''])])

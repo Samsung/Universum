@@ -4,8 +4,8 @@ import os
 from typing import Optional
 import pytest
 
-from _universum.configuration_support import Variations
-from _universum.modules.launcher import check_if_env_set
+from universum.configuration_support import Variations
+from universum.modules.launcher import check_if_env_set
 
 
 @pytest.fixture(autouse=True)

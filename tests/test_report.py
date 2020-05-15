@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import pytest
 import six
 
-import universum
+from universum import __main__
 from . import utils
 
 
@@ -36,7 +36,7 @@ def report_environment(tmpdir, git_client):
 
 
 def test_github_run(http_check, report_environment):
-    http_check.assert_success_and_collect(universum.run, report_environment.settings,
+    http_check.assert_success_and_collect(__main__.run, report_environment.settings,
                                           url=report_environment.path, method="PATCH")
 
     http_check.assert_request_body_contained("status", "in_progress")

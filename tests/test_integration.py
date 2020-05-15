@@ -21,7 +21,7 @@ def get_line_with_text(text, log):
 
 def test_minimal_execution(docker_main_and_nonci):
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """)
@@ -30,7 +30,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 def test_artifacts(docker_main):
     config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 mkdir = Variations([dict(name="Create directory", command=["mkdir", "-p"])])
 mkfile = Variations([dict(name="Create file", command=["touch"])])
@@ -60,7 +60,7 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
 
 def test_background_steps(docker_main_and_nonci):
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 background = Variations([dict(name="Background", background=True)])
 sleep = Variations([dict(name=' long step', command=["sleep", "1"])])
@@ -78,7 +78,7 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
     # Test background after failed foreground (regression)
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       dict(name="Good bg step", command=["touch", "file"],
@@ -93,7 +93,7 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
     if artifacts_must_collect:
         docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
 """, additional_parameters=" -ot tc")
@@ -103,7 +103,7 @@ configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], bac
     if artifacts_must_collect:
         docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
                       dict(name="Bad step 2", command=["ls", "not_a_file"], background=True)])
@@ -114,7 +114,7 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
 def test_critical_steps(docker_main_and_nonci):
     # Test linear
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Good step", command=["echo", "step succeeded"]),
                       dict(name="Bad step", command=["ls", "not_a_file"], critical=True),
@@ -126,7 +126,7 @@ configs = Variations([dict(name="Good step", command=["echo", "step succeeded"])
     # Test embedded: critical step, critical substep
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 upper = Variations([dict(name="Group 1"),
                     dict(name="Group 2", critical=True),
@@ -144,7 +144,7 @@ configs = upper * lower
     # Test embedded: critical step, non-critical substep
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 upper = Variations([dict(name="Group 1", critical=True),
                     dict(name="Group 2")])
@@ -161,7 +161,7 @@ configs = upper * lower
     # Test critical non-commands
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Group 1")])
 
@@ -177,7 +177,7 @@ configs += Variations([dict(name="Linear non-command", command=["this-is-not-a-c
     # Test background
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 group = Variations([dict(name="Group")])
 
@@ -204,7 +204,7 @@ configs += Variations([dict(name="Additional step", command=["echo", "This shoul
 
 def test_minimal_git(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="git")
@@ -213,7 +213,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 def test_minimal_p4(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="p4")
@@ -224,7 +224,7 @@ def test_p4_params(docker_main_with_vcs):
     p4 = docker_main_with_vcs.perforce.p4
     p4_file = docker_main_with_vcs.perforce.repo_file
     config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
 """.format(p4_file.basename)
@@ -286,7 +286,7 @@ def empty_required_params_ids(param):
 def test_empty_required_params(docker_main_with_vcs, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
     config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
@@ -307,7 +307,7 @@ echo ${SPECIAL_TESTING_VARIABLE}
     script.chmod(0o777)
 
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["script.sh"],
                            environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
@@ -316,7 +316,7 @@ configs = Variations([dict(name="Test configuration", command=["script.sh"],
 
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 upper = Variations([dict(name="Test configuration",
                          environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
@@ -330,14 +330,14 @@ configs = upper * lower
 @pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
 def test_abort(local_sources, tmpdir, terminate_type):
     config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
     config_file = tmpdir.join("configs.py")
     config_file.write(config)
 
-    process = subprocess.Popen(["python3.7", os.path.join(os.getcwd(), "universum.py"),
+    process = subprocess.Popen(["python3.7", os.path.join(os.getcwd(), "universum", "__main__.py"),
                                 "-o", "console", "-vt", "none",
                                 "-pr", str(tmpdir.join("project_root")),
                                 "-ad", str(tmpdir.join("artifacts")),

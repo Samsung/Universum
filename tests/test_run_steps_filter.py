@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import pytest
 
 config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 def step(name, cmd=False):
     return Variations([dict(name=name, command=[] if not cmd else ["bash", "-c", '''echo "run step"'''])])
