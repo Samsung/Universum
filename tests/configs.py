@@ -1,6 +1,6 @@
 
 import os
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 env_name = "virtual_universe"
 
@@ -10,7 +10,7 @@ def run_virtual(cmd):
 
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
-                      dict(name="Update Pylint", command=["python3", "-m", "pip", "install", "-U", "--user", "pylint"]),
+                      dict(name="Update Pylint", command=["python3.7", "-m", "pip", "install", "-U", "--user", "pylint"]),
                       dict(name="Create virtual environment",
                            command=["python3.7", "-m", "venv", env_name]),
                       dict(name="Install development",
@@ -21,6 +21,11 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                            command=run_virtual("python3.7 -m pip --default-timeout=1200 install .[test] -U")),
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
+
+                      dict(name="Run static pylint", code_report=True,
+                           command=["python3.7", "-m", "universum.analyzers.pylint",
+                                    "--python-version=3.7", "--rcfile=pylintrc", "--result-file=${CODE_REPORT_FILE}",
+                                    "--files", "*.py", "universum/", "tests/"]),
 
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",

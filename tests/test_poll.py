@@ -10,13 +10,13 @@ from . import git_utils, perforce_utils
 def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
-                             "-vt", "p4",
-                             "-f", str(db_file),
-                             "-p4p", perforce_workspace.p4.port,
-                             "-p4u", perforce_workspace.p4.user,
-                             "-p4P", perforce_workspace.p4.password,
-                             "-p4d", "//depot/...",
-                             "-jtu", "https://localhost/?%s"])
+                            "-vt", "p4",
+                            "-f", str(db_file),
+                            "-p4p", perforce_workspace.p4.port,
+                            "-p4u", perforce_workspace.p4.user,
+                            "-p4P", perforce_workspace.p4.password,
+                            "-p4d", "//depot/...",
+                            "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
@@ -24,11 +24,11 @@ def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, 
 def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
-                             "-vt", "git",
-                             "-f", str(db_file),
-                             "-gr", git_server.url,
-                             "-grs", git_server.target_branch,
-                             "-jtu", "https://localhost/?%s"])
+                            "-vt", "git",
+                            "-f", str(db_file),
+                            "-gr", git_server.url,
+                            "-grs", git_server.target_branch,
+                            "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
@@ -36,13 +36,13 @@ def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir)
 def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
-                             "-vt", "p4",
-                             "-f", str(db_file),
-                             "-p4p", "127.0.0.1:1024",
-                             "-p4u", perforce_workspace.p4.user,
-                             "-p4P", perforce_workspace.p4.password,
-                             "-p4d", "//depot/...",
-                             "-jtu", "https://localhost/?%s"])
+                            "-vt", "p4",
+                            "-f", str(db_file),
+                            "-p4p", "127.0.0.1:1024",
+                            "-p4u", perforce_workspace.p4.user,
+                            "-p4P", perforce_workspace.p4.password,
+                            "-p4d", "//depot/...",
+                            "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
 
@@ -50,11 +50,11 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
 def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     db_file = tmpdir.join("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
-                             "-vt", "git",
-                             "-f", str(db_file),
-                             "-gr", "file:///non-existing-directory",
-                             "-grs", git_server.target_branch,
-                             "-jtu", "https://localhost/?%s"])
+                            "-vt", "git",
+                            "-f", str(db_file),
+                            "-gr", "file:///non-existing-directory",
+                            "-grs", git_server.target_branch,
+                            "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("Cmd('git') failed due to: exit code(128)")
 
@@ -75,6 +75,7 @@ class PollerParameters:
 def poll_parameters(log_exception_checker, stdout_checker, http_check):
     def inner(environment):
         return PollerParameters(log_exception_checker, stdout_checker, http_check, environment)
+
     yield inner
 
 
