@@ -22,10 +22,10 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
 
-                      dict(name="Run static pylint", code_report=True, directory="./",
+                      dict(name="Run static pylint", code_report=True,
                            command=["python3.7", "-m", "universum.analyzers.pylint",
                                     "--python-version=3.7", "--rcfile=pylintrc", "--result-file='${CODE_REPORT_FILE}'",
-                                    "--files", "*.py", "universum/", "tests/", "analyzers/"]),
+                                    "--files", "*.py", "universum/", "tests/"]),
 
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",

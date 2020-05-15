@@ -39,18 +39,17 @@ class PylintAnalyzer:
         return parser
 
     def __init__(self, settings):
-        print(os.getcwd())
         self.settings = settings
 
     def execute(self):
-        print(os.getcwd())
         cmd = [f"python{self.settings.version}", '-m', 'pylint', '-f', 'json']
         if self.settings.rcfile:
             cmd.append(f'--rcfile={self.settings.rcfile}')
 
         for pattern in self.settings.file_list:
-            print(glob.glob(pattern))
-            cmd.append(" ".join(glob.glob(pattern)))
+            found_files = glob.glob(pattern)
+            if found_files:
+                cmd.append(" ".join(found_files))
 
         result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
