@@ -1,4 +1,4 @@
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 
 one = Variations([{'name': 'one', 'command': ['echo', 'one']}])

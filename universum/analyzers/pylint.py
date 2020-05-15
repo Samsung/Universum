@@ -7,6 +7,7 @@ import glob
 import json
 import sys
 import subprocess
+import os
 
 from universum.analyzers import utils
 
@@ -46,7 +47,9 @@ class PylintAnalyzer:
             cmd.append(f'--rcfile={self.settings.rcfile}')
 
         for pattern in self.settings.file_list:
-            cmd.append(" ".join(glob.glob(pattern)))
+            found_files = glob.glob(pattern)
+            if found_files:
+                cmd.append(" ".join(found_files))
 
         result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
