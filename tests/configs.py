@@ -10,7 +10,7 @@ def run_virtual(cmd):
 
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
-                      dict(name="Update Pylint", command=["python3.7", "-m", "pip", "install", "-U", "--user", "pylint"]),
+                      dict(name="Update Pylint", command=["python3", "-m", "pip", "install", "-U", "--user", "pylint"]),
                       dict(name="Create virtual environment",
                            command=["python3.7", "-m", "venv", env_name]),
                       dict(name="Install development",
