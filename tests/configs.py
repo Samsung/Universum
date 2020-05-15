@@ -23,7 +23,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
 
                       dict(name="Run static pylint", code_report=True,
-                           command=["universum_pylint", "--python-version=3", "--rcfile=pylintrc ",
+                           command=["universum_pylint", "--python-version=3", "--rcfile=pylintrc",
                                     "--files", "*.py", "universum/", "tests/", "analyzers/",
                                     "--result-file='${CODE_REPORT_FILE}'"]),
 
