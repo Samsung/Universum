@@ -6,7 +6,7 @@ env_name = "virtual_universe"
 
 
 def run_virtual(cmd):
-    return ["env", "-i", "PATH=" + os.getenv("PATH"), "bash", "-c", "source {}/bin/activate; {}".format(env_name, cmd)]
+    return ["env", "-i", "PATH=" + os.getenv("PATH"), "bash", "-c", "source {}/bin/activate && {}".format(env_name, cmd)]
 
 
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
