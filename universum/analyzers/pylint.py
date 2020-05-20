@@ -47,8 +47,7 @@ class PylintAnalyzer:
             cmd.append(f'--rcfile={self.settings.rcfile}')
 
         for pattern in self.settings.file_list:
-            found_files = glob.glob(pattern)
-            cmd.append(found_files)
+            cmd.extend(glob.glob(pattern))
 
         result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
