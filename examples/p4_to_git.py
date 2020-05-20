@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from __future__ import absolute_import
 import argparse
 from P4 import P4
 from universum import __main__
