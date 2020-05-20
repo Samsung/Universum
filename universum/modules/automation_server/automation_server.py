@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 from ...lib.gravity import Dependency, Module
 from ...lib import utils
 from .jenkins_server import JenkinsServerForHostingBuild, JenkinsServerForTrigger

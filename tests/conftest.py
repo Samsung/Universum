@@ -1,7 +1,5 @@
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
-from __future__ import absolute_import
 from unittest import mock
 import httpretty
 import pytest

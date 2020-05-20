@@ -1,6 +1,3 @@
-# -*- coding: UTF-8 -*-
-
-from __future__ import absolute_import
 import os
 import six.moves.urllib.request
 import six.moves.urllib.error

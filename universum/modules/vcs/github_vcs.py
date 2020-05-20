@@ -1,6 +1,3 @@
-# -*- coding: UTF-8 -*-
-
-from __future__ import absolute_import
 import datetime
 import six.moves.urllib.parse
 import requests

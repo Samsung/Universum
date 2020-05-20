@@ -1,6 +1,3 @@
-# -*- coding: UTF-8 -*-
-
-from __future__ import absolute_import
 import codecs
 import distutils
 from distutils import dir_util, errors

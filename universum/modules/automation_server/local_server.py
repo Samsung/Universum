@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
 __all__ = [

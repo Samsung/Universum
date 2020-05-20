@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 from ...lib.gravity import Module
 
 
