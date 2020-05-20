@@ -48,8 +48,7 @@ class PylintAnalyzer:
 
         for pattern in self.settings.file_list:
             found_files = glob.glob(pattern)
-            if found_files:
-                cmd.append(" ".join(found_files))
+            cmd.append(found_files)
 
         result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
