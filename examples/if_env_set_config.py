@@ -1,5 +1,6 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
 from universum.configuration_support import Variations
 
 script_name = './basic_build_script.sh'

@@ -18,7 +18,7 @@ def create_settings(test_type, vcs_type):
     elif test_type == "submit":
         settings.Submit.commit_message = "Test CL"
     elif test_type == "main":
-        settings.Launcher.config_path = "configs.py"
+        settings.Launcher.config_path = "../configs.py"
         settings.ArtifactCollector.artifact_dir = "artifacts"
 
         settings.AutomationServer.type = "tc"
