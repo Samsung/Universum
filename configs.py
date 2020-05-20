@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.7
 
 import os
 from universum.configuration_support import Variations

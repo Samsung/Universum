@@ -1,6 +1,3 @@
-# -*- coding: UTF-8 -*-
-
-from __future__ import print_function
 from .base_output import BaseOutput
 
 __all__ = [

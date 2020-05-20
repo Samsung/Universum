@@ -1,7 +1,4 @@
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, too-many-locals
-
-from __future__ import absolute_import
 
 import time
 import pytest

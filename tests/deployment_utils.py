@@ -1,8 +1,4 @@
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import getpass
 import os

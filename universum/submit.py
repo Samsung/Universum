@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 from .lib import utils
 from .lib.gravity import Module, Dependency
 from .lib.module_arguments import IncorrectParameterError

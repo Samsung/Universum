@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
 import git
