@@ -22,7 +22,7 @@ test:
 pytest:
 	python3.7 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
 	--cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
-	--ignore=universum_log_collapser --ignore=tests/configs.py
+	--ignore=universum_log_collapser --ignore=configs.py
 
 doc_doctest:
 	+$(MAKE) -C doc doctest
