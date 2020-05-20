@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3.7
 
 import os.path
 from universum.configuration_support import Variations, get_project_root

@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, abstract-method
 
-from __future__ import absolute_import
 import pytest
 import six
 

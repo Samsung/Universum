@@ -1,6 +1,3 @@
-# -*- coding: UTF-8 -*-
-
-from __future__ import absolute_import
 from collections import defaultdict
 
 from ..lib.gravity import Module, Dependency

@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
 from .terminal_based_output import TerminalBasedOutput
