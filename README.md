@@ -18,11 +18,11 @@ and [contribution policy](.github/CONTRIBUTING.md)
 Minimum prerequisites ([see documentation for details](
 https://universum.readthedocs.io/en/latest/prerequisites.html)):
 1. OS Linux
-2. Python 2.7
-3. Pip for python2
+2. Python 3.7
+3. Pip for python3.7
 4. Git client
 ```bash
-sudo python2 -m pip install git+https://github.com/Samsung/Universum/@release -U
+sudo python2 -m pip install -U git+https://github.com/Samsung/Universum/@release
 ```
 ### Latest development + tests
 
@@ -47,7 +47,8 @@ but all the dependency modules will remain in the system.
 
 ## Project contents
 
-`__main__.py` is project executable. It uses the following modules from `universum` directory:
+Project is executed with `python3.7 -m universum` command, that launches `__main__.py` script.
+It uses the following modules from `universum` directory:
 * `main`/`poll`/`submit`/`api` - managing modules for different Universum modes
 * `configuration_support` - special module for [configuring the project](
 https://universum.readthedocs.io/en/latest/configuring.html)
