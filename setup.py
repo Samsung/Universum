@@ -28,14 +28,14 @@ setup(
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum'],
-    python_requires='>=3.7.5',
+    python_requires='>=3.7',
     setup_requires=['setuptools'],
     install_requires=[
         'glob2',
         'requests',
         'sh',
         'lxml',
-        'six',
+        'six'
     ],
     extras_require={
         'docs': [docs],
