@@ -418,5 +418,3 @@ class Launcher(ProjectDirectory):
     def launch_project(self):
         self.reporter.add_block_to_report(self.structure.get_current_block())
         self.structure.execute_step_structure(self.project_configs, self.create_process)
-
-

@@ -94,8 +94,8 @@ class ExecutionEnvironment:
     def assert_successful_execution(self, cmd, environment=None, workdir=None):
         return self._run_and_check(cmd, True, environment=environment, workdir=workdir)
 
-    def assert_unsuccessful_execution(self, cmd, environment=None):
-        return self._run_and_check(cmd, False, environment=environment,workdir=workdir)
+    def assert_unsuccessful_execution(self, cmd, environment=None, workdir=None):
+        return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
     def install_python_module(self, name):
         if os.path.exists(name):
