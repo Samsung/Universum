@@ -419,20 +419,4 @@ class Launcher(ProjectDirectory):
         self.reporter.add_block_to_report(self.structure.get_current_block())
         self.structure.execute_step_structure(self.project_configs, self.create_process)
 
-    def execute(self):
-        if not self.settings.output:
-            self.output = 'console'
 
-        self.out.log("Cleaning artifacts...")
-        self.artifacts.clean_artifacts_silently()
-
-        project_configs = self.process_project_configs()
-        self.artifacts.set_and_clean_artifacts(project_configs, ignore_existing_artifacts=True)
-
-        self.launch_project()
-        self.reporter.report_initialized = True
-        self.reporter.report_build_result()
-        self.artifacts.collect_artifacts()
-
-    def finalize(self):
-        pass
