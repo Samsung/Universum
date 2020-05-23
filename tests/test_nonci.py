@@ -21,9 +21,9 @@ def test_launcher_output(docker_nonci):
      - version control and review system are not used
      - project root is set to current directory
     """
-    cwd = str(docker_nonci.working_dir)
+    cwd = docker_nonci.local.root_directory.strpath
     file_output_expected = f"Adding file {cwd}/artifacts/test_step_log.txt to artifacts"
-    pwd_string_in_logs = "pwd:[" + docker_nonci.local.root_directory.strpath + "]"
+    pwd_string_in_logs = f"pwd:[{cwd}]"
 
     docker_nonci.environment.assert_successful_execution(
         f"bash -c 'mkdir {cwd}/artifacts; echo \"Old artifact\" > {cwd}/artifacts/test_nonci.txt'")
