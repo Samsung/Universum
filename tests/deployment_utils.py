@@ -72,10 +72,10 @@ class ExecutionEnvironment:
     def get_working_directory(self):
         return self._work_dir
 
-    def _run_and_check(self, cmd, result, environment):
+    def _run_and_check(self, cmd, result, environment, workdir):
         if not environment:
             environment = []
-        process_id = self._client.api.exec_create(self._container.id, cmd, environment=environment)
+        process_id = self._client.api.exec_create(self._container.id, cmd, environment=environment, workdir=workdir)
         print("$ " + cmd)
         log = self._client.api.exec_start(process_id)
         assert not isinstance(str, type(log)), "Looks like it's a bug in a docker 4.1.0. According to documentation " \
@@ -91,11 +91,11 @@ class ExecutionEnvironment:
 
         return log
 
-    def assert_successful_execution(self, cmd, environment=None):
-        return self._run_and_check(cmd, True, environment=environment)
+    def assert_successful_execution(self, cmd, environment=None, workdir=None):
+        return self._run_and_check(cmd, True, environment=environment, workdir=workdir)
 
-    def assert_unsuccessful_execution(self, cmd, environment=None):
-        return self._run_and_check(cmd, False, environment=environment)
+    def assert_unsuccessful_execution(self, cmd, environment=None, workdir=None):
+        return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
     def install_python_module(self, name):
         if os.path.exists(name):
@@ -195,7 +195,10 @@ class UniversumRunner:
         return " -lo console -ad '{}'".format(self.artifact_dir)
 
     def _mandatory_args(self, config_file):
-        return " -pr '{}'  -lcp '{}'".format(self.project_root, config_file)
+        result = f" -lcp '{config_file}'"
+        if self.project_root:
+            result += f" -pr '{self.project_root}'"
+        return result
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
@@ -218,7 +221,7 @@ class UniversumRunner:
         return file_path
 
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
-            additional_parameters="", environment=None, expected_to_fail=False):
+            additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
 
         if utils.is_pycharm():
             cmd = "{0}/universum/__main__.py".format(self.working_dir)
@@ -239,9 +242,9 @@ class UniversumRunner:
         cmd += self._mandatory_args(config_file) + ' ' + additional_parameters
 
         if expected_to_fail:
-            result = self.environment.assert_unsuccessful_execution(cmd, environment=environment)
+            result = self.environment.assert_unsuccessful_execution(cmd, environment=environment, workdir=workdir)
         else:
-            result = self.environment.assert_successful_execution(cmd, environment=environment)
+            result = self.environment.assert_successful_execution(cmd, environment=environment, workdir=workdir)
 
         os.remove(config_file)
         return result
