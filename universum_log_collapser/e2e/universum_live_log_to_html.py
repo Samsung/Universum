@@ -4,12 +4,11 @@ import os
 import subprocess
 import re
 
-
 def run_universum():
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
     cmd = """python3.7 -m universum --clean-build --vcs-type=none --server-type=local --out-type=term 
-        --launcher-output=console --file-source-dir=. --launcher-config-path=universum_log_collapser/e2e/universum_config/configs.py"""
+        --launcher-output=console --file-source-dir=./universum_log_collapser/e2e --launcher-config-path=./universum_config/configs.py"""
     stdout = launch_process(*cmd.split(), env=env)
     return re.sub("\\[.+?m", "", stdout)
 
@@ -43,7 +42,7 @@ def write_to_html(log):
     </html>
     """
 
-    with open("generated.html", "w") as file:
+    with open(os.path.join(os.getcwd(), "universum_log_collapser", "e2e", "generated.html"), "w") as file:
         file.write(html_start + log + html_end)
 
 
