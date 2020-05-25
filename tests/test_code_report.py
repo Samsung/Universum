@@ -69,7 +69,6 @@ configs = Variations([dict(name="Run usual command", command=["ls", "-la"])])
     [["--python-version=3", "--result-file", "${CODE_REPORT_FILE}"],
      "error: the following arguments are required: --files"],
 ])
-@pytest.mark.nonci_applicable
 def test_pylint_analyzer_wrong_params(runner_with_pylint, args, expected_log):
     source_file = runner_with_pylint.local.root_directory.join("source_file.py")
     source_file.write(source_code)
