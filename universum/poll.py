@@ -48,9 +48,9 @@ class Poll(Module):
                 continue
 
             self.out.log("Detected commit {}, triggering build".format(change))
-            if self.server.trigger_build(change):
-                self.triggered_cls.add(change)
-                self.stored_cls[depot] = change
+            self.server.trigger_build(change)
+            self.triggered_cls.add(change)
+            self.stored_cls[depot] = change
 
     @make_block("Enumerating changes")
     def execute(self):
