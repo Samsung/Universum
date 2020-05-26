@@ -6,9 +6,8 @@ import sys
 from universum import __version__, __title__
 from universum.api import Api
 from universum.main import Main
-from universum.github_hadler import GithubHandler
-from universum.nonci import Nonci
 from universum.poll import Poll
+from universum.nonci import Nonci
 from universum.submit import Submit
 from universum.lib.ci_exception import SilentAbortException
 from universum.lib.gravity import define_arguments_recursive, construct_component
@@ -35,7 +34,6 @@ def define_arguments():
     define_command(Poll, "poll")
     define_command(Submit, "submit")
     define_command(Nonci, "nonci")
-    define_command(GithubHandler, "github-handler")
 
     return parser
 
