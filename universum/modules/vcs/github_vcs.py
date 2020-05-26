@@ -7,11 +7,12 @@ import six
 
 from ...lib.gravity import Dependency
 from ...lib import utils
+from ...lib.gravity import Module
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
 
 __all__ = [
-    "calculate_token",
+    "GithubToken",
     "GithubMainVcs"
 ]
 
@@ -20,27 +21,7 @@ def get_time():
     return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
-def calculate_token(integration_id, installation_id, key_path):
-    """
-    Generate GitHub token out of private keys
-
-    :param integration_id: GitHub application ID (see 'general')
-    :param installation_id: in-project installation ID (see 'integrations & services')
-    :param key_path: private key file path
-    :return: GitHub token
-    """
-    with open(key_path) as f:
-        private_key = f.read()
-    integration = github.GithubIntegration(integration_id, private_key)
-    auth_obj = integration.get_access_token(installation_id)
-    return auth_obj.token
-
-
-class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
-    """
-    This class mostly contains functions for Gihub report observer
-    """
-    reporter_factory = Dependency(Reporter)
+class GithubToken(Module):
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -52,6 +33,26 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                             help="in-project installation ID (see 'integrations & services')")
         parser.add_argument("--github-private-key", "-ghk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
                             help="Application private key file path")
+
+    def __init__(self, *args, **kwargs):
+        super(GithubToken, self).__init__(*args, **kwargs)
+        with open(self.settings.key_path) as f:
+            private_key = f.read()
+        integration = github.GithubIntegration(self.settings.integration_id, private_key)
+        auth_obj = integration.get_access_token(self.settings.installation_id)
+        self.token = auth_obj.token
+
+
+class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubToken):
+    """
+    This class mostly contains functions for Gihub report observer
+    """
+    reporter_factory = Dependency(Reporter)
+
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
+
         parser.add_argument("--github-check-name", "-ghc", dest="check_name", metavar="GITHUB_CHECK_NAME",
                             default="Universum check", help="The name of Github check run")
         parser.add_argument("--github-check-id", "-ghi", dest="check_id", metavar="GITHUB_CHECK_ID",
@@ -80,8 +81,6 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
                     actual check. Please specify check run ID by using '--github-check-id' ('-ghi')
                     command line parameter or by setting GITHUB_CHECK_ID environment variable.
                 """)
-
-        self.token = calculate_token(self.settings.integration_id, self.settings.installation_id, self.settings.key_path)
 
         parsed_repo = six.moves.urllib.parse.urlsplit(self.settings.repo)
         repo_path = six.text_type(parsed_repo.path).rsplit(".git", 1)[0]
