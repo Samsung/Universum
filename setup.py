@@ -35,7 +35,8 @@ setup(
         'requests',
         'sh',
         'lxml',
-        'six'
+        'six',
+        'pygithub'
     ],
     extras_require={
         'docs': [docs],
