@@ -1,3 +1,4 @@
+import ast
 import sys
 import requests
 
@@ -17,19 +18,20 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
 
     @staticmethod
     def define_arguments(argument_parser):
-        argument_parser.add_argument('--event', '-e', dest='header', metavar="GITHUB_EVENT",
+        argument_parser.add_argument('--event', '-e', dest='event', metavar="GITHUB_EVENT",
                                      help='Currently parsed from "x-github-event" header')
 
     def __init__(self, *args, **kwargs):
         super(GithubHandler, self).__init__(*args, **kwargs)
-        self.payload = sys.stdin.read()
+        self.payload = ast.literal_eval(sys.stdin.read())
 
     @make_block("Analysing trigger payload")
     def execute(self):
-        if self.settings.header == "check_suite" and (self.settings.payload["action"] in ["requested", "rerequested"]):
-            url = self.settings.payload["repository"]["url"]
+        if self.settings.event == "check_suite" and (self.payload["action"] in ["requested", "rerequested"]):
+            url = self.payload["repository"]["url"]
             data = {"name": "CI tests", "head_sha": self.settings.payload["check_suite"]["head_sha"]}
-            headers = {'Authorization': f"token {self.token}", 'Accept': 'application/vnd.github.antiope-preview+json'}
+            headers = {'Authorization': f"token {self.get_token(self.payload['installation']['id'])}",
+                       'Accept': 'application/vnd.github.antiope-preview+json'}
             requests.post(url=url, data=data, headers=headers)
         elif self.settings.header == "check_run" and \
                 (self.settings.payload["action"] in ["requested", "rerequested", "created"]) and \

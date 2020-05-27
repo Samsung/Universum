@@ -6,7 +6,7 @@ import sys
 from universum import __version__, __title__
 from universum.api import Api
 from universum.main import Main
-from universum.github_hadler import GithubHandler
+from universum.github_handler import GithubHandler
 from universum.nonci import Nonci
 from universum.poll import Poll
 from universum.submit import Submit

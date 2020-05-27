@@ -30,7 +30,8 @@ class GithubToken(Module):
         parser.add_argument("--github-integration", "-ght", dest="integration_id", metavar="GITHUB_INTEGRATION",
                             help="GitHub application ID (see 'general')")
         parser.add_argument("--github-installation", "-ghs", dest="installation_id", metavar="GITHUB_INSTALLATION",
-                            help="in-project installation ID (see 'integrations & services')")
+                            help="in-project installation ID (see 'integrations & services')"
+                                 " - not needed for 'github-handler'")
         parser.add_argument("--github-private-key", "-ghk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
                             help="Application private key file path")
 
@@ -38,9 +39,13 @@ class GithubToken(Module):
         super(GithubToken, self).__init__(*args, **kwargs)
         with open(self.settings.key_path) as f:
             private_key = f.read()
-        integration = github.GithubIntegration(self.settings.integration_id, private_key)
-        auth_obj = integration.get_access_token(self.settings.installation_id)
-        self.token = auth_obj.token
+        self.integration =  github.GithubIntegration(self.settings.integration_id, private_key)
+
+    def get_token(self, installation_id=None):
+        if not installation_id:
+            installation_id = self.settings.installation_id
+        auth_obj = self.integration.get_access_token(installation_id)
+        return auth_obj.token
 
 
 class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubToken):
@@ -91,7 +96,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubToken):
         self.clone_url = six.moves.urllib.parse.urlunsplit(parsed_repo)
         self.headers = {
             "Accept": "application/vnd.github.antiope-preview+json",
-            "Authorization": "token " + self.token
+            "Authorization": "token " + self.get_token()
         }
         self.request = dict()
         self.request["status"] = "in_progress"
