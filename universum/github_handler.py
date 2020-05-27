@@ -1,4 +1,4 @@
-import demjson
+import json
 import sys
 import requests
 
@@ -23,7 +23,7 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
 
     def __init__(self, *args, **kwargs):
         super(GithubHandler, self).__init__(*args, **kwargs)
-        self.payload = demjson.decode(sys.stdin.read())
+        self.payload = json.loads(sys.stdin.read())
 
     @make_block("Analysing trigger payload")
     def execute(self):
