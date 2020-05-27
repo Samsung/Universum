@@ -28,11 +28,10 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
     @make_block("Analysing trigger payload")
     def execute(self):
         if self.settings.event == "check_suite" and (self.payload["action"] in ["requested", "rerequested"]):
-            url = self.payload["repository"]["url"]
+            url = self.payload["repository"]["url"] + "/check-runs"
             data = {"name": "CI tests", "head_sha": self.payload["check_suite"]["head_sha"]}
             headers = {'Authorization': f"token {self.get_token(self.payload['installation']['id'])}",
                        'Accept': 'application/vnd.github.antiope-preview+json'}
-            self.out.log(f"Sending request to {url} with contents {data} and headers {headers}")
             response = requests.post(url=url, data=data, headers=headers)
             self.out.log(f"Got response {response.status_code} with message '{response.text}'")
         elif self.settings.event == "check_run" and \
