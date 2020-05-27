@@ -36,7 +36,8 @@ setup(
         'sh',
         'lxml',
         'six',
-        'pygithub'
+        'pygithub',
+        'demjson'
     ],
     extras_require={
         'docs': [docs],
