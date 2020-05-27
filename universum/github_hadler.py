@@ -1,3 +1,4 @@
+import sys
 import requests
 
 from .modules.automation_server.jenkins_server import JenkinsServerForTrigger
@@ -10,16 +11,18 @@ from .lib.utils import make_block
 @needs_structure
 @needs_output
 class GithubHandler(JenkinsServerForTrigger, GithubToken):
+    """
+    Excepts payload from stdin!
+    """
 
     @staticmethod
     def define_arguments(argument_parser):
         argument_parser.add_argument('--event', '-e', dest='header', metavar="GITHUB_EVENT",
                                      help='Currently parsed from "x-github-event" header')
-        argument_parser.add_argument('--payload', '-op', dest='payload', metavar="GITHUB_PAYLOAD",
-                                     help='Payload JSON object')
 
     def __init__(self, *args, **kwargs):
         super(GithubHandler, self).__init__(*args, **kwargs)
+        self.payload = sys.stdin.read()
 
     @make_block("Analysing trigger payload")
     def execute(self):
