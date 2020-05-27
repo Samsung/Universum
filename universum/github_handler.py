@@ -29,13 +29,13 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
     def execute(self):
         if self.settings.event == "check_suite" and (self.payload["action"] in ["requested", "rerequested"]):
             url = self.payload["repository"]["url"]
-            data = {"name": "CI tests", "head_sha": self.settings.payload["check_suite"]["head_sha"]}
+            data = {"name": "CI tests", "head_sha": self.payload["check_suite"]["head_sha"]}
             headers = {'Authorization': f"token {self.get_token(self.payload['installation']['id'])}",
                        'Accept': 'application/vnd.github.antiope-preview+json'}
             requests.post(url=url, data=data, headers=headers)
-        elif self.settings.header == "check_run" and \
-                (self.settings.payload["action"] in ["requested", "rerequested", "created"]) and \
-                (self.settings.payload["check_run"]["app"]["id"] == self.settings.integration_id):
+        elif self.settings.event == "check_run" and \
+                (self.payload["action"] in ["requested", "rerequested", "created"]) and \
+                (self.payload["check_run"]["app"]["id"] == self.integration_id):
             self.trigger_build("some-revision")
         else:
             self.out.log("Unknown event, skipping...")
