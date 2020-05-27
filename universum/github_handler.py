@@ -32,7 +32,8 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
             data = {"name": "CI tests", "head_sha": self.payload["check_suite"]["head_sha"]}
             headers = {'Authorization': f"token {self.get_token(self.payload['installation']['id'])}",
                        'Accept': 'application/vnd.github.antiope-preview+json'}
-            requests.post(url=url, data=data, headers=headers)
+            response = requests.post(url=url, data=data, headers=headers)
+            self.out.log(f"Got response {response.status_code} with message '{response.text}'")
         elif self.settings.event == "check_run" and \
                 (self.payload["action"] in ["requested", "rerequested", "created"]) and \
                 (self.payload["check_run"]["app"]["id"] == self.integration_id):
