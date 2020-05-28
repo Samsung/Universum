@@ -44,9 +44,11 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
                 "GIT_REPO": self.payload["repository"]["clone_url"],
                 "GITHUB_INTEGRATION": self.settings.integration_id,
                 "GITHUB_INSTALLATION": self.payload['installation']['id'],
-                "GITHUB_PRIVATE_KEY": self.settings.key_path
+                "GITHUB_PRIVATE_KEY": self.settings.key_path,
+                "GITHUB_TOKEN": self.get_token(self.payload['installation']['id'])  # to remove after test
             })
         else:
+            self.out.log(f"event {self.settings.event}, action {self.payload['action']} and id {self.payload['check_run']['app']['id']}")
             self.out.log("Unknown event, skipping...")
 
     def finalize(self):
