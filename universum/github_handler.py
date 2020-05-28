@@ -36,8 +36,16 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
             self.out.log(f"Got response {response.status_code} with message '{response.text}'")
         elif self.settings.event == "check_run" and \
                 (self.payload["action"] in ["requested", "rerequested", "created"]) and \
-                (self.payload["check_run"]["app"]["id"] == self.integration_id):
-            self.trigger_build("some-revision")
+                (self.payload["check_run"]["app"]["id"] == self.settings.integration_id):
+            self.trigger_build({
+                "GIT_REFSPEC": self.payload["check_run"]["check_suite"]["head_branch"],
+                "GIT_CHECKOUT_ID": self.payload["check_run"]["head_sha"],
+                "GITHUB_CHECK_ID": self.payload["check_run"]["id"],
+                "GIT_REPO": self.payload["repository"]["clone_url"],
+                "GITHUB_INTEGRATION": self.settings.integration_id,
+                "GITHUB_INSTALLATION": self.payload['installation']['id'],
+                "GITHUB_PRIVATE_KEY": self.settings.key_path
+            })
         else:
             self.out.log("Unknown event, skipping...")
 
