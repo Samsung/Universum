@@ -5,6 +5,7 @@ import urllib.parse
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import unify_argument_list
 from ..output import needs_output
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
@@ -34,12 +35,14 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
                                           "is not specified\n\n"
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
+        self.params = unify_argument_list(self.settings.shelve_cls)
 
     def trigger_build(self, param_dict=None):
         processed_url = self.settings.trigger_url
-        param_list = copy.copy(self.settings.param_list).append(urllib.parse.urlencode(param_dict))
-        if param_list:
-            processed_url += '?' + '&'.join(param_list)
+        if param_dict:
+            self.params.append(urllib.parse.urlencode(param_dict))
+        if self.params:
+            processed_url += '?' + '&'.join(self.params)
 
         self.out.log(f"Triggering url {processed_url}")
         try:
