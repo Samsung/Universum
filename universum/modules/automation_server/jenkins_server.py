@@ -37,11 +37,15 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
     def trigger_build(self, param_dict):
         processed_url = self.settings.trigger_url
         if param_dict or self.settings.param_list:
-            processed_url += '?' + urllib.parse.urlencode(param_dict) + '&'.join(self.settings.param_list)
+            processed_url += '?' + urllib.parse.urlencode(param_dict)
+            if self.settings.param_list:
+                processed_url += '&'.join(self.settings.param_list)
 
         self.out.log(f"Triggering url {processed_url}")
         try:
-            requests.post(processed_url)
+            response = requests.post(processed_url)
+            response.raise_for_status()
+            self.out.log("Sucessfully triggered")
         except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
             raise CriticalCiException(f"Error opening URL, error message {e}")
 
