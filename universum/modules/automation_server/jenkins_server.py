@@ -1,3 +1,4 @@
+import copy
 import os
 import requests
 import urllib.parse
@@ -36,10 +37,9 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
 
     def trigger_build(self, param_dict=None):
         processed_url = self.settings.trigger_url
-        if param_dict or self.settings.param_list:
-            processed_url += '?' + urllib.parse.urlencode(param_dict)
-            if self.settings.param_list:
-                processed_url += '&'.join(self.settings.param_list)
+        param_list = copy.copy(self.settings.param_list).append(urllib.parse.urlencode(param_dict))
+        if param_list:
+            processed_url += '?' + '&'.join(param_list)
 
         self.out.log(f"Triggering url {processed_url}")
         try:
