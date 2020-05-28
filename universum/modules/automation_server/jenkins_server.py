@@ -1,5 +1,6 @@
 import os
 import requests
+import urllib.parse
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
@@ -18,9 +19,12 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Jenkins variables", "Jenkins-specific parameters")
-        parser.add_argument('--jenkins-trigger-url', '-jtu', dest='trigger_url',
-                            help='Url to trigger, must include exactly one conversion specifier (%%s) to be '
-                                 'replaced by CL number, for example: http://localhost/%%s', metavar="URL")
+        parser.add_argument('--jenkins-trigger-url', '-jtu', dest='trigger_url', metavar="TRIGGER_URL",
+                            help='Url to trigger, ending with "build" or "buildWithParameters" accordingly')
+        parser.add_argument('--jenkins-trigger-parameter', "-jtp", action="append", nargs='+', dest="param_list",
+                            metavar="TRIGGER_PARAMS",
+                            help="List of parameters to pass to Jenkins build, such as token; "
+                                 "format 'name=value', case sensitive")
 
     def __init__(self, *args, **kwargs):
         super(JenkinsServerForTrigger, self).__init__(*args, **kwargs)
@@ -30,18 +34,16 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
 
-    def trigger_build(self, revision):
-        processed_url = self.settings.trigger_url % revision
+    def trigger_build(self, param_dict):
+        processed_url = self.settings.trigger_url
+        if param_dict or self.settings.param_list:
+            processed_url += '?' + urllib.parse.urlencode(param_dict) + '&'.join(self.settings.param_list)
 
-        self.out.log("Triggering url %s" % processed_url)
+        self.out.log(f"Triggering url {processed_url}")
         try:
-            requests.get(processed_url)
-        except requests.HTTPError as url_error:
-            raise CriticalCiException(f"Error opening URL, error message {url_error.reason}")
-        except ValueError as value_error:
-            raise CriticalCiException(f"Error opening URL, error message {value_error}")
-
-        return True
+            requests.post(processed_url)
+        except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
+            raise CriticalCiException(f"Error opening URL, error message {e}")
 
 
 class JenkinsServerForHostingBuild(BaseServerForHostingBuild):
