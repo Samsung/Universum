@@ -25,7 +25,7 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
         parser.add_argument('--jenkins-trigger-parameter', "-jtp", action="append", nargs='+', dest="param_list",
                             metavar="TRIGGER_PARAMS",
                             help="List of parameters to pass to Jenkins build, such as token; "
-                                 "format 'name=value', case sensitive")
+                                 "format 'name=value', url-quoted, case sensitive")
 
     def __init__(self, *args, **kwargs):
         super(JenkinsServerForTrigger, self).__init__(*args, **kwargs)
@@ -34,7 +34,7 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
                                           "is not specified\n\n"
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
-        self.params = [urllib.parse.quote(item) for item in unify_argument_list(self.settings.param_list)]
+        self.params = unify_argument_list(self.settings.param_list)
 
     def trigger_build(self, param_dict=None):
         processed_url = self.settings.trigger_url
