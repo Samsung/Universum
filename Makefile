@@ -34,4 +34,4 @@ images:
 	+$(MAKE) -C tests/docker all
 
 rebuild:
-	+$(MAKE) -C tests/docker rebuild
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" all
