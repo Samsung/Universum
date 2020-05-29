@@ -11,6 +11,11 @@ Full documentation can be found here: https://universum.readthedocs.io/
 Please check out our [code of conduct](CODE_OF_CONDUCT.md)
 and [contribution policy](.github/CONTRIBUTING.md)
 
+Project is executed with `python3.7 -m universum` command.
+Independent analyzers are executed with their module name, e.g. `python3.7 -m universum.analyzers.pylint`.
+Other Universum modes, such as poller or submitter, are called via command line, e.g.
+`python3.7 -m universum poll`
+
 ## Installation from GitHub
 
 ### Latest release
@@ -24,6 +29,7 @@ https://universum.readthedocs.io/en/latest/prerequisites.html)):
 ```bash
 sudo python2 -m pip install -U git+https://github.com/Samsung/Universum/@release
 ```
+
 ### Latest development + tests
 
 Additional prerequisites ([see documentation for details](
@@ -47,11 +53,15 @@ but all the dependency modules will remain in the system.
 
 ## Project contents
 
-Project is executed with `python3.7 -m universum` command, that launches `__main__.py` script.
-It uses the following modules from `universum` directory:
-* `main`/`poll`/`submit`/`api` - managing modules for different Universum modes
+`universum` is main project folder, that is being copied to `dist_packages` when installed.
+It contains `__main__.py` script, that is the main entry point to the whole project.
+It also contains the following modules:
+* `main`/`poll`/`submit`/`api`/`nonci` - managing modules for different Universum modes
 * `configuration_support` - special module for [configuring the project](
 https://universum.readthedocs.io/en/latest/configuring.html)
+* `analyzers` directory is not quite a part of Universum itself. It contains [independent scripts](
+https://universum.readthedocs.io/en/latest/code_report.html) compatible with Universum
+for static (and other types of) analysis.
 * `lib` - utility functions libraries
   * `ci_exception` - internal exceptions
   * `module_arguments` - handles [command line](
@@ -88,9 +98,7 @@ from root directory via `make tests` command, otherwise use standard PyTest synt
 https://universum.readthedocs.io/en/latest/configuring.html). Usage of such files
 is illustrated in `run_basic_example.sh` script.
 
-`analyzers` directory is not a part of Universum itself. It contains [example external scripts](
-https://universum.readthedocs.io/en/latest/code_report.html) compatible with Universum
-for static (and other types of) analysis.
+`universum_log_collapser` is a directory with Java sources of Jenkins plugin for Universum pretty display.
 
 `setup.py` is 'setuptools' configuration file, and shouldn't be executed on its own.
 
