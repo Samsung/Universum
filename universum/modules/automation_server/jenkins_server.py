@@ -1,8 +1,10 @@
 import os
 import requests
+import urllib.parse
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
+from ...lib.utils import unify_argument_list
 from ..output import needs_output
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
@@ -18,9 +20,12 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Jenkins variables", "Jenkins-specific parameters")
-        parser.add_argument('--jenkins-trigger-url', '-jtu', dest='trigger_url',
-                            help='Url to trigger, must include exactly one conversion specifier (%%s) to be '
-                                 'replaced by CL number, for example: http://localhost/%%s', metavar="URL")
+        parser.add_argument('--jenkins-trigger-url', '-jtu', dest='trigger_url', metavar="TRIGGER_URL",
+                            help='Url to trigger, ending with "build" or "buildWithParameters" accordingly')
+        parser.add_argument('--jenkins-trigger-parameter', "-jtp", action="append", nargs='+', dest="param_list",
+                            metavar="TRIGGER_PARAMS",
+                            help="List of parameters to pass to Jenkins build, such as token; "
+                                 "format 'name=value', url-quoted, case sensitive")
 
     def __init__(self, *args, **kwargs):
         super(JenkinsServerForTrigger, self).__init__(*args, **kwargs)
@@ -29,13 +34,20 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
                                           "is not specified\n\n"
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
+        self.params = unify_argument_list(self.settings.param_list)
 
-    def trigger_build(self, revision):
-        processed_url = self.settings.trigger_url % revision
+    def trigger_build(self, param_dict=None):
+        processed_url = self.settings.trigger_url
+        if param_dict:
+            self.params.append(urllib.parse.urlencode(param_dict))
+        if self.params:
+            processed_url += '?' + '&'.join(self.params)
 
-        self.out.log("Triggering url %s" % processed_url)
+        self.out.log(f"Triggering url {processed_url}")
         try:
-            requests.get(processed_url)
+            response = requests.post(processed_url)
+            response.raise_for_status()
+            self.out.log("Sucessfully triggered")
         except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
             raise CriticalCiException(f"Error opening URL, error message {e}")
 

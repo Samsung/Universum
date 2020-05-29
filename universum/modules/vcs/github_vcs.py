@@ -1,14 +1,18 @@
 import datetime
+
+import github
 import six.moves.urllib.parse
 import requests
 import six
 
 from ...lib.gravity import Dependency
 from ...lib import utils
+from ...lib.gravity import Module
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
 
 __all__ = [
+    "GithubToken",
     "GithubMainVcs"
 ]
 
@@ -17,7 +21,34 @@ def get_time():
     return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
-class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
+class GithubToken(Module):
+
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
+
+        parser.add_argument("--github-integration", "-ght", dest="integration_id", metavar="GITHUB_INTEGRATION",
+                            help="GitHub application ID (see 'general')")
+        parser.add_argument("--github-installation", "-ghs", dest="installation_id", metavar="GITHUB_INSTALLATION",
+                            help="in-project installation ID (see 'integrations & services')"
+                                 " - not needed for 'github-handler'")
+        parser.add_argument("--github-private-key", "-ghk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
+                            help="Application private key file path")
+
+    def __init__(self, *args, **kwargs):
+        super(GithubToken, self).__init__(*args, **kwargs)
+        with open(self.settings.key_path) as f:
+            private_key = f.read()
+        self.integration = github.GithubIntegration(self.settings.integration_id, private_key)
+
+    def get_token(self, installation_id=None):
+        if not installation_id:
+            installation_id = self.settings.installation_id
+        auth_obj = self.integration.get_access_token(installation_id)
+        return auth_obj.token
+
+
+class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubToken):
     """
     This class mostly contains functions for Gihub report observer
     """
@@ -27,9 +58,6 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
-        parser.add_argument("--github-token", "-ght", dest="token", metavar="GITHUB_TOKEN",
-                            help="GitHub API token; for details see "
-                                 "https://developer.github.com/v3/oauth_authorizations/")
         parser.add_argument("--github-check-name", "-ghc", dest="check_name", metavar="GITHUB_CHECK_NAME",
                             default="Universum check", help="The name of Github check run")
         parser.add_argument("--github-check-id", "-ghi", dest="check_id", metavar="GITHUB_CHECK_ID",
@@ -49,18 +77,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
 
                     In CI builds commit ID is usually extracted from webhook and handled automatically.
                 """)
-        utils.check_required_option(self.settings, "token", """
-                    github api token is not specified.
 
-                    GitHub API token is used for application authorization. Expected format is
-                    'v1.4e96f8c2d1922c3b154a65ca7ecb91f6994fb0c5'.
-                    Please specify the token by using '--github-token' ('-ght')
-                    command line parameter or by setting GITHUB_TOKEN environment variable.
-
-                    In CI builds github api token is expected to be acquired automatically before build.
-                    For information on how to acquire the token please see
-                    https://developer.github.com/v3/oauth_authorizations/
-                """)
         utils.check_required_option(self.settings, "check_id", """
                     github check id is not specified.
 
@@ -79,7 +96,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs):
         self.clone_url = six.moves.urllib.parse.urlunsplit(parsed_repo)
         self.headers = {
             "Accept": "application/vnd.github.antiope-preview+json",
-            "Authorization": "token " + self.settings.token
+            "Authorization": "token " + self.get_token()
         }
         self.request = dict()
         self.request["status"] = "in_progress"
