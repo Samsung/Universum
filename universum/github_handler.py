@@ -38,10 +38,11 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
             headers = {'Authorization': f"token {self.get_token(self.payload['installation']['id'])}",
                        'Accept': 'application/vnd.github.antiope-preview+json'}
             response = requests.post(url=url, json=data, headers=headers)
-            self.out.log(f"Got response {response.status_code} with message '{response.text}'")
+            response.raise_for_status()
+
         elif self.settings.event == "check_run" and \
                 (self.payload["action"] in ["requested", "rerequested", "created"]) and \
-                (self.payload["check_run"]["app"]["id"] == self.settings.integration_id):
+                (str(self.payload["check_run"]["app"]["id"]) == str(self.settings.integration_id)):
             self.trigger_build({
                 "GIT_REFSPEC": self.payload["check_run"]["check_suite"]["head_branch"],
                 "GIT_CHECKOUT_ID": self.payload["check_run"]["head_sha"],
@@ -49,10 +50,12 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
                 "GIT_REPO": self.payload["repository"]["clone_url"],
                 "GITHUB_INTEGRATION": self.settings.integration_id,
                 "GITHUB_INSTALLATION": self.payload['installation']['id'],
-                "GITHUB_PRIVATE_KEY": self.settings.key_path
+                "GITHUB_PRIVATE_KEY": self.settings.key_path,
+                "GITHUB_TOKEN": self.get_token(self.payload['installation']['id'])  # remove after tests
             })
+
         else:
-            self.out.log("Unknown event, skipping...")
+            self.out.log("Unhandled event, skipping...")
 
     def finalize(self):
         pass
