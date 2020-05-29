@@ -28,10 +28,9 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
         if self.settings.payload == '-':
             self.payload = json.loads(sys.stdin.read())
         else:
-            self.out.log(self.settings.payload)
-            self.payload = self.settings.payload
+            self.payload = json.loads(self.settings.payload)
 
-    @make_block("Analysing trigger payload", pass_errors=False)
+    @make_block("Analysing trigger payload")
     def execute(self):
         if self.settings.event == "check_suite" and (self.payload["action"] in ["requested", "rerequested"]):
             url = self.payload["repository"]["url"] + "/check-runs"
