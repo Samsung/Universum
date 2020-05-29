@@ -1,7 +1,7 @@
 TEST_TARGETS = pytest doc_doctest
 
 
-.PHONY: all doc test $(TEST_TARGETS) pylint images
+.PHONY: all doc test $(TEST_TARGETS) pylint images rebuild
 
 all: doc
 
@@ -32,3 +32,6 @@ pylint:
 
 images:
 	+$(MAKE) -C tests/docker all
+
+rebuild:
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" all
