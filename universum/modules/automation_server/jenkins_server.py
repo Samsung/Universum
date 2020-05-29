@@ -34,7 +34,7 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
                                           "is not specified\n\n"
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
-        self.params = unify_argument_list(self.settings.param_list)
+        self.params = [urllib.parse.quote(item) for item in unify_argument_list(self.settings.param_list)]
 
     def trigger_build(self, param_dict=None):
         processed_url = self.settings.trigger_url
