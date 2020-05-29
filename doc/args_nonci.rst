@@ -21,7 +21,7 @@ The 'universum nonci' has the following differences from the regular mode:
 
 
 .. argparse::
-    :module: universum
+    :module: universum.__main__
     :func: define_arguments
-    :prog: universum
+    :prog: python3.7 -m universum
     :path: nonci
