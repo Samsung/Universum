@@ -39,7 +39,7 @@ class GithubToken(Module):
         super(GithubToken, self).__init__(*args, **kwargs)
         with open(self.settings.key_path) as f:
             private_key = f.read()
-        self.integration =  github.GithubIntegration(self.settings.integration_id, private_key)
+        self.integration = github.GithubIntegration(self.settings.integration_id, private_key)
 
     def get_token(self, installation_id=None):
         if not installation_id:
