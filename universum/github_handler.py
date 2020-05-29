@@ -20,10 +20,15 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
     def define_arguments(argument_parser):
         argument_parser.add_argument('--event', '-e', dest='event', metavar="GITHUB_EVENT",
                                      help='Currently parsed from "x-github-event" header')
+        argument_parser.add_argument('--payload', '-p', dest='payload', metavar="PAYLOAD",
+                                     help='<actual help coming later> leave "-" to read from stdin')
 
     def __init__(self, *args, **kwargs):
         super(GithubHandler, self).__init__(*args, **kwargs)
-        self.payload = json.loads(sys.stdin.read())
+        if self.settings.payload == '-':
+            self.payload = json.loads(sys.stdin.read())
+        else:
+            self.payload = self.settings.payload
 
     @make_block("Analysing trigger payload")
     def execute(self):
