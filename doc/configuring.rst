@@ -8,8 +8,8 @@ This file is a regular python script with specific interface, which is recognize
 by the `Universum`.
 
 The path to the configuration file is supplied to the main script via the `CONFIG_PATH`
-environment variable or ``--launcher-config-path`` / ``-lcp`` `command-line parameter
-<args.html#launcher>`__.
+environment variable or ``--config`` / ``-cfg`` `command-line parameter
+<args.html#Configuration\ execution>`__.
 Internally the config file is processed by the :mod:`universum.launcher` module. The path is passed
 to this module in `config_path` member of its input settings.
 
@@ -20,7 +20,8 @@ to this module in `config_path` member of its input settings.
     there are no restriction on using of external python modules, libraries or on the
     structure of the configuration file itself.
 
-    The project is free to use whatever it needs in the configuration file for its needs.
+    The project is free to use whatever it needs in the configuration file; just remember,
+    all the calculations are done on config processing, not step execution.
 
 
 Project configuration
@@ -68,6 +69,9 @@ the following parameters:
 
 #. **name** is a string `"Build"`
 #. **command** is a list with a string item `"build.sh"`
+
+Both `name` and `command`, however, can be missing. A build configuration without name will still have a step number;
+a build configuration without issued command will do nothing, but will still appear in log and have a step number.
 
 .. note::
 
