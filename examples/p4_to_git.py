@@ -2,7 +2,7 @@
 
 import argparse
 from P4 import P4
-from universum import __main__
+from universum import __main__ as universum
 
 
 def main():
@@ -44,7 +44,7 @@ def main():
         line = depot_path + '@' + cl
         p4.run_sync("-f", line)
     
-        __main__.main(["submit",
+        universum.main(["submit",
                         "-ot", "term",
                         "-vt", "git",
                         "-cm", p4.run_describe(cl)[0]['desc'],
