@@ -27,6 +27,7 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
     @make_block("Analysing trigger payload")
     def execute(self):
         # TODO: refactor to real curl-style variable with '@' adn '-' support
+        # TODO: add some proper exception handling on payload contents; add tests
         if self.settings.payload == '-':
             payload = json.loads(sys.stdin.read())
         else:
