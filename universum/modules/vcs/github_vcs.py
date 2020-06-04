@@ -1,7 +1,6 @@
 import datetime
 import urllib.parse
 
-import github
 import requests
 
 from ...lib.gravity import Dependency
@@ -33,11 +32,13 @@ class GithubToken(Module):
 
     def __init__(self, *args, **kwargs):
         super(GithubToken, self).__init__(*args, **kwargs)
-        # TODO: add check for parameters
+        # TODO: add check for parameters, rework key to curl-style variable
 
     def get_token(self, installation_id):
         with open(self.settings.key_path) as f:
             private_key = f.read()
+
+        github = utils.import_module("github")
         integration = github.GithubIntegration(self.settings.integration_id, private_key)
         auth_obj = integration.get_access_token(installation_id)
         return auth_obj.token
