@@ -50,7 +50,7 @@ class GithubTokenWithInstallation(GithubToken):
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
-        parser.add_argument("--github-installation-id", "-ghi", dest="installation_id",
+        parser.add_argument("--github-installation-id", "-ghn", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
                             help="Calculated out of webhook payload (real help coming soon)")
 
