@@ -32,6 +32,7 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
                                           "command-line option or URL environment variable.")
 
     def trigger_build(self, param_dict=None):
+        # TODO: add parsing exception handling, add tests
         processed_url = urllib.parse.urlsplit(self.settings.trigger_url)
         if param_dict:
             params = urllib.parse.parse_qs(processed_url.query)
