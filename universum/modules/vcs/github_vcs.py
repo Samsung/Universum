@@ -27,28 +27,42 @@ class GithubToken(Module):
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
-        parser.add_argument("--github-integration", "-ght", dest="integration_id", metavar="GITHUB_INTEGRATION",
-                            help="GitHub application ID (see 'general')")
-        parser.add_argument("--github-installation", "-ghs", dest="installation_id", metavar="GITHUB_INSTALLATION",
-                            help="in-project installation ID (see 'integrations & services')"
-                                 " - not needed for 'github-handler'")
+        parser.add_argument("--github-app-id", "-gha", dest="integration_id", metavar="GITHUB_APP_ID",
+                            help="GitHub application ID (real help coming soon)")
         parser.add_argument("--github-private-key", "-ghk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
                             help="Application private key file path")
 
     def __init__(self, *args, **kwargs):
         super(GithubToken, self).__init__(*args, **kwargs)
+        # TODO: add check for parameters
+
+    def get_token(self, installation_id):
         with open(self.settings.key_path) as f:
             private_key = f.read()
-        self.integration = github.GithubIntegration(self.settings.integration_id, private_key)
-
-    def get_token(self, installation_id=None):
-        if not installation_id:
-            installation_id = self.settings.installation_id
-        auth_obj = self.integration.get_access_token(installation_id)
+        integration = github.GithubIntegration(self.settings.integration_id, private_key)
+        auth_obj = integration.get_access_token(installation_id)
         return auth_obj.token
 
 
-class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubToken):
+class GithubTokenWithInstallation(GithubToken):
+
+    @staticmethod
+    def define_arguments(argument_parser):
+        parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
+
+        parser.add_argument("--github-installation-id", "-ghi", dest="installation_id",
+                            metavar="GITHUB_INSTALLATION_ID",
+                            help="Calculated out of webhook payload (real help coming soon)")
+
+    def __init__(self, *args, **kwargs):
+        super(GithubTokenWithInstallation, self).__init__(*args, **kwargs)
+        # TODO: add check for parameter
+
+    def get_token(self, installation_id=None):
+        super(GithubTokenWithInstallation, self).get_token(installation_id=self.settings.installation_id)
+
+
+class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallation):
     """
     This class mostly contains functions for Gihub report observer
     """

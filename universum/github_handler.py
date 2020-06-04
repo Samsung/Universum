@@ -48,8 +48,8 @@ class GithubHandler(JenkinsServerForTrigger, GithubToken):
                 "GIT_CHECKOUT_ID": self.payload["check_run"]["head_sha"],
                 "GITHUB_CHECK_ID": self.payload["check_run"]["id"],
                 "GIT_REPO": self.payload["repository"]["clone_url"],
-                "GITHUB_INTEGRATION": self.settings.integration_id,
-                "GITHUB_INSTALLATION": self.payload['installation']['id'],
+                "GITHUB_APP_ID": self.settings.integration_id,
+                "GITHUB_INSTALLATION_ID": self.payload['installation']['id'],
                 "GITHUB_PRIVATE_KEY": self.settings.key_path,
                 "GITHUB_TOKEN": self.get_token(self.payload['installation']['id'])  # remove after tests
             })
