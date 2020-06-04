@@ -11,7 +11,7 @@ class BaseServerForTrigger(Module):
     Abstract base class for API of triggering builds on automation (CI) server
     """
 
-    def trigger_build(self, revision):  # pylint: disable=no-self-use
+    def trigger_build(self, param_dict=None):  # pylint: disable=no-self-use
         raise RuntimeError("Trigger build function is not defined for current driver.")
 
 

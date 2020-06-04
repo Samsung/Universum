@@ -1,6 +1,7 @@
 import os
-import requests
 import urllib.parse
+
+import requests
 
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
