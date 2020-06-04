@@ -27,9 +27,9 @@ class GithubToken(Module):
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
-        parser.add_argument("--github-app-id", "-gha", dest="integration_id", metavar="GITHUB_APP_ID",
+        parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
                             help="GitHub application ID (real help coming soon)")
-        parser.add_argument("--github-private-key", "-ghk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
+        parser.add_argument("--github-private-key", "-gtk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
                             help="Application private key file path")
 
     def __init__(self, *args, **kwargs):
@@ -50,7 +50,7 @@ class GithubTokenWithInstallation(GithubToken):
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
-        parser.add_argument("--github-installation-id", "-ghn", dest="installation_id",
+        parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
                             help="Calculated out of webhook payload (real help coming soon)")
 
