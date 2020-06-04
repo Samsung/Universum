@@ -26,24 +26,15 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
     def __init__(self, *args, **kwargs):
         super(JenkinsServerForTrigger, self).__init__(*args, **kwargs)
         if not getattr(self.settings, "trigger_url", None):
-            raise IncorrectParameterError("the Jenkins url for triggering build\n"
-                                          "is not specified\n\n"
+            raise IncorrectParameterError("the Jenkins url for triggering build is not specified\n\n"
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
 
     def trigger_build(self, param_dict=None):
         # TODO: add parsing exception handling, add tests
-        processed_url = urllib.parse.urlsplit(self.settings.trigger_url)
-        if param_dict:
-            params = urllib.parse.parse_qs(processed_url.query)
-            params.update(param_dict)
-            new_query = urllib.parse.urlencode(params, doseq=True)
-            processed_url = processed_url._replace(query=new_query)  # pylint: disable = protected-access
-
-        url = (processed_url.geturl())
-        self.out.log(f"Triggering url {urllib.parse.urljoin(url, '?params-are-hidden')}")
+        self.out.log(f"Triggering url {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
         try:
-            response = requests.get(url)
+            response = requests.get(self.settings.trigger_url, params=param_dict)
             response.raise_for_status()
             self.out.log("Successfully triggered")
         except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
