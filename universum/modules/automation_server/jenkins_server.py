@@ -38,9 +38,10 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
             new_query = urllib.parse.urlencode(params, doseq=True)
             processed_url = processed_url._replace(query=new_query)  # pylint: disable = protected-access
 
-        self.out.log(f"Triggering url {processed_url.geturl()}")
+        url = (processed_url.geturl())
+        self.out.log(f"Triggering url {urllib.parse.urljoin(url, '?params-are-hidden')}")
         try:
-            response = requests.get(urllib.parse.urlunsplit(processed_url))
+            response = requests.get(url)
             response.raise_for_status()
             self.out.log("Successfully triggered")
         except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
