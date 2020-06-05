@@ -18,9 +18,9 @@ class GithubHandler(GithubToken):
     def define_arguments(argument_parser):
         argument_parser.add_argument('--event', '-e', dest='event', metavar="GITHUB_EVENT",
                                      help='Currently parsed from "x-github-event" header')
-        argument_parser.add_argument('--payload', '-p', dest='payload', metavar="PAYLOAD",
+        argument_parser.add_argument('--payload', '-pl', dest='payload', metavar="GITHUB_PAYLOAD",
                                      help='<actual help coming later> leave "-" to read from stdin')
-        argument_parser.add_argument('--trigger-url', '-t', dest='trigger_url', metavar="TRIGGER_URL",
+        argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
                                      help='<actual help coming later> including parameters like token')
 
     def __init__(self, *args, **kwargs):
