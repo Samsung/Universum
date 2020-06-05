@@ -22,6 +22,8 @@ class GithubHandler(GithubToken):
                                      help='<actual help coming later> leave "-" to read from stdin')
         argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
                                      help='<actual help coming later> including parameters like token')
+        argument_parser.add_argument('--verbose', '-v', dest='verbose', action="store_true",
+                                     help='Show all params passed in URL (mostly for debug purposes)')
 
     def __init__(self, *args, **kwargs):
         # TODO: add checks for params; add tests
@@ -43,6 +45,8 @@ class GithubHandler(GithubToken):
             headers = {'Authorization': f"token {self.get_token(payload['installation']['id'])}",
                        'Accept': 'application/vnd.github.antiope-preview+json'}
             self.out.log(f"Sending request to {url}")
+            if self.settings.verbose:
+                self.out.log(f"Headers are:\n{headers}\nOther passed params are:\n{data}")
             response = requests.post(url=url, json=data, headers=headers)
             response.raise_for_status()
             self.out.log("Successfully created check run")
@@ -59,11 +63,12 @@ class GithubHandler(GithubToken):
                 "GIT_REPO": payload["repository"]["clone_url"],
                 "GITHUB_APP_ID": self.settings.integration_id,
                 "GITHUB_INSTALLATION_ID": payload['installation']['id'],
-                "GITHUB_PRIVATE_KEY": self.settings.key_path,
-                "GITHUB_TOKEN": self.get_token(payload['installation']['id'])  # remove after tests
+                "GITHUB_PRIVATE_KEY": self.settings.key_path
             }
-            self.out.log(f"Triggering url {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
+            self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
             response = requests.get(self.settings.trigger_url, params=param_dict)
+            if self.settings.verbose:
+                self.out.log(f"Triggered {response.url}")
             response.raise_for_status()
             self.out.log("Successfully triggered")
 
