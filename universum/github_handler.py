@@ -31,6 +31,7 @@ class GithubHandler(GithubToken):
     def execute(self):
         # TODO: refactor to real curl-style variable with '@' adn '-' support
         # TODO: add some proper exception handling on payload contents; add tests
+        # TODO: add HTTP & value error handling to avoid printing whole stacktrace
         if self.settings.payload == '-':
             payload = json.loads(sys.stdin.read())
         else:
