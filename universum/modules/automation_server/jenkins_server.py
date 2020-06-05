@@ -20,23 +20,24 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Jenkins variables", "Jenkins-specific parameters")
-        parser.add_argument('--jenkins-trigger-url', '-jtu', dest='trigger_url', metavar="TRIGGER_URL",
-                            help='Url to trigger, with predefined parameters if any (e.g. token)')
+        parser.add_argument('--jenkins-trigger-url', '-jtu', dest='trigger_url',
+                            help='Url to trigger, must include exactly one conversion specifier (%%s) to be '
+                                 'replaced by CL number, for example: http://localhost/%%s', metavar="URL")
 
     def __init__(self, *args, **kwargs):
         super(JenkinsServerForTrigger, self).__init__(*args, **kwargs)
         if not getattr(self.settings, "trigger_url", None):
-            raise IncorrectParameterError("the Jenkins url for triggering build is not specified\n\n"
+            raise IncorrectParameterError("the Jenkins url for triggering build\n"
+                                          "is not specified\n\n"
                                           "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
                                           "command-line option or URL environment variable.")
 
-    def trigger_build(self, param_dict=None):
-        # TODO: add parsing exception handling, add tests
-        self.out.log(f"Triggering url {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
+    def trigger_build(self, revision):
+        processed_url = self.settings.trigger_url % revision
+
+        self.out.log("Triggering url %s" % processed_url)
         try:
-            response = requests.get(self.settings.trigger_url, params=param_dict)
-            response.raise_for_status()
-            self.out.log("Successfully triggered")
+            requests.get(processed_url)
         except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
             raise CriticalCiException(f"Error opening URL, error message {e}")
 
