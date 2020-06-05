@@ -31,8 +31,8 @@ class GithubToken(Module):
                             help="Application private key file path")
 
     def __init__(self, *args, **kwargs):
-        super(GithubToken, self).__init__(*args, **kwargs)
         # TODO: add check for parameters, rework key to curl-style variable
+        super().__init__(*args, **kwargs)
 
     def get_token(self, installation_id):
         with open(self.settings.key_path) as f:
@@ -55,11 +55,11 @@ class GithubTokenWithInstallation(GithubToken):
                             help="Calculated out of webhook payload (real help coming soon)")
 
     def __init__(self, *args, **kwargs):
-        super(GithubTokenWithInstallation, self).__init__(*args, **kwargs)
         # TODO: add check for parameter
+        super().__init__(*args, **kwargs)
 
     def get_token(self, installation_id=None):
-        super(GithubTokenWithInstallation, self).get_token(installation_id=self.settings.installation_id)
+        return super().get_token(installation_id=self.settings.installation_id)
 
 
 class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallation):
@@ -80,7 +80,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
                             default="https://api.github.com/", help="API URL for integration")
 
     def __init__(self, *args, **kwargs):
-        super(GithubMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reporter = None
         utils.check_required_option(self.settings, "checkout_id", """
                     git checkout id for github is not specified.
