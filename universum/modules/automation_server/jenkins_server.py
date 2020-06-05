@@ -1,6 +1,4 @@
 import os
-import urllib.parse
-
 import requests
 
 from ...lib.ci_exception import CriticalCiException
