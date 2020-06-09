@@ -15,8 +15,6 @@ __all__ = [
     "GitPollVcs"
 ]
 
-git = None
-
 
 def catch_git_exception(ignore_if=None):
     return utils.catch_exception("GitCommandError", ignore_if)
@@ -42,10 +40,9 @@ class GitVcs(BaseVcs):
     def __init__(self, *args, **kwargs):
         super(GitVcs, self).__init__(*args, **kwargs)
 
-        global git
         try:
-            git = utils.import_module("git")
-            remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
+            self.git = utils.import_module("git")
+            remote = utils.import_module("remote", target_name="git.remote", path=self.git.__path__)
         except ImportError:
             text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
                    "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
@@ -80,17 +77,20 @@ class GitVcs(BaseVcs):
         else:
             self.refspec = None
 
+    @catch_git_exception()
+    def _clone(self, history_depth, destination_directory):
+        if history_depth:
+            self.repo = self.git.Repo.clone_from(self.clone_url, destination_directory, depth=history_depth,
+                                                 no_single_branch=True, progress=self.logger)
+        else:
+            self.repo = self.git.Repo.clone_from(self.clone_url, destination_directory, progress=self.logger)
+
     @make_block("Cloning repository")
     @catch_git_exception()
     def clone_and_fetch(self, history_depth=None):
         self.out.log("Cloning '" + self.clone_url + "'...")
         destination_directory = convert_to_str(self.settings.project_root)
-        if history_depth:
-            self.repo = git.Repo.clone_from(self.clone_url, destination_directory,
-                                            depth=history_depth, no_single_branch=True, progress=self.logger)
-        else:
-            self.repo = git.Repo.clone_from(self.clone_url, destination_directory, progress=self.logger)
-
+        self._clone(history_depth, destination_directory)
         self.sources_need_cleaning = True
         self.append_repo_status("Git repo: " + self.clone_url + "\n\n")
 
@@ -258,10 +258,10 @@ class GitSubmitVcs(GitVcs):
 
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
-            self.repo = git.Repo(convert_to_str(self.settings.project_root))
-        except git.exc.NoSuchPathError:
+            self.repo = self.git.Repo(convert_to_str(self.settings.project_root))
+        except self.git.exc.NoSuchPathError:
             raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
-        except git.exc.InvalidGitRepositoryError:
+        except self.git.exc.InvalidGitRepositoryError:
             raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
         with self.repo.config_writer() as configurator:
