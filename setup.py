@@ -16,7 +16,9 @@ docs = (
 
 vcs = (
     'gitpython>=3.0.5',
-    'p4python>=2019.1'
+    'p4python>=2019.1',
+    'pygithub',
+    'cffi'  # TODO: check which of 'cryptography' or 'cffi' solves issue with 'github' better
 )
 
 setup(
