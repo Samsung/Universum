@@ -40,7 +40,7 @@ class GithubToken(Module):
         self.token_issued = None
         self._token = None
 
-    def _get_tokern(self, installation_id):
+    def _get_token(self, installation_id):
         with open(self.settings.key_path) as f:
             private_key = f.read()
 
@@ -54,7 +54,7 @@ class GithubToken(Module):
             token_age = datetime.datetime.now() - self.token_issued
             if token_age.min < 55:  # GitHub token lasts for one hour
                 return self._token
-        self._token = self._get_tokern(installation_id)
+        self._token = self._get_token(installation_id)
         self.token_issued = datetime.datetime.now()
         return self._token
 
