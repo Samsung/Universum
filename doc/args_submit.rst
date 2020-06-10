@@ -6,7 +6,7 @@ Submit command line
 .. Insert some description here
 
 .. argparse::
-    :module: universum
+    :module: universum.__main__
     :func: define_arguments
-    :prog: universum
+    :prog:  python3.7 -m universum
     :path: submit

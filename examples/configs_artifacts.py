@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.7
 
 from universum.configuration_support import Variations
-from six.moves import range
 
 mkdir = Variations([dict(name="Create directory", command=["mkdir", "-p"])])
 mkfile = Variations([dict(name="Create file", command=["touch"])])

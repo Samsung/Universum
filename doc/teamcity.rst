@@ -94,7 +94,7 @@ Create a common meta-runner
     USER=`whoami | sed -e "s/_/-/"`
     P4CLIENT="Disposable_workspace_"$HOST"-"$USER
 
-    cmd="universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS%"
+    cmd="python3.7 -u -m universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS%"
     echo "==> Run: ${cmd}"
     ${cmd} || EXITCODE=1
 
@@ -120,7 +120,7 @@ Create a common meta-runner
     USER=`whoami | sed -e "s/_/-/"`
     P4CLIENT="Disposable_workspace_"$HOST"-"$USER
 
-    cmd="python -u ./universum.py --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS% --finalize-only --artifact-dir finalization_artifacts"
+    cmd="python3.7 -u -m universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS% --finalize-only --artifact-dir finalization_artifacts"
     echo "==> Run: ${cmd}"
     ${cmd}
 

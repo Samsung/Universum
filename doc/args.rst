@@ -1,17 +1,18 @@
 Command line
 ------------
 
-Main script of project `Universum` is ``universum.py``.
-All command-line parameters, general and module-related, are passed to this main script.
+Main script of project `Universum` is ``__main__.py``.
+All command-line parameters, general and module-related, are passed to this entry point
+via ``python3.7 -m universum``.
 
 .. note::
     Most of command-line parameters can be replaced by setting up corresponding environment
     variables (see 'env' comment in descriptions)
 
 .. argparse::
-    :module: universum
+    :module: universum.__main__
     :func: define_arguments
-    :prog: universum
+    :prog: python3.7 -m universum
     :nosubcommands:
 
     --version : @replace
