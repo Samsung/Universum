@@ -130,7 +130,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
             new_netloc = "x-access-token:{}@{}".format(self.get_token(), parsed_repo.netloc)
             parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
 
-        # Outside of this function self.clone_url is only used for logging
+        # We do not change the 'self.clone_url' though, because is only used for logging outside this function
         clone_url = urllib.parse.urlunsplit(parsed_repo)
         if history_depth:
             self.repo = self.git.Repo.clone_from(clone_url, destination_directory, depth=history_depth,
