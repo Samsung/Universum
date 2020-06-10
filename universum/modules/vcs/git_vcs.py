@@ -16,6 +16,9 @@ __all__ = [
 ]
 
 
+git = None
+
+
 def catch_git_exception(ignore_if=None):
     return utils.catch_exception("GitCommandError", ignore_if)
 
@@ -41,9 +44,9 @@ class GitVcs(BaseVcs):
         super(GitVcs, self).__init__(*args, **kwargs)
 
         try:
-            # By putting imported module to self, we allow this and all derived classes to use it without more imports
-            self.git = utils.import_module("git")
-            remote = utils.import_module("remote", target_name="git.remote", path=self.git.__path__)
+            global git
+            git = utils.import_module("git")
+            remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
         except ImportError:
             text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
                    "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
@@ -94,10 +97,10 @@ class GitVcs(BaseVcs):
     @catch_git_exception()
     def _clone(self, history_depth, destination_directory, clone_url):
         if history_depth:
-            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, depth=history_depth,
-                                                 no_single_branch=True, progress=self.logger)
+            self.repo = git.Repo.clone_from(clone_url, destination_directory, depth=history_depth,
+                                            no_single_branch=True, progress=self.logger)
         else:
-            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
+            self.repo = git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
 
 
 @needs_output
@@ -258,10 +261,10 @@ class GitSubmitVcs(GitVcs):
 
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
-            self.repo = self.git.Repo(convert_to_str(self.settings.project_root))
-        except self.git.exc.NoSuchPathError:
+            self.repo = git.Repo(convert_to_str(self.settings.project_root))
+        except git.exc.NoSuchPathError:
             raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
-        except self.git.exc.InvalidGitRepositoryError:
+        except git.exc.InvalidGitRepositoryError:
             raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
 
         with self.repo.config_writer() as configurator:
