@@ -15,7 +15,6 @@ __all__ = [
     "GitPollVcs"
 ]
 
-
 git = None
 
 
@@ -43,8 +42,8 @@ class GitVcs(BaseVcs):
     def __init__(self, *args, **kwargs):
         super(GitVcs, self).__init__(*args, **kwargs)
 
+        global git
         try:
-            global git
             git = utils.import_module("git")
             remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
         except ImportError:
