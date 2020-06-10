@@ -124,8 +124,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
         }
 
     @catch_git_exception()
-    def _clone(self, history_depth, destination_directory):
-        # We do not change the 'self.clone_url' though, because is only used for logging outside this function
+    def _clone(self, history_depth, destination_directory, clone_url):
         parsed_repo = urllib.parse.urlsplit(self.settings.repo)
         if parsed_repo.scheme == "https" and not parsed_repo.username:
             new_netloc = "x-access-token:{}@{}".format(self.get_token(), parsed_repo.netloc)
