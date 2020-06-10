@@ -41,6 +41,7 @@ class GitVcs(BaseVcs):
         super(GitVcs, self).__init__(*args, **kwargs)
 
         try:
+            # By putting imported module to self, we allow this and all derived classes to use it without more imports
             self.git = utils.import_module("git")
             remote = utils.import_module("remote", target_name="git.remote", path=self.git.__path__)
         except ImportError:
