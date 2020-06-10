@@ -33,8 +33,10 @@ class GithubToken(Module):
     def __init__(self, *args, **kwargs):
         # TODO: add check for parameters, rework key to curl-style variable
         super().__init__(*args, **kwargs)
+        self.token_issued = None
+        self._token = None
 
-    def get_token(self, installation_id):
+    def _get_token(self, installation_id):
         with open(self.settings.key_path) as f:
             private_key = f.read()
 
@@ -42,6 +44,15 @@ class GithubToken(Module):
         integration = github.GithubIntegration(self.settings.integration_id, private_key)
         auth_obj = integration.get_access_token(installation_id)
         return auth_obj.token
+
+    def get_token(self, installation_id):
+        if self._token:
+            token_age = datetime.datetime.now() - self.token_issued
+            if token_age.min < 55:  # GitHub token lasts for one hour
+                return self._token
+        self._token = self._get_token(installation_id)
+        self.token_issued = datetime.datetime.now()
+        return self._token
 
 
 class GithubTokenWithInstallation(GithubToken):
@@ -101,27 +112,20 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
                     command line parameter or by setting GITHUB_CHECK_ID environment variable.
                 """)
 
-        parsed_repo = urllib.parse.urlsplit(self.settings.repo)
-        repo_path = str(parsed_repo.path).rsplit(".git", 1)[0]
-        self.check_url = self.settings.api_url + "repos" + repo_path + "/check-runs/" + self.settings.check_id
-
-        # TODO: somehow refactor to not show token in log on cloning
-        if parsed_repo.scheme == "https" and not parsed_repo.username:
-            new_netloc = "x-access-token:{}@{}".format(self.get_token(), parsed_repo.netloc)
-            parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
-        self.clone_url = urllib.parse.urlunsplit(parsed_repo)
-
-        # TODO: refactor to recalculate token if expired instead of hardcoding it into headers
-        self.headers = {
-            "Accept": "application/vnd.github.antiope-preview+json",
-            "Authorization": "token " + self.get_token()
-        }
         self.request = dict()
         self.request["status"] = "in_progress"
         self.request["output"] = {
             "title": self.settings.check_name,
             "summary": ""
         }
+
+    def _clone(self, history_depth, destination_directory, clone_url):
+        parsed_repo = urllib.parse.urlsplit(clone_url)
+        if parsed_repo.scheme == "https" and not parsed_repo.username:
+            new_netloc = "x-access-token:{}@{}".format(self.get_token(), parsed_repo.netloc)
+            parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
+        clone_url = urllib.parse.urlunsplit(parsed_repo)
+        super()._clone(history_depth, destination_directory, clone_url)
 
     def code_review(self):
         self.reporter = self.reporter_factory()
@@ -138,7 +142,15 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
         return True
 
     def _report(self):
-        result = requests.patch(self.check_url, json=self.request, headers=self.headers)
+        repo_path = str(urllib.parse.urlsplit(self.settings.repo).path).rsplit(".git", 1)[0]
+        check_url = self.settings.api_url + "repos" + repo_path + "/check-runs/" + self.settings.check_id
+
+        headers = {
+            "Accept": "application/vnd.github.antiope-preview+json",
+            "Authorization": "token " + self.get_token()
+        }
+
+        result = requests.patch(check_url, json=self.request, headers=headers)
         utils.check_request_result(result)
 
     def code_report_to_review(self, report):

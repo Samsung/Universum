@@ -3,9 +3,6 @@ import shutil
 import warnings
 
 import sh
-import six
-from six.moves import range
-from six.moves import zip
 
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
@@ -83,6 +80,7 @@ class PerforceVcs(base_vcs.BaseVcs):
                    "detailed instructions"
             raise ImportError(text)
 
+        # By putting P4 object to self, we can use it in this or any derived classes without any further imports
         self.p4 = p4_module.P4()
         global P4Exception
         P4Exception = p4_module.P4Exception
@@ -347,7 +345,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             swarm_cls = self.get_related_cls(self.swarm.settings.change)
             cls.extend(swarm_cls)
         for x in range(1, 6):
-            cls.append(os.getenv("SHELVE_CHANGELIST_" + six.text_type(x)))
+            cls.append(os.getenv("SHELVE_CHANGELIST_" + str(x)))
         self.shelve_cls = sorted(list(set(utils.unify_argument_list(self.settings.shelve_cls, additional_list=cls))))
 
     def p4report(self, report):
@@ -538,7 +536,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             for item, path in zip(unshelved_filtered, unshelved_path):
                 relative, copied, absolute = path
                 if item["action"] == "move/add":
-                    for local, depot in six.iteritems(self.mappings_dict):
+                    for local, depot in self.mappings_dict.items():
                         if depot == item["movedFile"]:
                             absolute = local
                 self.diff_in_files.append((relative, copied, absolute))
@@ -606,7 +604,7 @@ class PerforcePollVcs(PerforceWithMappings, base_vcs.BasePollVcs):
             reference_cl = changes_reference.get(depot_path, last_cl)
 
             rev_range_string = depot_path + "@" + reference_cl + ",#head"
-            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + six.text_type(max_number), rev_range_string)
+            submitted_cls = self.p4.run_changes("-s", "submitted", "-m" + str(max_number), rev_range_string)
 
             submitted_cls.reverse()
             for cl in submitted_cls:
