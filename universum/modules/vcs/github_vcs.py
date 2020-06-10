@@ -15,10 +15,6 @@ __all__ = [
 ]
 
 
-def catch_git_exception(ignore_if=None):
-    return utils.catch_exception("GitCommandError", ignore_if)
-
-
 def get_time():
     return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
@@ -123,7 +119,6 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
             "summary": ""
         }
 
-    @catch_git_exception()
     def _clone(self, history_depth, destination_directory, clone_url):
         parsed_repo = urllib.parse.urlsplit(clone_url)
         if parsed_repo.scheme == "https" and not parsed_repo.username:

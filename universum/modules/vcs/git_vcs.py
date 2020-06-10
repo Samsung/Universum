@@ -77,14 +77,6 @@ class GitVcs(BaseVcs):
         else:
             self.refspec = None
 
-    @catch_git_exception()
-    def _clone(self, history_depth, destination_directory, clone_url):
-        if history_depth:
-            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, depth=history_depth,
-                                                 no_single_branch=True, progress=self.logger)
-        else:
-            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
-
     @make_block("Cloning repository")
     @catch_git_exception()
     def clone_and_fetch(self, history_depth=None):
@@ -98,6 +90,14 @@ class GitVcs(BaseVcs):
         if self.settings.refspec:
             self.repo.remotes.origin.fetch(refspec=self.settings.refspec, progress=self.logger)
             self.append_repo_status("Fetched refspec: " + self.settings.refspec + "\n")
+
+    @catch_git_exception()
+    def _clone(self, history_depth, destination_directory, clone_url):
+        if history_depth:
+            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, depth=history_depth,
+                                                 no_single_branch=True, progress=self.logger)
+        else:
+            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
 
 
 @needs_output
