@@ -536,7 +536,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             for item, path in zip(unshelved_filtered, unshelved_path):
                 relative, copied, absolute = path
                 if item["action"] == "move/add":
-                    for local, depot in self.mappings_dict.iteritems():
+                    for local, depot in self.mappings_dict.items():
                         if depot == item["movedFile"]:
                             absolute = local
                 self.diff_in_files.append((relative, copied, absolute))
