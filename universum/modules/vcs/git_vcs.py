@@ -79,12 +79,14 @@ class GitVcs(BaseVcs):
             self.refspec = None
 
     @catch_git_exception()
-    def _clone(self, history_depth, destination_directory):
+    def _clone(self, history_depth, destination_directory, clone_url=None):
+        if not clone_url:
+            clone_url = self.clone_url
         if history_depth:
-            self.repo = self.git.Repo.clone_from(self.clone_url, destination_directory, depth=history_depth,
+            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, depth=history_depth,
                                                  no_single_branch=True, progress=self.logger)
         else:
-            self.repo = self.git.Repo.clone_from(self.clone_url, destination_directory, progress=self.logger)
+            self.repo = self.git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
 
     @make_block("Cloning repository")
     @catch_git_exception()
