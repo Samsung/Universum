@@ -205,7 +205,7 @@ command
 .. note::
 
     Some common actions, such as ``echo`` or ``cp``, are bash features and not actual programs to run. These
-    features should be called as ``["bash", "-C", "echo -e 'Some line goes here'"]``. Note that in this case
+    features should be called as ``["bash", "-c", "echo -e 'Some line goes here'"]``. Note that in this case
     the string to be passed to bash is one argument containing white spaces and therefore not splat by commas.
 
 .. _build_environment:

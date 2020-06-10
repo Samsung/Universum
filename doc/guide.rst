@@ -9,7 +9,7 @@ If using raw sources, launch Universum from project root via running main module
 
     $ python3.7 -m universum --help
 
-If using a module installed via PyPi, use the same command from any suitable directory.
+If using an installed module (e.g, via PyPi), use the same command from any suitable directory.
 
 In order to use the CI system with a project, a special ``configs.py`` file must be created.
 The contents of such file are described on :doc:`configuring` page.

@@ -16,9 +16,8 @@ the name must conform to file name standards. If argument is not provided, outpu
 Running analysers from Universum config, you need to add ``code_report=True`` and result file argument
 mandatory must be set to ``"${CODE_REPORT_FILE}"``.
 ``"${CODE_REPORT_FILE}"`` is a pseudo-variable that will be replaced with the file name during execution.
-Also, you are able not to add ``code_report=True`` option and name file as you wish, in this case result file
-won't be processed according to the rules defined for analysers and step will be marked as ``Failed``
-if there are any analysis issues found.
+Also, without ``code_report=True`` and result file may be called any name, as it won't be processed according
+to the rules defined for analysers. Such step will be marked as ``Failed`` if any analysis issues are found.
 
 .. note::
     When using Universum, if a file with analysis results is not added to artifacts, it will be deleted

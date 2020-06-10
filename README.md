@@ -27,7 +27,7 @@ https://universum.readthedocs.io/en/latest/prerequisites.html)):
 3. Pip for python3.7
 4. Git client
 ```bash
-sudo python2 -m pip install -U git+https://github.com/Samsung/Universum/@release
+sudo python3.7 -m pip install -U git+https://github.com/Samsung/Universum/@release
 ```
 
 ### Latest development + tests
@@ -53,7 +53,8 @@ but all the dependency modules will remain in the system.
 
 ## Project contents
 
-`universum` is main project folder, that is being copied to `dist_packages` when installed.
+`universum` is main project folder, that is being copied to Python libraries location
+(e.g. `dist-packages` or `site-packages`) when installed.
 It contains `__main__.py` script, that is the main entry point to the whole project.
 It also contains the following modules:
 * `main`/`poll`/`submit`/`api`/`nonci` - managing modules for different Universum modes
@@ -61,7 +62,7 @@ It also contains the following modules:
 https://universum.readthedocs.io/en/latest/configuring.html)
 * `analyzers` directory is not quite a part of Universum itself. It contains [independent scripts](
 https://universum.readthedocs.io/en/latest/code_report.html) compatible with Universum
-for static (and other types of) analysis.
+for implementing static (and other types of) analysis support.
 * `lib` - utility functions libraries
   * `ci_exception` - internal exceptions
   * `module_arguments` - handles [command line](
@@ -98,7 +99,8 @@ from root directory via `make tests` command, otherwise use standard PyTest synt
 https://universum.readthedocs.io/en/latest/configuring.html). Usage of such files
 is illustrated in `run_basic_example.sh` script.
 
-`universum_log_collapser` is a directory with Java sources of Jenkins plugin for Universum pretty display.
+`universum_log_collapser` contains Universum Jenkins plugin sources.
+The plugin implements coloring of failed steps and provides collapsing/expansion of log sections.
 
 `setup.py` is 'setuptools' configuration file, and shouldn't be executed on its own.
 
