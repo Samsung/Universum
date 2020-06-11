@@ -21,7 +21,7 @@ class GithubHandler(GithubToken):
                                      help='Currently parsed from "x-github-event" header')
         argument_parser.add_argument('--payload', '-pl', dest='payload', metavar="GITHUB_PAYLOAD",
                                      help='<actual help coming later> leave "-" to read from stdin')
-        argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
+        argument_parser.add_argument('--trigger-url', '-tu', dest='trigger', metavar="TRIGGER_URL",
                                      help='<actual help coming later> including parameters like token')
         argument_parser.add_argument('--verbose', '-v', dest='verbose', action="store_true",
                                      help='Show all params passed in URL (mostly for debug purposes)')
@@ -44,7 +44,7 @@ class GithubHandler(GithubToken):
                     for relative path starting at current directory), or via stdin (leave '-' for redirection),
                     or via environment variable.
                 """)
-        utils.check_required_option(self.settings, "trigger_url", """
+        utils.check_required_option(self.settings, "trigger", """
                     CI build trigger URL is not specified.
 
                     Trigger URL is a string to be extended by parsed build parameters and used in a GET request
@@ -88,8 +88,8 @@ class GithubHandler(GithubToken):
                 "GITHUB_INSTALLATION_ID": payload['installation']['id'],
                 "GITHUB_PRIVATE_KEY": self.settings.key_path
             }
-            self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
-            response = requests.get(self.settings.trigger_url, params=param_dict)
+            self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger, '?...')}")
+            response = requests.get(self.settings.trigger, params=param_dict)
             if self.settings.verbose:
                 self.out.log(f"Triggered {response.url}")
             response.raise_for_status()

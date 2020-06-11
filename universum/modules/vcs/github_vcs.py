@@ -27,14 +27,13 @@ class GithubToken(Module):
 
         parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
                             help="GitHub application ID (real help coming soon)")
-        parser.add_argument("--github-private-key", "-gtk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
+        parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
                             help="Application private key file path")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         utils.check_required_option(self.settings, "integration_id", """
-                    GitHub App ID not specified.
+                    GitHub App ID ('integration_id') not specified.
 
                     Only GitHub Application owner knows this ID. If you are the App owner,
                     please check your App's general settings. If not, please contact the App owner
@@ -43,12 +42,12 @@ class GithubToken(Module):
                     For security reasons, `universum github-handler` DOES NOT pass App ID to CI builds.
                 """)
 
-        utils.check_required_option(self.settings, "key_path", """
+        utils.check_required_option(self.settings, "key", """
                     GitHub App private key not specified.
 
                     As a multiline variable, the private key cannot be passed via command line directly.
-                    Please store it in environment variable, or enter through the stdin (pass '-' param
-                    value for redirection), or pass a filename starting with '@' character, absolute or
+                    Please store it in environment variable ("GITHUB_PRIVATE_KEY"), or enter through the stdin
+                    (pass '-' param value for redirection), or pass a filename starting with '@' character, absolute or
                     relative starting from project root.
 
                     For security reasons, `universum github-handler` DOES NOT pass private key to CI builds.
@@ -59,7 +58,7 @@ class GithubToken(Module):
 
     def _get_token(self, installation_id):
         # TODO: rework key to curl-style variable
-        with open(self.settings.key_path) as f:
+        with open(self.settings.key) as f:
             private_key = f.read()
 
         github = utils.import_module("github")
@@ -95,7 +94,7 @@ class GithubTokenWithInstallation(GithubToken):
                     An installation refers to any user or organization account that has installed the app.
                     Even if someone installs the app on more than one repository, it only counts as one
                     installation because it's within the same account.
-                    Installation ID can be retrieved via REST API or simply parsed from GitHub App webhook.
+                    'installation_id' can be retrieved via REST API or simply parsed from GitHub App webhook.
                     
                     If using `universum github-handler`, installation ID is passed automatically to CI builds.
                 """)
