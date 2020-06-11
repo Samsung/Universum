@@ -31,8 +31,31 @@ class GithubToken(Module):
                             help="Application private key file path")
 
     def __init__(self, *args, **kwargs):
-        # TODO: add check for parameters, rework key to curl-style variable
         super().__init__(*args, **kwargs)
+
+        utils.check_required_option(self.settings, "integration_id", """
+                    GitHub App ID not specified.
+
+                    Only GitHub Application owner knows this ID. If you are the App owner,
+                    please check your App's general settings. If not, please contact the App owner
+                    for this information.
+                    
+                    If using `universum github-handler`, it passes it's own set up App ID to CI builds.
+                """)
+
+        # TODO: rework key to curl-style variable
+        utils.check_required_option(self.settings, "key_path", """
+                    GitHub App private key not specified.
+
+                    As a multiline variable, the private key cannot be passed via command line directly.
+                    Please store it in environment variable, or enter through the stdin (pass '-' param
+                    value for redirection), or pass a filename starting with '@' character, absolute or
+                    relative starting from project root.
+
+                    As `universum github-handler` passes this param without changes, in case of redirection
+                    to stdin you will have to enter it again in CI builds.
+                """)
+
         self.token_issued = None
         self._token = None
 
@@ -66,8 +89,17 @@ class GithubTokenWithInstallation(GithubToken):
                             help="Calculated out of webhook payload (real help coming soon)")
 
     def __init__(self, *args, **kwargs):
-        # TODO: add check for parameter
         super().__init__(*args, **kwargs)
+        utils.check_required_option(self.settings, "installation_id", """
+                    GitHub App installation ID not specified.
+
+                    An installation refers to any user or organization account that has installed the app.
+                    Even if someone installs the app on more than one repository, it only counts as one
+                    installation because it's within the same account.
+                    Installation ID can be retrieved via REST API or simply parsed from GitHub App webhook.
+                    
+                    If using `universum github-handler`, installation ID is passed automatically to CI builds.
+                """)
 
     def get_token(self, installation_id=None):
         return super().get_token(installation_id=self.settings.installation_id)
