@@ -40,10 +40,9 @@ class GithubToken(Module):
                     please check your App's general settings. If not, please contact the App owner
                     for this information.
                     
-                    If using `universum github-handler`, it passes it's own set up App ID to CI builds.
+                    For security reasons, `universum github-handler` DOES NOT pass App ID to CI builds.
                 """)
 
-        # TODO: rework key to curl-style variable
         utils.check_required_option(self.settings, "key_path", """
                     GitHub App private key not specified.
 
@@ -52,14 +51,14 @@ class GithubToken(Module):
                     value for redirection), or pass a filename starting with '@' character, absolute or
                     relative starting from project root.
 
-                    As `universum github-handler` passes this param without changes, in case of redirection
-                    to stdin you will have to enter it again in CI builds.
+                    For security reasons, `universum github-handler` DOES NOT pass private key to CI builds.
                 """)
 
         self.token_issued = None
         self._token = None
 
     def _get_token(self, installation_id):
+        # TODO: rework key to curl-style variable
         with open(self.settings.key_path) as f:
             private_key = f.read()
 

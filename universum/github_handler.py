@@ -8,6 +8,7 @@ from .modules.vcs.github_vcs import GithubToken
 from .modules.output import needs_output
 from .modules.structure_handler import needs_structure
 from .lib.utils import make_block
+from .lib import utils
 
 
 @needs_structure
@@ -26,8 +27,30 @@ class GithubHandler(GithubToken):
                                      help='Show all params passed in URL (mostly for debug purposes)')
 
     def __init__(self, *args, **kwargs):
-        # TODO: add checks for params; add tests
+        # TODO: add tests
         super().__init__(*args, **kwargs)
+
+        utils.check_required_option(self.settings, "event", """
+                    GitHub web-hook event is not specified.
+
+                    Please pass 'X-GitHub-Event' header contents of incoming web-hook request to this parameter.
+                """)
+
+        utils.check_required_option(self.settings, "payload", """
+                    GitHub web-hook payload JSON is not specified.
+
+                    Please pass incoming web-hook request payload to this parameter directly, or
+                    via file (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json'
+                    for relative path starting at current directory), or via stdin (leave '-' for redirection),
+                    or via environment variable.
+                """)
+        utils.check_required_option(self.settings, "trigger_url", """
+                    CI build trigger URL is not specified.
+
+                    Trigger URL is a string to be extended by parsed build parameters and used in a GET request
+                    to start a CI build that can report a GitHub build check.
+                    For example, 'http://jenkins.com/job/JobName/build?token=MYTOKEN'
+                """)
 
     @make_block("Analysing trigger payload")
     def execute(self):
