@@ -26,9 +26,14 @@ class GithubToken(Module):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
         parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
-                            help="GitHub application ID (real help coming soon)")
+                            help="GitHub application ID to use for check run report. Only GitHub App "
+                                 "can report a check run result! If you don't have an App for reporting purposes, "
+                                 "please don't use '--report-to-review'  with VCS GitHub")
         parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
-                            help="Application private key file path")
+                            help="GitHub App private key for obtaining OAuth token. Pass raw key data via "
+                                 "environment variable, or redirect key reading to stdin by passing '-' as param"
+                                 "value, or pass a file path to read the key from by starting the value srting"
+                                 "with '@'. File path can be either absolute or relative")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -84,7 +89,9 @@ class GithubTokenWithInstallation(GithubToken):
 
         parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
-                            help="Calculated out of webhook payload (real help coming soon)")
+                            help="GitHub installation ID identifies GitHub App user. Can be retrieved from "
+                                 "web-hook or obtained via REST API; in standard workflow should be "
+                                 "received from `universum githbu-handler`")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,7 +101,7 @@ class GithubTokenWithInstallation(GithubToken):
                     An installation refers to any user or organization account that has installed the app.
                     Even if someone installs the app on more than one repository, it only counts as one
                     installation because it's within the same account.
-                    'installation_id' can be retrieved via REST API or simply parsed from GitHub App webhook.
+                    'installation_id' can be retrieved via REST API or simply parsed from GitHub App web-hook.
                     
                     If using `universum github-handler`, installation ID is passed automatically to CI builds.
                 """)
