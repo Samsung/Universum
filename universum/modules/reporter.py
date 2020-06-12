@@ -123,17 +123,18 @@ class Reporter(Module):
         else:
             self.out.log("Reporting failed build...")
 
-        if not self.settings.report_start:
-            text += "\n\n" + self.automation_server.report_build_location()
+        if text is not None:
+            if not self.settings.report_start:
+                text += "\n\n" + self.automation_server.report_build_location()
 
-        if self.artifacts_to_report:
-            text += "\n\nThe following artifacts were generated during check:\n"
-            for item in self.artifacts_to_report:
-                text += "* " + item + "\n"
-            text += "Please take a look."
+            if self.artifacts_to_report:
+                text += "\n\nThe following artifacts were generated during check:\n"
+                for item in self.artifacts_to_report:
+                    text += "* " + item + "\n"
+                text += "Please take a look."
 
-        for observer in self.observers:
-            observer.report_result(is_successful, text, no_vote=self.settings.no_vote)
+            for observer in self.observers:
+                observer.report_result(is_successful, text, no_vote=self.settings.no_vote)
 
         if self.code_report_comments:
             self.out.log("Reporting code report issues ")
