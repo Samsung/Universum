@@ -76,6 +76,7 @@ class GithubToken(Module):
     def get_token(self, installation_id):
         if self._token:
             token_age = datetime.datetime.now() - self.token_issued
+            # TODO: 'min' doesn't refer to minutes, needs to be fixed
             if token_age.min < 55:  # GitHub token lasts for one hour
                 return self._token
         self._token = self._get_token(installation_id)
@@ -91,9 +92,9 @@ class GithubTokenWithInstallation(GithubToken):
 
         parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
-                            help="GitHub installation ID identifies GitHub App issuer. Can be retrieved from "
-                                 "web-hook or obtained via REST API; in standard workflow should be "
-                                 "received from `universum githbu-handler`")
+                            help="GitHub installation ID identifies specific app installation into user account "
+                                 "or organization.. Can be retrieved from web-hook or obtained via REST API; "
+                                 "in standard workflow should be received from `universum github-handler`")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
