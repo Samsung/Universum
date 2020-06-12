@@ -75,9 +75,8 @@ class GithubToken(Module):
 
     def get_token(self, installation_id):
         if self._token:
-            token_age = datetime.datetime.now() - self.token_issued
-            # TODO: 'min' doesn't refer to minutes, needs to be fixed
-            if token_age.min < 55:  # GitHub token lasts for one hour
+            token_age = (datetime.datetime.now() - self.token_issued).total_seconds() / 60
+            if token_age < 55:  # GitHub token lasts for one hour
                 return self._token
         self._token = self._get_token(installation_id)
         self.token_issued = datetime.datetime.now()
