@@ -28,7 +28,7 @@ class GithubToken(Module):
         parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
                             help="GitHub application ID to use for check run report. Only GitHub App "
                                  "can report a check run result! If you don't have an App for reporting purposes, "
-                                 "please don't use '--report-to-review'  with GitHub")
+                                 "please don't use '--report-to-review' with GitHub")
         parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
                             help="GitHub App private key for obtaining installation authentication token. "
                                  "Pass raw key data via environment variable, or redirect key reading to stdin "
@@ -44,7 +44,7 @@ class GithubToken(Module):
                     please check your App's general settings. If not, please contact the App owner
                     for this information.
                     
-                    For security reasons, `universum github-handler` DOES NOT pass App ID to CI builds. 
+                    Please note that `universum github-handler` DOES NOT pass App ID to CI builds. 
                     Please specify the checkout id by using '--github-app-id' ('-gta')
                     command line parameter or by setting GITHUB_APP_ID environment variable.
                 """)
@@ -52,12 +52,12 @@ class GithubToken(Module):
         utils.check_required_option(self.settings, "key", """
                     GitHub App private key not specified.
 
-                    As a multiline variable, the private key cannot be passed via command line directly.
+                    As a multiline string, the private key is not very convenient to pass via command line directly.
                     Please store it in environment variable ("GITHUB_PRIVATE_KEY"), or enter through the stdin
                     (pass '-' param value for redirection), or pass a filename starting with '@' character, absolute or
                     relative starting from project root.
 
-                    For security reasons, `universum github-handler` DOES NOT pass private key to CI builds.
+                    Please note that `universum github-handler` DOES NOT pass private key to CI builds.
                 """)
 
         self.token_issued = None
@@ -93,7 +93,7 @@ class GithubTokenWithInstallation(GithubToken):
         parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
                             help="GitHub installation ID identifies specific app installation into user account "
-                                 "or organization.. Can be retrieved from web-hook or obtained via REST API; "
+                                 "or organization. Can be retrieved from web-hook or obtained via REST API; "
                                  "in standard workflow should be received from `universum github-handler`")
 
     def __init__(self, *args, **kwargs):
