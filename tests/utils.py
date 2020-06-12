@@ -6,7 +6,7 @@ import string
 import six
 from six.moves import range
 
-from universum import submit, poll, main
+from universum import submit, poll, main, github_handler
 from universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
@@ -62,6 +62,8 @@ def create_empty_settings(test_type):
         main_class = poll.Poll
     elif test_type == "submit":
         main_class = submit.Submit
+    elif test_type == "github-handler":
+        main_class = github_handler.GithubHandler
     elif test_type == "main":
         main_class = main.Main
     else:

@@ -9,6 +9,14 @@ from . import utils
 def create_settings(test_type, vcs_type):
     settings = utils.create_empty_settings(test_type)
     settings.Output.type = "term"
+    if test_type == "github-handler":
+        settings.GithubHandler.event = "event"
+        settings.GithubHandler.payload = "{}"
+        settings.GithubHandler.trigger_url = "http://example.com"
+        settings.GithubToken.integration_id = "1234"
+        settings.GithubToken.key = "/path"
+        return settings
+
     settings.ProjectDirectory.project_root = "project_root"
     settings.Vcs.type = vcs_type
 
@@ -38,6 +46,9 @@ def create_settings(test_type, vcs_type):
             settings.GitMainVcs.checkout_id = "HEAD"
             settings.GithubMainVcs.token = "some_token"
             settings.GithubMainVcs.check_id = "000000000"
+            settings.GithubToken.integration_id = "1234"
+            settings.GithubToken.key = "/path"
+            settings.GithubTokenWithInstallation.installation_id = "5678"
     elif vcs_type == "none":
         if test_type == "main":
             settings.LocalMainVcs.source_dir = "temp"
@@ -106,30 +117,38 @@ def param(test_type: str, module: str, field: str,
 
 
 # pylint: disable = bad-whitespace
-param("main",   "Launcher",             "config_path")
-param("submit", "Submit",               "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
-param("submit", "PerforceSubmitVcs",    "client",          vcs_type="p4")
-param("main",   "PerforceMainVcs",      "client",          vcs_type="p4")
-param("main",   "LocalMainVcs",         "source_dir",      vcs_type="none")
-param("submit", "GitSubmitVcs",         "user",            vcs_type=["git", "gerrit", "github"])
-param("submit", "GitSubmitVcs",         "email",           vcs_type=["git", "gerrit", "github"])
-param("main",   "TeamcityServer",       "build_id")
-param("main",   "TeamcityServer",       "configuration_id")
-param("main",   "TeamcityServer",       "server_url",      error_match="TEAMCITY_SERVER")
-param("main",   "TeamcityServer",       "user_id",         error_match="TC_USER")
-param("main",   "TeamcityServer",       "passwd",          error_match="TC_PASSWD")
-param("*",      "PerforceVcs",          "port",            vcs_type="p4")
-param("*",      "PerforceVcs",          "user",            vcs_type="p4")
-param("*",      "PerforceVcs",          "password",        vcs_type="p4")
-param("main",   "Swarm",                "server_url",      vcs_type="p4", error_match="SWARM_SERVER")
-param("main",   "Swarm",                "review_id",       vcs_type="p4", error_match="REVIEW")
-param("main",   "Swarm",                "change",          vcs_type="p4")
-param("*",      "Vcs",                  "type")
-param("*",      "GitVcs",               "repo",            vcs_type=["git", "gerrit", "github"])
-param("main",   "GitVcs",               "refspec",         vcs_type="gerrit")
-param("main",   "GitMainVcs",           "checkout_id",     vcs_type="github")
-param("main",   "GithubMainVcs",        "token",           vcs_type="github")
-param("main",   "GithubMainVcs",        "check_id",        vcs_type="github")
+param("main",           "Launcher",                     "config_path")
+param("submit",         "Submit",                       "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
+param("submit",         "PerforceSubmitVcs",            "client",          vcs_type="p4")
+param("main",           "PerforceMainVcs",              "client",          vcs_type="p4")
+param("main",           "LocalMainVcs",                 "source_dir",      vcs_type="none")
+param("submit",         "GitSubmitVcs",                 "user",            vcs_type=["git", "gerrit", "github"])
+param("submit",         "GitSubmitVcs",                 "email",           vcs_type=["git", "gerrit", "github"])
+param("main",           "TeamcityServer",               "build_id")
+param("main",           "TeamcityServer",               "configuration_id")
+param("main",           "TeamcityServer",               "server_url",      error_match="TEAMCITY_SERVER")
+param("main",           "TeamcityServer",               "user_id",         error_match="TC_USER")
+param("main",           "TeamcityServer",               "passwd",          error_match="TC_PASSWD")
+param("*",              "PerforceVcs",                  "port",            vcs_type="p4")
+param("*",              "PerforceVcs",                  "user",            vcs_type="p4")
+param("*",              "PerforceVcs",                  "password",        vcs_type="p4")
+param("main",           "Swarm",                        "server_url",      vcs_type="p4", error_match="SWARM_SERVER")
+param("main",           "Swarm",                        "review_id",       vcs_type="p4", error_match="REVIEW")
+param("main",           "Swarm",                        "change",          vcs_type="p4")
+param("*",              "Vcs",                          "type")
+param("*",              "GitVcs",                       "repo",            vcs_type=["git", "gerrit", "github"])
+param("main",           "GitVcs",                       "refspec",         vcs_type="gerrit")
+param("main",           "GitMainVcs",                   "checkout_id",     vcs_type="github")
+param("main",           "GithubMainVcs",                "check_id",        vcs_type="github")
+param("main",           "GithubToken",                  "integration_id",  vcs_type="github", error_match="GITHUB_APP_ID")
+param("github-handler", "GithubToken",                  "integration_id",  error_match="GITHUB_APP_ID")
+param("main",           "GithubToken",                  "key",             vcs_type="github")
+param("github-handler", "GithubToken",                  "key")
+param("github-handler", "GithubHandler",                "event",           error_match="GITHUB_EVENT")
+param("github-handler", "GithubHandler",                "payload",         error_match="GITHUB_PAYLOAD")
+param("github-handler", "GithubHandler",                "trigger_url")
+param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github",
+                                                                           error_match="GITHUB_INSTALLATION_ID")
 # pylint: enable = bad-whitespace
 
 

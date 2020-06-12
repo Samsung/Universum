@@ -26,18 +26,46 @@ class GithubToken(Module):
         parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
 
         parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
-                            help="GitHub application ID (real help coming soon)")
-        parser.add_argument("--github-private-key", "-gtk", dest="key_path", metavar="GITHUB_PRIVATE_KEY",
-                            help="Application private key file path")
+                            help="GitHub application ID to use for check run report. Only GitHub App "
+                                 "can report a check run result! If you don't have an App for reporting purposes, "
+                                 "please don't use '--report-to-review' with GitHub")
+        parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
+                            help="GitHub App private key for obtaining installation authentication token. "
+                                 "Pass raw key data via environment variable, or redirect key reading to stdin "
+                                 "by passing '-' as param value, or pass a file path to read the key from "
+                                 "by starting the value string with '@'. File path can be either absolute or relative")
 
     def __init__(self, *args, **kwargs):
-        # TODO: add check for parameters, rework key to curl-style variable
         super().__init__(*args, **kwargs)
+        utils.check_required_option(self.settings, "integration_id", """
+                    GitHub App ID not specified.
+
+                    Only GitHub Application owner knows this ID. If you are the App owner,
+                    please check your App's general settings. If not, please contact the App owner
+                    for this information.
+                    
+                    Please note that `universum github-handler` DOES NOT pass App ID to CI builds. 
+                    Please specify the checkout id by using '--github-app-id' ('-gta')
+                    command line parameter or by setting GITHUB_APP_ID environment variable.
+                """)
+
+        utils.check_required_option(self.settings, "key", """
+                    GitHub App private key not specified.
+
+                    As a multiline string, the private key is not very convenient to pass via command line directly.
+                    Please store it in environment variable ("GITHUB_PRIVATE_KEY"), or enter through the stdin
+                    (pass '-' param value for redirection), or pass a filename starting with '@' character, absolute or
+                    relative starting from project root.
+
+                    Please note that `universum github-handler` DOES NOT pass private key to CI builds.
+                """)
+
         self.token_issued = None
         self._token = None
 
     def _get_token(self, installation_id):
-        with open(self.settings.key_path) as f:
+        # TODO: rework key to curl-style variable
+        with open(self.settings.key) as f:
             private_key = f.read()
 
         github = utils.import_module("github")
@@ -48,6 +76,7 @@ class GithubToken(Module):
     def get_token(self, installation_id):
         if self._token:
             token_age = datetime.datetime.now() - self.token_issued
+            # TODO: 'min' doesn't refer to minutes, needs to be fixed
             if token_age.min < 55:  # GitHub token lasts for one hour
                 return self._token
         self._token = self._get_token(installation_id)
@@ -63,11 +92,23 @@ class GithubTokenWithInstallation(GithubToken):
 
         parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
-                            help="Calculated out of webhook payload (real help coming soon)")
+                            help="GitHub installation ID identifies specific app installation into user account "
+                                 "or organization. Can be retrieved from web-hook or obtained via REST API; "
+                                 "in standard workflow should be received from `universum github-handler`")
 
     def __init__(self, *args, **kwargs):
-        # TODO: add check for parameter
         super().__init__(*args, **kwargs)
+        utils.check_required_option(self.settings, "installation_id", """
+                    GitHub App installation ID not specified.
+
+                    An installation refers to any user or organization account that has installed the app.
+                    Even if someone installs the app on more than one repository, it only counts as one
+                    installation because it's within the same account.
+                    Installation ID can be retrieved via REST API or simply parsed from GitHub App web-hook.
+                    
+                    If using `universum github-handler`, installation ID is passed automatically to 
+                    GITHUB_INSTALLATION_ID environment variable.
+                """)
 
     def get_token(self, installation_id=None):
         return super().get_token(installation_id=self.settings.installation_id)
