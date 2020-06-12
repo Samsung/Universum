@@ -21,7 +21,7 @@ class GithubHandler(GithubToken):
                                      help='Currently parsed from "x-github-event" header')
         argument_parser.add_argument('--payload', '-pl', dest='payload', metavar="GITHUB_PAYLOAD",
                                      help='<actual help coming later> leave "-" to read from stdin')
-        argument_parser.add_argument('--trigger-url', '-tu', dest='trigger', metavar="TRIGGER_URL",
+        argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
                                      help='<actual help coming later> including parameters like token')
         argument_parser.add_argument('--verbose', '-v', dest='verbose', action="store_true",
                                      help='Show all params passed in URL (mostly for debug purposes)')
@@ -33,23 +33,27 @@ class GithubHandler(GithubToken):
         utils.check_required_option(self.settings, "event", """
                     GitHub web-hook event is not specified.
 
-                    Please pass 'X-GitHub-Event' header contents of incoming web-hook request to this parameter.
+                    Please pass 'X-GitHub-Event' header contents of incoming web-hook request via command line
+                    parameter '--event' ('-e') or GITHUB_EVENT environment variable.
                 """)
 
         utils.check_required_option(self.settings, "payload", """
                     GitHub web-hook payload JSON is not specified.
 
-                    Please pass incoming web-hook request payload to this parameter directly, or
-                    via file (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json'
-                    for relative path starting at current directory), or via stdin (leave '-' for redirection),
-                    or via environment variable.
+                    Please pass incoming web-hook request payload to this parameter directly via '--payload' ('-pl')
+                    command line parameter or by setting GITHUB_PAYLOAD environment variable, or by passing file path
+                    as the argument value (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json'
+                    for relative path starting at current directory), or via stdin (leave '-' valuer for redirection).
                 """)
-        utils.check_required_option(self.settings, "trigger", """
+        utils.check_required_option(self.settings, "trigger_url", """
                     CI build trigger URL is not specified.
 
                     Trigger URL is a string to be extended by parsed build parameters and used in a GET request
                     to start a CI build that can report a GitHub build check.
                     For example, 'http://jenkins.com/job/JobName/build?token=MYTOKEN'
+                    
+                    Please specify this parameter by using '--trigger-url' ('-tu')
+                    command line parameter or by setting TRIGGER_URL environment variable.
                 """)
 
     @make_block("Analysing trigger payload")
@@ -88,8 +92,8 @@ class GithubHandler(GithubToken):
                 "GITHUB_INSTALLATION_ID": payload['installation']['id'],
                 "GITHUB_PRIVATE_KEY": self.settings.key_path
             }
-            self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger, '?...')}")
-            response = requests.get(self.settings.trigger, params=param_dict)
+            self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
+            response = requests.get(self.settings.trigger_url, params=param_dict)
             if self.settings.verbose:
                 self.out.log(f"Triggered {response.url}")
             response.raise_for_status()

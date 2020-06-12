@@ -144,9 +144,9 @@ param("main",           "GithubToken",                  "integration_id",  vcs_t
 param("github-handler", "GithubToken",                  "integration_id",  error_match="GITHUB_APP_ID")
 param("main",           "GithubToken",                  "key",             vcs_type="github")
 param("github-handler", "GithubToken",                  "key")
-param("github-handler", "GithubHandler",                "event")
-param("github-handler", "GithubHandler",                "payload")
-param("github-handler", "GithubHandler",                "trigger")
+param("github-handler", "GithubHandler",                "event",           error_match="GITHUB_EVENT")
+param("github-handler", "GithubHandler",                "payload",         error_match="GITHUB_PAYLOAD")
+param("github-handler", "GithubHandler",                "trigger_url")
 param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github",
                                                                            error_match="GITHUB_INSTALLATION_ID")
 # pylint: enable = bad-whitespace
