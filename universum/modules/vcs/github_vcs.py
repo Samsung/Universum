@@ -38,13 +38,15 @@ class GithubToken(Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         utils.check_required_option(self.settings, "integration_id", """
-                    GitHub App ID ('integration_id') not specified.
+                    GitHub App ID not specified.
 
                     Only GitHub Application owner knows this ID. If you are the App owner,
                     please check your App's general settings. If not, please contact the App owner
                     for this information.
                     
-                    For security reasons, `universum github-handler` DOES NOT pass App ID to CI builds.
+                    For security reasons, `universum github-handler` DOES NOT pass App ID to CI builds. 
+                    Please specify the checkout id by using '--github-app-id' ('-gta')
+                    command line parameter or by setting GITHUB_APP_ID environment variable.
                 """)
 
         utils.check_required_option(self.settings, "key", """
@@ -101,9 +103,10 @@ class GithubTokenWithInstallation(GithubToken):
                     An installation refers to any user or organization account that has installed the app.
                     Even if someone installs the app on more than one repository, it only counts as one
                     installation because it's within the same account.
-                    'installation_id' can be retrieved via REST API or simply parsed from GitHub App web-hook.
+                    Installation ID can be retrieved via REST API or simply parsed from GitHub App web-hook.
                     
-                    If using `universum github-handler`, installation ID is passed automatically to CI builds.
+                    If using `universum github-handler`, installation ID is passed automatically to 
+                    GITHUB_INSTALLATION_ID environment variable.
                 """)
 
     def get_token(self, installation_id=None):

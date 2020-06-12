@@ -140,14 +140,15 @@ param("*",              "GitVcs",                       "repo",            vcs_t
 param("main",           "GitVcs",                       "refspec",         vcs_type="gerrit")
 param("main",           "GitMainVcs",                   "checkout_id",     vcs_type="github")
 param("main",           "GithubMainVcs",                "check_id",        vcs_type="github")
-param("main",           "GithubToken",                  "integration_id",  vcs_type="github")
-param("github-handler", "GithubToken",                  "integration_id")
+param("main",           "GithubToken",                  "integration_id",  vcs_type="github", error_match="GITHUB_APP_ID")
+param("github-handler", "GithubToken",                  "integration_id",  error_match="GITHUB_APP_ID")
 param("main",           "GithubToken",                  "key",             vcs_type="github")
 param("github-handler", "GithubToken",                  "key")
-param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github")
 param("github-handler", "GithubHandler",                "event")
 param("github-handler", "GithubHandler",                "payload")
 param("github-handler", "GithubHandler",                "trigger")
+param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github",
+                                                                           error_match="GITHUB_INSTALLATION_ID")
 # pylint: enable = bad-whitespace
 
 
