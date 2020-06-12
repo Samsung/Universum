@@ -28,12 +28,12 @@ class GithubToken(Module):
         parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
                             help="GitHub application ID to use for check run report. Only GitHub App "
                                  "can report a check run result! If you don't have an App for reporting purposes, "
-                                 "please don't use '--report-to-review'  with VCS GitHub")
+                                 "please don't use '--report-to-review'  with GitHub")
         parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
-                            help="GitHub App private key for obtaining OAuth token. Pass raw key data via "
-                                 "environment variable, or redirect key reading to stdin by passing '-' as param"
-                                 "value, or pass a file path to read the key from by starting the value srting"
-                                 "with '@'. File path can be either absolute or relative")
+                            help="GitHub App private key for obtaining installation authentication token. "
+                                 "Pass raw key data via environment variable, or redirect key reading to stdin "
+                                 "by passing '-' as param value, or pass a file path to read the key from "
+                                 "by starting the value string with '@'. File path can be either absolute or relative")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -89,7 +89,7 @@ class GithubTokenWithInstallation(GithubToken):
 
         parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
-                            help="GitHub installation ID identifies GitHub App user. Can be retrieved from "
+                            help="GitHub installation ID identifies GitHub App issuer. Can be retrieved from "
                                  "web-hook or obtained via REST API; in standard workflow should be "
                                  "received from `universum githbu-handler`")
 
