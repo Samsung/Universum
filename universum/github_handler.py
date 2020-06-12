@@ -92,9 +92,7 @@ class GithubHandler(GithubToken):
                 "GIT_CHECKOUT_ID": payload["check_run"]["head_sha"],
                 "GITHUB_CHECK_ID": payload["check_run"]["id"],
                 "GIT_REPO": payload["repository"]["clone_url"],
-                "GITHUB_APP_ID": self.settings.integration_id,
-                "GITHUB_INSTALLATION_ID": payload['installation']['id'],
-                "GITHUB_PRIVATE_KEY": self.settings.key_path
+                "GITHUB_INSTALLATION_ID": payload['installation']['id']
             }
             self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
             response = requests.get(self.settings.trigger_url, params=param_dict)
