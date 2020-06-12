@@ -18,11 +18,15 @@ class GithubHandler(GithubToken):
     @staticmethod
     def define_arguments(argument_parser):
         argument_parser.add_argument('--event', '-e', dest='event', metavar="GITHUB_EVENT",
-                                     help='Currently parsed from "x-github-event" header')
+                                     help='Currently parsed from "x-github-event" header of received web-hook')
         argument_parser.add_argument('--payload', '-pl', dest='payload', metavar="GITHUB_PAYLOAD",
-                                     help='<actual help coming later> leave "-" to read from stdin')
+                                     help='Full contents of web-hook received; leave "-" to redirect to stdin '
+                                          'or pass a JSON file path, starting it with "@" character')
         argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
-                                     help='<actual help coming later> including parameters like token')
+                                     help='URL for GET request to trigger the CI build and pass all parameters '
+                                          'parsed from payload; if any constant parameters (like token) are '
+                                          'requiered, include them in this string as well, e.g.: '
+                                          '"http://jenkins.com/job/JobName/build?token=MYTOKEN"')
         argument_parser.add_argument('--verbose', '-v', dest='verbose', action="store_true",
                                      help='Show all params passed in URL (mostly for debug purposes)')
 
