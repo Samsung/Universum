@@ -1,4 +1,5 @@
 import glob
+import importlib
 import os
 
 from .base_vcs import BaseVcs, BaseDownloadVcs
@@ -44,8 +45,8 @@ class GitVcs(BaseVcs):
 
         global git
         try:
-            git = utils.import_module("git")
-            remote = utils.import_module("remote", target_name="git.remote", path=git.__path__)
+            git = importlib.import_module("git")
+            remote = importlib.import_module("git.remote")
         except ImportError:
             text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
                    "to be installed to the system. Please refer to `Prerequisites` chapter of project " \

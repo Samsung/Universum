@@ -1,3 +1,4 @@
+import importlib
 import os
 import shutil
 import warnings
@@ -73,7 +74,7 @@ class PerforceVcs(base_vcs.BaseVcs):
             by setting P4PASSWD environment variable.""")
 
         try:
-            p4_module = utils.import_module("P4")
+            p4_module = importlib.import_module("P4")
         except ImportError:
             text = "Error: using VCS type 'p4' requires official Helix CLI and Python package 'perforce-p4python' " \
                    "to be installed. Please refer to `Prerequisites` chapter of project documentation for " \

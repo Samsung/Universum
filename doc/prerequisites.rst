@@ -33,6 +33,16 @@ Git
 * `Git` client (use ``sudo apt-get install git``)
 * :mod:`gitpython` module for Python (use ``sudo pip install gitpython``)
 
+GitHub
+......
+
+If used as GitHub Handler:
+
+* :mod:`pygithub` module for Python (use ``sudo pip install pygithub``)
+* :mod:`cffi` or :mod:`cryptography`
+
+If used as ``github`` VCS type, also includes `Git` requirements.
+
 
 Optional (used for internal tests)
 ----------------------------------

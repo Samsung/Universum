@@ -44,7 +44,6 @@ def create_settings(test_type, vcs_type):
             settings.GitSubmitVcs.email = "some@email.com"
         elif test_type == "main" and vcs_type == "github":
             settings.GitMainVcs.checkout_id = "HEAD"
-            settings.GithubMainVcs.token = "some_token"
             settings.GithubMainVcs.check_id = "000000000"
             settings.GithubToken.integration_id = "1234"
             settings.GithubToken.key = "/path"
@@ -148,7 +147,7 @@ param("github-handler", "GithubHandler",                "event",           error
 param("github-handler", "GithubHandler",                "payload",         error_match="GITHUB_PAYLOAD")
 param("github-handler", "GithubHandler",                "trigger_url")
 param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github",
-                                                                           error_match="GITHUB_INSTALLATION_ID")
+      error_match="GITHUB_INSTALLATION_ID")
 # pylint: enable = bad-whitespace
 
 
