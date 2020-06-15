@@ -1,4 +1,3 @@
-import imp
 import inspect
 import os
 import sys
@@ -18,7 +17,6 @@ __all__ = [
     "format_traceback",
     "check_required_option",
     "catch_exception",
-    "import_module",
     "trim_and_convert_to_unicode",
     "convert_to_str",
     "unify_argument_list",
@@ -109,21 +107,6 @@ def catch_exception(exception_name, ignore_if=None):
     return decorated_function
 
 
-def import_module(name, path=None, target_name=None):
-    try:
-        return sys.modules[name]
-    except KeyError:
-        filename = None
-        if not target_name:
-            target_name = name
-        try:
-            filename, pathname, description = imp.find_module(name, path)
-            return imp.load_module(target_name, filename, pathname, description)
-        finally:
-            if filename:
-                filename.close()
-
-
 def trim_and_convert_to_unicode(line):
     if isinstance(line, str):
         pass
@@ -140,7 +123,6 @@ def convert_to_str(line):
     if isinstance(line, bytes):
         return line.decode("utf8", "replace")
     return str(line)
-
 
 
 def unify_argument_list(source_list, separator=',', additional_list=None):

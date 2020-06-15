@@ -1,4 +1,5 @@
 import datetime
+import importlib
 import urllib.parse
 
 import requests
@@ -68,7 +69,14 @@ class GithubToken(Module):
         with open(self.settings.key) as f:
             private_key = f.read()
 
-        github = utils.import_module("github")
+        try:
+            github = importlib.import_module("github")
+        except ImportError:
+            text = "Error: using GitHub Handler or VCS type 'github' requires Python package 'pygithub' " \
+                   "to be installed to the system for correct GitHub App token processing. " \
+                   "Please refer to `Prerequisites` chapter of project documentation for detailed instructions"
+            raise ImportError(text)
+
         integration = github.GithubIntegration(self.settings.integration_id, private_key)
         auth_obj = integration.get_access_token(installation_id)
         return auth_obj.token

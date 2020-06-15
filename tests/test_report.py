@@ -32,6 +32,7 @@ def report_environment(tmpdir, git_client):
     yield ReportEnvironment(tmpdir, git_client)
 
 
+@pytest.mark.xfail  # Until propper mocking implemented
 def test_github_run(http_check, report_environment):
     http_check.assert_success_and_collect(__main__.run, report_environment.settings,
                                           url=report_environment.path, method="PATCH")
