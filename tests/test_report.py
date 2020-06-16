@@ -1,10 +1,9 @@
 # pylint: disable = redefined-outer-name, abstract-method
 
-import sys
-from unittest import mock
 import pytest
 
 from universum import __main__
+from universum.modules.vcs.github_vcs import GithubToken
 from . import utils
 
 
@@ -30,28 +29,15 @@ class ReportEnvironment(utils.TestEnvironment):
 
 
 @pytest.fixture()
-def mock_github_token(request):
-    try:
-        github_module = sys.modules['github']
-    except KeyError:
-        github_module = None
-
-    mocked_github = mock.MagicMock()
-    mocked_github.GithubIntegration().get_access_token().token.__radd__.return_value = 'some token'
-    sys.modules['github'] = mocked_github
-
-    yield request
-
-    if github_module:
-        sys.modules['github'] = github_module
-
-
-@pytest.fixture()
 def report_environment(tmpdir, git_client):
     yield ReportEnvironment(tmpdir, git_client)
 
 
-def test_github_run(http_check, report_environment, mock_github_token):
+def test_github_run(http_check, report_environment, monkeypatch):
+    def mock_tocken(*args, **kwargs):
+        return "this is token"
+
+    monkeypatch.setattr(GithubToken, 'get_token', mock_tocken)
     http_check.assert_success_and_collect(__main__.run, report_environment.settings,
                                           url=report_environment.path, method="PATCH")
 
