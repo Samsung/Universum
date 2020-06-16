@@ -69,6 +69,7 @@ class GithubToken(Module):
         with open(self.settings.key) as f:
             private_key = f.read()
 
+        # TODO: move import to __init__()
         try:
             github = importlib.import_module("github")
         except ImportError:
