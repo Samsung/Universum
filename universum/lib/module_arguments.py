@@ -5,6 +5,15 @@ import os
 import sys
 
 
+def multiline_argument(sting):
+    if sting.startswith('@'):
+        with open(sting.strip('@')) as file:
+            return file.read()
+    elif sting == '-':
+        return sys.stdin.read()
+    return sting
+
+
 class ModuleNamespace(argparse.Namespace):
     def __setattr__(self, name, value):
         if '.' in name:
@@ -25,7 +34,6 @@ class ModuleNamespace(argparse.Namespace):
         except KeyError:
             raise AttributeError("No attribute '" + name + "' in module arguments")
         return getattr(ns, name)
-
 
 
 # noinspection PyProtectedMember
