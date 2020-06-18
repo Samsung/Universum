@@ -27,7 +27,6 @@ class ModuleNamespace(argparse.Namespace):
         return getattr(ns, name)
 
 
-
 # noinspection PyProtectedMember
 class ModuleArgumentGroup(argparse._ArgumentGroup):
     def __init__(self, container, *args, **kwargs):
@@ -36,11 +35,14 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
 
     def _add_action(self, action):
         if action.metavar is not None:
-            if 'sphinx' in sys.modules:
-                action.help += "\n\nEnvironment variable: ${}".format(action.metavar)
-            else:
-                if not isinstance(action, argparse._SubParsersAction):
-                    action.help += " [env: {}]".format(action.metavar)
+            try:
+                if 'sphinx' in sys.modules:
+                    action.help += "\n\nEnvironment variable: ${}".format(action.metavar)
+                else:
+                    if not isinstance(action, argparse._SubParsersAction):
+                        action.help += f" [env: {action.metavar}]"
+            except TypeError:
+                action.help = f"Also available as [env: {action.metavar}]"
             default = os.environ.get(action.metavar, action.default)
 
             if isinstance(action, (argparse._AppendAction, argparse._AppendConstAction)):

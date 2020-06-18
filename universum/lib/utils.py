@@ -16,6 +16,7 @@ __all__ = [
     "create_driver",
     "format_traceback",
     "check_required_option",
+    "read_multiline_option",
     "catch_exception",
     "trim_and_convert_to_unicode",
     "convert_to_str",
@@ -87,6 +88,18 @@ def format_traceback(exc, trace):
 def check_required_option(settings, setting_name, error_message):
     if not getattr(settings, setting_name, None):
         raise IncorrectParameterError(inspect.cleandoc(error_message))
+
+
+def read_multiline_option(value):
+    if value.startswith('@'):
+        try:
+            with open(value.lstrip('@')) as file_name:
+                return file_name.read()
+        except FileNotFoundError as e:
+            raise IncorrectParameterError(str(e))
+    elif value == '-':
+        return sys.stdin.read()
+    return value
 
 
 def catch_exception(exception_name, ignore_if=None):
