@@ -5,15 +5,6 @@ import os
 import sys
 
 
-def multiline_argument(sting):
-    if sting.startswith('@'):
-        with open(sting.strip('@')) as file:
-            return file.read()
-    elif sting == '-':
-        return sys.stdin.read()
-    return sting
-
-
 class ModuleNamespace(argparse.Namespace):
     def __setattr__(self, name, value):
         if '.' in name:
@@ -48,7 +39,10 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
                 action.help += "\n\nEnvironment variable: ${}".format(action.metavar)
             else:
                 if not isinstance(action, argparse._SubParsersAction):
-                    action.help += " [env: {}]".format(action.metavar)
+                    try:
+                        action.help += f" [env: {action.metavar}]"
+                    except TypeError:
+                        action.help = f"Also available as [env: {action.metavar}]"
             default = os.environ.get(action.metavar, action.default)
 
             if isinstance(action, (argparse._AppendAction, argparse._AppendConstAction)):

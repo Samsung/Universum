@@ -1,22 +1,34 @@
-from universum.lib.module_arguments import ModuleArgumentParser, multiline_argument
+import subprocess
 
 
-def test_multiline_vars(tmp_path, monkeypatch):
+script = """
+from universum.lib.module_arguments import ModuleArgumentParser
+from universum.lib.utils import read_multiline_option
+
+parser = ModuleArgumentParser()
+# parser.add_argument('--argument', '-a', metavar='ARGUMENT')
+parser.add_argument('--argument', '-a')
+
+namespace = parser.parse_args()
+print(read_multiline_option(namespace.argument))
+"""
+
+
+def test_success_multiline_variable(tmp_path):
     text = "This is text\nwith some line breaks\n"
-    parser = ModuleArgumentParser()
-    parser.add_argument("--argument", type=multiline_argument)
 
-    # Usual value
-    namespace = parser.parse_args(["--argument", text])
-    assert namespace.argument == text
+    # Direct input
+    script_path = tmp_path / "script.py"
+    script_path.write_text(script)
+    result = subprocess.run(["python3.7", script_path, "-a", text], capture_output=True, text=True)
+    assert result.stdout[:-1] == text
 
     # File
-    tmp_file = tmp_path / "myfile.txt"
-    tmp_file.write_text(text)
-    namespace = parser.parse_args(["--argument", '@' + str(tmp_file)])
-    assert namespace.argument == text
+    var_path = tmp_path / "variable.txt"
+    var_path.write_text(text)
+    result = subprocess.run(["python3.7", script_path, "-a", '@' + str(var_path)], capture_output=True, text=True)
+    assert result.stdout[:-1] == text
 
     # Stdin
-    monkeypatch.setattr('sys.stdin.read', lambda: text)
-    namespace = parser.parse_args(["--argument", '-'])
-    assert namespace.argument == text
+    result = subprocess.run(["python3.7", script_path, "-a", '-'], capture_output=True, text=True, input=text)
+    assert result.stdout[:-1] == text
