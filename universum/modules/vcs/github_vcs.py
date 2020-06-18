@@ -207,7 +207,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
         # first line consists of commit id and commit comment, so it's skipped
         commit_files = self.repo.git.show("--name-only", "--oneline", self.settings.checkout_id).split('\n')[1:]
         comments = []
-        for path, issues in report.iteritems():
+        for path, issues in report.items():
             if path in commit_files:
                 for issue in issues:
                     comments.append(dict(path=path,
