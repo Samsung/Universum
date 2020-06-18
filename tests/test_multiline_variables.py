@@ -1,6 +1,7 @@
 import os
-import pytest
 import subprocess
+
+import pytest
 
 from universum.lib.utils import read_multiline_option
 from universum.lib.module_arguments import IncorrectParameterError
@@ -43,6 +44,6 @@ def test_multiline_variable_stdin(tmp_path):
     assert result.stdout == "\n"
 
     os.environ['ARGUMENT'] = '-'
-    result = subprocess.run(["python3.7", script_path], capture_output=True, text=True, input=text)
+    result = subprocess.run(["python3.7", script_path], capture_output=True, text=True, input=text, env=os.environ)
     assert result.stdout[:-1] == text
     del os.environ['ARGUMENT']
