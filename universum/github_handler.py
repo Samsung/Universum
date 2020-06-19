@@ -7,6 +7,7 @@ import requests
 from .modules.vcs.github_vcs import GithubToken
 from .modules.output import needs_output
 from .modules.structure_handler import needs_structure
+from .lib.module_arguments import IncorrectParameterError
 from .lib.utils import make_block
 from .lib import utils
 
@@ -41,14 +42,6 @@ class GithubHandler(GithubToken):
                     parameter '--event' ('-e') or GITHUB_EVENT environment variable.
                 """)
 
-        utils.check_required_option(self.settings, "payload", """
-                    GitHub web-hook payload JSON is not specified.
-
-                    Please pass incoming web-hook request payload to this parameter directly via '--payload' ('-pl')
-                    command line parameter or by setting GITHUB_PAYLOAD environment variable, or by passing file path
-                    as the argument value (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json'
-                    for relative path starting at current directory), or via stdin (leave '-' valuer for redirection).
-                """)
         utils.check_required_option(self.settings, "trigger_url", """
                     CI build trigger URL is not specified.
 
@@ -59,16 +52,26 @@ class GithubHandler(GithubToken):
                     Please specify this parameter by using '--trigger-url' ('-tu')
                     command line parameter or by setting TRIGGER_URL environment variable.
                 """)
+        try:
+            self.payload = utils.read_multiline_option(self.settings.payload)  # actually may throw AttributeError
+            if not self.payload:
+                raise AttributeError("Empty payload")
+        except AttributeError:
+            raise IncorrectParameterError("""
+                    GitHub web-hook payload JSON is not specified.
+
+                    Please pass incoming web-hook request payload to this parameter directly via '--payload' ('-pl')
+                    command line parameter or by setting GITHUB_PAYLOAD environment variable, or by passing file path
+                    as the argument value (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json'
+                    for relative path starting at current directory), or via stdin (leave '-' valuer for redirection).
+                """)
 
     @make_block("Analysing trigger payload")
     def execute(self):
-        # TODO: refactor to real curl-style variable with '@' adn '-' support
         # TODO: add some proper exception handling on payload contents; add tests
         # TODO: add HTTP & value error handling to avoid printing whole stacktrace
-        if self.settings.payload == '-':
-            payload = json.loads(sys.stdin.read())
-        else:
-            payload = json.loads(self.settings.payload)
+
+        payload = json.loads(self.payload)
 
         if self.settings.event == "check_suite" and (payload["action"] in ["requested", "rerequested"]):
             url = payload["repository"]["url"] + "/check-runs"
