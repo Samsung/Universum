@@ -67,6 +67,10 @@ class GithubToken(Module):
 
     def _get_token(self, installation_id):
         # TODO: move import to __init__()
+
+
+
+        # this should trigger pylint warning
         try:
             github = importlib.import_module("github")
         except ImportError:
