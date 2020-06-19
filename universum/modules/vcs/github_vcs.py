@@ -7,6 +7,7 @@ import requests
 from ...lib.gravity import Dependency
 from ...lib import utils
 from ...lib.gravity import Module
+from ...lib.module_arguments import IncorrectParameterError
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
 
@@ -50,7 +51,7 @@ class GithubToken(Module):
                     command line parameter or by setting GITHUB_APP_ID environment variable.
                 """)
 
-        utils.check_required_option(self.settings, "key", """
+        self.key = utils.read_and_check_multiline_option(self.settings, "key", """
                     GitHub App private key not specified.
 
                     As a multiline string, the private key is not very convenient to pass via command line directly.
@@ -65,10 +66,6 @@ class GithubToken(Module):
         self._token = None
 
     def _get_token(self, installation_id):
-        # TODO: rework key to curl-style variable
-        with open(self.settings.key) as f:
-            private_key = f.read()
-
         # TODO: move import to __init__()
         try:
             github = importlib.import_module("github")
@@ -78,7 +75,7 @@ class GithubToken(Module):
                    "Please refer to `Prerequisites` chapter of project documentation for detailed instructions"
             raise ImportError(text)
 
-        integration = github.GithubIntegration(self.settings.integration_id, private_key)
+        integration = github.GithubIntegration(self.settings.integration_id, self.key)
         auth_obj = integration.get_access_token(installation_id)
         return auth_obj.token
 

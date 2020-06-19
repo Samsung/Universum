@@ -16,7 +16,7 @@ __all__ = [
     "create_driver",
     "format_traceback",
     "check_required_option",
-    "read_multiline_option",
+    "read_and_check_multiline_option",
     "catch_exception",
     "trim_and_convert_to_unicode",
     "convert_to_str",
@@ -90,16 +90,26 @@ def check_required_option(settings, setting_name, error_message):
         raise IncorrectParameterError(inspect.cleandoc(error_message))
 
 
-def read_multiline_option(value):
-    if value.startswith('@'):
-        try:
-            with open(value.lstrip('@')) as file_name:
-                return file_name.read()
-        except FileNotFoundError as e:
-            raise IncorrectParameterError(str(e))
-    elif value == '-':
-        return sys.stdin.read()
-    return value
+def read_and_check_multiline_option(settings, setting_name, error_message):
+    try:
+        value = getattr(settings, setting_name, None)
+        if value.startswith('@'):
+            try:
+                with open(value.lstrip('@')) as file_name:
+                    result = file_name.read()
+            except FileNotFoundError as e:
+                raise IncorrectParameterError(f"Error reading argument {setting_name} from file {e.filename}: no such file")
+        elif value == '-':
+            result = sys.stdin.read()
+        else:
+            result = value
+    except AttributeError:
+        raise IncorrectParameterError(inspect.cleandoc(error_message))
+
+    if not result:
+        raise IncorrectParameterError(inspect.cleandoc(error_message))
+
+    return result
 
 
 def catch_exception(exception_name, ignore_if=None):
