@@ -51,12 +51,7 @@ class GithubToken(Module):
                     command line parameter or by setting GITHUB_APP_ID environment variable.
                 """)
 
-        try:
-            self.key = utils.read_multiline_option(self.settings.key)  # actually may throw AttributeError
-            if not self.key:
-                raise AttributeError("Empty key")
-        except AttributeError:
-            raise IncorrectParameterError("""
+        self.key = utils.read_and_check_multiline_option(self.settings, "key", """
                     GitHub App private key not specified.
 
                     As a multiline string, the private key is not very convenient to pass via command line directly.

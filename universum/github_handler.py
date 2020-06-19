@@ -52,12 +52,7 @@ class GithubHandler(GithubToken):
                     Please specify this parameter by using '--trigger-url' ('-tu')
                     command line parameter or by setting TRIGGER_URL environment variable.
                 """)
-        try:
-            self.payload = utils.read_multiline_option(self.settings.payload)  # actually may throw AttributeError
-            if not self.payload:
-                raise AttributeError("Empty payload")
-        except AttributeError:
-            raise IncorrectParameterError("""
+        self.payload = utils.read_and_check_multiline_option(self.settings, "payload", """
                     GitHub web-hook payload JSON is not specified.
 
                     Please pass incoming web-hook request payload to this parameter directly via '--payload' ('-pl')
