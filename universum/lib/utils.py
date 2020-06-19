@@ -92,7 +92,7 @@ def check_required_option(settings, setting_name, error_message):
 
 def read_and_check_multiline_option(settings, setting_name, error_message):
     try:
-        value = getattr(settings, setting_name)
+        value = getattr(settings, setting_name, None)
         if value.startswith('@'):
             try:
                 with open(value.lstrip('@')) as file_name:
@@ -103,9 +103,10 @@ def read_and_check_multiline_option(settings, setting_name, error_message):
             result = sys.stdin.read()
         else:
             result = value
-        if not result:
-            raise AttributeError('empty value')
     except AttributeError:
+        raise IncorrectParameterError(inspect.cleandoc(error_message))
+
+    if not result:
         raise IncorrectParameterError(inspect.cleandoc(error_message))
 
     return result
