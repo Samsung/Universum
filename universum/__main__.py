@@ -17,6 +17,7 @@ from universum.lib.utils import Uninterruptible, format_traceback
 
 
 def define_arguments():
+    # TODO: add 'prog', current usage '__main__.py' is quite misleading
     parser = ModuleArgumentParser(description=__title__ + " " + __version__)
     parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
     define_arguments_recursive(Main, parser)
