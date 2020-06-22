@@ -39,7 +39,8 @@ GitHub
 If used as GitHub Handler:
 
 * :mod:`pygithub` module for Python (use ``sudo pip install pygithub``)
-* :mod:`cffi` or :mod:`cryptography`
+* :mod:`cryptography` module for Python (use ``sudo pip install cryptography``), used by :mod:`pygithub` for
+  GitHub App token calculation
 
 If used as ``github`` VCS type, also includes `Git` requirements.
 

@@ -7,7 +7,6 @@ import requests
 from ...lib.gravity import Dependency
 from ...lib import utils
 from ...lib.gravity import Module
-from ...lib.module_arguments import IncorrectParameterError
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
 
@@ -15,6 +14,8 @@ __all__ = [
     "GithubToken",
     "GithubMainVcs"
 ]
+
+github = None
 
 
 def get_time():
@@ -62,21 +63,20 @@ class GithubToken(Module):
                     Please note that `universum github-handler` DOES NOT pass private key to CI builds.
                 """)
 
-        self.token_issued = None
-        self._token = None
-
-    def _get_token(self, installation_id):
-        # TODO: move import to __init__()
-        variable = {"This",
-            "should trigger pylint warning"}
+        global github
         try:
             github = importlib.import_module("github")
         except ImportError:
             text = "Error: using GitHub Handler or VCS type 'github' requires Python package 'pygithub' " \
                    "to be installed to the system for correct GitHub App token processing. " \
+                   "It also requires Python package 'cryptography' to be installed in addition. " \
                    "Please refer to `Prerequisites` chapter of project documentation for detailed instructions"
             raise ImportError(text)
 
+        self.token_issued = None
+        self._token = None
+
+    def _get_token(self, installation_id):
         integration = github.GithubIntegration(self.settings.integration_id, self.key)
         auth_obj = integration.get_access_token(installation_id)
         return auth_obj.token
