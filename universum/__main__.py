@@ -17,13 +17,13 @@ from universum.lib.utils import Uninterruptible, format_traceback
 
 
 def define_arguments():
-    # TODO: add 'prog', current usage '__main__.py' is quite misleading
-    parser = ModuleArgumentParser(description=__title__ + " " + __version__)
+    parser = ModuleArgumentParser(prog="python3.7 -m universum",
+                                  description=__title__ + " " + __version__)
     parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
     define_arguments_recursive(Main, parser)
 
     subparsers = parser.add_subparsers(title="Additional commands",
-                                       metavar="{poll,submit,nonci}",
+                                       metavar="{poll,submit,nonci,github-handler}",
                                        help="Use 'universum <subcommand> --help' for more info")
 
     def define_command(klass, command):
