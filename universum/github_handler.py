@@ -32,7 +32,6 @@ class GithubHandler(GithubToken):
                                      help='Show all params passed in URL (mostly for debug purposes)')
 
     def __init__(self, *args, **kwargs):
-        # TODO: add tests
         super().__init__(*args, **kwargs)
 
         utils.check_required_option(self.settings, "event", """
@@ -41,7 +40,6 @@ class GithubHandler(GithubToken):
                     Please pass 'X-GitHub-Event' header contents of incoming web-hook request via command line
                     parameter '--event' ('-e') or GITHUB_EVENT environment variable.
                 """)
-
         utils.check_required_option(self.settings, "trigger_url", """
                     CI build trigger URL is not specified.
 
