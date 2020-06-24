@@ -110,7 +110,7 @@ def test_error_github_handler_no_github_server(stdout_checker, github_handler_en
 }
 """
     assert __main__.run(github_handler_environment.settings)
-    stdout_checker.assert_has_calls_with_param(f"404 Client Error: Not Found for url: http://example.com/check-runs")
+    stdout_checker.assert_has_calls_with_param("404 Client Error: Not Found for url: http://example.com/check-runs")
 
 
 def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_environment, monkeypatch):
