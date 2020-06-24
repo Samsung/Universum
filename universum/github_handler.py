@@ -60,8 +60,6 @@ class GithubHandler(GithubToken):
 
     @make_block("Analysing trigger payload")
     def execute(self):
-        # TODO: add HTTP & value error handling to avoid printing whole stacktrace
-
         try:
             payload = json.loads(self.payload)
         except json.decoder.JSONDecodeError as error:
@@ -84,14 +82,12 @@ class GithubHandler(GithubToken):
             elif self.settings.event == "check_run" and \
                     (payload["action"] in ["requested", "rerequested", "created"]) and \
                     (str(payload["check_run"]["app"]["id"]) == str(self.settings.integration_id)):
-
-                # TODO: add parsing exception handling, add tests
                 param_dict = {
                     "GIT_REFSPEC": payload["check_run"]["check_suite"]["head_branch"],
                     "GIT_CHECKOUT_ID": payload["check_run"]["head_sha"],
                     "GITHUB_CHECK_ID": payload["check_run"]["id"],
                     "GIT_REPO": payload["repository"]["clone_url"],
-                    "GITHUB_INSTALLATION_ID": payload['installation']['id']
+                    "GITHUB_INSTALLATION_ID": payload["installation"]["id"]
                 }
                 self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
                 response = requests.get(self.settings.trigger_url, params=param_dict)
@@ -105,7 +101,9 @@ class GithubHandler(GithubToken):
         except KeyError as error:
             raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}")
         except TypeError:
-            raise CriticalCiException(f"Parsed JSON does not correspond to expected format")
+            raise CriticalCiException("Parsed payload JSON does not correspond to expected format")
+        except (requests.HTTPError, requests.ConnectionError, ValueError) as error:
+            raise CriticalCiException(f"Error opening URL, error message:\n{error}")
 
     def finalize(self):
         pass
