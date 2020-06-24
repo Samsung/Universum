@@ -28,8 +28,6 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                                     "--python-version=3.7", "--rcfile=pylintrc", "--result-file=${CODE_REPORT_FILE}",
                                     "--files", "*.py", "universum/", "tests/"]),
 
-                      dict(name="Test token re-issuing", command=["sleep", "3600"]),
-
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",
                            command=["mvn", "-B", "test"], directory="universum_log_collapser/universum_log_collapser"),
