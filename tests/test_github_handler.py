@@ -64,7 +64,7 @@ def github_handler_environment(tmpdir):
 
 @pytest.fixture(autouse=True)
 def mock_token(monkeypatch):
-    monkeypatch.setattr(GithubToken, 'get_token', lambda *args, **kwargs: "this is token")
+    monkeypatch.setattr(GithubToken, 'get_token', lambda *args, **kwargs: "TOKEN_STRING")
 
 
 def test_success_github_handler_check_suite(http_check, github_handler_environment):
@@ -72,8 +72,7 @@ def test_success_github_handler_check_suite(http_check, github_handler_environme
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_suite_payload
     http_check.assert_success_and_collect(__main__.run, github_handler_environment.settings,
                                           url=github_handler_environment.check_suite_url, method="POST")
-    http_check.assert_request_headers_contained('Accept', 'application/vnd.github.antiope-preview+json')
-    http_check.assert_request_headers_contained('Authorization', "token this is token")
+    http_check.assert_request_headers_contained('Authorization', "token TOKEN_STRING")
 
 
 def test_success_github_handler_check_run(http_check, github_handler_environment):
@@ -81,6 +80,11 @@ def test_success_github_handler_check_run(http_check, github_handler_environment
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     http_check.assert_success_and_collect(__main__.run, github_handler_environment.settings,
                                           url=github_handler_environment.check_run_url, method="GET")
+    http_check.assert_request_query_contained("GIT_REFSPEC", "check_run_check_suite_head_branch")
+    http_check.assert_request_query_contained("GIT_CHECKOUT_ID", "check_run_head_sha")
+    http_check.assert_request_query_contained("GITHUB_CHECK_ID", "check_run_id")
+    http_check.assert_request_query_contained("GIT_REPO", "repository_clone_url")
+    http_check.assert_request_query_contained("GITHUB_INSTALLATION_ID", "installation_id")
 
 
 def test_error_github_handler_not_a_json(stdout_checker, github_handler_environment):
