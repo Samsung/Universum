@@ -69,6 +69,7 @@ class GithubHandler(GithubToken):
         try:
             if self.settings.event == "check_suite" and (payload["action"] in ["requested", "rerequested"]):
                 url = payload["repository"]["url"] + "/check-runs"
+                # TODO: add parameter for check suite name
                 data = {"name": "CI tests", "head_sha": payload["check_suite"]["head_sha"]}
                 headers = {'Authorization': f"token {self.get_token(payload['installation']['id'])}",
                            'Accept': 'application/vnd.github.antiope-preview+json'}
