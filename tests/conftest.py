@@ -72,6 +72,38 @@ class HttpChecker:
             queries.append(request.querystring)
 
     @staticmethod
+    def assert_request_query_contained(key, value):
+        results = []
+        for request in httpretty.httpretty.latest_requests:
+            if key in request.querystring:
+                if value in request.querystring[key]:
+                    return
+                results.append(request.querystring[key])
+
+        if not results:
+            text = "No requests with param '{}' found in calls to http server".format(key)
+        else:
+            text = "No requests with param '{}' set to '{}' found in calls to http server.\n" \
+                   "However, requests with following values were made: {}".format(key, value, results)
+        assert False, text
+
+    @staticmethod
+    def assert_request_headers_contained(key, value):
+        results = []
+        for request in httpretty.httpretty.latest_requests:
+            if key in request.headers:
+                if request.headers[key] == value:
+                    return
+                results.append(request.headers[key])
+
+        if not results:
+            text = "No requests with header '{}' found in calls to http server".format(key)
+        else:
+            text = "No requests with header '{}' set to '{}' found in calls to http server.\n" \
+                   "However, requests with following header values were made: {}".format(key, value, results)
+        assert False, text
+
+    @staticmethod
     def assert_request_body_contained(key, value):
         results = []
         for request in httpretty.httpretty.latest_requests:
