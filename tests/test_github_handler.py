@@ -13,8 +13,8 @@ class GithubHandlerEnvironment:
         self.settings = create_empty_settings("github-handler")
         self.settings.Output.type = "term"
 
-        self.settings.GithubHandler.payload = ""
-        self.settings.GithubHandler.event = "check_suite"
+        self.settings.GithubHandler.payload = "{}"
+        self.settings.GithubHandler.event = "check_run"
         self.settings.GithubHandler.trigger_url = "http://localhost"
 
         self.settings.GithubToken.integration_id = "INTEGRATION_ID"
@@ -117,21 +117,28 @@ def test_error_github_handler_empty_json(stdout_checker, github_handler_environm
 
 
 def test_error_github_handler_json_missing_key(stdout_checker, github_handler_environment):
-    github_handler_environment.settings.GithubHandler.payload = """
-    {
-      "action": "requested",
-      "repository": {
-        "url": "http://example.com"
-      },
-      "check_suite": {
-        "head_sha": "1234"
-      }
-    }
-    """
+    github_handler_environment.settings.GithubHandler.event = "check_run"
+    fixed_payload = github_handler_environment.check_run_payload.replace('"id": "installation_id"', '')
+    github_handler_environment.settings.GithubHandler.payload = fixed_payload
     assert __main__.run(github_handler_environment.settings)
-    stdout_checker.assert_has_calls_with_param("Could not find key 'installation' in provided payload")
+    stdout_checker.assert_has_calls_with_param("Could not find key 'id' in provided payload")
 
 
+def test_error_github_handler_wrong_event(stdout_checker, github_handler_environment):
+    github_handler_environment.settings.GithubHandler.event = "unhandled_event"
+    assert not __main__.run(github_handler_environment.settings)
+    stdout_checker.assert_has_calls_with_param("Unhandled event, skipping...")
+
+
+def test_error_github_handler_wrong_app(stdout_checker, github_handler_environment):
+    github_handler_environment.settings.GithubHandler.event = "check_run"
+    fixed_payload = github_handler_environment.check_run_payload.replace('"id": "INTEGRATION_ID"', '"id": "wrong_id"')
+    github_handler_environment.settings.GithubHandler.payload = fixed_payload
+    assert not __main__.run(github_handler_environment.settings)
+    stdout_checker.assert_has_calls_with_param("Unhandled event, skipping...")
+
+
+@pytest.mark.xfail  # Until proper HTTP error handling
 def test_error_github_handler_no_github_server(stdout_checker, github_handler_environment):
     github_handler_environment.settings.GithubHandler.event = "check_suite"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_suite_payload
@@ -139,6 +146,7 @@ def test_error_github_handler_no_github_server(stdout_checker, github_handler_en
     stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")
 
 
+@pytest.mark.xfail  # Until proper HTTP error handling
 def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_environment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
