@@ -7,6 +7,23 @@ from universum.modules.vcs.github_vcs import GithubToken
 from .utils import create_empty_settings
 
 
+check_suite_payload = """
+{
+  "action": "requested",
+  "repository": {
+    "url": "http://localhost"
+  },
+  "check_suite": {
+    "head_sha": "check_suite_head_sha"
+  },
+  "installation": {
+    "id": "installation_id"
+  }
+}
+"""
+check_suite_url = "http://localhost/check-runs"
+
+
 class GithubHandlerEnvironment:
     def __init__(self, directory):
         self.temp_dir = directory
@@ -15,7 +32,7 @@ class GithubHandlerEnvironment:
 
         self.settings.GithubHandler.payload = ""
         self.settings.GithubHandler.event = "check_suite"
-        self.settings.GithubHandler.trigger_url = "http://example.com/non-existent"
+        self.settings.GithubHandler.trigger_url = "http://localhost"
 
         self.settings.GithubToken.integration_id = "1234"
         self.settings.GithubToken.key = "this is key"
@@ -31,23 +48,13 @@ def mock_token(monkeypatch):
     monkeypatch.setattr(GithubToken, 'get_token', lambda *args, **kwargs: "this is token")
 
 
-def test_success_github_handler(http_check, github_handler_environment):
-    url = "http://example.com/check-runs"
-    github_handler_environment.settings.GithubHandler.payload = """
-{
-  "action": "requested",
-  "repository": {
-    "url": "http://example.com"
-  },
-  "check_suite": {
-    "head_sha": "1234"
-  },
-  "installation": {
-    "id": "1234"
-  }
-}
-"""
-    http_check.assert_success_and_collect(__main__.run, github_handler_environment.settings, url=url, method="POST")
+def test_success_github_handler_check_suite(http_check, github_handler_environment):
+    github_handler_environment.settings.GithubHandler.event = "check_suite"
+    github_handler_environment.settings.GithubHandler.payload = check_suite_payload
+    http_check.assert_success_and_collect(__main__.run, github_handler_environment.settings,
+                                          url=check_suite_url, method="POST")
+    http_check.assert_request_headers_contained('Accept', 'application/vnd.github.antiope-preview+json')
+    http_check.assert_request_headers_contained('Authorization', "token this is token")
 
 
 def test_error_github_handler_not_a_json(stdout_checker, github_handler_environment):
@@ -92,22 +99,9 @@ def test_error_github_handler_json_missing_key(stdout_checker, github_handler_en
 
 def test_error_github_handler_no_github_server(stdout_checker, github_handler_environment):
     github_handler_environment.settings.GithubHandler.event = "check_suite"
-    github_handler_environment.settings.GithubHandler.payload = """
-{
-  "action": "requested",
-  "repository": {
-    "url": "http://example.com"
-  },
-  "check_suite": {
-    "head_sha": "1234"
-  },
-  "installation": {
-    "id": "1234"
-  }
-}
-"""
+    github_handler_environment.settings.GithubHandler.payload = check_suite_payload
     assert __main__.run(github_handler_environment.settings)
-    stdout_checker.assert_has_calls_with_param("404 Client Error: Not Found for url: http://example.com/check-runs")
+    stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")
 
 
 def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_environment):
@@ -126,7 +120,7 @@ def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_e
     "id": "0"
   },
   "repository": {
-    "clone_url": "http://example.com"
+    "clone_url": "http://localhost"
   },
   "installation": {
   "id": "123456"
@@ -134,4 +128,4 @@ def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_e
 }
 """
     assert __main__.run(github_handler_environment.settings)
-    stdout_checker.assert_has_calls_with_param("404 Client Error: Not Found for url: http://example.com/non-existent?")
+    stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")

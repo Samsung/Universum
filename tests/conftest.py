@@ -88,6 +88,22 @@ class HttpChecker:
         assert False, text
 
     @staticmethod
+    def assert_request_headers_contained(key, value):
+        results = []
+        for request in httpretty.httpretty.latest_requests:
+            if key in request.headers:
+                if request.headers[key] == value:
+                    return
+                results.append(request.headers[key])
+
+        if not results:
+            text = "No requests with header '{}' found in calls to http server".format(key)
+        else:
+            text = "No requests with header '{}' set to '{}' found in calls to http server.\n" \
+                   "However, requests with following header values were made: {}".format(key, value, results)
+        assert False, text
+
+    @staticmethod
     def assert_success_and_collect(function, params, url="https://localhost/", method="GET"):
         httpretty.reset()
         httpretty.enable()
