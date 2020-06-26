@@ -27,8 +27,10 @@ class GithubHandler(GithubToken):
                                           'parsed from payload; if any constant parameters (like token) are '
                                           'requiered, include them in this string as well, e.g.: '
                                           '"http://jenkins.com/job/JobName/build?token=MYTOKEN"')
-        argument_parser.add_argument('--suite-name', '-s', dest='suite_name', metavar="SUITE_NAME", default="CI tests",
+        argument_parser.add_argument('--suite-name', '-sn', dest='suite_name', metavar="SUITE_NAME", default="CI tests",
                                      help='GitHub check suite name, default is "CI tests"')
+        argument_parser.add_argument('--target-repo', '-tr', dest='target_repo', metavar="TARGET_REPO",
+                                     help='Repository name to process; leave blank to process any repo')
         argument_parser.add_argument('--verbose', '-v', dest='verbose', action="store_true",
                                      help='Show all params passed in URL (mostly for debug purposes)')
 
@@ -69,6 +71,14 @@ class GithubHandler(GithubToken):
             raise CriticalCiException(text)
 
         try:
+            if self.settings.target_repo:
+                parsed_repo = payload['repository']['full_name']
+                if parsed_repo != self.settings.target_repo:
+                    text = f"This payload has come from '{parsed_repo}' repository, while due to parameter passed to "
+                    text += f" '--target-repo' only '{self.settings.target_repo}' repository is handled. Skipping..."
+                    self.out.log(text)
+                    return
+
             if self.settings.event == "check_suite" and (payload["action"] in ["requested", "rerequested"]):
                 url = payload["repository"]["url"] + "/check-runs"
                 data = {"name": self.settings.suite_name, "head_sha": payload["check_suite"]["head_sha"]}
