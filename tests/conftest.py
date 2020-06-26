@@ -51,73 +51,69 @@ def log_exception_checker(request):
 
 
 class HttpChecker:
+
     @staticmethod
-    def assert_request_was_made(query):
+    def assert_request_with_query(query, ensure):
         queries = []
         for request in httpretty.httpretty.latest_requests:
             if request.querystring == query:
-                return
+                if ensure:
+                    return
+                else:
+                    assert False, 'Query string was found in calls to http server.\n' \
+                                  'Expected: %s\nActual: %r' % (query, queries)
             queries.append(request.querystring)
 
-        assert False, 'Query string is not found in calls to http server.\n' \
-                      'Expected: %s\nActual: %r' % (query, queries)
+        if ensure:
+            assert False, 'Query string is not found in calls to http server.\n' \
+                          'Expected: %s\nActual: %r' % (query, queries)
+
+    @staticmethod
+    def assert_request_was_made(query):
+        HttpChecker.assert_request_with_query(query, ensure=True)
 
     @staticmethod
     def assert_request_was_not_made(query):
-        queries = []
+        HttpChecker.assert_request_with_query(query, ensure=False)
+
+    @staticmethod
+    def assert_request_contained(key, value, target):
+        results = []
         for request in httpretty.httpretty.latest_requests:
-            if request.querystring == query:
-                assert False, 'Query string was found in calls to http server.' \
-                              '\nExpected: %s\nActual: %r' % (query, queries)
-            queries.append(request.querystring)
+            if target == "query param":
+                check_target = request.querystring
+            elif target == "header":
+                check_target = request.headers
+            elif target == "body field":
+                check_target = request.parsed_body
+            else:
+                assert False, f"This type of check ('{target}') is not implemented"
+
+            if key in check_target:
+                if (target == "query param") and value in (check_target[key]):
+                    return
+                elif check_target[key] == value:
+                    return
+                results.append(check_target[key])
+
+        if not results:
+            text = f"No requests with {target} '{key}' found in calls to http server"
+        else:
+            text = f"No requests with {target} '{key}' set to '{value}' found in calls to http server.\n"
+            text += f"However, requests with following values were made: {results}"
+        assert False, text
 
     @staticmethod
     def assert_request_query_contained(key, value):
-        results = []
-        for request in httpretty.httpretty.latest_requests:
-            if key in request.querystring:
-                if value in request.querystring[key]:
-                    return
-                results.append(request.querystring[key])
-
-        if not results:
-            text = "No requests with param '{}' found in calls to http server".format(key)
-        else:
-            text = "No requests with param '{}' set to '{}' found in calls to http server.\n" \
-                   "However, requests with following values were made: {}".format(key, value, results)
-        assert False, text
+        HttpChecker.assert_request_contained(key, value, "query param")
 
     @staticmethod
     def assert_request_headers_contained(key, value):
-        results = []
-        for request in httpretty.httpretty.latest_requests:
-            if key in request.headers:
-                if request.headers[key] == value:
-                    return
-                results.append(request.headers[key])
-
-        if not results:
-            text = "No requests with header '{}' found in calls to http server".format(key)
-        else:
-            text = "No requests with header '{}' set to '{}' found in calls to http server.\n" \
-                   "However, requests with following header values were made: {}".format(key, value, results)
-        assert False, text
+        HttpChecker.assert_request_contained(key, value, "header")
 
     @staticmethod
     def assert_request_body_contained(key, value):
-        results = []
-        for request in httpretty.httpretty.latest_requests:
-            if key in request.parsed_body:
-                if request.parsed_body[key] == value:
-                    return
-                results.append(request.parsed_body[key])
-
-        if not results:
-            text = "No requests with field '{}' found in calls to http server".format(key)
-        else:
-            text = "No requests with field '{}' set to '{}' found in calls to http server.\n" \
-                   "However, requests with following values were made: {}".format(key, value, results)
-        assert False, text
+        HttpChecker.assert_request_contained(key, value, "body field")
 
     @staticmethod
     def assert_and_collect(function, params, url, method, result, status):
