@@ -59,8 +59,7 @@ class HttpChecker:
             if request.querystring == query:
                 if ensure:
                     return
-                else:
-                    assert False, 'Query string was found in calls to http server.\n' \
+                assert False, 'Query string was found in calls to http server.\n' \
                                   'Expected: %s\nActual: %r' % (query, queries)
             queries.append(request.querystring)
 
@@ -90,9 +89,9 @@ class HttpChecker:
                 assert False, f"This type of check ('{target}') is not implemented"
 
             if key in check_target:
-                if (target == "query param") and value in (check_target[key]):
+                if (target == "query param") and (value in check_target[key]):
                     return
-                elif check_target[key] == value:
+                if check_target[key] == value:
                     return
                 results.append(check_target[key])
 
