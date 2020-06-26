@@ -136,6 +136,23 @@ class HttpChecker:
         finally:
             httpretty.disable()
 
+    @staticmethod
+    def assert_404_and_collect(function, params, url="https://localhost/", method="GET"):
+        httpretty.reset()
+        httpretty.enable()
+        if method == "GET":
+            hmethod = httpretty.GET
+        elif method == "POST":
+            hmethod = httpretty.POST
+        else:
+            hmethod = httpretty.PATCH
+        httpretty.register_uri(hmethod, url, status="404")
+
+        try:
+            assert function(params) != 0
+        finally:
+            httpretty.disable()
+
 
 @pytest.fixture()
 def http_check(request):

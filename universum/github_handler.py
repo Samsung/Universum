@@ -104,7 +104,8 @@ class GithubHandler(GithubToken):
             raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}")
         except TypeError:
             raise CriticalCiException("Parsed payload JSON does not correspond to expected format")
-        # TODO: add proper HTTP error handling
+        except requests.RequestException as error:
+            raise CriticalCiException(f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}")
 
     def finalize(self):
         pass
