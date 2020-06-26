@@ -27,6 +27,8 @@ class GithubHandler(GithubToken):
                                           'parsed from payload; if any constant parameters (like token) are '
                                           'requiered, include them in this string as well, e.g.: '
                                           '"http://jenkins.com/job/JobName/build?token=MYTOKEN"')
+        argument_parser.add_argument('--suite-name', '-s', dest='suite_name', metavar="SUITE_NAME", default="CI tests",
+                                     help='GitHub check suite name, default is "CI tests"')
         argument_parser.add_argument('--verbose', '-v', dest='verbose', action="store_true",
                                      help='Show all params passed in URL (mostly for debug purposes)')
 
@@ -69,8 +71,7 @@ class GithubHandler(GithubToken):
         try:
             if self.settings.event == "check_suite" and (payload["action"] in ["requested", "rerequested"]):
                 url = payload["repository"]["url"] + "/check-runs"
-                # TODO: add parameter for check suite name
-                data = {"name": "CI tests", "head_sha": payload["check_suite"]["head_sha"]}
+                data = {"name": self.settings.suite_name, "head_sha": payload["check_suite"]["head_sha"]}
                 headers = {'Authorization': f"token {self.get_token(payload['installation']['id'])}",
                            'Accept': 'application/vnd.github.antiope-preview+json'}
                 self.out.log(f"Sending request to {url}")
