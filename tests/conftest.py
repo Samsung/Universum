@@ -120,7 +120,7 @@ class HttpChecker:
         assert False, text
 
     @staticmethod
-    def assert_success_and_collect(function, params, url="https://localhost/", method="GET"):
+    def assert_and_collect(function, params, url, method, result, status):
         httpretty.reset()
         httpretty.enable()
         if method == "GET":
@@ -129,29 +129,20 @@ class HttpChecker:
             hmethod = httpretty.POST
         else:
             hmethod = httpretty.PATCH
-        httpretty.register_uri(hmethod, url)
+        httpretty.register_uri(hmethod, url, status=status)
 
         try:
-            assert function(params) == 0
+            assert function(params) == result
         finally:
             httpretty.disable()
 
     @staticmethod
-    def assert_404_and_collect(function, params, url="https://localhost/", method="GET"):
-        httpretty.reset()
-        httpretty.enable()
-        if method == "GET":
-            hmethod = httpretty.GET
-        elif method == "POST":
-            hmethod = httpretty.POST
-        else:
-            hmethod = httpretty.PATCH
-        httpretty.register_uri(hmethod, url, status="404")
+    def assert_success_and_collect(function, params, url="https://localhost/", method="GET"):
+        HttpChecker.assert_and_collect(function, params, url, method, result=0, status='200')
 
-        try:
-            assert function(params) != 0
-        finally:
-            httpretty.disable()
+    @staticmethod
+    def assert_404_and_collect(function, params, url="https://localhost/", method="GET"):
+        HttpChecker.assert_and_collect(function, params, url, method, result=1, status='404')
 
 
 @pytest.fixture()
