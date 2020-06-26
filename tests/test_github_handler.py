@@ -138,7 +138,6 @@ def test_error_github_handler_wrong_app(stdout_checker, github_handler_environme
     stdout_checker.assert_has_calls_with_param("Unhandled event, skipping...")
 
 
-@pytest.mark.xfail  # Until proper HTTP error handling
 def test_error_github_handler_no_github_server(stdout_checker, github_handler_environment):
     github_handler_environment.settings.GithubHandler.event = "check_suite"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_suite_payload
@@ -146,9 +145,24 @@ def test_error_github_handler_no_github_server(stdout_checker, github_handler_en
     stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")
 
 
-@pytest.mark.xfail  # Until proper HTTP error handling
 def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_environment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     assert universum.run(github_handler_environment.settings)
     stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")
+
+
+def test_error_github_handler_wrong_schema(stdout_checker, github_handler_environment):
+    github_handler_environment.settings.GithubHandler.event = "check_run"
+    github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
+    github_handler_environment.settings.GithubHandler.trigger_url = "htttttp://localhost"
+    assert universum.run(github_handler_environment.settings)
+    stdout_checker.assert_has_calls_with_param("No connection adapters were found for 'htttttp://localhost'")
+
+
+def test_error_github_handler_404(http_check, stdout_checker, github_handler_environment):
+    github_handler_environment.settings.GithubHandler.event = "check_run"
+    github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
+    url = github_handler_environment.check_run_url
+    http_check.assert_404_and_collect(universum.run, github_handler_environment.settings, url=url, method="GET")
+    stdout_checker.assert_has_calls_with_param(f"404 Client Error: Not Found for url: {url}")

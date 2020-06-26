@@ -36,8 +36,8 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
         self.out.log("Triggering url %s" % processed_url)
         try:
             requests.get(processed_url)
-        except (requests.HTTPError, requests.ConnectionError, ValueError) as e:
-            raise CriticalCiException(f"Error opening URL, error message {e}")
+        except requests.RequestException as error:
+            raise CriticalCiException(f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}")
 
 
 class JenkinsServerForHostingBuild(BaseServerForHostingBuild):
