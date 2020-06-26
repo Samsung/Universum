@@ -74,7 +74,9 @@ class GithubHandler(GithubToken):
             if self.settings.target_repo:
                 parsed_repo = payload['repository']['full_name']
                 if parsed_repo != self.settings.target_repo:
-                    self.out.log(f"This payload has come from '{parsed_repo}' repository. Skipping...")
+                    text = f"This payload has come from '{parsed_repo}' repository, while due to parameter passed to "
+                    text += f" '--target-repo' only '{self.settings.target_repo}' repository is handled. Skipping..."
+                    self.out.log()
                     return
 
             if self.settings.event == "check_suite" and (payload["action"] in ["requested", "rerequested"]):
