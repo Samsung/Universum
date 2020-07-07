@@ -223,15 +223,20 @@ class UniversumRunner:
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
             additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
 
-        if utils.is_pycharm():
-            cmd = "{0}/universum/__main__.py".format(self.working_dir)
-        else:
-            cmd = "coverage run --branch --append --source='{0}' '{0}/universum/__main__.py'" \
-                .format(self.working_dir)
-
-        # We cannot collect coverage from installed module, so we run it only if specifically told so
+        # workdir is ignored unless force_installed;
+        # if installed to make sure local sources are not used by default the directory is changed
         if force_installed:
+            if not workdir:
+                workdir = os.path.join(self.working_dir, "another_directory")
+                os.makedirs(workdir, exist_ok=True)
+        else:
+            workdir = self.working_dir
+
+        # We cannot collect coverage from installed module
+        if utils.is_pycharm() or force_installed:
             cmd = "python3.7 -m universum"
+        else:
+            cmd = f"coverage run --branch --append --source='.' 'python3.7 -m universum'"
 
         if self.nonci:
             cmd += ' nonci'

@@ -1,19 +1,17 @@
-#!/usr/bin/env python3.7
-
 import signal
 import sys
 
-from universum import __version__, __title__
-from universum.api import Api
-from universum.main import Main
-from universum.github_handler import GithubHandler
-from universum.nonci import Nonci
-from universum.poll import Poll
-from universum.submit import Submit
-from universum.lib.ci_exception import SilentAbortException
-from universum.lib.gravity import define_arguments_recursive, construct_component
-from universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
-from universum.lib.utils import Uninterruptible, format_traceback
+from . import __version__, __title__
+from .api import Api
+from .main import Main
+from .github_handler import GithubHandler
+from .nonci import Nonci
+from .poll import Poll
+from .submit import Submit
+from .lib.ci_exception import SilentAbortException
+from .lib.gravity import define_arguments_recursive, construct_component
+from .lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
+from .lib.utils import Uninterruptible, format_traceback
 
 
 def define_arguments():

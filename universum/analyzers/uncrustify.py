@@ -5,7 +5,6 @@ import os
 
 import re
 import sh
-from six.moves import zip
 
 from . import utils
 
@@ -15,8 +14,7 @@ MAX_LINES = 11
 
 
 def replace_invisible_symbols(line):
-    for old_str, new_str in zip([u" ", u"\t", u"\n"],
-                                [u"\u00b7", u"\u2192\u2192\u2192\u2192", u"\u2193\u000a"]):
+    for old_str, new_str in zip([u" ", u"\t", u"\n"], [u"\u00b7", u"\u2192\u2192\u2192\u2192", u"\u2193\u000a"]):
         return line.replace(old_str, new_str)
 
 
