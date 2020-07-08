@@ -77,7 +77,7 @@ from universum.configuration_support import Variations
 configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       dict(name="Good bg step", command=["touch", "file"],
                       background=True, artifacts="file")])
-""")
+""", force_installed=docker_main_and_nonci.nonci)
     assert "All ongoing background steps completed" in log
     artifacts_must_collect = not docker_main_and_nonci.nonci
     assert artifacts_must_collect == os.path.exists(
