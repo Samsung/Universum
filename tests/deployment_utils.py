@@ -236,7 +236,7 @@ class UniversumRunner:
         if utils.is_pycharm() or force_installed:
             cmd = "python3.7 -m universum"
         else:
-            cmd = f"coverage run --branch --append --source='.' 'python3.7 -m universum'"
+            cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
         if self.nonci:
             cmd += ' nonci'
