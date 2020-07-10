@@ -1,4 +1,5 @@
 import inspect
+import os
 import re
 from typing import List
 
@@ -76,3 +77,18 @@ def test_pylint_analyzer_wrong_params(runner_with_pylint, args, expected_log):
     log = runner_with_pylint.run(get_config(args))
     assert re.findall(r'Run static pylint - [^\n]*Failed', log)
     assert expected_log in log
+
+
+def test_code_report_extended_arg_search(runner_with_pylint):
+    runner_with_pylint.local.root_directory.join("source_file.py").write(source_code + '\n')
+    config = """
+from universum.configuration_support import Variations
+
+configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${CODE_REPORT_FILE}", command=[
+    'bash', '-c',
+    'python3.7 -m universum.analyzers.pylint --result-file ${CODE_REPORT_FILE} --python-version=3 --files source_file.py'
+])])"""
+
+    log = runner_with_pylint.run(config)
+    assert re.findall(log_fail, log)
+    assert os.path.exists(os.path.join(runner_with_pylint.artifact_dir, "Run_static_pylint.json"))

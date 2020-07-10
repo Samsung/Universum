@@ -39,13 +39,22 @@ class CodeReportCollector(ProjectDirectory):
                 continue
 
             self.set_code_report_directory(self.settings.project_root)
-
             temp_filename = "${CODE_REPORT_FILE}"
-            for enum, i in enumerate(item["command"]):
-                if temp_filename in i:
-                    name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
-                    actual_filename = os.path.join(self.report_path, name)
-                    item["command"][enum] = item["command"][enum].replace(temp_filename, actual_filename)
+            name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
+            actual_filename = os.path.join(self.report_path, name)
+
+            for key in item:
+                if key == "command":
+                    for enum, i in enumerate(item[key]):
+                        if temp_filename in i:
+                            item[key][enum] = item[key][enum].replace(temp_filename, actual_filename)
+                else:
+                    try:
+                        if temp_filename in item[key]:
+                            item[key] = item[key].replace(temp_filename, actual_filename)
+                    except TypeError as error:
+                        if "is not iterable" not in str(error):
+                            raise
 
             afterall_item = deepcopy(item)
             afterall_steps.append(afterall_item)
