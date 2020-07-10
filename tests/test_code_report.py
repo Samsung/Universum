@@ -86,7 +86,7 @@ from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${CODE_REPORT_FILE}", command=[
     'bash', '-c',
-    'python3.7 -m universum.analyzers.pylint --result-file ${CODE_REPORT_FILE} --python-version=3 --files source_file.py'
+    'python3.7 -m universum.analyzers.pylint --result-file=\"${CODE_REPORT_FILE}\" --python-version=3 --files source_file.py'
 ])])"""
 
     log = runner_with_pylint.run(config)
