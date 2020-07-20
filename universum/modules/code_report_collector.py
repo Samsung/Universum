@@ -45,15 +45,12 @@ class CodeReportCollector(ProjectDirectory):
 
             for key in item:
                 if key == "command":
-                    for enum, i in enumerate(item[key]):
-                        if temp_filename in i:
-                            item[key][enum] = item[key][enum].replace(temp_filename, actual_filename)
+                    item[key] = [word.replace(temp_filename, actual_filename) for word in item[key]]
                 else:
                     try:
-                        if temp_filename in item[key]:
-                            item[key] = item[key].replace(temp_filename, actual_filename)
-                    except TypeError as error:
-                        if "is not iterable" not in str(error):
+                        item[key] = item[key].replace(temp_filename, actual_filename)
+                    except AttributeError as error:
+                        if "object has no attribute 'replace'" not in str(error):
                             raise
 
             afterall_item = deepcopy(item)
