@@ -223,10 +223,16 @@ class UniversumRunner:
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
             additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
 
-        # workdir is ignored unless force_installed;
-        # if installed to make sure local sources are not used by default the directory is changed
+        # as nonci changes workdir to project root, Universum is always an external moudule
+        # therefore for nonci it should always be installed to system
+        if self.nonci:
+            force_installed = True
+
+        # workdir is ignored unless force_installed is True
         if force_installed:
             if not workdir:
+                # when run from directory containing Universum sources, installed module will not be used
+                # therefore directory should be changed to any other to make sure 'python -m universum' still works
                 workdir = os.path.join(self.working_dir, "another_directory")
                 os.makedirs(workdir, exist_ok=True)
         else:
