@@ -1,3 +1,4 @@
+import inspect
 import os
 import pickle
 import tempfile
@@ -15,7 +16,13 @@ class ApiSupport(Module):
 
         if api_mode:
             if "UNIVERSUM_DATA_FILE" not in os.environ:
-                raise EnvironmentError("Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment")
+                text = """Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment
+                
+                This command is intended to be run from within Universum run (e.g. as a separate step
+                in project config file). If you got this message by running it from command line:
+                please don't. If you got this message by running it with Universum: something must
+                have gone wrong, may be a bug in Universum itself. Feel free to contact the developers"""
+                raise EnvironmentError(inspect.cleandoc(text))
             with open(os.getenv("UNIVERSUM_DATA_FILE"), "rb+") as data_file:
                 self.data = pickle.load(data_file)
         else:
