@@ -89,13 +89,13 @@ class PerforceVcs(base_vcs.BaseVcs):
     @make_block("Connecting")
     @catch_p4exception()
     def connect(self):
-        if not self.p4.connected():
-            self.p4.port = self.settings.port
-            self.p4.user = self.settings.user
-            self.p4.password = self.settings.password
+        self.disconnect()
+        self.p4.port = self.settings.port
+        self.p4.user = self.settings.user
+        self.p4.password = self.settings.password
 
-            self.p4.connect()
-            self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
+        self.p4.connect()
+        self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     @make_block("Disconnecting")
     def disconnect(self):
@@ -103,14 +103,12 @@ class PerforceVcs(base_vcs.BaseVcs):
             self.p4.disconnect()
             if not w:
                 return
-            if "Not connected" in str(w[0].message):
-                text = "Perforce client is not connected on disconnect. Something must have gone wrong"
-                self.structure.fail_current_block(text)
-            else:
-                text = ""
-                for line in w:
-                    text += "\n" + warnings.formatwarning(line.message, line.category, line.filename, line.lineno)
-                self.structure.fail_current_block("Unexpected warning(s): " + text)
+            if "Not connected" in str(w[0].message):  # We consider it ok for a session to expire or not be created yet
+                return
+            text = ""
+            for line in w:
+                text += "\n" + warnings.formatwarning(line.message, line.category, line.filename, line.lineno)
+            self.structure.fail_current_block("Unexpected warning(s): " + text)
             raise SilentAbortException()
 
     def finalize(self):
