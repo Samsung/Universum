@@ -4,7 +4,7 @@ from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
 from .output import needs_output
-
+from typing import List, Optional
 __all__ = [
     "needs_structure"
 ]
@@ -51,15 +51,15 @@ class Block:
     True
     """
 
-    def __init__(self, name: str, parent: 'Block' = None):
-        self.name = name
-        self.status = "Success"
-        self.children = []
+    def __init__(self, name: str, parent: Optional[Block] = None):
+        self.name: str = name
+        self.status: str = "Success"
+        self.children: List[Block] = []
 
-        self._parent = parent
-        self.number = ''
-        if self.parent:
-            self.parent.children.append(self)
+        self._parent: Optional[Block] = parent
+        self.number: str = ''
+        if parent:
+            parent.children.append(self)
             self.number = '{}{}.'.format(parent.number, len(parent.children))
 
     def __str__(self) -> str:
@@ -67,7 +67,7 @@ class Block:
         return '{} - {}'.format(result, self.status) if not self.children else result
 
     @property  # getter
-    def parent(self) -> 'Block':
+    def parent(self) -> Optional[Block]:
         return self._parent
 
     def is_successful(self) -> bool:
@@ -78,11 +78,10 @@ class Block:
 class StructureHandler(Module):
     def __init__(self, *args, **kwargs):
         super(StructureHandler, self).__init__(*args, **kwargs)
-        block_structure = Block("Universum")
-        self.current_block = block_structure
-        self.configs_current_number = 0
-        self.configs_total_count = 0
-        self.active_background_steps = []
+        self.current_block: Block = Block("Universum")
+        self.configs_current_number: int = 0
+        self.configs_total_count: int = 0
+        self.active_background_steps: List[Callable[[Any], Any]] = []
 
     def open_block(self, name):
         new_block = Block(name, self.current_block)

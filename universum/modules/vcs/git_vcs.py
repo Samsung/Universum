@@ -2,7 +2,7 @@ import glob
 import importlib
 import os
 
-from .base_vcs import BaseVcs, BaseDownloadVcs
+from .base_vcs import BaseVcs, BaseDownloadVcs, BasePollVcs, BaseSubmitVcs
 from ..output import needs_output
 from ..structure_handler import needs_structure
 from ...lib import utils
@@ -196,7 +196,7 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
 
 
 @needs_output
-class GitSubmitVcs(GitVcs):
+class GitSubmitVcs(GitVcs, BaseSubmitVcs):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git")
@@ -304,7 +304,7 @@ class GitSubmitVcs(GitVcs):
         return change
 
 
-class GitPollVcs(GitVcs):
+class GitPollVcs(GitVcs, BasePollVcs):
     def get_changes(self, changes_reference=None, max_number='1'):
         self.clone_and_fetch()
         if not changes_reference:
