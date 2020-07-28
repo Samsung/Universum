@@ -97,9 +97,9 @@ class TestEnvironment:
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = six.text_type(self.vcs_cooking_dir)
         elif test_type == "main":
-            configs_file = self.temp_dir.join("configs.py")
-            configs_file.write(simple_test_config)
-            self.settings.Launcher.config_path = six.text_type(configs_file)
+            self.configs_file = self.temp_dir.join("configs.py")
+            self.configs_file.write(simple_test_config)
+            self.settings.Launcher.config_path = six.text_type(self.configs_file)
             self.settings.ArtifactCollector.artifact_dir = six.text_type(self.temp_dir.mkdir("artifacts"))
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = six.text_type(self.temp_dir.join("project_root"))

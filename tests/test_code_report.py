@@ -5,6 +5,9 @@ from typing import List
 
 import pytest
 
+from universum import __main__
+from . import utils
+
 
 @pytest.fixture(name='runner_with_pylint')
 def fixture_runner_with_pylint(docker_main):
@@ -79,16 +82,27 @@ def test_pylint_analyzer_wrong_params(runner_with_pylint, args, expected_log):
     assert expected_log in log
 
 
-def test_code_report_extended_arg_search(runner_with_pylint):
-    runner_with_pylint.local.root_directory.join("source_file.py").write(source_code + '\n')
+def test_code_report_extended_arg_search(tmpdir, stdout_checker):
+    env = utils.TestEnvironment(tmpdir, "main")
+    env.settings.Vcs.type = "none"
+    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+    env.settings.Main.no_diff = True  # TODO: remove when issue #477 is fixed
+
+    tmpdir.join("source_file.py").write(source_code + '\n')
+
     config = """
 from universum.configuration_support import Variations
 
-configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${CODE_REPORT_FILE}", command=[
+configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${{CODE_REPORT_FILE}}", command=[
     'bash', '-c',
-    'python3.7 -m universum.analyzers.pylint --result-file=\"${CODE_REPORT_FILE}\" --python-version=3 --files source_file.py'
+    'cd {0} && python3.7 -m universum.analyzers.pylint --result-file=\"${{CODE_REPORT_FILE}}\" --python-version=3 \
+--files {1}/source_file.py'
 ])])"""
 
-    log = runner_with_pylint.run(config)
-    assert re.findall(log_fail, log)
-    assert os.path.exists(os.path.join(runner_with_pylint.artifact_dir, "Run_static_pylint.json"))
+    env.configs_file.write(config.format(os.getcwd(), str(tmpdir)))
+
+    res = __main__.run(env.settings)
+
+    assert res == 0
+    stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
+    assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
