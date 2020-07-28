@@ -1,8 +1,12 @@
 import inspect
+import os
 import re
 from typing import List
 
 import pytest
+
+from universum import __main__
+from . import utils
 
 
 @pytest.fixture(name='runner_with_pylint')
@@ -76,3 +80,29 @@ def test_pylint_analyzer_wrong_params(runner_with_pylint, args, expected_log):
     log = runner_with_pylint.run(get_config(args))
     assert re.findall(r'Run static pylint - [^\n]*Failed', log)
     assert expected_log in log
+
+
+def test_code_report_extended_arg_search(tmpdir, stdout_checker):
+    env = utils.TestEnvironment(tmpdir, "main")
+    env.settings.Vcs.type = "none"
+    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+    env.settings.Main.no_diff = True  # TODO: remove when issue #477 is fixed
+
+    tmpdir.join("source_file.py").write(source_code + '\n')
+
+    config = """
+from universum.configuration_support import Variations
+
+configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${{CODE_REPORT_FILE}}", command=[
+    'bash', '-c',
+    'cd \"{0}\" && python3.7 -m universum.analyzers.pylint --result-file=\"${{CODE_REPORT_FILE}}\" --python-version=3 \
+--files {1}/source_file.py'
+])])"""
+
+    env.configs_file.write(config.format(os.getcwd(), str(tmpdir)))
+
+    res = __main__.run(env.settings)
+
+    assert res == 0
+    stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
+    assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))

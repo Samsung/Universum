@@ -1,6 +1,8 @@
 # pylint: disable = redefined-outer-name
 
+import re
 from unittest import mock
+
 import httpretty
 import pytest
 
@@ -14,26 +16,34 @@ class FuzzyCallChecker:
     def _assertion_message(self, string_to_find):
         return '\nExpected param: %s\nActual list: %r' % (string_to_find, self.mock_object.mock_calls)
 
-    def _find_call_with_param(self, string_param):
+    def _find_call_with_param(self, pattern_to_search, is_regexp):
+        if is_regexp:
+            regexp = re.compile(pattern_to_search)
+
         for call in self.mock_object.mock_calls:
             _, args, _ = call
             for arg in args:
-                if string_param in arg:
-                    return True
+                if is_regexp:
+                    if regexp.search(arg) is not None:
+                        return True
+                else:
+                    if pattern_to_search in arg:
+                        return True
         # return explicit False
         return False
 
     def reset(self):
         self.mock_object.reset_mock()
 
-    def assert_has_calls_with_param(self, string_param):
-        assert self._find_call_with_param(string_param), 'String parameter is not found in call list. %s' \
-                                                         % (self._assertion_message(string_param))
+    def assert_has_calls_with_param(self, pattern_to_search, is_regexp=False):
+        assert self._find_call_with_param(pattern_to_search, is_regexp), \
+            'Pattern is not found in call list. ' + \
+            self._assertion_message(pattern_to_search)
 
-    def assert_absent_calls_with_param(self, string_param):
-        assert not self._find_call_with_param(string_param), 'String parameter is found in call list, ' \
-                                                             'but is not expected to be found.%s' \
-                                                             % (self._assertion_message(string_param))
+    def assert_absent_calls_with_param(self, pattern_to_search, is_regexp=False):
+        assert not self._find_call_with_param(pattern_to_search, is_regexp), \
+            'Pattern is found in call list, but is not expected to be found. ' + \
+            self._assertion_message(pattern_to_search)
 
 
 @pytest.fixture()
@@ -60,7 +70,7 @@ class HttpChecker:
                 if ensure:
                     return
                 assert False, 'Query string was found in calls to http server.\n' \
-                                  'Expected: %s\nActual: %r' % (query, queries)
+                              'Expected: %s\nActual: %r' % (query, queries)
             queries.append(request.querystring)
 
         if ensure:

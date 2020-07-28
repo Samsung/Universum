@@ -39,13 +39,19 @@ class CodeReportCollector(ProjectDirectory):
                 continue
 
             self.set_code_report_directory(self.settings.project_root)
-
             temp_filename = "${CODE_REPORT_FILE}"
-            for enum, i in enumerate(item["command"]):
-                if temp_filename in i:
-                    name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
-                    actual_filename = os.path.join(self.report_path, name)
-                    item["command"][enum] = item["command"][enum].replace(temp_filename, actual_filename)
+            name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
+            actual_filename = os.path.join(self.report_path, name)
+
+            for key in item:
+                if key == "command":
+                    item[key] = [word.replace(temp_filename, actual_filename) for word in item[key]]
+                else:
+                    try:
+                        item[key] = item[key].replace(temp_filename, actual_filename)
+                    except AttributeError as error:
+                        if "object has no attribute 'replace'" not in str(error):
+                            raise
 
             afterall_item = deepcopy(item)
             afterall_steps.append(afterall_item)
