@@ -223,8 +223,9 @@ class UniversumRunner:
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
             additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
 
-        # as nonci changes workdir to project root, Universum is always an external moudule
-        # therefore for nonci it should always be installed to system
+        # 'python -m module_name' can only launch modules from current directory or already installed to the system
+        # but nonci changes workdir to project root (from current universum sources to sources to be checked by nonci)
+        # therefore to run Universum in nonci mode, it should always be installed to system
         if self.nonci:
             force_installed = True
 
