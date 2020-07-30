@@ -1,8 +1,6 @@
 import json
 import urllib.parse
 
-import requests
-
 from .modules.vcs.github_vcs import GithubToken
 from .modules.output import needs_output
 from .modules.structure_handler import needs_structure
@@ -87,8 +85,7 @@ class GithubHandler(GithubToken):
                 self.out.log(f"Sending request to {url}")
                 if self.settings.verbose:
                     self.out.log(f"Headers are:\n{headers}\nOther passed params are:\n{data}")
-                response = requests.post(url=url, json=data, headers=headers)
-                response.raise_for_status()
+                utils.make_request(url=url, request_method="POST", json=data, headers=headers)
                 self.out.log("Successfully created check run")
 
             elif self.settings.event == "check_run" and \
@@ -102,11 +99,11 @@ class GithubHandler(GithubToken):
                     "GITHUB_INSTALLATION_ID": payload["installation"]["id"]
                 }
                 self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
-                response = requests.get(self.settings.trigger_url, params=param_dict)
+                response = utils.make_request(self.settings.trigger_url, params=param_dict)
                 if self.settings.verbose:
                     self.out.log(f"Triggered {response.url}")
-                response.raise_for_status()
-                self.out.log("Successfully triggered")
+                else:
+                    self.out.log("Successfully triggered")
 
             else:
                 self.out.log("Unhandled event, skipping...")
@@ -114,8 +111,6 @@ class GithubHandler(GithubToken):
             raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}")
         except TypeError:
             raise CriticalCiException("Parsed payload JSON does not correspond to expected format")
-        except requests.RequestException as error:
-            raise CriticalCiException(f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}")
 
     def finalize(self):
         pass

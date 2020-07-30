@@ -2,10 +2,10 @@ import inspect
 import os
 import sys
 import traceback
-import six
 
-from universum.lib.ci_exception import CiException
-from .ci_exception import CriticalCiException, SilentAbortException
+import requests
+
+from .ci_exception import CiException, CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
 
 __all__ = [
@@ -23,7 +23,7 @@ __all__ = [
     "unify_argument_list",
     "Uninterruptible",
     "make_block",
-    "check_request_result"
+    "make_request"
 ]
 
 
@@ -131,10 +131,8 @@ def catch_exception(exception_name, ignore_if=None):
 
 
 def trim_and_convert_to_unicode(line):
-    if isinstance(line, str):
-        pass
-    elif not isinstance(line, six.text_type):
-        line = six.text_type(line)
+    if not isinstance(line, str):
+        line = str(line)
 
     if line.endswith("\n"):
         line = line[:-1]
@@ -208,8 +206,13 @@ def make_block(block_name, pass_errors=True):
     return decorated_function
 
 
-def check_request_result(result):
-    if result.status_code != 200:
-        text = "Invalid return code " + six.text_type(result.status_code) + ". Response is:\n"
-        text += result.text
+def make_request(url, request_method="GET", critical=True, **kwargs):
+    try:
+        response = requests.request(method=request_method, url=url, **kwargs)
+        response.raise_for_status()
+        return response
+    except requests.RequestException as error:
+        text = f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}"
+        if critical:
+            raise CriticalCiException(text)
         raise CiException(text)
