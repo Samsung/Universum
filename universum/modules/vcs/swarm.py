@@ -1,6 +1,5 @@
 import os
 import urllib3
-import requests
 
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Module, Dependency
@@ -142,9 +141,8 @@ class Swarm(ReportObserver, Module):
             if no_notification:
                 request["silenceNotification"] = "true"
 
-        result = requests.post(self.settings.server_url + "/api/v9/comments", data=request,
-                               auth=(self.user, self.password))
-        utils.check_request_result(result)
+        utils.make_request(self.settings.server_url + "/api/v9/comments", request_type="post",
+                           data=request, auth=(self.user, self.password))
 
     def vote_review(self, result, version=None):
         request = {}
@@ -155,9 +153,8 @@ class Swarm(ReportObserver, Module):
         if version:
             request["vote[version]"] = version
 
-        result = requests.patch(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id,
-                                data=request, auth=(self.user, self.password))
-        utils.check_request_result(result)
+        utils.make_request(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id,
+                           request_type="patch", data=request, auth=(self.user, self.password))
 
     def report_start(self, report_text):
         self.update_review_version()
@@ -185,7 +182,7 @@ class Swarm(ReportObserver, Module):
 
         if link is not None:
             self.out.log("Swarm will be informed about build status by URL " + link)
-            utils.make_get_request(link, critical=False)  # TODO: add test for HTTP exceptions
+            utils.make_request(link, critical=False)
         else:
             self.out.log("Swarm will not be informed about build status because " +
                          "the '{0}' link was not provided".format("PASS" if result else "FAIL"))

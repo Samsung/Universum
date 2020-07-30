@@ -23,8 +23,7 @@ __all__ = [
     "unify_argument_list",
     "Uninterruptible",
     "make_block",
-    "make_get_request",
-    "check_request_result"
+    "make_request"
 ]
 
 
@@ -207,20 +206,20 @@ def make_block(block_name, pass_errors=True):
     return decorated_function
 
 
-def make_get_request(url, critical=True, **kwargs):
+def make_request(url, request_type="get", critical=True, **kwargs):
     try:
-        response = requests.get(url, **kwargs)
+        if request_type == "get":
+            response = requests.get(url, **kwargs)
+        elif request_type == "post":
+            response = requests.post(url, **kwargs)
+        elif request_type == "patch":
+            response = requests.patch(url, **kwargs)
+        else:
+            raise CriticalCiException(f"Unknown request type '{request_type}'!")
         response.raise_for_status()
         return response
     except requests.RequestException as error:
         text = f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}"
         if critical:
             raise CriticalCiException(text)
-        raise CiException(text)
-
-
-def check_request_result(result):
-    if result.status_code != 200:
-        text = "Invalid return code " + str(result.status_code) + ". Response is:\n"
-        text += result.text
         raise CiException(text)

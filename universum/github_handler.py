@@ -1,8 +1,6 @@
 import json
 import urllib.parse
 
-import requests
-
 from .modules.vcs.github_vcs import GithubToken
 from .modules.output import needs_output
 from .modules.structure_handler import needs_structure
@@ -87,8 +85,7 @@ class GithubHandler(GithubToken):
                 self.out.log(f"Sending request to {url}")
                 if self.settings.verbose:
                     self.out.log(f"Headers are:\n{headers}\nOther passed params are:\n{data}")
-                response = requests.post(url=url, json=data, headers=headers)
-                response.raise_for_status()
+                utils.make_request(url=url, request_type="post", json=data, headers=headers)
                 self.out.log("Successfully created check run")
 
             elif self.settings.event == "check_run" and \
@@ -102,7 +99,7 @@ class GithubHandler(GithubToken):
                     "GITHUB_INSTALLATION_ID": payload["installation"]["id"]
                 }
                 self.out.log(f"Triggering {urllib.parse.urljoin(self.settings.trigger_url, '?...')}")
-                response = utils.make_get_request(self.settings.trigger_url, params=param_dict)
+                response = utils.make_request(self.settings.trigger_url, params=param_dict)
                 if self.settings.verbose:
                     self.out.log(f"Triggered {response.url}")
                 else:
