@@ -100,7 +100,7 @@ def read_and_check_multiline_option(settings, setting_name, error_message):
             except FileNotFoundError as e:
                 raise IncorrectParameterError(f"Error reading argument {setting_name} from file {e.filename}: no such file")
         elif value == '-':
-            result = sys.stdin.read()
+            result = "".join(sys.stdin.readlines())
         else:
             result = value
     except AttributeError:
