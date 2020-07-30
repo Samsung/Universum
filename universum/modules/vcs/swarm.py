@@ -95,8 +95,8 @@ class Swarm(ReportObserver, Module):
         if self.review_version:
             return
 
-        result = utils.make_get_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
-                                        critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
+        result = utils.make_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
+                                    critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
         except (KeyError, ValueError):
@@ -141,7 +141,7 @@ class Swarm(ReportObserver, Module):
             if no_notification:
                 request["silenceNotification"] = "true"
 
-        utils.make_request(self.settings.server_url + "/api/v9/comments", request_method="POST",
+        utils.make_request(self.settings.server_url + "/api/v9/comments", request_method="POST", critical=False,
                            data=request, auth=(self.user, self.password))
 
     def vote_review(self, result, version=None):
@@ -153,7 +153,7 @@ class Swarm(ReportObserver, Module):
         if version:
             request["vote[version]"] = version
 
-        utils.make_request(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id,
+        utils.make_request(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id, critical=False,
                            request_method="PATCH", data=request, auth=(self.user, self.password))
 
     def report_start(self, report_text):
