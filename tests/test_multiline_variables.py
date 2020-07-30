@@ -5,9 +5,8 @@ import subprocess
 
 import pytest
 
-
-from universum.lib.utils import read_and_check_multiline_option
 from universum.lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
+from universum.lib.utils import read_and_check_multiline_option
 
 text = "This is text\nwith some line breaks\n"
 error_message = "This is some missing argument error message"
@@ -50,17 +49,23 @@ def test_multiline_variable_files(tmp_path, parser):
 
 
 def test_multiline_variable_stdin(tmp_path):
-    script_path = tmp_path / "script.py"
-    script_path.write_text(script)
-    result = subprocess.run(["python3.7", script_path, "-a", "-"], capture_output=True, text=True, input=text, check=True)
+    script_file = tmp_path / "script.py"
+    script_file.write_text(script)
+    script_path = str(script_file)
+
+    env = dict(os.environ)
+    env['PYTHONPATH'] = os.getcwd()
+    common_args = {"capture_output": True, "text": True, "env": env}
+
+    result = subprocess.run(["python3.7", script_path, "-a", "-"], **common_args, input=text, check=True)
     assert result.stdout[:-1] == text
 
-    os.environ['ARGUMENT'] = '-'
-    result = subprocess.run(["python3.7", script_path], capture_output=True, text=True, input=text, env=os.environ, check=True)
+    env['ARGUMENT'] = '-'
+    result = subprocess.run(["python3.7", script_path], **common_args, input=text, check=True)
     assert result.stdout[:-1] == text
-    del os.environ['ARGUMENT']
+    del env['ARGUMENT']
 
-    result = subprocess.run(["python3.7", script_path, "-a", "-"], capture_output=True, text=True, check=False)
+    result = subprocess.run(["python3.7", script_path, "-a", "-"], **common_args, input="", check=False)
     assert result.returncode != 0
     assert "IncorrectParameterError" in result.stderr
     assert error_message in result.stderr
