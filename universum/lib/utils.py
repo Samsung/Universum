@@ -206,16 +206,9 @@ def make_block(block_name, pass_errors=True):
     return decorated_function
 
 
-def make_request(url, request_type="get", critical=True, **kwargs):
+def make_request(url, request_method="GET", critical=True, **kwargs):
     try:
-        if request_type == "get":
-            response = requests.get(url, **kwargs)
-        elif request_type == "post":
-            response = requests.post(url, **kwargs)
-        elif request_type == "patch":
-            response = requests.patch(url, **kwargs)
-        else:
-            raise CriticalCiException(f"Unknown request type '{request_type}'!")
+        response = requests.request(method=request_method, url=url, **kwargs)
         response.raise_for_status()
         return response
     except requests.RequestException as error:

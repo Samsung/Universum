@@ -141,7 +141,7 @@ class Swarm(ReportObserver, Module):
             if no_notification:
                 request["silenceNotification"] = "true"
 
-        utils.make_request(self.settings.server_url + "/api/v9/comments", request_type="post",
+        utils.make_request(self.settings.server_url + "/api/v9/comments", request_method="POST",
                            data=request, auth=(self.user, self.password))
 
     def vote_review(self, result, version=None):
@@ -154,7 +154,7 @@ class Swarm(ReportObserver, Module):
             request["vote[version]"] = version
 
         utils.make_request(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id,
-                           request_type="patch", data=request, auth=(self.user, self.password))
+                           request_method="PATCH", data=request, auth=(self.user, self.password))
 
     def report_start(self, report_text):
         self.update_review_version()
