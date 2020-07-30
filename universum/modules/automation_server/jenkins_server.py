@@ -1,8 +1,7 @@
 import os
-import requests
 
-from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
+from ...lib import utils
 from ..output import needs_output
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
@@ -32,13 +31,8 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
 
     def trigger_build(self, revision):
         processed_url = self.settings.trigger_url % revision
-
         self.out.log("Triggering url %s" % processed_url)
-        try:
-            response = requests.get(processed_url)
-            response.raise_for_status()
-        except requests.RequestException as error:
-            raise CriticalCiException(f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}")
+        utils.make_get_request(processed_url)
 
 
 class JenkinsServerForHostingBuild(BaseServerForHostingBuild):

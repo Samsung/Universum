@@ -96,8 +96,8 @@ class Swarm(ReportObserver, Module):
         if self.review_version:
             return
 
-        result = requests.get(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
-                              data={"id": self.settings.review_id}, auth=(self.user, self.password))
+        result = utils.make_get_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
+                                        critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
         except (KeyError, ValueError):
@@ -185,11 +185,7 @@ class Swarm(ReportObserver, Module):
 
         if link is not None:
             self.out.log("Swarm will be informed about build status by URL " + link)
-            try:
-                response = requests.get(link)
-                response.raise_for_status()
-            except requests.RequestException as error:  # TODO: test this case
-                raise CiException(f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}")
+            utils.make_get_request(link, critical=False)  # TODO: add test for HTTP exceptions
         else:
             self.out.log("Swarm will not be informed about build status because " +
                          "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
