@@ -32,7 +32,7 @@ class JenkinsServerForTrigger(BaseServerForTrigger):
     def trigger_build(self, revision):
         processed_url = self.settings.trigger_url % revision
         self.out.log("Triggering url %s" % processed_url)
-        utils.make_get_request(processed_url)
+        utils.make_request(processed_url)
 
 
 class JenkinsServerForHostingBuild(BaseServerForHostingBuild):
