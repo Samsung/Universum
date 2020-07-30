@@ -186,7 +186,8 @@ class Swarm(ReportObserver, Module):
         if link is not None:
             self.out.log("Swarm will be informed about build status by URL " + link)
             try:
-                requests.get(link)
+                response = requests.get(link)
+                response.raise_for_status()
             except requests.RequestException as error:  # TODO: test this case
                 raise CiException(f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}")
         else:
