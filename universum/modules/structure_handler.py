@@ -4,7 +4,7 @@ from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
 from .output import needs_output
-
+from typing import Any, Callable, List, Optional
 __all__ = [
     "needs_structure"
 ]
@@ -51,24 +51,20 @@ class Block:
     True
     """
 
-    def __init__(self, name: str, parent: 'Block' = None):
-        self.name = name
-        self.status = "Success"
-        self.children = []
+    def __init__(self, name: str, parent: Optional['Block'] = None):
+        self.name: str = name
+        self.status: str = "Success"
+        self.children: List[Block] = []
 
-        self._parent = parent
-        self.number = ''
-        if self.parent:
-            self.parent.children.append(self)
+        self.parent: Optional[Block] = parent
+        self.number: str = ''
+        if parent:
+            parent.children.append(self)
             self.number = '{}{}.'.format(parent.number, len(parent.children))
 
     def __str__(self) -> str:
         result = self.number + ' ' + self.name
         return '{} - {}'.format(result, self.status) if not self.children else result
-
-    @property  # getter
-    def parent(self) -> 'Block':
-        return self._parent
 
     def is_successful(self) -> bool:
         return self.status == "Success"
@@ -78,24 +74,23 @@ class Block:
 class StructureHandler(Module):
     def __init__(self, *args, **kwargs):
         super(StructureHandler, self).__init__(*args, **kwargs)
-        block_structure = Block("Universum")
-        self.current_block = block_structure
-        self.configs_current_number = 0
-        self.configs_total_count = 0
+        self.current_block: Block = Block("Universum")
+        self.configs_current_number: int = 0
+        self.configs_total_count: int = 0
         self.active_background_steps = []
 
-    def open_block(self, name):
+    def open_block(self, name: str) -> None:
         new_block = Block(name, self.current_block)
         self.current_block = new_block
 
         self.out.open_block(new_block.number, name)
 
-    def close_block(self):
+    def close_block(self) -> None:
         block = self.current_block
         self.current_block = self.current_block.parent
         self.out.close_block(block.number, block.name, block.status)
 
-    def report_critical_block_failure(self):
+    def report_critical_block_failure(self) -> None:
         self.out.report_skipped("Critical step failed. All further configurations will be skipped")
 
     def report_skipped_block(self, name):
@@ -105,11 +100,11 @@ class StructureHandler(Module):
         self.out.report_skipped(new_skipped_block.number + " " + name +
                                 " skipped because of critical step failure")
 
-    def fail_current_block(self, error=None): #TODO: why don't used empty str by default?
-        block = self.get_current_block()
+    def fail_current_block(self, error: str = ""):
+        block: Block = self.get_current_block()
         self.fail_block(block, error)
 
-    def fail_block(self, block, error=None):
+    def fail_block(self, block, error: str = ""):
         if error:
             self.out.log_exception(error)
         block.status = "Failed"
