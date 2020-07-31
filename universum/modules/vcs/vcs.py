@@ -157,6 +157,9 @@ class MainVcs(create_vcs()):
         except OSError:
             pass
 
+    def supports_copy_cl_files_and_revert(self):
+        return self.driver.supports_copy_cl_files_and_revert()
+
     @make_block("Revert repository")
     def revert_repository(self):
         diff = self.driver.copy_cl_files_and_revert()

@@ -498,6 +498,9 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 abs_path = self.p4.run("where", line["depotFile"])[0]["path"]
                 self.mappings_dict[abs_path] = line["depotFile"]
 
+    def supports_copy_cl_files_and_revert(self):
+        return True
+
     @make_block("Revert workspace to depot state")
     @catch_p4exception()
     def copy_cl_files_and_revert(self):
