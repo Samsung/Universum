@@ -28,16 +28,16 @@ class BaseVcs(ProjectDirectory):
     def get_repo_status(self):
         return self.repo_status
 
-    @make_block("Cleaning copied sources")
+    @make_block("Cleaning copied sources", pass_errors=False)
     def clean_sources(self):
         try:
             shutil.rmtree(self.settings.project_root)
         except OSError as e:
             text = f"{e}\n"
             text += "\nPossible reasons of this error:" + \
-                   "\n * Sources were not copied due to runtime errors" + \
-                   "\n * Copied sources are already deleted while executing generated scenario" + \
-                   "\n * Source vcs permissions do not allow deleting"
+                    "\n * Sources were not copied due to runtime errors" + \
+                    "\n * Copied sources are already deleted while executing generated scenario" + \
+                    "\n * Source vcs permissions do not allow deleting"
             raise CiException(text)
 
     def finalize(self):
