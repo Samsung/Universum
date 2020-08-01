@@ -56,9 +56,7 @@ class BaseDownloadVcs(BaseVcs):
     def prepare_repository(self):
         raise NotImplementedError
 
-    @staticmethod
-    def supports_copy_cl_files_and_revert():
-        return False
+    supports_copy_cl_files_and_revert = False
 
     def copy_cl_files_and_revert(self):
         raise NotImplementedError

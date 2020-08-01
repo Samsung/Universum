@@ -241,6 +241,7 @@ class PerforceWithMappings(PerforceVcs):
 
 
 class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
+    supports_copy_cl_files_and_revert = True
     swarm_factory = Dependency(Swarm)
     artifacts_factory = Dependency(ArtifactCollector)
     reporter_factory = Dependency(Reporter)
@@ -497,9 +498,6 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             if isinstance(line, dict):
                 abs_path = self.p4.run("where", line["depotFile"])[0]["path"]
                 self.mappings_dict[abs_path] = line["depotFile"]
-
-    def supports_copy_cl_files_and_revert(self):
-        return True
 
     @make_block("Revert workspace to depot state")
     @catch_p4exception()
