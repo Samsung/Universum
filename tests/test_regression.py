@@ -18,7 +18,6 @@ def test_clean_sources_exceptions(tmpdir):
     env = utils.TestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir / 'nonexisting_dir')
-    env.settings.Main.no_diff = True  # TODO: remove when issue #477 is fixed
 
     # Check failure with non-existing temp dir
     __main__.run(env.settings)

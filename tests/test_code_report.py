@@ -86,7 +86,6 @@ def test_code_report_extended_arg_search(tmpdir, stdout_checker):
     env = utils.TestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
-    env.settings.Main.no_diff = True  # TODO: remove when issue #477 is fixed
 
     tmpdir.join("source_file.py").write(source_code + '\n')
 

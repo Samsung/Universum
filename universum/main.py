@@ -75,9 +75,12 @@ class Main(Module):
         self.launcher.launch_project()
         if afterall_configs:
             if not self.settings.no_diff:
-                repo_diff = self.vcs.revert_repository()
-                self.launcher.launch_custom_configs(afterall_configs)
-                self.code_report_collector.repo_diff = repo_diff
+                if self.vcs.supports_copy_cl_files_and_revert():
+                    repo_diff = self.vcs.revert_repository()
+                    self.launcher.launch_custom_configs(afterall_configs)
+                    self.code_report_collector.repo_diff = repo_diff
+                else:
+                    self.out.log("Diff calculation for code report is skipped because current VCS doesn't support it")
             self.code_report_collector.report_code_report_results()
         self.artifacts.collect_artifacts()
         self.reporter.report_build_result()

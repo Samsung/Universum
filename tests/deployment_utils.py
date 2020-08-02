@@ -202,10 +202,10 @@ class UniversumRunner:
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none --no-diff -fsd '{}'".format(str(self.local.root_directory))
+            return " -vt none -fsd '{}'".format(str(self.local.root_directory))
 
         if vcs_type == "git":
-            return " -vt git --no-diff -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
+            return " -vt git -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
 
         return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
             .format(self.perforce.p4.port,

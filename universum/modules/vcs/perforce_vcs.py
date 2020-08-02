@@ -241,6 +241,7 @@ class PerforceWithMappings(PerforceVcs):
 
 
 class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
+    supports_copy_cl_files_and_revert = True
     swarm_factory = Dependency(Swarm)
     artifacts_factory = Dependency(ArtifactCollector)
     reporter_factory = Dependency(Reporter)
