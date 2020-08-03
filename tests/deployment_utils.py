@@ -220,27 +220,11 @@ class UniversumRunner:
             f.write(config)
         return file_path
 
-    def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
-            additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
-
-        # 'python -m module_name' can only launch modules from current directory or already installed to the system
-        # but nonci changes workdir to project root (from current universum sources to sources to be checked by nonci)
-        # therefore to run Universum in nonci mode, it should always be installed to system
-        if self.nonci:
-            force_installed = True
-
-        # workdir is ignored unless force_installed is True
-        if force_installed:
-            if not workdir:
-                # when run from directory containing Universum sources, installed module will not be used
-                # therefore directory should be changed to any other to make sure 'python -m universum' still works
-                workdir = os.path.join(self.working_dir, "another_directory")
-                os.makedirs(workdir, exist_ok=True)
-        else:
-            workdir = self.working_dir
+    def run(self, config: str, vcs_type: str = "none", workdir=None,
+            additional_parameters="", environment=None, expected_to_fail=False):
 
         # We cannot collect coverage from installed module
-        if utils.is_pycharm() or force_installed:
+        if utils.is_pycharm() or workdir:
             cmd = "python3.7 -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
