@@ -13,7 +13,7 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 def test_minimal_install(clean_docker_main):
     # Create tmpdir in container to make sure local universum sources are not used instead of installed
     tmpdir = os.path.join(clean_docker_main.working_dir, randomize_name('tmpdir'))
-    clean_docker_main.environment.assert_successful_execution(f"mkdir {tmpdir}")
+    clean_docker_main.environment.assert_successful_execution(f"mkdir '{tmpdir}'")
 
     # Run without parameters
     log = clean_docker_main.environment.assert_unsuccessful_execution("python3.7 -m universum")
@@ -34,13 +34,13 @@ def test_minimal_install(clean_docker_main):
     assert clean_docker_main.perforce.repo_file.basename in log
 
     # Clean
-    clean_docker_main.environment.assert_successful_execution(f"rm -rf {tmpdir}")
+    clean_docker_main.environment.assert_successful_execution(f"rm -rf '{tmpdir}'")
 
 
 def test_minimal_install_with_git_only(clean_docker_main_no_p4, capsys):
     # Create tmpdir in container to make sure local universum sources are not used instead of installed
     tmpdir = os.path.join(clean_docker_main_no_p4.working_dir, randomize_name('tmpdir'))
-    clean_docker_main_no_p4.environment.assert_successful_execution(f"mkdir {tmpdir}")
+    clean_docker_main_no_p4.environment.assert_successful_execution(f"mkdir '{tmpdir}'")
 
     # Run from P4
     clean_docker_main_no_p4.run(config, vcs_type="p4", workdir=tmpdir, expected_to_fail=True)
@@ -52,13 +52,13 @@ def test_minimal_install_with_git_only(clean_docker_main_no_p4, capsys):
     assert clean_docker_main_no_p4.git.repo_file.basename in log
 
     # Clean
-    clean_docker_main_no_p4.environment.assert_successful_execution(f"rm -rf {tmpdir}")
+    clean_docker_main_no_p4.environment.assert_successful_execution(f"rm -rf '{tmpdir}'")
 
 
 def test_minimal_install_plain_ubuntu(clean_docker_main_no_vcs, capsys):
     # Create tmpdir in container to make sure local universum sources are not used instead of installed
     tmpdir = os.path.join(clean_docker_main_no_vcs.working_dir, randomize_name('tmpdir'))
-    clean_docker_main_no_vcs.environment.assert_successful_execution(f"mkdir {tmpdir}")
+    clean_docker_main_no_vcs.environment.assert_successful_execution(f"mkdir '{tmpdir}'")
 
     # Run from P4
     clean_docker_main_no_vcs.run(config, vcs_type="p4", workdir=tmpdir, expected_to_fail=True)
@@ -73,4 +73,4 @@ def test_minimal_install_plain_ubuntu(clean_docker_main_no_vcs, capsys):
     assert clean_docker_main_no_vcs.local.repo_file.basename in log
 
     # Clean
-    clean_docker_main_no_vcs.environment.assert_successful_execution(f"rm -rf {tmpdir}")
+    clean_docker_main_no_vcs.environment.assert_successful_execution(f"rm -rf '{tmpdir}'")
