@@ -1,16 +1,14 @@
 #!/bin/bash
 
-HOSTNAME=swarm
 MXHOST=localhost
-
-service rsyslog start
-service crond start
 
 if [ ! -e /var/run/configure-swarm ]; then
     /opt/perforce/swarm/sbin/configure-swarm.sh -n \
         -p "$P4PORT" -u "$P4USER" -w "$P4PASSWD" \
         -H $HOSTNAME -e "$MXHOST"
     touch /var/run/configure-swarm
+    rm -f /etc/apache2/sites-enabled/000-default.conf
+    service apache2 restart
 fi
 echo '<?php phpinfo(); ?>' > /opt/perforce/swarm/public/phpinfo.php
 for i in `seq 20`; do
