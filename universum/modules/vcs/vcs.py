@@ -1,9 +1,8 @@
+from typing import Dict, List, Type, Union
 import inspect
 import json
 import shutil
 import sh
-
-from typing import cast, Dict, List, Type, Union
 
 from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
@@ -58,7 +57,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
     @needs_structure
     class Vcs(ProjectDirectory):
         driver_factory: Dict[str, Dependency] = {vcs_type: Dependency(cls)
-                                                       for vcs_type, cls in driver_factory_class.items()}
+                                                 for vcs_type, cls in driver_factory_class.items()}
 
         @staticmethod
         def define_arguments(argument_parser):

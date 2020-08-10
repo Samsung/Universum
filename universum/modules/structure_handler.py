@@ -1,10 +1,11 @@
 import copy
 
+from typing import Any, Callable, List, Optional
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
 from .output import needs_output
-from typing import Any, Callable, List, Optional
+
 __all__ = [
     "needs_structure"
 ]
