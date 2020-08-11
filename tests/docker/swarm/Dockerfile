@@ -10,7 +10,8 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && 
     echo 'deb http://package.perforce.com/apt/ubuntu bionic release' > /etc/apt/sources.list.d/perforce.sources.list && \
     apt-get update
 
-RUN apt-get install -y curl apache2 helix-swarm helix-cli helix-swarm-triggers helix-swarm-optional
+RUN apt-get install -y curl redis-server php libapache2-mod-php php-redis \
+    helix-swarm helix-cli helix-swarm-triggers helix-swarm-optional
 
 # Volumes for server roots and triggers
 #VOLUME /opt/perforce/servers
