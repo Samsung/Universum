@@ -21,8 +21,10 @@ if [ ! -e /var/run/configure-swarm ]; then
     cp /opt/perforce/etc/swarm-trigger.conf .swarm/triggers/
     p4 -c $TCLIENT reconcile .swarm/...
     p4 -c $TCLIENT --field "Description=Add swarm triggers" change -o | p4 -c $TCLIENT submit -i
+    p4 configure set dm.shelve.promote=1
     p4 configure set dm.keys.hide=2
     p4 configure set filetype.bypasslock=1
+    ( p4 triggers -o ; /opt/perforce/swarm/p4-bin/scripts/swarm-trigger.pl -o ) | p4 triggers -i
 
     rm -rf .swarm
     p4 client -d $TCLIENT
