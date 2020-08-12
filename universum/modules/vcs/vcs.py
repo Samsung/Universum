@@ -56,8 +56,11 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
 
     @needs_structure
     class Vcs(ProjectDirectory):
-        driver_factory: Dict[str, Dependency] = {vcs_type: Dependency(cls)
-                                                 for vcs_type, cls in driver_factory_class.items()}
+        local_driver_factory = Dependency(driver_factory_class['none'])
+        git_driver_factory = Dependency(driver_factory_class['git'])
+        gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])
+        github_driver_factory = Dependency(driver_factory_class['github'])
+        perforce_driver_factory = Dependency(driver_factory_class['p4'])
 
         @staticmethod
         def define_arguments(argument_parser):
@@ -96,9 +99,20 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                 raise IncorrectParameterError(text)
 
             try:
-                self.driver = driver_factory[self.settings.type]()
+                if self.settings.type == "none":
+                    driver_factory = self.local_driver_factory
+                elif self.settings.type == "git":
+                    driver_factory = self.git_driver_factory
+                elif self.settings.type == "gerrit":
+                    driver_factory = self.gerrit_driver_factory
+                elif self.settings.type == "github":
+                    driver_factory = self.github_driver_factory
+                else:
+                    driver_factory = self.perforce_driver_factory
             except AttributeError:
                 raise NotImplementedError()
+            dir(driver_factory)
+            self.driver = driver_factory()
 
         @make_block("Finalizing")
         def finalize(self):
