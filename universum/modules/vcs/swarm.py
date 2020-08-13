@@ -175,17 +175,19 @@ class Swarm(ReportObserver, Module):
     def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm
         # Does not require login to Swarm; changes "Automated Tests" icon
-        if result:
-            link = self.settings.pass_link
-        else:
-            link = self.settings.fail_link
+        # Should not be applied to non-latest revision
+        if self.is_latest_version():
+            if result:
+                link = self.settings.pass_link
+            else:
+                link = self.settings.fail_link
 
-        if link is not None:
-            self.out.log("Swarm will be informed about build status by URL " + link)
-            utils.make_request(link, critical=False)
-        else:
-            self.out.log("Swarm will not be informed about build status because " +
-                         "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
+            if link is not None:
+                self.out.log("Swarm will be informed about build status by URL " + link)
+                utils.make_request(link, critical=False)
+            else:
+                self.out.log("Swarm will not be informed about build status because " +
+                             "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
 
         # Voting up or down; posting comments if any
         # An addition to "Automated Tests" functionality, requires login to Swarm
