@@ -33,3 +33,15 @@ configs = Variations([dict(name="Test configuration", command=["bash", "-c", "rm
 
     __main__.run(env.settings)
     # the log output is automatically checked by the 'detect_fails' fixture
+
+
+def test_p4_multiple_spaces_in_mappings(perforce_workspace, tmpdir):
+    environment = utils.TestEnvironment(tmpdir, "main")
+    environment.settings.Vcs.type = "p4"
+    environment.settings.PerforceVcs.port = perforce_workspace.p4.port
+    environment.settings.PerforceVcs.user = perforce_workspace.p4.user
+    environment.settings.PerforceVcs.password = perforce_workspace.p4.password
+    environment.settings.PerforceMainVcs.client = "regression_disposable_workspace"
+    environment.settings.PerforceMainVcs.force_clean = True
+    environment.settings.PerforceWithMappings.mappings = [f"{perforce_workspace.depot}   /..."]
+    assert not __main__.run(environment.settings)

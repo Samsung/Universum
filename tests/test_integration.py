@@ -245,7 +245,6 @@ configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
     assert "This line should be in file." not in log
 
     # Pass params via command line
-
     docker_main_with_vcs.clean_artifacts()
     log = docker_main_with_vcs.run(config, vcs_type="p4",
                                    additional_parameters=" -p4h=" + sync_cl + " -p4s=" + shelve_cl)

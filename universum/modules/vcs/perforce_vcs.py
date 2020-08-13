@@ -319,7 +319,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         for mapping in self.mappings:
             splat_mapping = mapping.split(" ")
             self.depots.append({"path": splat_mapping[0]})
-            self.client_view.append(splat_mapping[0] + " //" + self.client_name + splat_mapping[1])
+            self.client_view.append(splat_mapping[0] + " //" + self.client_name + splat_mapping[-1])
 
         # Finalize the list of depots for sync: merge and define sync CLs
         self.sync_cls = utils.unify_argument_list(self.settings.sync_cls)
