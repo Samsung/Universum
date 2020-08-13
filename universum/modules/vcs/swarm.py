@@ -92,7 +92,7 @@ class Swarm(ReportObserver, Module):
         return self.settings.server_url + "/reviews/" + self.settings.review_id + "/"
 
     def update_review_version(self):
-        if self.review_version:
+        if self.review_version and self.review_latest_version:
             return
 
         result = utils.make_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
@@ -124,8 +124,8 @@ class Swarm(ReportObserver, Module):
         if self.review_latest_version == self.review_version:
             return True
 
-        text = "Current review version is " + self.review_version + \
-               ", while latest review version is already " + self.review_latest_version
+        text = "Current review version is {0}, while latest review version is already {1}".format(
+            self.review_version, self.review_latest_version)
         self.out.log(text)
         return False
 
