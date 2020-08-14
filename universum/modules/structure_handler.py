@@ -19,8 +19,8 @@ class HasStructure():
 
 def needs_structure(cls: Type) -> Type['HasStructure']:
     cast(Type['HasStructure'], cls)
-    klass.structure_factory = Dependency(StructureHandler)
-    original_init = klass.__init__
+    cls.structure_factory = Dependency(StructureHandler)
+    original_init = cls.__init__
 
     def new_init(self, *args, **kwargs):
         self.structure = self.structure_factory()
