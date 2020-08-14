@@ -183,16 +183,16 @@ class Swarm(ReportObserver, Module):
 
         if self.is_latest_version():
             if link is not None:
-                self.out.log("Swarm will be informed about build status by URL " + link)
+                self.out.log("Build status on Swarm will be updated via URL " + link)
                 utils.make_request(link, critical=False)
             else:
-                self.out.log("Swarm will not be informed about build status because " +
-                             "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
+                self.out.log("Build status on Swarm will not be updated because " +
+                             "the '{0}' link has not been provided.".format("PASS" if result else "FAIL"))
         else:
-            text = "Review test status will not be changed for review revision is not latest."
+            text = "Build status on Swarm will not be updated because tested review revision is not latest."
             if not link:
-                text += " Also, even if the review version was latest, we wouldn't be able to report the status " \
-                        "because the '{0}' link was not provided.".format("PASS" if result else "FAIL")
+                text += " Also, even if the review revision was latest, we wouldn't be able to report the status " \
+                        "because the '{0}' link has not been provided.".format("PASS" if result else "FAIL")
             self.out.log(text)
 
         # Voting up or down; posting comments if any
