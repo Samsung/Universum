@@ -189,7 +189,7 @@ class Swarm(ReportObserver, Module):
                 self.out.log("Swarm will not be informed about build status because " +
                              "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         else:
-            text = "Review test status will not be changed for review revision is not latest"
+            text = "Review test status will not be changed for review revision is not latest."
             if not link:
                 text += " Also, even if the review version was latest, we wouldn't be able to report the status " \
                         "because the '{0}' link was not provided.".format("PASS" if result else "FAIL")
