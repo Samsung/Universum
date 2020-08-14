@@ -111,7 +111,6 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     driver_factory = self.perforce_driver_factory
             except AttributeError:
                 raise NotImplementedError()
-            dir(driver_factory)
             self.driver = driver_factory()
 
         @make_block("Finalizing")

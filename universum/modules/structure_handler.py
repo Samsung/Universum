@@ -1,6 +1,6 @@
 import copy
 
-from typing import Any, Callable, List, Optional
+from typing import cast, Any, Callable, List, NewType, Optional, Type, TypeVar
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
@@ -11,7 +11,14 @@ __all__ = [
 ]
 
 
-def needs_structure(klass):
+class HasStructure():
+    structure_factory: Dependency['StructureHandler']
+    def __init__(self):
+        structure: 'StructureHandler'
+
+
+def needs_structure(cls: Type) -> Type['HasStructure']:
+    cast(Type['HasStructure'], cls)
     klass.structure_factory = Dependency(StructureHandler)
     original_init = klass.__init__
 
@@ -19,8 +26,8 @@ def needs_structure(klass):
         self.structure = self.structure_factory()
         original_init(self, *args, **kwargs)
 
-    klass.__init__ = new_init
-    return klass
+    cls.__init__ = new_init
+    return cls
 
 
 class Block:
@@ -52,7 +59,7 @@ class Block:
     True
     """
 
-    def __init__(self, name: str, parent: Optional['Block'] = None):
+    def __init__(self, name: str, parent: Optional['Block'] = None) -> None:
         self.name: str = name
         self.status: str = "Success"
         self.children: List[Block] = []
@@ -79,6 +86,7 @@ class StructureHandler(Module):
         self.configs_current_number: int = 0
         self.configs_total_count: int = 0
         self.active_background_steps = []
+        self.out: 'Output'  # TODO: add annotations in ./universum/module/output/output.py for @needs_output
 
     def open_block(self, name: str) -> None:
         new_block = Block(name, self.current_block)
@@ -116,7 +124,7 @@ class StructureHandler(Module):
 
     # The exact block will be reported as failed only if pass_errors is False
     # Otherwise the exception will be passed to the higher level function and handled there
-    def run_in_block(self, operation, block_name, pass_errors, *args, **kwargs):
+    def run_in_block(self, operation: Callable[..., Optional[bool]], block_name, pass_errors: bool, *args, **kwargs):
         result = None
         self.open_block(block_name)
         try:
