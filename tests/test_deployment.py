@@ -7,8 +7,8 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 
 def test_minimal_install(clean_docker_main):
     # Run without parameters
-    log = clean_docker_main.environment.assert_unsuccessful_execution("universum")
-    assert "command not found" not in log
+    log = clean_docker_main.environment.assert_unsuccessful_execution("python3.7 -m universum")
+    assert "No module named universum" not in log
 
     # Run locally
     log = clean_docker_main.run(config, force_installed=True)

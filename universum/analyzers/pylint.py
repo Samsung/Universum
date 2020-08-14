@@ -3,9 +3,8 @@ import glob
 import json
 import sys
 import subprocess
-import os
 
-from universum.analyzers import utils
+from . import utils
 
 
 class PylintAnalyzer:
