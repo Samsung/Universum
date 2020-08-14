@@ -32,7 +32,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                                     "--rcfile=pylintrc", "--result-file=${CODE_REPORT_FILE}",
                                     "--files", "*.py", "universum/", "tests/"]),
                       dict(name="Run static type checker", code_report=True,
-                           command=["python3.7", "-m", "mypy", "universum/__main__.py", "--ignore-missing-imports"]),
+                           command=["python3.7", "-m", "mypy", "universum/", "--ignore-missing-imports"]),
 
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",

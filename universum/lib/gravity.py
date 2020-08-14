@@ -1,4 +1,4 @@
-from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, NoReturn, Optional, Type, TypeVar
+from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, NoReturn, Optional, Type, TypeVar, Union
 
 __all__ = [
     "Module",
@@ -15,24 +15,24 @@ class ModuleSettings:
         # TODO: can't clarify that active_modules[Type[X]] returns X (https://github.com/python/mypy/issues/4928)
         self.active_modules: Optional[Dict[Type[Module], Module]]
 
-    def __getattribute__(self, item: Any) -> Any:  # TODO: narrow down type annotations
+    def __getattribute__(self, item: str) -> Union[str, List[str]]:
         cls: Type['Module'] = object.__getattribute__(self, "cls")
         main_settings = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
-                settings: Any = getattr(main_settings, entry.__name__)  # TODO: narrow down type annotations
+                settings: 'Settings' = getattr(main_settings, entry.__name__)
                 return getattr(settings, item)
             except AttributeError:
                 continue
 
         raise AttributeError("'" + cls.__name__ + "' object has no setting '" + item + "'")
 
-    def __setattr__(self, key: Any, value: Any) -> None:  # TODO: narrow down type annotations
+    def __setattr__(self, key: str, value: Union[str, List[str]]) -> None:
         cls: Type['Module'] = object.__getattribute__(self, "cls")
         main_settings: 'ModuleSettings' = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
-                settings: Any = getattr(main_settings, entry.__name__)  # TODO: narrow down type annotations
+                settings: 'Settings' = getattr(main_settings, entry.__name__)
                 getattr(settings, key)
                 setattr(settings, key, value)
                 return
