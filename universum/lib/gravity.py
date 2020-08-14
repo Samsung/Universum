@@ -13,7 +13,7 @@ class ModuleSettings:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
         # TODO: can't clarify that active_modules[Type[X]] returns X (https://github.com/python/mypy/issues/4928)
-        self.active_modules: Optional[Dict[Type[Module], Module]] 
+        self.active_modules: Optional[Dict[Type[Module], Module]]
 
     def __getattribute__(self, item: Any) -> Any:  # TODO: narrow down type annotations
         cls: Type['Module'] = object.__getattribute__(self, "cls")
@@ -53,63 +53,63 @@ class Settings:
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
-T_Module = TypeVar('T_Module', bound='Module')
+ModuleType = TypeVar('ModuleType', bound='Module')
 
-class Module(Generic[T_Module]):
+class Module(Generic[ModuleType]):
     settings: ClassVar['Settings']
     main_settings: 'ModuleSettings'
-    def __new__(klass: Type[T_Module], main_settings: 'ModuleSettings', *args, **kwargs) -> T_Module:
-        instance: T_Module = super(Module, klass).__new__(klass)
+    def __new__(cls: Type[ModuleType], main_settings: 'ModuleSettings', *args, **kwargs) -> ModuleType:
+        instance: ModuleType = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
         return instance
 
 
-T = TypeVar('T', bound='Module')
+ComponentType = TypeVar('ComponentType', bound='Module')
 
-def construct_component(klass: Type[T], main_settings: 'ModuleSettings', *args, **kwargs) -> T:
+def construct_component(cls: Type[ComponentType], main_settings: 'ModuleSettings', *args, **kwargs) -> ComponentType:
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = dict()
 
-    if klass not in main_settings.active_modules:
-        klass.settings = Settings(klass)
-        instance: T = klass.__new__(klass, main_settings=main_settings)
+    if cls not in main_settings.active_modules:
+        cls.settings = Settings(cls)
+        instance: ComponentType = cls.__new__(cls, main_settings=main_settings)
         # https://github.com/python/mypy/blob/master/mypy/checkmember.py#180
         # Accessing __init__ in statically typed code would compromise
         # type safety unless used via super().
-        instance.__init__(*args, **kwargs)  # type: ignore  
-        main_settings.active_modules[klass] = instance
-    return cast(T, main_settings.active_modules[klass])
+        instance.__init__(*args, **kwargs)  # type: ignore
+        main_settings.active_modules[cls] = instance
+    return cast(ComponentType, main_settings.active_modules[cls])
 
 
-T_Dependency = TypeVar('T_Dependency', bound='Module')
+DependencyType = TypeVar('DependencyType', bound='Module')
 
-class Dependency(Generic[T_Dependency]):
-    def __init__(self, klass: Type[T_Dependency]) -> None:
-        self.klass = klass
+class Dependency(Generic[DependencyType]):
+    def __init__(self, cls: Type[DependencyType]) -> None:
+        self.cls = cls
 
-    def __get__(self, instance: T_Dependency, owner: Any) -> Callable[..., T_Dependency]:
-        def constructor_function(*args, **kwargs) -> T_Dependency:
-            return construct_component(self.klass, instance.main_settings, *args, **kwargs)
+    def __get__(self, instance: DependencyType, owner: Any) -> Callable[..., DependencyType]:
+        def constructor_function(*args, **kwargs) -> DependencyType:
+            return construct_component(self.cls, instance.main_settings, *args, **kwargs)
         return constructor_function
 
 
-def get_dependencies(klass: Type[Module], result: Optional[List[Type[Module]]]=None,
-                     parent: Optional[Dict[Type[Module], Type[Module]]]=None) -> List[Type[Module]]:
+def get_dependencies(cls: Type[Module], result: Optional[List[Type[Module]]] = None,
+                     parent: Optional[Dict[Type[Module], Type[Module]]] = None) -> List[Type[Module]]:
     if result is None:
         result = list()
     if parent is None:
         parent = dict()
 
-    result.append(klass)
+    result.append(cls)
 
     # parent classes
-    all_dependenies: List[Module]
-    all_dependencies = [x for x in klass.__mro__ if issubclass(x, Module) and x != Module and x != klass]
+    all_dependencies: List[Type[Module]]
+    all_dependencies = [x for x in cls.__mro__ if issubclass(x, Module) and x != Module and x != cls]
     # dependencies
-    all_dependencies.extend([x.klass for x in klass.__dict__.values() if isinstance(x, Dependency)])
+    all_dependencies.extend([x.cls for x in cls.__dict__.values() if isinstance(x, Dependency)])
 
     for dependency in all_dependencies:
-        parent[dependency] = klass
+        parent[dependency] = cls
 
         if dependency not in result:
             get_dependencies(dependency, result, parent)
@@ -117,8 +117,8 @@ def get_dependencies(klass: Type[Module], result: Optional[List[Type[Module]]]=N
     return result
 
 
-def define_arguments_recursive(klass, argument_parser):  # TODO: return here after ModuleArgumentParser is annotated
-    modules = get_dependencies(klass)
+def define_arguments_recursive(cls, argument_parser):  # TODO: return here after ModuleArgumentParser is annotated
+    modules = get_dependencies(cls)
 
     for current_module in modules:
         if "define_arguments" in current_module.__dict__:
