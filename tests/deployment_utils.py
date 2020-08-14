@@ -220,14 +220,13 @@ class UniversumRunner:
             f.write(config)
         return file_path
 
-    def run(self, config: str, vcs_type: str = "none", force_installed=False, workdir=None,
-            additional_parameters="", environment=None, expected_to_fail=False):
+    def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
+            additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
 
-        # We can only collect coverage from local sources
         if force_installed:
             cmd = "python3.7 -I -m universum"
         elif utils.is_pycharm() or workdir:
-            # Changing workdir will also lead to using installed Universum instead of local sources
+            # Changing workdir may also lead to using installed Universum instead of local sources
             cmd = "python3.7 -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
