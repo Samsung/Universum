@@ -176,12 +176,12 @@ class Swarm(ReportObserver, Module):
         # Opening links, sent by Swarm
         # Does not require login to Swarm; changes "Automated Tests" icon
         # Should not be applied to non-latest revision
-        if self.is_latest_version():
-            if result:
-                link = self.settings.pass_link
-            else:
-                link = self.settings.fail_link
+        if result:
+            link = self.settings.pass_link
+        else:
+            link = self.settings.fail_link
 
+        if self.is_latest_version():
             if link is not None:
                 self.out.log("Swarm will be informed about build status by URL " + link)
                 utils.make_request(link, critical=False)
@@ -190,10 +190,9 @@ class Swarm(ReportObserver, Module):
                              "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         else:
             text = "Review test status will not be changed for review revision is not latest"
-            if not self.settings.pass_link:
-                text += "\nAlso, PASS link was not provided"
-            if not self.settings.fail_link:
-                text += "\nAlso, FAIL link was not provided"
+            if not link:
+                text += " Also, even if the review version was latest, we wouldn't be able to report the status " \
+                        "because the '{0}' link was not provided.".format("PASS" if result else "FAIL")
             self.out.log(text)
 
         # Voting up or down; posting comments if any
