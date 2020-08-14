@@ -13,7 +13,7 @@ class ModuleSettings:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
         # TODO: can't clarify that active_modules[Type[X]] returns X (https://github.com/python/mypy/issues/4928)
-        self.active_modules: Optional[Dict[Type[Module], Module]]
+        self.active_modules: Dict[Type[Module], Module]
 
     def __getattribute__(self, item: str) -> Union[str, List[str]]:
         cls: Type['Module'] = object.__getattribute__(self, "cls")
@@ -53,13 +53,11 @@ class Settings:
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
-ModuleType = TypeVar('ModuleType', bound='Module')
-
-class Module(Generic[ModuleType]):
+class Module():
     settings: ClassVar['Settings']
     main_settings: 'ModuleSettings'
-    def __new__(cls: Type[ModuleType], main_settings: 'ModuleSettings', *args, **kwargs) -> ModuleType:
-        instance: ModuleType = super(Module, cls).__new__(cls)
+    def __new__(cls: Type['Module'], main_settings: 'ModuleSettings', *args, **kwargs) -> 'Module':
+        instance: Module = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
         return instance
 
@@ -72,7 +70,7 @@ def construct_component(cls: Type[ComponentType], main_settings: 'ModuleSettings
 
     if cls not in main_settings.active_modules:
         cls.settings = Settings(cls)
-        instance: ComponentType = cls.__new__(cls, main_settings=main_settings)
+        instance: 'Module' = cls.__new__(cls, main_settings=main_settings)
         # https://github.com/python/mypy/blob/master/mypy/checkmember.py#180
         # Accessing __init__ in statically typed code would compromise
         # type safety unless used via super().

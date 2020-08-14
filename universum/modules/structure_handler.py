@@ -81,7 +81,7 @@ class Block:
 class StructureHandler(Module):
     def __init__(self, *args, **kwargs):
         super(StructureHandler, self).__init__(*args, **kwargs)
-        self.current_block: Block = Block("Universum")
+        self.current_block: Optional[Block] = Block("Universum")
         self.configs_current_number: int = 0
         self.configs_total_count: int = 0
         self.active_background_steps = []
@@ -94,9 +94,10 @@ class StructureHandler(Module):
         self.out.open_block(new_block.number, name)
 
     def close_block(self) -> None:
-        block = self.current_block
-        self.current_block = self.current_block.parent
-        self.out.close_block(block.number, block.name, block.status)
+        if self.current_block is not None:
+            block: Block = self.current_block
+            self.current_block = self.current_block.parent
+            self.out.close_block(block.number, block.name, block.status)
 
     def report_critical_block_failure(self) -> None:
         self.out.report_skipped("Critical step failed. All further configurations will be skipped")
