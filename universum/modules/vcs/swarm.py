@@ -189,7 +189,12 @@ class Swarm(ReportObserver, Module):
                 self.out.log("Swarm will not be informed about build status because " +
                              "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
         else:
-            self.out.log("Review test status will not be changed for review revision is not latest")
+            text = "Review test status will not be changed for review revision is not latest"
+            if not self.settings.pass_link:
+                text += "\nAlso, PASS link was not provided"
+            if not self.settings.fail_link:
+                text += "\nAlso, FAIL link was not provided"
+            self.out.log(text)
 
         # Voting up or down; posting comments if any
         # An addition to "Automated Tests" functionality, requires login to Swarm
