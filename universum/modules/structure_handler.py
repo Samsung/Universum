@@ -1,6 +1,6 @@
 import copy
 
-from typing import cast, Any, Callable, List, NewType, Optional, Type, TypeVar
+from typing import cast, Any, Callable, ClassVar, List, NewType, Optional, Type, TypeVar
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
@@ -12,9 +12,8 @@ __all__ = [
 
 
 class HasStructure():
-    structure_factory: Dependency['StructureHandler']
-    def __init__(self):
-        structure: 'StructureHandler'
+    structure_factory: ClassVar[Dependency['StructureHandler']]
+    structure: 'StructureHandler'
 
 
 def needs_structure(cls: Type) -> Type['HasStructure']:
