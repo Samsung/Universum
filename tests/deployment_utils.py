@@ -222,11 +222,17 @@ class UniversumRunner:
 
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
             additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
+        """
+        `force_installed` launches python with '-I' option, that ensures the non-installed universum sources
+        will not be used instead of those installed into system. Without '-I' option `python3.7 -m` will first
+        try to launch universum from sources in `workdir` if there are any. That is why, if `workdir` is not
+        default and there are no universum sources in specified `workdir`, the preinstalled universum will
+        be ran as in case of `force_installed`.
+        """
 
         if force_installed:
             cmd = "python3.7 -I -m universum"
         elif utils.is_pycharm() or workdir:
-            # Changing workdir may also lead to using installed Universum instead of local sources
             cmd = "python3.7 -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
