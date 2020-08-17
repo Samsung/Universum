@@ -92,7 +92,7 @@ class Swarm(ReportObserver, Module):
         return self.settings.server_url + "/reviews/" + self.settings.review_id + "/"
 
     def update_review_version(self):
-        if self.review_version:
+        if self.review_version and self.review_latest_version:
             return
 
         result = utils.make_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
@@ -124,8 +124,8 @@ class Swarm(ReportObserver, Module):
         if self.review_latest_version == self.review_version:
             return True
 
-        text = "Current review version is " + self.review_version + \
-               ", while latest review version is already " + self.review_latest_version
+        text = "Current review version is {0}, while latest review version is already {1}".format(
+            self.review_version, self.review_latest_version)
         self.out.log(text)
         return False
 
@@ -175,17 +175,25 @@ class Swarm(ReportObserver, Module):
     def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm
         # Does not require login to Swarm; changes "Automated Tests" icon
+        # Should not be applied to non-latest revision
         if result:
             link = self.settings.pass_link
         else:
             link = self.settings.fail_link
 
-        if link is not None:
-            self.out.log("Swarm will be informed about build status by URL " + link)
-            utils.make_request(link, critical=False)
+        if self.is_latest_version():
+            if link is not None:
+                self.out.log("Build status on Swarm will be updated via URL " + link)
+                utils.make_request(link, critical=False)
+            else:
+                self.out.log("Build status on Swarm will not be updated because " +
+                             "the '{0}' link has not been provided.".format("PASS" if result else "FAIL"))
         else:
-            self.out.log("Swarm will not be informed about build status because " +
-                         "the '{0}' link was not provided".format("PASS" if result else "FAIL"))
+            text = "Build status on Swarm will not be updated because tested review revision is not latest."
+            if not link:
+                text += " Also, even if the review revision was latest, we wouldn't be able to report the status " \
+                        "because the '{0}' link has not been provided.".format("PASS" if result else "FAIL")
+            self.out.log(text)
 
         # Voting up or down; posting comments if any
         # An addition to "Automated Tests" functionality, requires login to Swarm
