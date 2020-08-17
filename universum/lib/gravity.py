@@ -1,4 +1,4 @@
-from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, NoReturn, Optional, Type, TypeVar, Union
+from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 __all__ = [
     "Module",
@@ -12,7 +12,6 @@ class ModuleSettings:
     def __init__(self, cls: Type['Module'], main_settings: 'ModuleSettings') -> None:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
-        # TODO: can't clarify that active_modules[Type[X]] returns X (https://github.com/python/mypy/issues/4928)
         self.active_modules: Dict[Type[Module], Module]
 
     def __getattribute__(self, item: str) -> Union[str, List[str]]:
@@ -53,16 +52,18 @@ class Settings:
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
-class Module():
+class Module:
     settings: ClassVar['Settings']
     main_settings: 'ModuleSettings'
+
     def __new__(cls: Type['Module'], main_settings: 'ModuleSettings', *args, **kwargs) -> 'Module':
         instance: Module = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
         return instance
 
 
-ComponentType = TypeVar('ComponentType', bound='Module')
+ComponentType = TypeVar('ComponentType', bound=Module)
+
 
 def construct_component(cls: Type[ComponentType], main_settings: 'ModuleSettings', *args, **kwargs) -> ComponentType:
     if not getattr(main_settings, "active_modules", None):
@@ -79,7 +80,8 @@ def construct_component(cls: Type[ComponentType], main_settings: 'ModuleSettings
     return cast(ComponentType, main_settings.active_modules[cls])
 
 
-DependencyType = TypeVar('DependencyType', bound='Module')
+DependencyType = TypeVar('DependencyType', bound=Module)
+
 
 class Dependency(Generic[DependencyType]):
     def __init__(self, cls: Type[DependencyType]) -> None:

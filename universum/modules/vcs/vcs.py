@@ -127,6 +127,7 @@ SubmitVcs: Type[ProjectDirectory] = create_vcs("submit")
 class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/issues/2477
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(ApiSupport)
+    driver: Union[base_vcs.BasePollVcs, base_vcs.BaseSubmitVcs, base_vcs.BaseDownloadVcs]
 
     @staticmethod
     def define_arguments(argument_parser):
