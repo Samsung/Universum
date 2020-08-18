@@ -1,4 +1,7 @@
-from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import cast, Any, Callable, ClassVar, Generic, List, Optional, Type, TypeVar, TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from .module_arguments import ModuleNamespace  # for static type check
 
 __all__ = [
     "Module",
@@ -9,10 +12,9 @@ __all__ = [
 
 
 class ModuleSettings:
-    def __init__(self, cls: Type['Module'], main_settings: 'ModuleSettings') -> None:
+    def __init__(self, cls: Type['Module'], main_settings: 'ModuleNamespace') -> None:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
-        self.active_modules: Dict[Type[Module], Module]
 
     def __getattribute__(self, item: str) -> Union[str, List[str]]:
         cls: Type['Module'] = object.__getattribute__(self, "cls")
@@ -28,7 +30,7 @@ class ModuleSettings:
 
     def __setattr__(self, key: str, value: Union[str, List[str]]) -> None:
         cls: Type['Module'] = object.__getattribute__(self, "cls")
-        main_settings: 'ModuleSettings' = object.__getattribute__(self, "main_settings")
+        main_settings: 'ModuleNamespace' = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
                 settings: 'Settings' = getattr(main_settings, entry.__name__)
@@ -54,10 +56,10 @@ class Settings:
 
 class Module:
     settings: ClassVar['Settings']
-    main_settings: 'ModuleSettings'
+    main_settings: 'ModuleNamespace'
 
-    def __new__(cls: Type['Module'], main_settings: 'ModuleSettings', *args, **kwargs) -> 'Module':
-        instance: Module = super(Module, cls).__new__(cls)
+    def __new__(cls: Type['Module'], main_settings: 'ModuleNamespace', *args, **kwargs) -> 'Module':
+        instance: 'Module' = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
         return instance
 
@@ -65,7 +67,7 @@ class Module:
 ComponentType = TypeVar('ComponentType', bound=Module)
 
 
-def construct_component(cls: Type[ComponentType], main_settings: 'ModuleSettings', *args, **kwargs) -> ComponentType:
+def construct_component(cls: Type[ComponentType], main_settings: 'ModuleNamespace', *args, **kwargs) -> ComponentType:
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = dict()
 
@@ -93,12 +95,9 @@ class Dependency(Generic[DependencyType]):
         return constructor_function
 
 
-def get_dependencies(cls: Type[Module], result: Optional[List[Type[Module]]] = None,
-                     parent: Optional[Dict[Type[Module], Type[Module]]] = None) -> List[Type[Module]]:
+def get_dependencies(cls: Type[Module], result: Optional[List[Type[Module]]] = None) -> List[Type[Module]]:
     if result is None:
         result = list()
-    if parent is None:
-        parent = dict()
 
     result.append(cls)
 
@@ -109,10 +108,8 @@ def get_dependencies(cls: Type[Module], result: Optional[List[Type[Module]]] = N
     all_dependencies.extend([x.cls for x in cls.__dict__.values() if isinstance(x, Dependency)])
 
     for dependency in all_dependencies:
-        parent[dependency] = cls
-
         if dependency not in result:
-            get_dependencies(dependency, result, parent)
+            get_dependencies(dependency, result)
 
     return result
 
