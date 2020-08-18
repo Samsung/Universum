@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class ModuleNamespace(argparse.Namespace):
 
     if TYPE_CHECKING:
-        active_modules: Dict[Type[Module], Module]
+        active_modules: Dict[Type['Module'], 'Module']
 
     def __setattr__(self, name, value):
         if '.' in name:
