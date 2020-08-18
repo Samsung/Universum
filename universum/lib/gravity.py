@@ -1,7 +1,4 @@
-from typing import cast, Any, Callable, ClassVar, Generic, List, Optional, Type, TypeVar, TYPE_CHECKING, Union
-
-if TYPE_CHECKING:
-    from .module_arguments import ModuleNamespace  # for static type check
+from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, TYPE_CHECKING, Union
 
 __all__ = [
     "Module",
@@ -12,7 +9,7 @@ __all__ = [
 
 
 class ModuleSettings:
-    def __init__(self, cls: Type['Module'], main_settings: 'ModuleNamespace') -> None:
+    def __init__(self, cls: Type['Module'], main_settings: 'HasModulesMapping') -> None:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
 
@@ -30,7 +27,7 @@ class ModuleSettings:
 
     def __setattr__(self, key: str, value: Union[str, List[str]]) -> None:
         cls: Type['Module'] = object.__getattribute__(self, "cls")
-        main_settings: 'ModuleNamespace' = object.__getattribute__(self, "main_settings")
+        main_settings: 'HasModulesMapping' = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
                 settings: 'Settings' = getattr(main_settings, entry.__name__)
@@ -54,11 +51,14 @@ class Settings:
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
+class HasModulesMapping:
+    active_modules: Dict[Type['Module'], 'Module']
+
 class Module:
     settings: ClassVar['Settings']
-    main_settings: 'ModuleNamespace'
+    main_settings: 'HasModulesMapping'
 
-    def __new__(cls: Type['Module'], main_settings: 'ModuleNamespace', *args, **kwargs) -> 'Module':
+    def __new__(cls: Type['Module'], main_settings: 'HasModulesMapping', *args, **kwargs) -> 'Module':
         instance: 'Module' = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
         return instance
@@ -67,7 +67,7 @@ class Module:
 ComponentType = TypeVar('ComponentType', bound=Module)
 
 
-def construct_component(cls: Type[ComponentType], main_settings: 'ModuleNamespace', *args, **kwargs) -> ComponentType:
+def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentType:
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = dict()
 

@@ -1,19 +1,13 @@
 # pylint: disable = protected-access
 
-from typing import Dict, Type, TYPE_CHECKING
-
 import argparse
 import os
 import sys
 
-if TYPE_CHECKING:
-    from .gravity import Module  # for static type check
+from .gravity import HasModulesMapping
 
 
-class ModuleNamespace(argparse.Namespace):
-
-    if TYPE_CHECKING:
-        active_modules: Dict[Type['Module'], 'Module']
+class ModuleNamespace(argparse.Namespace, HasModulesMapping):
 
     def __setattr__(self, name, value):
         if '.' in name:
