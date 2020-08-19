@@ -1,5 +1,4 @@
 from typing import Dict, List, Type, Union
-import inspect
 import json
 import shutil
 import sh
@@ -12,7 +11,6 @@ from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
 from ...lib import utils
 from ...lib.gravity import Dependency
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 
 __all__ = [
@@ -77,13 +75,12 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
             super(Vcs, self).__init__(*args, **kwargs)
 
             if not getattr(self.settings, "type", None):
-                text = inspect.cleandoc("""
+                self.error("""
                     The repository (VCS) type is not set.
                      
-                    The repository type defines the version control system 
-                    that is used for performing the requested action.
-                    For example, Universum needs to get project source codes
-                    for performing Continuous Integration (CI) builds.  
+                    The repository type defines the version control system that is used for
+                    performing the requested action. For example, Universum needs to get project
+                    source codes for performing Continuous Integration (CI) builds.
 
                     The following types are supported: {}.
                     
@@ -91,13 +88,12 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     configuration parameters. At the minimum, the following
                     parameters are required:
                       * "git", "github" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
-                      * "perforce"                   - P4PORT (-p4p), P4USER (-p4u) and P4PASSWD (-p4P)
+                      * "perforce"                   - P4PORT (-p4p), P4USER (-p4u), P4PASSWD (-p4P)
                       * "none"                       - SOURCE_DIR (-fsd)
                       
-                    Depending on the requested action, additional type-specific
-                    parameters are required. For example, P4CLIENT (-p4c) is
-                    required for CI builds with perforce.""").format(", ".join(vcs_types))
-                self.error(text)
+                    Depending on the requested action, additional type-specific parameters are
+                    required. For example, P4CLIENT (-p4c) is required for CI builds with perforce.""".
+                           format(", ".join(vcs_types)))
                 return
 
             try:

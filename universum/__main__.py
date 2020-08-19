@@ -46,7 +46,7 @@ def run(settings) -> int:
     main_module = construct_component(settings.main_class, settings)
 
     if error_state_module.is_error_state():
-        raise IncorrectParameterError("\n"+("\n"+"-"*80 + "\n").join(error_state_module.get_errors()))
+        raise IncorrectParameterError(("\n\n"+"-"*80 + "\n").join(error_state_module.get_errors()))
 
     main_module.out.log("{} {} started execution".format(__title__, __version__))
 
@@ -82,7 +82,10 @@ def main(args=None):
     try:
         return run(settings)
     except IncorrectParameterError as e:
-        settings.command_parser.error(e)
+        settings.command_parser.print_usage(sys.stderr)
+        sys.stderr.write("\nThe following errors were encountered:\n" + "-"*80+"\n")
+        sys.stderr.write(str(e))
+        return 2
     except ImportError as e:
         print(e)
         return 2

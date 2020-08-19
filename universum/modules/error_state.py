@@ -1,4 +1,5 @@
 from typing import List
+import inspect
 
 from ..lib.gravity import Module, Dependency
 
@@ -18,7 +19,7 @@ class ErrorState(Module):
         self.global_error_state = self.global_error_state_factory()
 
     def error(self, message: str):
-        self.global_error_state.errors.append(message)
+        self.global_error_state.errors.append(inspect.cleandoc(message))
 
     def is_error_state(self):
         return len(self.global_error_state.errors) > 0
