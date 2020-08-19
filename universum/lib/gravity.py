@@ -1,5 +1,5 @@
 from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, TYPE_CHECKING, Union
-
+from typing_extensions import Protocol
 __all__ = [
     "Module",
     "Dependency",
@@ -51,8 +51,9 @@ class Settings:
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
-class HasModulesMapping:
+class HasModulesMapping(Protocol):
     active_modules: Dict[Type['Module'], 'Module']
+
 
 class Module:
     settings: ClassVar['Settings']

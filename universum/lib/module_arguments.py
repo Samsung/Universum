@@ -4,10 +4,8 @@ import argparse
 import os
 import sys
 
-from .gravity import HasModulesMapping
 
-
-class ModuleNamespace(argparse.Namespace, HasModulesMapping):
+class ModuleNamespace(argparse.Namespace):
 
     def __setattr__(self, name, value):
         if '.' in name:
