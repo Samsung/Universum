@@ -18,7 +18,7 @@ class ModuleSettings:
         main_settings = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
-                settings: 'HasModulesMapping' = getattr(main_settings, entry.__name__)
+                settings = getattr(main_settings, entry.__name__)
                 return getattr(settings, item)
             except AttributeError:
                 continue
@@ -30,7 +30,7 @@ class ModuleSettings:
         main_settings: 'HasModulesMapping' = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
-                settings: 'HasModulesMapping' = getattr(main_settings, entry.__name__)
+                settings = getattr(main_settings, entry.__name__)
                 getattr(settings, key)
                 setattr(settings, key, value)
                 return
