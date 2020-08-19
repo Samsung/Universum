@@ -1,5 +1,6 @@
 import copy
 
+from typing import cast, Callable, ClassVar, List, Optional, Type
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
@@ -10,16 +11,24 @@ __all__ = [
 ]
 
 
-def needs_structure(klass):
-    klass.structure_factory = Dependency(StructureHandler)
-    original_init = klass.__init__
+class HasStructure:
+    structure_factory: ClassVar[Dependency['StructureHandler']]
+    structure: 'StructureHandler'
+
+
+def needs_structure(cls: Type) -> Type['HasStructure']:
+    # noinspection PyTypeChecker
+    cast(Type['HasStructure'], cls)
+    cls.structure_factory = Dependency(StructureHandler)
+    original_init = cls.__init__
 
     def new_init(self, *args, **kwargs):
         self.structure = self.structure_factory()
         original_init(self, *args, **kwargs)
 
-    klass.__init__ = new_init
-    return klass
+    cls.__init__ = new_init
+    # noinspection PyTypeChecker
+    return cls
 
 
 class Block:
@@ -51,24 +60,20 @@ class Block:
     True
     """
 
-    def __init__(self, name: str, parent: 'Block' = None):
-        self.name = name
-        self.status = "Success"
-        self.children = []
+    def __init__(self, name: str, parent: Optional['Block'] = None) -> None:
+        self.name: str = name
+        self.status: str = "Success"
+        self.children: List[Block] = []
 
-        self._parent = parent
-        self.number = ''
-        if self.parent:
-            self.parent.children.append(self)
+        self.parent: Optional[Block] = parent
+        self.number: str = ''
+        if parent:
+            parent.children.append(self)
             self.number = '{}{}.'.format(parent.number, len(parent.children))
 
     def __str__(self) -> str:
         result = self.number + ' ' + self.name
         return '{} - {}'.format(result, self.status) if not self.children else result
-
-    @property  # getter
-    def parent(self) -> 'Block':
-        return self._parent
 
     def is_successful(self) -> bool:
         return self.status == "Success"
@@ -78,24 +83,26 @@ class Block:
 class StructureHandler(Module):
     def __init__(self, *args, **kwargs):
         super(StructureHandler, self).__init__(*args, **kwargs)
-        block_structure = Block("Universum")
-        self.current_block = block_structure
-        self.configs_current_number = 0
-        self.configs_total_count = 0
+        self.current_block: Optional[Block] = Block("Universum")
+        self.configs_current_number: int = 0
+        self.configs_total_count: int = 0
         self.active_background_steps = []
+        # noinspection PyUnresolvedReferences
+        self.out: 'Output'  # TODO: add annotations in ./universum/module/output/output.py for @needs_output
 
-    def open_block(self, name):
+    def open_block(self, name: str) -> None:
         new_block = Block(name, self.current_block)
         self.current_block = new_block
 
         self.out.open_block(new_block.number, name)
 
-    def close_block(self):
-        block = self.current_block
-        self.current_block = self.current_block.parent
-        self.out.close_block(block.number, block.name, block.status)
+    def close_block(self) -> None:
+        if self.current_block is not None:
+            block: Block = self.current_block
+            self.current_block = self.current_block.parent
+            self.out.close_block(block.number, block.name, block.status)
 
-    def report_critical_block_failure(self):
+    def report_critical_block_failure(self) -> None:
         self.out.report_skipped("Critical step failed. All further configurations will be skipped")
 
     def report_skipped_block(self, name):
@@ -105,11 +112,11 @@ class StructureHandler(Module):
         self.out.report_skipped(new_skipped_block.number + " " + name +
                                 " skipped because of critical step failure")
 
-    def fail_current_block(self, error=None): #TODO: why don't used empty str by default?
-        block = self.get_current_block()
+    def fail_current_block(self, error: str = ""):
+        block: Block = self.get_current_block()
         self.fail_block(block, error)
 
-    def fail_block(self, block, error=None):
+    def fail_block(self, block, error: str = ""):
         if error:
             self.out.log_exception(error)
         block.status = "Failed"
@@ -120,7 +127,7 @@ class StructureHandler(Module):
 
     # The exact block will be reported as failed only if pass_errors is False
     # Otherwise the exception will be passed to the higher level function and handled there
-    def run_in_block(self, operation, block_name, pass_errors, *args, **kwargs):
+    def run_in_block(self, operation: Callable[..., Optional[bool]], block_name, pass_errors: bool, *args, **kwargs):
         result = None
         self.open_block(block_name)
         try:

@@ -1,3 +1,7 @@
+from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, Union
+
+from typing_extensions import Protocol
+
 __all__ = [
     "Module",
     "Dependency",
@@ -7,12 +11,12 @@ __all__ = [
 
 
 class ModuleSettings:
-    def __init__(self, cls, main_settings):
+    def __init__(self, cls: Type['Module'], main_settings: 'HasModulesMapping') -> None:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
 
-    def __getattribute__(self, item):
-        cls = object.__getattribute__(self, "cls")
+    def __getattribute__(self, item: str) -> Union[str, List[str]]:
+        cls: Type['Module'] = object.__getattribute__(self, "cls")
         main_settings = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
@@ -23,9 +27,9 @@ class ModuleSettings:
 
         raise AttributeError("'" + cls.__name__ + "' object has no setting '" + item + "'")
 
-    def __setattr__(self, key, value):
-        cls = object.__getattribute__(self, "cls")
-        main_settings = object.__getattribute__(self, "main_settings")
+    def __setattr__(self, key: str, value: Union[str, List[str]]) -> None:
+        cls: Type['Module'] = object.__getattribute__(self, "cls")
+        main_settings: 'HasModulesMapping' = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
                 settings = getattr(main_settings, entry.__name__)
@@ -39,73 +43,88 @@ class ModuleSettings:
 
 
 class Settings:
-    def __init__(self, cls):
-        self.cls = cls
+    def __init__(self, cls: Type['Module']) -> None:
+        self.cls: Type['Module'] = cls
 
-    def __get__(self, obj, objtype=None):
+    def __get__(self, obj: 'Module', objtype: Any = None) -> 'ModuleSettings':
         return ModuleSettings(self.cls, obj.main_settings)
 
-    def __set__(self, obj, settings):
+    def __set__(self, obj: 'Module', settings: 'Settings'):
         setattr(obj.main_settings, self.cls.__name__, settings)
 
 
+class HasModulesMapping(Protocol):
+    active_modules: Dict[Type['Module'], 'Module']
+
+
 class Module:
-    def __new__(cls, main_settings, *args, **kwargs):
-        instance = super(Module, cls).__new__(cls)
+    settings: ClassVar['Settings']
+    main_settings: 'HasModulesMapping'
+
+    def __new__(cls: Type['Module'], main_settings: 'HasModulesMapping', *args, **kwargs) -> 'Module':
+        instance: 'Module' = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings
         return instance
 
 
-def construct_component(klass, main_settings, *args, **kwargs):
+ComponentType = TypeVar('ComponentType', bound=Module)
+
+
+def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentType:
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = dict()
 
-    if klass not in main_settings.active_modules:
-        klass.settings = Settings(klass)
-        instance = klass.__new__(klass, main_settings=main_settings)
-        instance.__init__(*args, **kwargs)
-        main_settings.active_modules[klass] = instance
-    return main_settings.active_modules[klass]
+    if cls not in main_settings.active_modules:
+        cls.settings = Settings(cls)
+        instance: 'Module' = cls.__new__(cls, main_settings=main_settings)
+        # https://github.com/python/mypy/blob/master/mypy/checkmember.py#180
+        # Accessing __init__ in statically typed code would compromise
+        # type safety unless used via super().
+        # noinspection PyArgumentList
+        instance.__init__(*args, **kwargs)  # type: ignore
+        main_settings.active_modules[cls] = instance
+    return cast(ComponentType, main_settings.active_modules[cls])
 
 
-class Dependency:
-    def __init__(self, klass):
-        self.klass = klass
+DependencyType = TypeVar('DependencyType', bound=Module)
 
-    def __get__(self, instance, owner):
-        def constructor_function(*args, **kwargs):
-            return construct_component(self.klass, instance.main_settings, *args, **kwargs)
+
+class Dependency(Generic[DependencyType]):
+    def __init__(self, cls: Type[DependencyType]) -> None:
+        self.cls = cls
+
+    def __get__(self, instance: DependencyType, owner: Any) -> Callable[..., DependencyType]:
+        def constructor_function(*args, **kwargs) -> DependencyType:
+            return construct_component(self.cls, instance.main_settings, *args, **kwargs)
         return constructor_function
 
 
-def get_dependencies(klass, result=None, parent=None):
+def get_dependencies(cls: Type[Module], result: Optional[List[Type[Module]]] = None) -> List[Type[Module]]:
     if result is None:
         result = list()
-    if parent is None:
-        parent = dict()
 
-    result.append(klass)
+    result.append(cls)
 
     # parent classes
-    all_dependencies = [x for x in klass.__mro__ if issubclass(x, Module) and x != Module and x != klass]
+    all_dependencies: List[Type[Module]]
+    all_dependencies = [x for x in cls.__mro__ if issubclass(x, Module) and x != Module and x != cls]
     # dependencies
-    all_dependencies.extend([x.klass for x in klass.__dict__.values() if isinstance(x, Dependency)])
+    all_dependencies.extend([x.cls for x in cls.__dict__.values() if isinstance(x, Dependency)])
 
     for dependency in all_dependencies:
-        parent[dependency] = klass
-
         if dependency not in result:
-            get_dependencies(dependency, result, parent)
+            get_dependencies(dependency, result)
 
     return result
 
 
-def define_arguments_recursive(klass, argument_parser):
-    modules = get_dependencies(klass)
+def define_arguments_recursive(cls, argument_parser):  # TODO: return here after ModuleArgumentParser is annotated
+    modules = get_dependencies(cls)
 
     for current_module in modules:
         if "define_arguments" in current_module.__dict__:
             argument_parser.dest_prefix = current_module.__name__ + '.'
+            # noinspection PyUnresolvedReferences
             current_module.define_arguments(argument_parser)
 
     argument_parser.dest_prefix = ''

@@ -1,3 +1,4 @@
+from typing import Dict, List, Type, Union
 import inspect
 import json
 import shutil
@@ -20,35 +21,46 @@ __all__ = [
 ]
 
 
-def create_vcs(class_type=None):
+def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
+    driver_factory_class: Union[
+        Dict[str, Type[base_vcs.BasePollVcs]],
+        Dict[str, Type[base_vcs.BaseSubmitVcs]],
+        Dict[str, Type[base_vcs.BaseDownloadVcs]]
+    ]
     if class_type == "submit":
-        p4_driver_factory_class = perforce_vcs.PerforceSubmitVcs
-        git_driver_factory_class = git_vcs.GitSubmitVcs
-        gerrit_driver_factory_class = gerrit_vcs.GerritSubmitVcs
-        github_driver_factory_class = git_vcs.GitSubmitVcs
-        local_driver_factory_class = base_vcs.BaseSubmitVcs
+        driver_factory_class = {
+            "none": base_vcs.BaseSubmitVcs,
+            "p4": perforce_vcs.PerforceSubmitVcs,
+            "git": git_vcs.GitSubmitVcs,
+            "gerrit": gerrit_vcs.GerritSubmitVcs,
+            "github": git_vcs.GitSubmitVcs
+        }
     elif class_type == "poll":
-        p4_driver_factory_class = perforce_vcs.PerforcePollVcs
-        git_driver_factory_class = git_vcs.GitPollVcs
-        gerrit_driver_factory_class = git_vcs.GitPollVcs
-        github_driver_factory_class = git_vcs.GitPollVcs
-        local_driver_factory_class = base_vcs.BasePollVcs
+        driver_factory_class = {
+            "none": base_vcs.BasePollVcs,
+            "p4": perforce_vcs.PerforcePollVcs,
+            "git": git_vcs.GitPollVcs,
+            "gerrit": git_vcs.GitPollVcs,
+            "github": git_vcs.GitPollVcs
+        }
     else:
-        p4_driver_factory_class = perforce_vcs.PerforceMainVcs
-        git_driver_factory_class = git_vcs.GitMainVcs
-        gerrit_driver_factory_class = gerrit_vcs.GerritMainVcs
-        github_driver_factory_class = github_vcs.GithubMainVcs
-        local_driver_factory_class = local_vcs.LocalMainVcs
+        driver_factory_class = {
+            "none": local_vcs.LocalMainVcs,
+            "p4": perforce_vcs.PerforceMainVcs,
+            "git": git_vcs.GitMainVcs,
+            "gerrit": gerrit_vcs.GerritMainVcs,
+            "github": github_vcs.GithubMainVcs
+        }
 
-    vcs_types = ["none", "p4", "git", "gerrit", "github"]
+    vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
 
     @needs_structure
     class Vcs(ProjectDirectory):
-        local_driver_factory = Dependency(local_driver_factory_class)
-        git_driver_factory = Dependency(git_driver_factory_class)
-        gerrit_driver_factory = Dependency(gerrit_driver_factory_class)
-        github_driver_factory = Dependency(github_driver_factory_class)
-        perforce_driver_factory = Dependency(p4_driver_factory_class)
+        local_driver_factory = Dependency(driver_factory_class['none'])
+        git_driver_factory = Dependency(driver_factory_class['git'])
+        gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])
+        github_driver_factory = Dependency(driver_factory_class['github'])
+        perforce_driver_factory = Dependency(driver_factory_class['p4'])
 
         @staticmethod
         def define_arguments(argument_parser):
@@ -108,13 +120,14 @@ def create_vcs(class_type=None):
     return Vcs
 
 
-PollVcs = create_vcs("poll")
-SubmitVcs = create_vcs("submit")
+PollVcs: Type[ProjectDirectory] = create_vcs("poll")
+SubmitVcs: Type[ProjectDirectory] = create_vcs("submit")
 
 
-class MainVcs(create_vcs()):
+class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/issues/2477
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(ApiSupport)
+    driver: Union[base_vcs.BasePollVcs, base_vcs.BaseSubmitVcs, base_vcs.BaseDownloadVcs]
 
     @staticmethod
     def define_arguments(argument_parser):

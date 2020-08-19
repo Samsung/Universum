@@ -6,6 +6,7 @@ import sys
 
 
 class ModuleNamespace(argparse.Namespace):
+
     def __setattr__(self, name, value):
         if '.' in name:
             group, name = name.split('.', 1)
