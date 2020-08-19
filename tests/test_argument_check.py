@@ -233,9 +233,10 @@ def test_swarm_changelist_incorrect_format():
 
 
 @parametrize_unset()
-def test_vcs_type_and_config_path(unset, ):
+def test_vcs_type_and_config_path(unset):
     settings = create_settings("main", "p4")
     unset(settings, "Launcher", "config_path")
     unset(settings, "Vcs", "type")
 
-    assert_incorrect_parameter(settings, "(?i)" + "config_path")
+    # (?is) means "ignore case" and "dot matches newline character"
+    assert_incorrect_parameter(settings, "(?is)(?=.*CONFIG_PATH)(?=.*repository type)")
