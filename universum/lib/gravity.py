@@ -80,6 +80,7 @@ def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapp
         # https://github.com/python/mypy/blob/master/mypy/checkmember.py#180
         # Accessing __init__ in statically typed code would compromise
         # type safety unless used via super().
+        # noinspection PyArgumentList
         instance.__init__(*args, **kwargs)  # type: ignore
         main_settings.active_modules[cls] = instance
     return cast(ComponentType, main_settings.active_modules[cls])
@@ -123,6 +124,7 @@ def define_arguments_recursive(cls, argument_parser):  # TODO: return here after
     for current_module in modules:
         if "define_arguments" in current_module.__dict__:
             argument_parser.dest_prefix = current_module.__name__ + '.'
+            # noinspection PyUnresolvedReferences
             current_module.define_arguments(argument_parser)
 
     argument_parser.dest_prefix = ''

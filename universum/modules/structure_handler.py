@@ -17,6 +17,7 @@ class HasStructure:
 
 
 def needs_structure(cls: Type) -> Type['HasStructure']:
+    # noinspection PyTypeChecker
     cast(Type['HasStructure'], cls)
     cls.structure_factory = Dependency(StructureHandler)
     original_init = cls.__init__
@@ -26,6 +27,7 @@ def needs_structure(cls: Type) -> Type['HasStructure']:
         original_init(self, *args, **kwargs)
 
     cls.__init__ = new_init
+    # noinspection PyTypeChecker
     return cls
 
 
@@ -85,6 +87,7 @@ class StructureHandler(Module):
         self.configs_current_number: int = 0
         self.configs_total_count: int = 0
         self.active_background_steps = []
+        # noinspection PyUnresolvedReferences
         self.out: 'Output'  # TODO: add annotations in ./universum/module/output/output.py for @needs_output
 
     def open_block(self, name: str) -> None:
