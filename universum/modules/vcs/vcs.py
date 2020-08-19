@@ -7,6 +7,7 @@ import sh
 from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
+from ..error_state import ErrorState
 from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
 from ...lib import utils
@@ -55,7 +56,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
     vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
 
     @needs_structure
-    class Vcs(ProjectDirectory):
+    class Vcs(ProjectDirectory, ErrorState):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
         gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])
@@ -96,7 +97,8 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     Depending on the requested action, additional type-specific
                     parameters are required. For example, P4CLIENT (-p4c) is
                     required for CI builds with perforce.""").format(", ".join(vcs_types))
-                raise IncorrectParameterError(text)
+                self.error(text)
+                return
 
             try:
                 if self.settings.type == "none":
@@ -109,7 +111,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     driver_factory = self.github_driver_factory
                 else:
                     driver_factory = self.perforce_driver_factory
-            except AttributeError:
+            except AttributeError:  # TODO: how it can be generated?
                 raise NotImplementedError()
             self.driver = driver_factory()
 
@@ -142,7 +144,8 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         self.api_support = self.api_support_factory()
 
         if self.settings.report_to_review:
-            self.code_review = self.driver.code_review()
+            if not self.is_error_state():
+                self.code_review = self.driver.code_review()
 
     def is_latest_review_version(self):
         if self.settings.report_to_review:

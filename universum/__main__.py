@@ -3,15 +3,16 @@ import sys
 
 from . import __version__, __title__
 from .api import Api
-from .main import Main
 from .github_handler import GithubHandler
-from .nonci import Nonci
-from .poll import Poll
-from .submit import Submit
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import define_arguments_recursive, construct_component
 from .lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
 from .lib.utils import Uninterruptible, format_traceback
+from .main import Main
+from .modules.error_state import ErrorState
+from .nonci import Nonci
+from .poll import Poll
+from .submit import Submit
 
 
 def define_arguments():
@@ -39,9 +40,14 @@ def define_arguments():
     return parser
 
 
-def run(settings):
+def run(settings) -> int:
     result = 0
+    error_state_module = construct_component(ErrorState, settings)
     main_module = construct_component(settings.main_class, settings)
+
+    if error_state_module.is_error_state():
+        raise IncorrectParameterError("\n"+("\n"+"-"*80 + "\n").join(error_state_module.get_errors()))
+
     main_module.out.log("{} {} started execution".format(__title__, __version__))
 
     def signal_handler(signal_number, stack_frame):

@@ -5,6 +5,7 @@ from inspect import cleandoc
 
 import sh
 
+from .error_state import ErrorState
 from .. import configuration_support
 from ..lib import utils
 from ..lib.ci_exception import CiException, CriticalCiException, StepException
@@ -289,7 +290,7 @@ class Step:
 
 @needs_output
 @needs_structure
-class Launcher(ProjectDirectory):
+class Launcher(ProjectDirectory, ErrorState):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
@@ -336,8 +337,8 @@ class Launcher(ProjectDirectory):
                 self.output = "console"
 
         if not getattr(self.settings, "config_path", None):
-            raise IncorrectParameterError(
-                "the path to config file is not specified.\n"
+            self.error(
+                "The path to config file is not specified.\n"
                 "Please specify the path to project config file by using\n"
                 "'--launcher-config-path' ('-lcp') command-line option or\n"
                 "CONFIG_PATH environment variable")

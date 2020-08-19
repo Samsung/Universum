@@ -230,3 +230,12 @@ def test_swarm_changelist_incorrect_format():
     settings.Swarm.change = "123,456"
 
     assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
+
+
+@parametrize_unset()
+def test_vcs_type_and_config_path(unset, ):
+    settings = create_settings("main", "p4")
+    unset(settings, "Launcher", "config_path")
+    unset(settings, "Vcs", "type")
+
+    assert_incorrect_parameter(settings, "(?i)" + "config_path")
