@@ -1,5 +1,7 @@
-from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, TYPE_CHECKING, Union
+from typing import cast, Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, Union
+
 from typing_extensions import Protocol
+
 __all__ = [
     "Module",
     "Dependency",

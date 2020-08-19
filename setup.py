@@ -37,7 +37,8 @@ setup(
         'requests',
         'sh',
         'lxml',
-        'six'
+        'six',
+        'typing-extensions'
     ],
     extras_require={
         'docs': [docs],
