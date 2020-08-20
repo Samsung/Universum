@@ -84,7 +84,7 @@ def main(args=None):
     except IncorrectParameterError as e:
         settings.command_parser.print_usage(sys.stderr)
         sys.stderr.write("\nThe following errors were encountered:\n" + "-"*80+"\n")
-        sys.stderr.write(str(e))
+        sys.stderr.write(str(e)+"\n")
         return 2
     except ImportError as e:
         print(e)

@@ -92,7 +92,11 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                       * "none"                       - SOURCE_DIR (-fsd)
                       
                     Depending on the requested action, additional type-specific parameters are
-                    required. For example, P4CLIENT (-p4c) is required for CI builds with perforce.""".
+                    required. For example, P4CLIENT (-p4c) is required for CI builds with perforce.
+                    
+                    Please specify the VCS type by using '--vcs-type' ('-vt') command-line option or
+                    VCS_TYPE environment variable.
+                    """.
                            format(", ".join(vcs_types)))
                 return
 
