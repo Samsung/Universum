@@ -103,7 +103,7 @@ class GitVcs(HasOutput, BaseVcs):
 
 
 @needs_structure
-class GitMainVcs(GitVcs, HasOutput, BaseDownloadVcs):
+class GitMainVcs(GitVcs, BaseDownloadVcs):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git")
@@ -193,7 +193,7 @@ class GitMainVcs(GitVcs, HasOutput, BaseDownloadVcs):
         raise NotImplementedError
 
 
-class GitSubmitVcs(GitVcs, HasOutput, BaseSubmitVcs):
+class GitSubmitVcs(GitVcs, BaseSubmitVcs):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git")
