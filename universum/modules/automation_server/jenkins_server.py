@@ -2,7 +2,7 @@ import os
 
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib import utils
-from ..output import needs_output
+from ..output import HasOutput
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 
 __all__ = [
@@ -11,8 +11,7 @@ __all__ = [
 ]
 
 
-@needs_output
-class JenkinsServerForTrigger(BaseServerForTrigger):
+class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger):
 
     @staticmethod
     def define_arguments(argument_parser):

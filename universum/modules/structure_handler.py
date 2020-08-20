@@ -4,7 +4,7 @@ from typing import cast, Callable, ClassVar, List, Optional, Type
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
-from .output import needs_output
+from .output import HasOutput
 
 __all__ = [
     "needs_structure"
@@ -79,8 +79,7 @@ class Block:
         return self.status == "Success"
 
 
-@needs_output
-class StructureHandler(Module):
+class StructureHandler(HasOutput, Module):
     def __init__(self, *args, **kwargs):
         super(StructureHandler, self).__init__(*args, **kwargs)
         self.current_block: Optional[Block] = Block("Universum")

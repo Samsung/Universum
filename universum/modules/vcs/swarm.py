@@ -6,7 +6,7 @@ from ...lib.gravity import Module, Dependency
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib import utils
 from ..reporter import ReportObserver, Reporter
-from ..output import needs_output
+from ..output import HasOutput
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
 
@@ -16,8 +16,7 @@ __all__ = [
 ]
 
 
-@needs_output
-class Swarm(ReportObserver, Module):
+class Swarm(HasOutput, ReportObserver, Module):
     """
     This class contains CI functions for interaction with Swarm via 'swarm_cli.py'
     """

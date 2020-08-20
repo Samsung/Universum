@@ -3,7 +3,7 @@ from collections import defaultdict
 from ..lib.gravity import Module, Dependency
 from ..lib.utils import make_block
 from . import automation_server
-from .output import needs_output
+from .output import HasOutput
 from .structure_handler import needs_structure
 
 __all__ = [
@@ -30,9 +30,8 @@ class ReportObserver:
         raise NotImplementedError
 
 
-@needs_output
 @needs_structure
-class Reporter(Module):
+class Reporter(HasOutput, Module):
     automation_server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
 
     @staticmethod

@@ -4,21 +4,8 @@ from .terminal_based_output import TerminalBasedOutput
 from .teamcity_output import TeamcityOutput
 
 __all__ = [
-    "needs_output"
+    "HasOutput"
 ]
-
-
-def needs_output(klass):
-    klass.out_factory = Dependency(Output)
-    original_init = klass.__init__
-
-    def new_init(self, *args, **kwargs):
-        self.out = self.out_factory()
-        original_init(self, *args, **kwargs)
-
-    klass.__init__ = new_init
-
-    return klass
 
 
 class Output(Module):
@@ -72,3 +59,11 @@ class Output(Module):
 
     def log_shell_output(self, line):
         self.driver.log_shell_output(line)
+
+
+class HasOutput(Module):
+    out_factory = Dependency(Output)
+
+    def __init__(self, *args, **kwargs):
+        super(HasOutput, self).__init__(*args, **kwargs)
+        self.out = self.out_factory()

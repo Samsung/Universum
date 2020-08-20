@@ -4,7 +4,7 @@ import json
 import os
 
 from universum.configuration_support import Variations
-from .output import needs_output
+from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
 from ..lib import utils
@@ -13,9 +13,8 @@ from ..lib.utils import make_block
 from .structure_handler import needs_structure
 
 
-@needs_output
 @needs_structure
-class CodeReportCollector(ProjectDirectory):
+class CodeReportCollector(HasOutput, ProjectDirectory):
     reporter_factory = Dependency(reporter.Reporter)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
