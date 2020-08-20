@@ -1,3 +1,5 @@
+from typing import Type
+
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
 from .terminal_based_output import TerminalBasedOutput
@@ -62,8 +64,8 @@ class Output(Module):
 
 
 class HasOutput(Module):
-    out_factory = Dependency(Output)
+    out_factory: Dependency[Output] = Dependency(Output)
 
-    def __init__(self, *args, **kwargs):
-        super(HasOutput, self).__init__(*args, **kwargs)
-        self.out = self.out_factory()
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)  # type: ignore
+        self.out: Output = self.out_factory()
