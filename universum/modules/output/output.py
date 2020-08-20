@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Union
 
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
@@ -21,45 +21,46 @@ class Output(Module):
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
                                  "TeamCity environment is detected automatically when launched on build agent.")
 
-    def __init__(self, *args, **kwargs):
-        super(Output, self).__init__(*args, **kwargs)
-        self.driver = utils.create_driver(local_factory=self.terminal_driver_factory,
-                                          teamcity_factory=self.teamcity_driver_factory,
-                                          jenkins_factory=self.terminal_driver_factory,
-                                          env_type=self.settings.type)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.driver: Union[TeamcityOutput, TerminalBasedOutput] = \
+            utils.create_driver(local_factory=self.terminal_driver_factory,
+                                teamcity_factory=self.teamcity_driver_factory,
+                                jenkins_factory=self.terminal_driver_factory,
+                                env_type=self.settings.type)
 
-    def log(self, line):
+    def log(self, line: str) -> None:
         self.driver.log(line)
 
-    def log_external_command(self, command):
+    def log_external_command(self, command: str) -> None:
         self.driver.log_external_command(command)
 
-    def open_block(self, number, name):
+    def open_block(self, number: str, name: str) -> None:
         self.driver.open_block(number, name)
 
-    def close_block(self, number, name, status):
+    def close_block(self, number: str, name: str, status: str) -> None:
         self.driver.close_block(number, name, status)
 
-    def report_build_status(self, status):
+    def report_build_status(self, status: str) -> None:
         self.driver.change_status(status)
 
     # TODO: pass build problem to the Report module
-    def report_build_problem(self, problem):
+    def report_build_problem(self, problem: str) -> None:
         self.driver.report_error(problem)
 
-    def report_skipped(self, message):
+    def report_skipped(self, message: str) -> None:
         self.driver.report_skipped(message)
 
-    def report_step(self, message, status):
+    def report_step(self, message: str, status: str) -> None:
         self.driver.report_step(message, status)
 
-    def log_exception(self, line):
+    def log_exception(self, line: str) -> None:
         self.driver.log_exception(line)
 
-    def log_stderr(self, line):
+    def log_stderr(self, line: str) -> None:
         self.driver.log_stderr(line)
 
-    def log_shell_output(self, line):
+    def log_shell_output(self, line: str) -> None:
         self.driver.log_shell_output(line)
 
 
@@ -67,5 +68,5 @@ class HasOutput(Module):
     out_factory = Dependency(Output)
 
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)
         self.out: Output = self.out_factory()
