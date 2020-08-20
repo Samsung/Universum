@@ -9,7 +9,7 @@ from .lib.gravity import define_arguments_recursive, construct_component
 from .lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
 from .lib.utils import Uninterruptible, format_traceback
 from .main import Main
-from .modules.error_state import HasErrorState
+from .modules.error_state import GlobalErrorState
 from .nonci import Nonci
 from .poll import Poll
 from .submit import Submit
@@ -42,7 +42,7 @@ def define_arguments():
 
 def run(settings) -> int:
     result = 0
-    error_state_module = construct_component(HasErrorState, settings)
+    error_state_module = construct_component(GlobalErrorState, settings)
     main_module = construct_component(settings.main_class, settings)
 
     if error_state_module.is_in_error_state():

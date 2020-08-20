@@ -9,6 +9,12 @@ class GlobalErrorState(Module):
         super().__init__(*args, **kwargs)  # type: ignore
         self.errors: List[str] = []
 
+    def get_errors(self):
+        return self.errors
+
+    def is_in_error_state(self):
+        return len(self.errors) > 0
+
 
 class HasErrorState(Module):
     global_error_state_factory = Dependency(GlobalErrorState)
@@ -21,7 +27,4 @@ class HasErrorState(Module):
         self.global_error_state.errors.append(inspect.cleandoc(message))
 
     def is_in_error_state(self):
-        return len(self.global_error_state.errors) > 0
-
-    def get_errors(self):
-        return self.global_error_state.errors
+        return self.global_error_state.is_in_error_state()
