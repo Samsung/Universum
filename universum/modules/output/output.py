@@ -64,7 +64,7 @@ class Output(Module):
 
 
 class HasOutput(Module):
-    out_factory: Dependency[Output] = Dependency(Output)
+    out_factory = Dependency(Output)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)  # type: ignore
