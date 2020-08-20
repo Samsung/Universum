@@ -93,6 +93,9 @@ class Dependency(Generic[DependencyType]):
     def __init__(self, cls: Type[DependencyType]) -> None:
         self.cls = cls
 
+    # The source and the target of the dependency are different modules,
+    # so we need to use different type variables to annotate them.
+    # instance parameter of the __get__ method is source module.
     def __get__(self, instance: Module, owner: Any) -> Callable[..., DependencyType]:
         def constructor_function(*args, **kwargs) -> DependencyType:
             return construct_component(self.cls, instance.main_settings, *args, **kwargs)
