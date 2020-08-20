@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class Swarm(HasOutput, ReportObserver, Module):
+class Swarm(ReportObserver, Module, HasOutput):
     """
     This class contains CI functions for interaction with Swarm via 'swarm_cli.py'
     """

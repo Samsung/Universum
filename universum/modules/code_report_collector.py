@@ -14,7 +14,7 @@ from .structure_handler import needs_structure
 
 
 @needs_structure
-class CodeReportCollector(HasOutput, ProjectDirectory):
+class CodeReportCollector(ProjectDirectory, HasOutput):
     reporter_factory = Dependency(reporter.Reporter)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 

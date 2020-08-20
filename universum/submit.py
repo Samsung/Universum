@@ -10,7 +10,7 @@ __all__ = ["Submit"]
 
 
 @needs_structure
-class Submit(HasOutput, Module):
+class Submit(Module, HasOutput):
     description = "Submitting module of Universum"
     vcs_factory = Dependency(vcs.SubmitVcs)
 

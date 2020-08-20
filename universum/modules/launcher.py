@@ -288,7 +288,7 @@ class Step:
 
 
 @needs_structure
-class Launcher(HasOutput, ProjectDirectory):
+class Launcher(ProjectDirectory, HasOutput):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)

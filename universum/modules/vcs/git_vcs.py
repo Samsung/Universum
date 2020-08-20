@@ -24,7 +24,7 @@ def catch_git_exception(ignore_if=None):
 
 
 @needs_structure
-class GitVcs(HasOutput, BaseVcs):
+class GitVcs(BaseVcs, HasOutput):
     """
     This class contains CI functions for interaction with Git
     """

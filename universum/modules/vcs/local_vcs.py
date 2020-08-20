@@ -15,7 +15,7 @@ __all__ = [
 
 
 @needs_structure
-class LocalMainVcs(HasOutput, base_vcs.BaseDownloadVcs):
+class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Local files",

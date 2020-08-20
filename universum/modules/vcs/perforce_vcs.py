@@ -32,7 +32,7 @@ def catch_p4exception(ignore_if=None):
 
 
 @needs_structure
-class PerforceVcs(HasOutput, base_vcs.BaseVcs):
+class PerforceVcs(base_vcs.BaseVcs, HasOutput):
     """
     This class contains global functions for interaction with Perforce
     """
