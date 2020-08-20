@@ -30,8 +30,8 @@ class Submit(Module):
                             help="List of vcs or directories to be reconciled for commit. "
                                  "Relative paths starting at client root are supported")
 
-    def __init__(self, *args, **kwargs):
-        super(Submit, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)  # type: ignore
         if not getattr(self.settings, "commit_message", None):
             raise IncorrectParameterError("commit message is not specified.\n\n"
                                           "Please use '--commit-message' option or COMMIT_MESSAGE\n"
