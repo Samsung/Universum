@@ -31,7 +31,7 @@ class ReportObserver:
 
 
 @needs_structure
-class Reporter(Module, HasOutput):
+class Reporter(HasOutput):
     automation_server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
 
     @staticmethod

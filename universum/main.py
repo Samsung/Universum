@@ -7,7 +7,7 @@ from .modules.output import HasOutput
 __all__ = ["Main"]
 
 
-class Main(HasOutput, Module):
+class Main(HasOutput):
     description = __title__
     vcs_factory = Dependency(vcs.MainVcs)
     launcher_factory = Dependency(launcher.Launcher)

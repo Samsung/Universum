@@ -79,7 +79,7 @@ class Block:
         return self.status == "Success"
 
 
-class StructureHandler(Module, HasOutput):
+class StructureHandler(HasOutput):
     def __init__(self, *args, **kwargs):
         super(StructureHandler, self).__init__(*args, **kwargs)
         self.current_block: Optional[Block] = Block("Universum")
