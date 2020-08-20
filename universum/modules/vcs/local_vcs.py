@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from ..error_state import ErrorState
+from ..error_state import HasErrorState
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
@@ -17,7 +17,7 @@ __all__ = [
 
 @needs_output
 @needs_structure
-class LocalMainVcs(base_vcs.BaseDownloadVcs, ErrorState):
+class LocalMainVcs(base_vcs.BaseDownloadVcs, HasErrorState):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Local files",

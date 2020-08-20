@@ -6,7 +6,7 @@ import sh
 from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
-from ..error_state import ErrorState
+from ..error_state import HasErrorState
 from ..project_directory import ProjectDirectory
 from ..structure_handler import needs_structure
 from ...lib import utils
@@ -54,7 +54,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
     vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
 
     @needs_structure
-    class Vcs(ProjectDirectory, ErrorState):
+    class Vcs(ProjectDirectory, HasErrorState):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
         gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])

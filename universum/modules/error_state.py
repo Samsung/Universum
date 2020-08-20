@@ -10,18 +10,17 @@ class GlobalErrorState(Module):
         self.errors: List[str] = []
 
 
-class ErrorState(Module):
+class HasErrorState(Module):
     global_error_state_factory = Dependency(GlobalErrorState)
 
     def __init__(self, *args, **kwargs) -> None:
-        # mypy doesn't support cooperative inheritance
         super().__init__(*args, **kwargs)  # type: ignore
         self.global_error_state = self.global_error_state_factory()
 
     def error(self, message: str):
         self.global_error_state.errors.append(inspect.cleandoc(message))
 
-    def is_error_state(self):
+    def is_in_error_state(self):
         return len(self.global_error_state.errors) > 0
 
     def get_errors(self):

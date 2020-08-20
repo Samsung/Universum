@@ -5,7 +5,7 @@ from inspect import cleandoc
 
 import sh
 
-from .error_state import ErrorState
+from .error_state import HasErrorState
 from .. import configuration_support
 from ..lib import utils
 from ..lib.ci_exception import CiException, CriticalCiException, StepException
@@ -289,7 +289,7 @@ class Step:
 
 @needs_output
 @needs_structure
-class Launcher(ProjectDirectory, ErrorState):
+class Launcher(ProjectDirectory, HasErrorState):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
