@@ -12,7 +12,7 @@ from ..lib.gravity import Dependency
 from ..lib.module_arguments import IncorrectParameterError
 from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
-from .output import needs_output
+from .output import HasOutput
 from .project_directory import ProjectDirectory
 from .structure_handler import needs_structure
 
@@ -287,9 +287,8 @@ class Step:
         self._postponed_out = []
 
 
-@needs_output
 @needs_structure
-class Launcher(ProjectDirectory):
+class Launcher(ProjectDirectory, HasOutput):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)

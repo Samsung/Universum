@@ -13,7 +13,7 @@ from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from ..lib import utils
 from .automation_server import AutomationServerForHostingBuild
-from .output import needs_output
+from .output import HasOutput
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import needs_structure
@@ -56,9 +56,8 @@ def make_big_archive(target, source):
     return filename
 
 
-@needs_output
 @needs_structure
-class ArtifactCollector(ProjectDirectory):
+class ArtifactCollector(HasOutput, ProjectDirectory):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServerForHostingBuild)
 
