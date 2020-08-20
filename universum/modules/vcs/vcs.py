@@ -144,7 +144,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         self.api_support = self.api_support_factory()
 
         if self.settings.report_to_review:
-            if not self.is_error_state():
+            if not self.is_in_error_state():
                 self.code_review = self.driver.code_review()
 
     def is_latest_review_version(self):
