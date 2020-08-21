@@ -98,8 +98,8 @@ def read_and_check_multiline_option(settings, setting_name, error_message):
                 with open(value.lstrip('@')) as file_name:
                     result = file_name.read()
             except FileNotFoundError as e:
-                raise IncorrectParameterError(f"Error reading argument {setting_name} "
-                                              "from file {e.filename}: no such file") from e
+                raise IncorrectParameterError(f"Error reading argument {setting_name} from file {e.filename}: no such "
+                                              f"file") from e
         elif value == '-':
             result = "".join(sys.stdin.readlines())
         else:
