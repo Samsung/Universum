@@ -186,16 +186,16 @@ class Step:
 
         except KeyError as e:
             if str(e) != "command":
-                raise KeyError from e
+                raise
 
             self.out.log("No 'command' found. Nothing to execute")
             return False
         try:
             try:
                 self.cmd = make_command(command_name)
-            except CiException as e:
+            except CiException:
                 if self.working_directory is None:
-                    raise CiException from e
+                    raise
                 command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
                 self.cmd = make_command(command_name)
         except CiException as ex:

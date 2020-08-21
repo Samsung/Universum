@@ -49,7 +49,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                         item[key] = item[key].replace(temp_filename, actual_filename)
                     except AttributeError as error:
                         if "object has no attribute 'replace'" not in str(error):
-                            raise AttributeError from error
+                            raise
 
             afterall_item = deepcopy(item)
             afterall_steps.append(afterall_item)
