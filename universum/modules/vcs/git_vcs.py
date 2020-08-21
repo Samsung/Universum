@@ -257,10 +257,10 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs):
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
             self.repo = git.Repo(convert_to_str(self.settings.project_root))
-        except git.exc.NoSuchPathError:
-            raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
-        except git.exc.InvalidGitRepositoryError:
-            raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
+        except git.exc.NoSuchPathError as e:
+            raise CriticalCiException("No such directory as '" + self.settings.project_root + "'") from e
+        except git.exc.InvalidGitRepositoryError as e:
+            raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository") from e
 
         with self.repo.config_writer() as configurator:
             configurator.set_value("user", "name", self.settings.user)

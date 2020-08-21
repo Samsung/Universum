@@ -73,11 +73,11 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
 
         try:
             p4_module = importlib.import_module("P4")
-        except ImportError:
+        except ImportError as e:
             text = "Error: using VCS type 'p4' requires official Helix CLI and Python package 'perforce-p4python' " \
                    "to be installed. Please refer to `Prerequisites` chapter of project documentation for " \
                    "detailed instructions"
-            raise ImportError(text)
+            raise ImportError(text) from e
 
         # By putting P4 object to self, we can use it in this or any derived classes without any further imports
         self.p4 = p4_module.P4()
@@ -137,9 +137,9 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             return self.p4.run_reconcile(*args, **kwargs)
         except P4Exception as e:
             if not e.warnings:
-                raise
+                raise P4Exception from e
             if "no file(s) to reconcile" not in e.warnings[0]:
-                raise
+                raise P4Exception from e
             return []
 
     def reconcile_one_path(self, file_path, workspace_root, change_id, edit_only):
@@ -194,10 +194,10 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
                 return 0
 
             self.p4.run_submit(current_cl, "-f", "revertunchanged")
-        except Exception:
+        except Exception as e:
             self.p4.run_revert("-k", "-c", change_id, "//...")
             self.p4.run_change("-d", change_id)
-            raise
+            raise CriticalCiException(str(e)) from e
 
         return change_id
 
@@ -390,10 +390,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.out.log("Getting latest CL number for '" + depot["path"] + "'")
                 try:
                     depot["cl"] = self.p4.run_changes("-m", "1", "-s", "submitted", depot["path"])[0]["change"]
-                except IndexError:
+                except IndexError as e:
                     text = "Error getting latest CL number for '" + depot["path"] + "'"
                     text += "\nPlease check depot path formatting (e.g. '/...' in the end for directories)"
-                    raise CriticalCiException(text)
+                    raise CriticalCiException(text) from e
                 self.out.log("Latest CL: " + depot["cl"])
 
             line = depot["path"] + '@' + depot["cl"]
@@ -405,12 +405,12 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 result = self.p4.run_sync("-f", line)
             except P4Exception as e:
                 if "not in client view" not in str(e):
-                    raise CriticalCiException(str(e))
+                    raise CriticalCiException(str(e)) from e
 
                 text = f"{e}\nPossible reasons of this error:"
                 text += "\n * Wrong formatting (e.g. no '/...' in the end of directory path)"
                 text += "\n * Location in 'SYNC_CHANGELIST' is not actually located inside any of 'P4_MAPPINGS'"
-                raise CriticalCiException(text)
+                raise CriticalCiException(text) from e
 
             self.append_repo_status(f"    {line}\n")
             self.out.log(f"Downloaded {result[0]['totalFileCount']} files.")
@@ -423,8 +423,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
-                raise SilentAbortException(application_exit_code=0)
-            raise
+                raise SilentAbortException(application_exit_code=0) from e
+            raise P4Exception from e
         return result
 
     @make_block("Unshelving")
@@ -454,7 +454,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                         or line.startswith("Error opening librarian file")
                         or line.startswith("Transfer of librarian file")
                         or line.endswith(".gz: No such file or directory")):
-                    raise CriticalCiException(utils.trim_and_convert_to_unicode(e.stderr))
+                    raise CriticalCiException(utils.trim_and_convert_to_unicode(e.stderr)) from e
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result
 

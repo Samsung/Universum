@@ -23,8 +23,8 @@ class ModuleNamespace(argparse.Namespace):
         group, name = name.split('.', 1)
         try:
             ns = self.__dict__[group]
-        except KeyError:
-            raise AttributeError("No attribute '" + name + "' in module arguments")
+        except KeyError as error:
+            raise AttributeError("No attribute '" + name + "' in module arguments") from error
         return getattr(ns, name)
 
 

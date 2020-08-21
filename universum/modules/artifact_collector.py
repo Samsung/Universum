@@ -128,7 +128,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                             os.remove(matching_path) #TODO: use shutil by default
                         except OSError as e:
                             if "Is a directory" not in e.strerror:
-                                raise
+                                raise OSError from e
                             shutil.rmtree(matching_path)
                 elif not ignore_already_existing:
                     text = "Build artifacts, such as"

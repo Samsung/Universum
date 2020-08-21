@@ -59,7 +59,7 @@ class Poll(HasOutput, HasStructure):
             if io_error.errno == 2:
                 pass
             else:
-                raise
+                raise IOError from io_error
 
         try:
             self.latest_cls = self.vcs.driver.get_changes(self.stored_cls, self.settings.max_number)

@@ -111,14 +111,14 @@ class StructureHandler(HasOutput):
         self.open_block(block_name)
         try:
             result = operation(*args, **kwargs)
-        except (SilentAbortException, StepException):
-            raise
+        except (SilentAbortException, StepException) as e:
+            raise StepException from e
         except CriticalCiException as e:
             self.fail_current_block(str(e))
-            raise SilentAbortException()
+            raise SilentAbortException() from e
         except Exception as e:
             if pass_errors is True:
-                raise
+                raise Exception from e
             self.fail_current_block(str(e))
         finally:
             self.close_block()

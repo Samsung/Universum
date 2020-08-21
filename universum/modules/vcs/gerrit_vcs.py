@@ -47,7 +47,7 @@ class GerritVcs(git_vcs.GitVcs):
             text = f"Got exit code {e.exit_code} while executing the following command:\n{e.full_cmd}"
             if e.stderr:
                 text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
-            raise CiException(text)
+            raise CiException(text) from e
 
 
 class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
@@ -108,10 +108,10 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
             decoder = json.JSONDecoder()
             result = decoder.raw_decode(response)
             return result[0]
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as e:
             text = "Error parsing gerrit server response. Full response is the following:\n"
             text += response
-            raise CiException(text)
+            raise CiException(text) from e
 
     def is_latest_version(self):
         self.update_review_version()

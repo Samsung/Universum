@@ -98,10 +98,10 @@ class Swarm(ReportObserver, HasOutput):
                                     critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as e:
             text = "Error parsing Swarm server response. Full response is the following:\n"
             text += result.text
-            raise CiException(text)
+            raise CiException(text) from e
 
         self.review_latest_version = str(len(versions))
 
