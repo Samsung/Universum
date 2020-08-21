@@ -29,7 +29,6 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
 
                       dict(name="Run static pylint", code_report=True,
                            command=["python3.7", "-m", "universum.analyzers.pylint", "--python-version=3.7",
-                                    "--max-parents", "10",
                                     "--rcfile=pylintrc", "--result-file=${CODE_REPORT_FILE}",
                                     "--files", "*.py", "universum/", "tests/"]),
                       dict(name="Run static type checker", code_report=True,
