@@ -25,7 +25,7 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasStructure, HasErrorSt
                                  "This option is only needed when '--driver-type' is set to 'none'")
 
     def __init__(self, *args, **kwargs):
-        super(LocalMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "source_dir", None):
             self.error("""The source directory is not specified.
@@ -55,4 +55,4 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasStructure, HasErrorSt
             text += "\n * Directory '{}' already exists in working dir (e.g. due to previous builds)".format(
                 os.path.basename(self.settings.project_root))
             text += "\n * File reading permissions troubles"
-            raise CriticalCiException(text)
+            raise CriticalCiException(text) from e

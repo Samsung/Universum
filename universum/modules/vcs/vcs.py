@@ -71,7 +71,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                                      "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
         def __init__(self, *args, **kwargs):
-            super(Vcs, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
             if not getattr(self.settings, "type", None):
                 self.error("""
@@ -110,8 +110,8 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     driver_factory = self.github_driver_factory
                 else:
                     driver_factory = self.perforce_driver_factory
-            except AttributeError:  # TODO: how it can be generated?
-                raise NotImplementedError()
+            except AttributeError as e:  # TODO: how it can be generated?
+                raise NotImplementedError() from e
             self.driver = driver_factory()
 
         @make_block("Finalizing")
@@ -138,7 +138,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
     def __init__(self, *args, **kwargs):
-        super(MainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()
 
