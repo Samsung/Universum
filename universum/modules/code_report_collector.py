@@ -18,7 +18,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
     def __init__(self, *args, **kwargs):
-        super(CodeReportCollector, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()
         self.report_path = ""

@@ -26,7 +26,7 @@ def stdout(*args, **kwargs):
 
 class TerminalBasedOutput(BaseOutput):
     def __init__(self, *args, **kwargs):
-        super(TerminalBasedOutput, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.block_level = 0
 
     def indent(self):

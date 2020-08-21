@@ -9,7 +9,7 @@ from . import utils
 
 class ReportEnvironment(utils.TestEnvironment):
     def __init__(self, directory, client):
-        super(ReportEnvironment, self).__init__(directory, "main")
+        super().__init__(directory, "main")
 
         self.settings.Vcs.type = "github"
         self.settings.MainVcs.report_to_review = True

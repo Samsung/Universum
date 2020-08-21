@@ -18,4 +18,4 @@ class ProjectDirectory(Module):
             self.settings.project_root = utils.parse_path(self.settings.project_root, os.getcwd())
         else:
             self.settings.project_root = os.path.join(os.getcwd(), "temp")
-        super(ProjectDirectory, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

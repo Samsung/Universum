@@ -27,7 +27,7 @@ class AutomationServerForHostingBuild(AutomationServer):
     jenkins_driver_factory = Dependency(JenkinsServerForHostingBuild)
 
     def __init__(self, *args, **kwargs):
-        super(AutomationServerForHostingBuild, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.driver = utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                           jenkins_factory=self.jenkins_driver_factory,
                                           local_factory=self.local_driver_factory,
@@ -49,7 +49,7 @@ class AutomationServerForTrigger(AutomationServer):
     jenkins_driver_factory = Dependency(JenkinsServerForTrigger)
 
     def __init__(self, *args, **kwargs):
-        super(AutomationServerForTrigger, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.driver = utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                           jenkins_factory=self.jenkins_driver_factory,
                                           local_factory=self.local_driver_factory,

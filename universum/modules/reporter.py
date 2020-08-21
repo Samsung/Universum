@@ -48,7 +48,7 @@ class Reporter(HasOutput, HasStructure):
                             help="Do not vote up/down review depending on result")
 
     def __init__(self, *args, **kwargs):
-        super(Reporter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.observers = []
         self.report_initialized = False
         self.blocks_to_report = []

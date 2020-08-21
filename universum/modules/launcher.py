@@ -25,8 +25,8 @@ __all__ = [
 def make_command(name):
     try:
         return sh.Command(name)
-    except sh.CommandNotFound:
-        raise CiException(f"No such file or command as '{name}'")
+    except sh.CommandNotFound as e :
+        raise CiException(f"No such file or command as '{name}'") from e
 
 
 def check_if_env_set(configuration):
@@ -162,7 +162,7 @@ def get_match_patterns(filters):
 class Step:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
-        super(Step, self).__init__()
+        super().__init__()
         self.configuration = item
         self.out = out
         self.fail_block = fail_block
@@ -200,7 +200,7 @@ class Step:
                 self.cmd = make_command(command_name)
         except CiException as ex:
             self.fail_block(str(ex))
-            raise StepException()
+            raise StepException() from ex
         return True
 
     def start(self, is_background):
@@ -322,7 +322,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                                    help="Deprecated option. Please use '--steps-config' instead.")
 
     def __init__(self, *args, **kwargs):
-        super(Launcher, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.source_project_configs = None
         self.project_configs = None
 
@@ -383,17 +383,17 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                  actual 'configs.py' location\n
                 * Some problems occurred while downloading or copying the repository
                 """
-            raise CriticalCiException(cleandoc(text))
+            raise CriticalCiException(cleandoc(text)) from e
         except KeyError as e:
             text = "KeyError: " + str(e) + '\n'
             text += "Possible reason of this error: variable 'configs' is not defined in 'configs.py'"
-            raise CriticalCiException(text)
+            raise CriticalCiException(text) from e
         except Exception as e:
             ex_traceback = sys.exc_info()[2]
             text = "Exception while processing 'configs.py'\n" + utils.format_traceback(e, ex_traceback) + \
                    "\nPlease copy 'configs.py' script to the CI scripts folder and run it " + \
                    "to make sure no exceptions occur in that case."
-            raise CriticalCiException(text)
+            raise CriticalCiException(text) from e
         return self.project_configs
 
     def create_process(self, item):

@@ -17,7 +17,7 @@ class Api(Module):
                             help="Input some description")
 
     def __init__(self, *args, **kwargs):
-        super(Api, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         try:
             self.api_support = self.api_support_factory(api_mode=True)
         except EnvironmentError as error:

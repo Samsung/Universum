@@ -41,7 +41,7 @@ class Main(HasOutput):
                                           "in this case full analysis report will be published")
 
     def __init__(self, *args, **kwargs):
-        super(Main, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.vcs = self.vcs_factory()
         self.launcher = self.launcher_factory()
         self.artifacts = self.artifacts_factory()

@@ -134,7 +134,7 @@ class GitEnvironment(utils.TestEnvironment):
         self.db_file = str(db_file)
         self.vcs_cooking_dir = client.root_directory
 
-        super(GitEnvironment, self).__init__(directory, test_type)
+        super().__init__(directory, test_type)
 
         self.server = client.server
         self.repo = client.repo

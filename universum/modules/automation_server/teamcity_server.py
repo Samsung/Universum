@@ -26,7 +26,7 @@ class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger):
                             metavar="TC_PASSWD", help="system.teamcity.auth.password")
 
     def __init__(self, *args, **kwargs):
-        super(TeamcityServer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         utils.check_required_option(self.settings, "server_url", """
             the URL of the TeamCity server is not specified.
 

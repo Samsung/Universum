@@ -350,7 +350,7 @@ def test_construct_component_inheritance(mock_module):
             parser.add_argument('--base_option')
 
         def __init__(self, base_param, **kwargs):
-            super(BaseModule, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base_option = self.settings.base_option
             self.base_param = base_param
 
@@ -360,7 +360,7 @@ def test_construct_component_inheritance(mock_module):
             parser.add_argument('--derived_option')
 
         def __init__(self, **kwargs):
-            super(DerivedModule, self).__init__(456, **kwargs)
+            super().__init__(456, **kwargs)
             self.derived_option = self.settings.derived_option
             self.derived_member = 123
 
@@ -381,13 +381,13 @@ def test_construct_component_multiple_inheritance(mock_module):
             parser.add_argument('--base1_option')
 
         def __init__(self, base1_param, **kwargs):
-            super(Base1, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base1_option = self.settings.base1_option
             self.base1_param = base1_param
 
     class Base2:
         def __init__(self, base2_param, **kwargs):
-            super(Base2, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base2_param = base2_param
 
     class Base3(mock_module):
@@ -396,13 +396,13 @@ def test_construct_component_multiple_inheritance(mock_module):
             parser.add_argument('--base3_option')
 
         def __init__(self, base3_param, **kwargs):
-            super(Base3, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base3_option = self.settings.base3_option
             self.base3_param = base3_param
 
     class Base4(mock_module):
         def __init__(self, base4_param, **kwargs):
-            super(Base4, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base4_param = base4_param
 
     class DerivedMulti(Base1, Base2, Base3, Base4):
@@ -411,7 +411,7 @@ def test_construct_component_multiple_inheritance(mock_module):
             parser.add_argument('--derived_option')
 
         def __init__(self, **kwargs):
-            super(DerivedMulti, self).__init__(base1_param="ab",
+            super().__init__(base1_param="ab",
                                                base2_param="cd",
                                                base3_param="ef",
                                                base4_param="gh",
@@ -444,7 +444,7 @@ def test_construct_component_multiple_instance(mock_module):
             parser.add_argument('--wparam')
 
         def __init__(self):
-            super(W, self).__init__()
+            super().__init__()
             if self.settings.wparam == "z":
                 self.z = self.dep()
             else:

@@ -64,7 +64,7 @@ class GithubHandler(GithubToken, HasOutput, HasStructure):
             payload = json.loads(self.payload)
         except json.decoder.JSONDecodeError as error:
             text = f"Provided payload value could not been parsed as JSON and returned the following error:\n {error}"
-            raise CriticalCiException(text)
+            raise CriticalCiException(text) from error
 
         try:
             if self.settings.target_repo:
@@ -106,9 +106,9 @@ class GithubHandler(GithubToken, HasOutput, HasStructure):
             else:
                 self.out.log("Unhandled event, skipping...")
         except KeyError as error:
-            raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}")
-        except TypeError:
-            raise CriticalCiException("Parsed payload JSON does not correspond to expected format")
+            raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}") from error
+        except TypeError as error:
+            raise CriticalCiException("Parsed payload JSON does not correspond to expected format") from error
 
     def finalize(self):
         pass
