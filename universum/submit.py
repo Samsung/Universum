@@ -4,13 +4,12 @@ from .lib.module_arguments import IncorrectParameterError
 from .lib.utils import make_block
 from .modules import vcs
 from .modules.output import HasOutput
-from .modules.structure_handler import needs_structure
+from .modules.structure_handler import HasStructure
 
 __all__ = ["Submit"]
 
 
-@needs_structure
-class Submit(HasOutput):
+class Submit(HasOutput, HasStructure):
     description = "Submitting module of Universum"
     vcs_factory = Dependency(vcs.SubmitVcs)
 
@@ -30,7 +29,7 @@ class Submit(HasOutput):
                                  "Relative paths starting at client root are supported")
 
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)
         if not getattr(self.settings, "commit_message", None):
             raise IncorrectParameterError("commit message is not specified.\n\n"
                                           "Please use '--commit-message' option or COMMIT_MESSAGE\n"

@@ -1,34 +1,14 @@
 import copy
 
-from typing import cast, Callable, ClassVar, List, Optional, Type
+from typing import Callable, ClassVar, List, Optional
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Module, Dependency
 from .output import HasOutput
 
 __all__ = [
-    "needs_structure"
+    "HasStructure"
 ]
-
-
-class HasStructure:
-    structure_factory: ClassVar[Dependency['StructureHandler']]
-    structure: 'StructureHandler'
-
-
-def needs_structure(cls: Type) -> Type['HasStructure']:
-    # noinspection PyTypeChecker
-    cast(Type['HasStructure'], cls)
-    cls.structure_factory = Dependency(StructureHandler)
-    original_init = cls.__init__
-
-    def new_init(self, *args, **kwargs):
-        self.structure = self.structure_factory()
-        original_init(self, *args, **kwargs)
-
-    cls.__init__ = new_init
-    # noinspection PyTypeChecker
-    return cls
 
 
 class Block:
@@ -240,3 +220,11 @@ class StructureHandler(HasOutput):
 
         if self.active_background_steps:
             self.run_in_block(self.report_background_steps, "Reporting background steps", False)
+
+
+class HasStructure(Module):
+    structure_factory: ClassVar = Dependency(StructureHandler)
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.structure: StructureHandler = self.structure_factory()

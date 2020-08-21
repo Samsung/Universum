@@ -1,4 +1,4 @@
-from typing import Union
+from typing import ClassVar, Union
 
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
@@ -65,7 +65,7 @@ class Output(Module):
 
 
 class HasOutput(Module):
-    out_factory = Dependency(Output)
+    out_factory: ClassVar = Dependency(Output)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

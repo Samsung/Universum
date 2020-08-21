@@ -14,7 +14,7 @@ from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .output import HasOutput
 from .project_directory import ProjectDirectory
-from .structure_handler import needs_structure
+from .structure_handler import HasStructure
 
 __all__ = [
     "Launcher",
@@ -287,8 +287,7 @@ class Step:
         self._postponed_out = []
 
 
-@needs_structure
-class Launcher(ProjectDirectory, HasOutput):
+class Launcher(ProjectDirectory, HasOutput, HasStructure):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)

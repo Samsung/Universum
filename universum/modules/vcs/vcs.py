@@ -8,7 +8,7 @@ from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
 from ..project_directory import ProjectDirectory
-from ..structure_handler import needs_structure
+from ..structure_handler import HasStructure
 from ...lib import utils
 from ...lib.gravity import Dependency
 from ...lib.module_arguments import IncorrectParameterError
@@ -54,8 +54,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
 
     vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
 
-    @needs_structure
-    class Vcs(ProjectDirectory):
+    class Vcs(ProjectDirectory, HasStructure):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
         gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])

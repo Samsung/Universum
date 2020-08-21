@@ -4,7 +4,7 @@ import os
 
 from .base_vcs import BaseVcs, BaseDownloadVcs, BasePollVcs, BaseSubmitVcs
 from ..output import HasOutput
-from ..structure_handler import needs_structure
+from ..structure_handler import HasStructure
 from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
@@ -23,8 +23,7 @@ def catch_git_exception(ignore_if=None):
     return utils.catch_exception("GitCommandError", ignore_if)
 
 
-@needs_structure
-class GitVcs(BaseVcs, HasOutput):
+class GitVcs(BaseVcs, HasOutput, HasStructure):
     """
     This class contains CI functions for interaction with Git
     """
@@ -102,7 +101,6 @@ class GitVcs(BaseVcs, HasOutput):
             self.repo = git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
 
 
-@needs_structure
 class GitMainVcs(GitVcs, BaseDownloadVcs):
     @staticmethod
     def define_arguments(argument_parser):

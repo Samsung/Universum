@@ -16,7 +16,7 @@ from .automation_server import AutomationServerForHostingBuild
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
-from .structure_handler import needs_structure
+from .structure_handler import HasStructure
 
 __all__ = [
     "ArtifactCollector"
@@ -56,8 +56,7 @@ def make_big_archive(target, source):
     return filename
 
 
-@needs_structure
-class ArtifactCollector(HasOutput, ProjectDirectory):
+class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServerForHostingBuild)
 
