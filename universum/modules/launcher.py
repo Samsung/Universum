@@ -5,11 +5,11 @@ from inspect import cleandoc
 
 import sh
 
+from .error_state import HasErrorState
 from .. import configuration_support
 from ..lib import utils
 from ..lib.ci_exception import CiException, CriticalCiException, StepException
 from ..lib.gravity import Dependency
-from ..lib.module_arguments import IncorrectParameterError
 from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .output import HasOutput
@@ -288,7 +288,7 @@ class Step:
 
 
 @needs_structure
-class Launcher(ProjectDirectory, HasOutput):
+class Launcher(ProjectDirectory, HasOutput, HasErrorState):
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
@@ -335,11 +335,17 @@ class Launcher(ProjectDirectory, HasOutput):
                 self.output = "console"
 
         if not getattr(self.settings, "config_path", None):
-            raise IncorrectParameterError(
-                "the path to config file is not specified.\n"
-                "Please specify the path to project config file by using\n"
-                "'--launcher-config-path' ('-lcp') command-line option or\n"
-                "CONFIG_PATH environment variable")
+            self.error("""
+                The path to the config file is not specified.
+
+                The config defines all steps performed by Universum for your project. The status
+                of each step can be reported to the code review system. The config file for a
+                project can be created and debugged locally. There are examples of config files
+                in the documentation.
+
+                Please specify the path to project config file by using '--launcher-config-path'
+                ('-lcp') command-line option or CONFIG_PATH environment variable
+                """)
 
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()

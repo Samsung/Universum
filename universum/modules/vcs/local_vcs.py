@@ -1,6 +1,7 @@
 import os
 import shutil
 
+from ..error_state import HasErrorState
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
@@ -15,7 +16,7 @@ __all__ = [
 
 
 @needs_structure
-class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput):
+class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasErrorState):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Local files",
@@ -29,10 +30,15 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput):
         super(LocalMainVcs, self).__init__(*args, **kwargs)
 
         if not getattr(self.settings, "source_dir", None):
-            raise IncorrectParameterError("the source directory is not specified.\n"
-                                          "Please specify source directory by using --file-source-dir\n"
-                                          "command-line option or SOURCE_DIR environment variable")
-        self.source_dir = utils.parse_path(self.settings.source_dir, os.getcwd())
+            self.error("""The source directory is not specified.
+            
+                          The source directory defines the location of the project sources on a local
+                          filesystem.
+            
+                          Please specify source directory by using --file-source-dir
+                          command-line option or SOURCE_DIR environment variable.""")
+        else:
+            self.source_dir = utils.parse_path(self.settings.source_dir, os.getcwd())
 
     def calculate_file_diff(self):  # pylint: disable=no-self-use
         return {}                   # No file diff can be calculated for local VCS
