@@ -130,7 +130,6 @@ def param(test_type: str, module: str, field: str,
     missing_params.append(pytest.param(test_type, module, field, vcs_type, error_match, id=test_id))
 
 
-# pylint: disable = bad-whitespace
 param("main",           "Launcher",                     "config_path")
 param("submit",         "Submit",                       "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
 param("submit",         "PerforceSubmitVcs",            "client",          vcs_type="p4")
@@ -163,7 +162,6 @@ param("github-handler", "GithubHandler",                "payload",         error
 param("github-handler", "GithubHandler",                "trigger_url")
 param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github",
       error_match="GITHUB_INSTALLATION_ID")
-# pylint: enable = bad-whitespace
 
 
 @parametrize_unset()
