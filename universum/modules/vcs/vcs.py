@@ -1,5 +1,4 @@
 from typing import Dict, List, Type, Union
-import inspect
 import json
 import shutil
 import sh
@@ -7,11 +6,11 @@ import sh
 from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
+from ..error_state import HasErrorState
 from ..project_directory import ProjectDirectory
 from ..structure_handler import HasStructure
 from ...lib import utils
 from ...lib.gravity import Dependency
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 
 __all__ = [
@@ -53,8 +52,8 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
         }
 
     vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
-
-    class Vcs(ProjectDirectory, HasStructure):
+      
+    class Vcs(ProjectDirectory, HasStructure, HasErrorState):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
         gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])
@@ -75,13 +74,12 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
             super(Vcs, self).__init__(*args, **kwargs)
 
             if not getattr(self.settings, "type", None):
-                text = inspect.cleandoc("""
+                self.error("""
                     The repository (VCS) type is not set.
                      
-                    The repository type defines the version control system 
-                    that is used for performing the requested action.
-                    For example, Universum needs to get project source codes
-                    for performing Continuous Integration (CI) builds.  
+                    The repository type defines the version control system that is used for
+                    performing the requested action. For example, Universum needs to get project
+                    source codes for performing Continuous Integration (CI) builds.
 
                     The following types are supported: {}.
                     
@@ -89,13 +87,17 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     configuration parameters. At the minimum, the following
                     parameters are required:
                       * "git", "github" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
-                      * "perforce"                   - P4PORT (-p4p), P4USER (-p4u) and P4PASSWD (-p4P)
+                      * "perforce"                   - P4PORT (-p4p), P4USER (-p4u), P4PASSWD (-p4P)
                       * "none"                       - SOURCE_DIR (-fsd)
                       
-                    Depending on the requested action, additional type-specific
-                    parameters are required. For example, P4CLIENT (-p4c) is
-                    required for CI builds with perforce.""").format(", ".join(vcs_types))
-                raise IncorrectParameterError(text)
+                    Depending on the requested action, additional type-specific parameters are
+                    required. For example, P4CLIENT (-p4c) is required for CI builds with perforce.
+                    
+                    Please specify the VCS type by using '--vcs-type' ('-vt') command-line option or
+                    VCS_TYPE environment variable.
+                    """.
+                           format(", ".join(vcs_types)))
+                return
 
             try:
                 if self.settings.type == "none":
@@ -108,7 +110,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     driver_factory = self.github_driver_factory
                 else:
                     driver_factory = self.perforce_driver_factory
-            except AttributeError:
+            except AttributeError:  # TODO: how it can be generated?
                 raise NotImplementedError()
             self.driver = driver_factory()
 
@@ -141,7 +143,8 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         self.api_support = self.api_support_factory()
 
         if self.settings.report_to_review:
-            self.code_review = self.driver.code_review()
+            if not self.is_in_error_state():
+                self.code_review = self.driver.code_review()
 
     def is_latest_review_version(self):
         if self.settings.report_to_review:

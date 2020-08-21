@@ -6,6 +6,21 @@ from universum.lib.module_arguments import IncorrectParameterError
 from . import utils
 
 
+def get_match_all(*args):
+    """
+    :param args: each argument is a pattern to be found in the error text
+    :return: regular expression pattern that matches the string only if each argument pattern is found
+
+    Example:
+
+    >>> get_match_all("a", "b")
+    '(?is)(?=.*a)(?=.*b)'
+    """
+
+    # (?is) means "ignore case" and "dot matches newline character"
+    return "(?is)" + "".join(f"(?=.*{arg})" for arg in args)
+
+
 def create_settings(test_type, vcs_type):
     settings = utils.create_empty_settings(test_type)
     settings.Output.type = "term"
@@ -160,7 +175,7 @@ def test_missing_params(unset, test_type, module, field, vcs_type, error_match):
     assert_incorrect_parameter(settings, "(?i)" + error_match)
 
 
-mappings_error_match = "(?=.*P4_PATH)(?=.*P4_MAPPINGS)"
+mappings_error_match = get_match_all("P4_PATH", "P4_MAPPINGS")
 
 
 @parametrize_unset("unset_mappings")
@@ -230,3 +245,20 @@ def test_swarm_changelist_incorrect_format():
     settings.Swarm.change = "123,456"
 
     assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
+
+
+def test_vcs_type_and_config_path():
+    settings = create_settings("main", "p4")
+    settings.Launcher.config_path = None
+    settings.Vcs.type = None
+
+    assert_incorrect_parameter(settings, get_match_all("CONFIG_PATH", "repository type"))
+
+
+def test_source_dir_and_config_path():
+    settings = create_settings("main", "p4")
+    settings.Vcs.type = "none"
+    settings.Launcher.config_path = None
+    settings.LocalMainVcs.source_dir = None
+
+    assert_incorrect_parameter(settings, get_match_all("CONFIG_PATH", "SOURCE_DIR"))
