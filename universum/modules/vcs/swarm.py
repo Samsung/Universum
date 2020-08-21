@@ -38,7 +38,7 @@ class Swarm(ReportObserver, HasOutput):
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
     def __init__(self, user, password, *args, **kwargs):
-        super(Swarm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.user = user
         self.password = password
         self.review_version = None

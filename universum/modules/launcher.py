@@ -162,7 +162,7 @@ def get_match_patterns(filters):
 class Step:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
-        super(Step, self).__init__()
+        super().__init__()
         self.configuration = item
         self.out = out
         self.fail_block = fail_block
@@ -322,7 +322,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                                    help="Deprecated option. Please use '--steps-config' instead.")
 
     def __init__(self, *args, **kwargs):
-        super(Launcher, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.source_project_configs = None
         self.project_configs = None
 

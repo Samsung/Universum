@@ -32,7 +32,7 @@ class ModuleNamespace(argparse.Namespace):
 class ModuleArgumentGroup(argparse._ArgumentGroup):
     def __init__(self, container, *args, **kwargs):
         self.container = container
-        super(ModuleArgumentGroup, self).__init__(container, *args, **kwargs)
+        super().__init__(container, *args, **kwargs)
 
     def _add_action(self, action):
         if action.metavar is not None:
@@ -54,7 +54,7 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
 
         self.container.prepend_dest(action)
 
-        return super(ModuleArgumentGroup, self)._add_action(action)
+        return super()._add_action(action)
 
     def add_hidden_argument(self, *args, **kwargs):
         if kwargs.get("is_hidden", True):

@@ -21,7 +21,7 @@ class GerritVcs(git_vcs.GitVcs):
     """
 
     def __init__(self, *args, **kwargs):
-        super(GerritVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reporter = None
 
         if not self.settings.repo.startswith("ssh://"):
@@ -54,7 +54,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
     reporter_factory = Dependency(Reporter)
 
     def __init__(self, *args, **kwargs):
-        super(GerritMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         utils.check_required_option(self.settings, "refspec", """
             git refspec for gerrit is not specified.
@@ -164,7 +164,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
         self.run_ssh_command(text)
 
     def prepare_repository(self):
-        super(GerritMainVcs, self).prepare_repository()
+        super().prepare_repository()
         self.commit_id = str(self.repo.head.commit)
 
 

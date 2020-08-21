@@ -61,7 +61,7 @@ class Block:
 
 class StructureHandler(HasOutput):
     def __init__(self, *args, **kwargs):
-        super(StructureHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.current_block: Optional[Block] = Block("Universum")
         self.configs_current_number: int = 0
         self.configs_total_count: int = 0

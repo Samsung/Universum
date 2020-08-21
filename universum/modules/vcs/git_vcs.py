@@ -39,7 +39,7 @@ class GitVcs(BaseVcs, HasOutput, HasStructure):
                             help="Any additional refspec to be fetched")
 
     def __init__(self, *args, **kwargs):
-        super(GitVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         global git
         try:
@@ -61,7 +61,7 @@ class GitVcs(BaseVcs, HasOutput, HasStructure):
 
         class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
-                super(Progress, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self.out = out
 
             def line_dropped(self, line):
@@ -116,7 +116,7 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
                                  "'--git-cherry-pick-id' can be added to the command line several times")
 
     def __init__(self, *args, **kwargs):
-        super(GitMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.checkout_id = None
 
     @make_block("Checking out")
@@ -202,7 +202,7 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs):
                             help="Git user email for submitting")
 
     def __init__(self, *args, **kwargs):
-        super(GitSubmitVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "user", None) or not getattr(self.settings, "email", None):
             raise IncorrectParameterError("user name or email is not specified. \n\n"

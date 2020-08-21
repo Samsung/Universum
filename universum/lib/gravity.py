@@ -65,7 +65,7 @@ class Module:
         pass
 
     def __new__(cls: Type['Module'], main_settings: 'HasModulesMapping', *args, **kwargs) -> 'Module':
-        instance: 'Module' = super(Module, cls).__new__(cls)
+        instance: 'Module' = super().__new__(cls)
         instance.main_settings = main_settings
         return instance
 

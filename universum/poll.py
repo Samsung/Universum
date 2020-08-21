@@ -22,7 +22,7 @@ class Poll(HasOutput, HasStructure):
                             help='Maximum number of CLs processed, default is 10', type=int, default=10)
 
     def __init__(self, *args, **kwargs):
-        super(Poll, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.stored_cls = {}
         self.latest_cls = {}
         self.triggered_cls = set()

@@ -47,7 +47,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
         parser.add_argument("--p4-password", "-p4P", dest="password", help="P4 password", metavar="P4PASSWD")
 
     def __init__(self, *args, **kwargs):
-        super(PerforceVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         utils.check_required_option(self.settings, "port", """
             the perforce 'port' is not specified.
@@ -112,7 +112,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
     def finalize(self):
         with Uninterruptible(self.out.log_exception) as run:
             run(self.disconnect)
-            run(super(PerforceVcs, self).finalize)
+            run(super().finalize)
 
 
 class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
@@ -123,7 +123,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
                             help="Existing P4 client (workspace) name to use for submitting")
 
     def __init__(self, *args, **kwargs):
-        super(PerforceSubmitVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "client", None):
             raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
@@ -221,7 +221,7 @@ class PerforceWithMappings(PerforceVcs):
                                  "For more than one add several times or split with ',' character")
 
     def __init__(self, *args, **kwargs):
-        super(PerforceWithMappings, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "project_depot_path", None) and not getattr(self.settings, "mappings", None):
             raise IncorrectParameterError("both P4_PATH (-p4d) and P4_MAPPINGS (-p4m) are not set.\n\n"
@@ -273,7 +273,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                                  "Mandatory for CI environment, otherwise use with caution")
 
     def __init__(self, *args, **kwargs):
-        super(PerforceMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "client", None):
             raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
@@ -581,7 +581,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 run(self.connect)
                 run(self.clean_workspace)
             run(self.disconnect)
-            run(super(PerforceVcs, self).finalize)
+            run(super().finalize)
 
 
 class PerforcePollVcs(PerforceWithMappings, base_vcs.BasePollVcs):
