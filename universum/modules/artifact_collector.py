@@ -6,7 +6,6 @@ import shutil
 import zipfile
 
 import glob2
-import six
 
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency

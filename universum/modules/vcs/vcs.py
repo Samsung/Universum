@@ -52,7 +52,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
         }
 
     vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
-      
+
     class Vcs(ProjectDirectory, HasStructure, HasErrorState):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
