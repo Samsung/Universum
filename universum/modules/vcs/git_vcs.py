@@ -45,11 +45,11 @@ class GitVcs(BaseVcs, HasOutput, HasStructure):
         try:
             git = importlib.import_module("git")
             remote = importlib.import_module("git.remote")
-        except ImportError:
+        except ImportError as e:
             text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
                    "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
                    "documentation for detailed instructions"
-            raise ImportError(text)
+            raise ImportError(text) from e
 
         utils.check_required_option(self.settings, "repo", """
             the git repo is not specified.
