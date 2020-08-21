@@ -1,22 +1,25 @@
+from typing import ClassVar
 from . import __title__
 from .lib.ci_exception import SilentAbortException
-from .lib.gravity import Module, Dependency
+from .lib.gravity import Dependency
+from .lib.module_arguments import ModuleArgumentParser
 from .modules import vcs, artifact_collector, reporter, launcher, code_report_collector
 from .modules.output import HasOutput
+
 
 __all__ = ["Main"]
 
 
 class Main(HasOutput):
-    description = __title__
-    vcs_factory = Dependency(vcs.MainVcs)
-    launcher_factory = Dependency(launcher.Launcher)
-    artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
-    reporter_factory = Dependency(reporter.Reporter)
-    code_report_collector = Dependency(code_report_collector.CodeReportCollector)
+    description: ClassVar[str] = __title__
+    vcs_factory: ClassVar = Dependency(vcs.MainVcs)
+    launcher_factory: ClassVar = Dependency(launcher.Launcher)
+    artifacts_factory: ClassVar = Dependency(artifact_collector.ArtifactCollector)
+    reporter_factory: ClassVar = Dependency(reporter.Reporter)
+    code_report_collector_factory: ClassVar = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
-    def define_arguments(argument_parser):
+    def define_arguments(argument_parser: ModuleArgumentParser) -> None:
         argument_parser.add_hidden_argument("--no-finalize", action="store_true", dest="no_finalize",
                                             help="Skip 'Finalizing' step: "
                                                  "do not clear sources, do not revert workspace vcs, etc. "
@@ -41,14 +44,14 @@ class Main(HasOutput):
                                           "in this case full analysis report will be published")
 
     def __init__(self, *args, **kwargs):
-        super(Main, self).__init__(*args, **kwargs)
-        self.vcs = self.vcs_factory()
-        self.launcher = self.launcher_factory()
-        self.artifacts = self.artifacts_factory()
-        self.reporter = self.reporter_factory()
-        self.code_report_collector = self.code_report_collector()
+        super().__init__(*args, **kwargs)
+        self.vcs: vcs.MainVcs = self.vcs_factory()
+        self.launcher: launcher.Launcher = self.launcher_factory()
+        self.artifacts: artifact_collector.ArtifactCollector = self.artifacts_factory()
+        self.reporter: reporter.Reporter = self.reporter_factory()
+        self.code_report_collector: code_report_collector.CodeReportCollector = self.code_report_collector_factory()
 
-    def execute(self):
+    def execute(self) -> None:
         if self.settings.clean_build:
             self.vcs.clean_sources_silently()
             self.artifacts.clean_artifacts_silently()
@@ -74,17 +77,17 @@ class Main(HasOutput):
         self.launcher.launch_project()
         if afterall_configs:
             if not self.settings.no_diff:
-                if self.vcs.supports_copy_cl_files_and_revert():
+                try:
                     repo_diff = self.vcs.revert_repository()
                     self.launcher.launch_custom_configs(afterall_configs)
                     self.code_report_collector.repo_diff = repo_diff
-                else:
+                except NotImplementedError:
                     self.out.log("Diff calculation for code report is skipped because current VCS doesn't support it")
             self.code_report_collector.report_code_report_results()
         self.artifacts.collect_artifacts()
         self.reporter.report_build_result()
 
-    def finalize(self):
+    def finalize(self) -> None:
         if self.settings.no_finalize:
             self.out.log("Cleaning skipped because of '--no-finalize' option")
             return

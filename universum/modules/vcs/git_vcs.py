@@ -189,9 +189,6 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
         if self.settings.cherrypick_id:
             self.cherry_pick()
 
-    def copy_cl_files_and_revert(self):
-        raise NotImplementedError
-
 
 class GitSubmitVcs(GitVcs, BaseSubmitVcs):
     @staticmethod

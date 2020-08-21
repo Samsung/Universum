@@ -1,4 +1,4 @@
-from typing import Dict, List, Type, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 import json
 import shutil
 import sh
@@ -139,7 +139,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
     def __init__(self, *args, **kwargs):
-        super(MainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()
 
@@ -173,10 +173,12 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         except OSError:
             pass
 
-    def supports_copy_cl_files_and_revert(self):
-        return self.driver.supports_copy_cl_files_and_revert
+    def copy_cl_files_and_revert(self) -> None:
+        raise NotImplementedError("Not applicable")
 
     @make_block("Revert repository")
-    def revert_repository(self):
-        diff = self.driver.copy_cl_files_and_revert()
-        return diff
+    def revert_repository(self) -> Optional[List[Tuple[Optional[str], Optional[str], Optional[str]]]]:
+        if isinstance(self.driver, base_vcs.BaseDownloadVcs):
+            diff = self.driver.copy_cl_files_and_revert()
+            return diff
+        raise NotImplementedError("The driver is unable to perform the requested action")

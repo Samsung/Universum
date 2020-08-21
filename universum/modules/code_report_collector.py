@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Dict, List, Optional, TextIO, Tuple
 import glob
 import json
 import os
@@ -18,11 +19,12 @@ class CodeReportCollector(ProjectDirectory, HasOutput):
     reporter_factory = Dependency(reporter.Reporter)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
-    def __init__(self, *args, **kwargs):
-        super(CodeReportCollector, self).__init__(*args, **kwargs)
-        self.artifacts = self.artifacts_factory()
-        self.reporter = self.reporter_factory()
-        self.report_path = ""
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.artifacts: artifact_collector.ArtifactCollector = self.artifacts_factory()
+        self.reporter: reporter.Reporter = self.reporter_factory()
+        self.report_path: str = ""
+        self.repo_diff: List[Tuple[Optional[str], Optional[str], Optional[str]]]
 
     def set_code_report_directory(self, project_root):
         if self.report_path:
@@ -38,9 +40,9 @@ class CodeReportCollector(ProjectDirectory, HasOutput):
                 continue
 
             self.set_code_report_directory(self.settings.project_root)
-            temp_filename = "${CODE_REPORT_FILE}"
-            name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
-            actual_filename = os.path.join(self.report_path, name)
+            temp_filename: str = "${CODE_REPORT_FILE}"
+            name: str = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
+            actual_filename: str = os.path.join(self.report_path, name)
 
             for key in item:
                 if key == "command":
@@ -57,21 +59,22 @@ class CodeReportCollector(ProjectDirectory, HasOutput):
         return Variations(afterall_steps)
 
     @make_block("Processing code report results")
-    def report_code_report_results(self):
-        reports = glob.glob(self.report_path + "/*.json")
+    def report_code_report_results(self) -> None:
+        reports: List[str] = glob.glob(self.report_path + "/*.json")
         for report_file in reports:
             with open(report_file, "r") as f:
-                text = f.read()
-                report = ""
+                text: str = f.read()
+                report: Optional[List[Dict[str, str]]] = None
                 if text:
                     report = json.loads(text)
 
-            json_file = self.artifacts.create_text_file("Static_analysis_report.json")
+            json_file: TextIO = self.artifacts.create_text_file("Static_analysis_report.json")
             json_file.write(json.dumps(report, indent=4))
 
-            for result in report:
-                text = result["symbol"] + ": " + result["message"]
-                self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
+            if report:
+                for result in report:
+                    text = result["symbol"] + ": " + result["message"]
+                    self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
 
             if report:
                 text = str(len(report)) + " issues"

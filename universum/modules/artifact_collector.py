@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import codecs
 import distutils
 from distutils import dir_util, errors
@@ -6,7 +8,6 @@ import shutil
 import zipfile
 
 import glob2
-import six
 
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
@@ -127,7 +128,7 @@ class ArtifactCollector(HasOutput, ProjectDirectory):
                 if item["clean"]:
                     for matching_path in matches:
                         try:
-                            os.remove(matching_path) #TODO: use shutil by default
+                            os.remove(matching_path)  # TODO: use shutil by default
                         except OSError as e:
                             if "Is a directory" not in e.strerror:
                                 raise
@@ -155,7 +156,7 @@ class ArtifactCollector(HasOutput, ProjectDirectory):
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs, ignore_existing_artifacts=False):
-        artifact_list = []
+        artifact_list: List[Dict] = []
         report_artifact_list = []
         for configuration in project_configs.all():
             if "artifacts" in configuration:

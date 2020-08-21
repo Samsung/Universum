@@ -1,9 +1,9 @@
 import copy
 
-from typing import cast, Callable, ClassVar, List, Optional, Type
+from typing import cast, Callable, ClassVar, List, Optional, Type, TypeVar
 from .. import configuration_support
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
-from ..lib.gravity import Module, Dependency
+from ..lib.gravity import Dependency
 from .output import HasOutput
 
 __all__ = [
@@ -126,7 +126,10 @@ class StructureHandler(HasOutput):
 
     # The exact block will be reported as failed only if pass_errors is False
     # Otherwise the exception will be passed to the higher level function and handled there
-    def run_in_block(self, operation: Callable[..., Optional[bool]], block_name, pass_errors: bool, *args, **kwargs):
+    T = TypeVar('T')
+
+    def run_in_block(self, operation: Callable[..., T],
+                     block_name: str, pass_errors: bool, *args, **kwargs) -> Optional[T]:
         result = None
         self.open_block(block_name)
         try:
