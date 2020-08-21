@@ -4,13 +4,12 @@ from .lib.gravity import Module, Dependency
 from .lib.utils import make_block
 from .modules import automation_server, vcs
 from .modules.output import HasOutput
-from .modules.structure_handler import needs_structure
+from .modules.structure_handler import HasStructure
 
 __all__ = ["Poll"]
 
 
-@needs_structure
-class Poll(HasOutput):
+class Poll(HasOutput, HasStructure):
     description = "Polling module of Universum"
     vcs_factory = Dependency(vcs.PollVcs)
     server_factory = Dependency(automation_server.AutomationServerForTrigger)

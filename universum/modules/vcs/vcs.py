@@ -8,7 +8,7 @@ from .. import artifact_collector
 from ..api_support import ApiSupport
 from ..error_state import HasErrorState
 from ..project_directory import ProjectDirectory
-from ..structure_handler import needs_structure
+from ..structure_handler import HasStructure
 from ...lib import utils
 from ...lib.gravity import Dependency
 from ...lib.utils import make_block
@@ -53,8 +53,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
 
     vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
 
-    @needs_structure
-    class Vcs(ProjectDirectory, HasErrorState):
+    class Vcs(ProjectDirectory, HasStructure, HasErrorState):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
         gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])
@@ -72,7 +71,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                                      "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
         def __init__(self, *args, **kwargs):
-            super(Vcs, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
             if not getattr(self.settings, "type", None):
                 self.error("""
@@ -111,8 +110,8 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     driver_factory = self.github_driver_factory
                 else:
                     driver_factory = self.perforce_driver_factory
-            except AttributeError:  # TODO: how it can be generated?
-                raise NotImplementedError()
+            except AttributeError as e:  # TODO: how it can be generated?
+                raise NotImplementedError() from e
             self.driver = driver_factory()
 
         @make_block("Finalizing")
@@ -139,7 +138,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
     def __init__(self, *args, **kwargs):
-        super(MainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()
 

@@ -3,14 +3,13 @@ import urllib.parse
 
 from .modules.vcs.github_vcs import GithubToken
 from .modules.output import HasOutput
-from .modules.structure_handler import needs_structure
+from .modules.structure_handler import HasStructure
 from .lib.ci_exception import CriticalCiException
 from .lib.utils import make_block
 from .lib import utils
 
 
-@needs_structure
-class GithubHandler(HasOutput, GithubToken):
+class GithubHandler(GithubToken, HasOutput, HasStructure):
 
     @staticmethod
     def define_arguments(argument_parser):

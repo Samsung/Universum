@@ -3,11 +3,10 @@ import shutil
 
 from ..error_state import HasErrorState
 from ...lib.ci_exception import CriticalCiException
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 from ...lib import utils
 from ..output import HasOutput
-from ..structure_handler import needs_structure
+from ..structure_handler import HasStructure
 from . import base_vcs
 
 __all__ = [
@@ -15,8 +14,7 @@ __all__ = [
 ]
 
 
-@needs_structure
-class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasErrorState):
+class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasStructure, HasErrorState):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Local files",
@@ -27,7 +25,7 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasErrorState):
                                  "This option is only needed when '--driver-type' is set to 'none'")
 
     def __init__(self, *args, **kwargs):
-        super(LocalMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "source_dir", None):
             self.error("""The source directory is not specified.
@@ -57,4 +55,4 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasErrorState):
             text += "\n * Directory '{}' already exists in working dir (e.g. due to previous builds)".format(
                 os.path.basename(self.settings.project_root))
             text += "\n * File reading permissions troubles"
-            raise CriticalCiException(text)
+            raise CriticalCiException(text) from e
