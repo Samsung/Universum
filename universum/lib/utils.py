@@ -122,7 +122,7 @@ def catch_exception(exception_name, ignore_if=None):
                 return result
             except Exception as e:
                 if not type(e).__name__ == exception_name:
-                    raise Exception from e
+                    raise
                 if ignore_if is not None:
                     if ignore_if in str(e):
                         return result
