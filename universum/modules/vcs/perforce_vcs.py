@@ -12,7 +12,7 @@ from ...lib.gravity import Dependency
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block, Uninterruptible, convert_to_str
 from ...lib import utils
-from ..output import needs_output
+from ..output import HasOutput
 from ..structure_handler import needs_structure
 from . import base_vcs
 from .swarm import Swarm
@@ -31,9 +31,8 @@ def catch_p4exception(ignore_if=None):
     return utils.catch_exception("P4Exception", ignore_if)
 
 
-@needs_output
 @needs_structure
-class PerforceVcs(base_vcs.BaseVcs):
+class PerforceVcs(base_vcs.BaseVcs, HasOutput):
     """
     This class contains global functions for interaction with Perforce
     """

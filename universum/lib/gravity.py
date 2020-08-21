@@ -61,6 +61,9 @@ class Module:
     settings: ClassVar['Settings']
     main_settings: 'HasModulesMapping'
 
+    def __init__(self, *args, **kwargs):  # workaround for type checking
+        pass
+
     def __new__(cls: Type['Module'], main_settings: 'HasModulesMapping', *args, **kwargs) -> 'Module':
         instance: 'Module' = super(Module, cls).__new__(cls)
         instance.main_settings = main_settings

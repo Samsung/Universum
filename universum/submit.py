@@ -3,15 +3,14 @@ from .lib.gravity import Module, Dependency
 from .lib.module_arguments import IncorrectParameterError
 from .lib.utils import make_block
 from .modules import vcs
-from .modules.output import needs_output
+from .modules.output import HasOutput
 from .modules.structure_handler import needs_structure
 
 __all__ = ["Submit"]
 
 
-@needs_output
 @needs_structure
-class Submit(Module):
+class Submit(HasOutput):
     description = "Submitting module of Universum"
     vcs_factory = Dependency(vcs.SubmitVcs)
 

@@ -2,13 +2,12 @@ from . import __title__
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import Module, Dependency
 from .modules import vcs, artifact_collector, reporter, launcher, code_report_collector
-from .modules.output import needs_output
+from .modules.output import HasOutput
 
 __all__ = ["Main"]
 
 
-@needs_output
-class Main(Module):
+class Main(HasOutput):
     description = __title__
     vcs_factory = Dependency(vcs.MainVcs)
     launcher_factory = Dependency(launcher.Launcher)

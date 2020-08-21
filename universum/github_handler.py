@@ -2,7 +2,7 @@ import json
 import urllib.parse
 
 from .modules.vcs.github_vcs import GithubToken
-from .modules.output import needs_output
+from .modules.output import HasOutput
 from .modules.structure_handler import needs_structure
 from .lib.ci_exception import CriticalCiException
 from .lib.utils import make_block
@@ -10,8 +10,7 @@ from .lib import utils
 
 
 @needs_structure
-@needs_output
-class GithubHandler(GithubToken):
+class GithubHandler(HasOutput, GithubToken):
 
     @staticmethod
     def define_arguments(argument_parser):

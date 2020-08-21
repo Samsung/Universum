@@ -6,7 +6,7 @@ from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 from ...lib import utils
-from ..output import needs_output
+from ..output import HasOutput
 from ..structure_handler import needs_structure
 from . import base_vcs
 
@@ -15,9 +15,8 @@ __all__ = [
 ]
 
 
-@needs_output
 @needs_structure
-class LocalMainVcs(base_vcs.BaseDownloadVcs, HasErrorState):
+class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasErrorState):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Local files",
