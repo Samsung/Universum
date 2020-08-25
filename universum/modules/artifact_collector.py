@@ -155,7 +155,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs, ignore_existing_artifacts=False):
-        artifact_list: List[Dict] = []
+        artifact_list = []
         report_artifact_list = []
         for configuration in project_configs.all():
             if "artifacts" in configuration:

@@ -39,9 +39,9 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                 continue
 
             self.set_code_report_directory(self.settings.project_root)
-            temp_filename: str = "${CODE_REPORT_FILE}"
-            name: str = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
-            actual_filename: str = os.path.join(self.report_path, name)
+            temp_filename = "${CODE_REPORT_FILE}"
+            name = utils.calculate_file_absolute_path(self.report_path, item.get("name")) + ".json"
+            actual_filename = os.path.join(self.report_path, name)
 
             for key in item:
                 if key == "command":
