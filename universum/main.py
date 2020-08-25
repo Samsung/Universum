@@ -79,10 +79,10 @@ class Main(HasOutput):
             if not self.settings.no_diff:
                 try:
                     repo_diff = self.vcs.revert_repository()
-                    self.launcher.launch_custom_configs(afterall_configs)
-                    self.code_report_collector.repo_diff = repo_diff
                 except NotImplementedError:
                     self.out.log("Diff calculation for code report is skipped because current VCS doesn't support it")
+                self.launcher.launch_custom_configs(afterall_configs)
+                self.code_report_collector.repo_diff = repo_diff
             self.code_report_collector.report_code_report_results()
         self.artifacts.collect_artifacts()
         self.reporter.report_build_result()

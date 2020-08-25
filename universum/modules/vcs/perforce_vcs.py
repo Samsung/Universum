@@ -104,7 +104,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
         self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     @make_block("Disconnecting")
-    def disconnect(self):
+    def disconnect(self) -> None:
         with warnings.catch_warnings(record=True) as w:
             self.p4.disconnect()
             if not w:
