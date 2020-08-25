@@ -174,8 +174,5 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
 
     @make_block("Revert repository")
     def revert_repository(self) -> Optional[List[Tuple[Optional[str], Optional[str], Optional[str]]]]:
-        try:
-            diff = self.driver.copy_cl_files_and_revert()
-            return diff
-        except NotImplementedError as e:
-            raise NotImplementedError("The driver is unable to perform the requested action") from e
+        diff = self.driver.copy_cl_files_and_revert()
+        return diff
