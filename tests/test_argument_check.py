@@ -106,7 +106,6 @@ missing_params = []
 
 def param(test_type: str, module: str, field: str,
           vcs_type: Union[str, List[str]] = "*", error_match: str = None) -> None:
-
     global missing_params
 
     if isinstance(vcs_type, list):
@@ -142,18 +141,20 @@ param("main",           "TeamcityServer",               "configuration_id")
 param("main",           "TeamcityServer",               "server_url",      error_match="TEAMCITY_SERVER")
 param("main",           "TeamcityServer",               "user_id",         error_match="TC_USER")
 param("main",           "TeamcityServer",               "passwd",          error_match="TC_PASSWD")
-param("*",              "PerforceVcs",                  "port",            vcs_type="p4")
+param("*",              "PerforceVcs",                  "port",            vcs_type="p4", error_match="perforce port")
 param("*",              "PerforceVcs",                  "user",            vcs_type="p4")
 param("*",              "PerforceVcs",                  "password",        vcs_type="p4")
 param("main",           "Swarm",                        "server_url",      vcs_type="p4", error_match="SWARM_SERVER")
-param("main",           "Swarm",                        "review_id",       vcs_type="p4", error_match="REVIEW")
+param("main",           "Swarm",                        "review_id",       vcs_type="p4", error_match="review number")
 param("main",           "Swarm",                        "change",          vcs_type="p4")
 param("*",              "Vcs",                          "type")
-param("*",              "GitVcs",                       "repo",            vcs_type=["git", "gerrit", "github"])
+param("*",              "GitVcs",                       "repo",            vcs_type=["git", "gerrit", "github"],
+      error_match="git repo")
 param("main",           "GitVcs",                       "refspec",         vcs_type="gerrit")
 param("main",           "GitMainVcs",                   "checkout_id",     vcs_type="github")
 param("main",           "GithubMainVcs",                "check_id",        vcs_type="github")
-param("main",           "GithubToken",                  "integration_id",  vcs_type="github", error_match="GITHUB_APP_ID")
+param("main",           "GithubToken",                  "integration_id",  vcs_type="github",
+      error_match="GITHUB_APP_ID")
 param("github-handler", "GithubToken",                  "integration_id",  error_match="GITHUB_APP_ID")
 param("main",           "GithubToken",                  "key",             vcs_type="github")
 param("github-handler", "GithubToken",                  "key")
@@ -167,13 +168,45 @@ param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_t
 @parametrize_unset()
 @pytest.mark.parametrize("test_type, module, field, vcs_type, error_match", missing_params)
 def test_missing_params(unset, test_type, module, field, vcs_type, error_match):
+    """
+    Make sure the exact error message is produced for the empty settings field
+    """
     settings = create_settings(test_type, vcs_type)
     unset(settings, module, field)
 
     assert_incorrect_parameter(settings, "(?i)" + error_match)
 
 
-mappings_error_match = get_match_all("P4_PATH", "P4_MAPPINGS")
+@pytest.mark.parametrize("test_type, module, field, vcs_type, error_match", missing_params)
+def test_missing_params_correct_error(test_type, module, field, vcs_type, error_match):
+    """
+    Make sure the error message is not produced if the settings field is not empty
+    """
+    settings = create_settings(test_type, vcs_type)
+
+    # remove some other setting and make sure there is no error message for current one
+    if test_type == "main":
+        if module == "Launcher" and field == "config_path":
+            settings.Vcs.type = ""
+        else:
+            settings.Launcher.config_path = ""
+    elif test_type == "submit":
+        if module == "Submit" and field == "commit_message":
+            settings.Vcs.type = ""
+        else:
+            settings.Submit.commit_message = ""
+    elif test_type == "poll":
+        settings.AutomationServer.type = "jenkins"
+        settings.JenkinsServerForTrigger.trigger_url = ""
+    elif test_type == "github-handler":
+        if module == "GithubToken" and field == "integration_id":
+            settings.GithubToken.key = ""
+        else:
+            settings.GithubToken.integration_id = ""
+
+    # the regular expression verifies that the string is not located in the error text
+    with pytest.raises(IncorrectParameterError, match=f"(?is)^((?!{error_match}).)*$"):
+        __main__.run(settings)
 
 
 @parametrize_unset("unset_mappings")
@@ -207,6 +240,14 @@ def test_missing_jenkins_params(unset, vcs_type):
     unset(settings, "JenkinsServerForTrigger", "trigger_url")
 
     assert_incorrect_parameter(settings, "trigger-url")
+
+    settings = create_settings("poll", vcs_type)
+    settings.AutomationServer.type = "tc"
+    settings.TeamcityServer.server_url = ""
+
+    # the regular expression verifies that the string is not located in the error text
+    with pytest.raises(IncorrectParameterError, match=f"(?is)^((?!Jenkins url for triggering build).)*$"):
+        __main__.run(settings)
 
 
 @pytest.mark.parametrize("vcs_type", ["git", "none"])
