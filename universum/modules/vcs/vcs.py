@@ -137,7 +137,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         parser.add_argument("--report-to-review", action="store_true", dest="report_to_review", default=False,
                             help="Perform test build for code review system (e.g. Gerrit or Swarm).")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.artifacts: artifact_collector.ArtifactCollector = self.artifacts_factory()
         self.api_support: ApiSupport = self.api_support_factory()
@@ -152,7 +152,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         return True
 
     @make_block("Preparing repository")
-    def prepare_repository(self):
+    def prepare_repository(self) -> None:
         status_file: TextIO = self.artifacts.create_text_file("REPOSITORY_STATE.txt")
 
         self.driver.prepare_repository()
