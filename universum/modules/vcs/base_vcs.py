@@ -11,7 +11,6 @@ __all__ = [
     "BasePollVcs"
 ]
 
-
 class BaseVcs(ProjectDirectory):
     """
     Base class for VCS drivers

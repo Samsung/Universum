@@ -1,3 +1,4 @@
+# pylint: disable=W0223
 import glob
 import importlib
 import os
