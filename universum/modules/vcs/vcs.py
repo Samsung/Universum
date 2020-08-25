@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, TextIO, Tuple, Type, Union
 import json
 import shutil
 import sh
@@ -128,7 +128,7 @@ SubmitVcs: Type[ProjectDirectory] = create_vcs("submit")
 class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/issues/2477
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
     api_support_factory = Dependency(ApiSupport)
-    driver: Union[base_vcs.BasePollVcs, base_vcs.BaseSubmitVcs, base_vcs.BaseDownloadVcs]
+    driver: base_vcs.BaseDownloadVcs
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -139,8 +139,8 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.artifacts = self.artifacts_factory()
-        self.api_support = self.api_support_factory()
+        self.artifacts: artifact_collector.ArtifactCollector = self.artifacts_factory()
+        self.api_support: ApiSupport = self.api_support_factory()
 
         if self.settings.report_to_review:
             if not self.is_in_error_state():
@@ -153,7 +153,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
 
     @make_block("Preparing repository")
     def prepare_repository(self):
-        status_file = self.artifacts.create_text_file("REPOSITORY_STATE.txt")
+        status_file: TextIO = self.artifacts.create_text_file("REPOSITORY_STATE.txt")
 
         self.driver.prepare_repository()
 

@@ -11,6 +11,7 @@ __all__ = [
     "BasePollVcs"
 ]
 
+
 class BaseVcs(ProjectDirectory):
     """
     Base class for VCS drivers
@@ -39,9 +40,6 @@ class BaseVcs(ProjectDirectory):
                     "\n * Source vcs permissions do not allow deleting"
             raise CiException(text) from e
 
-    def copy_cl_files_and_revert(self):
-        raise NotImplementedError
-
     def finalize(self):
         if self.sources_need_cleaning:
             self.clean_sources()
@@ -56,6 +54,9 @@ class BaseDownloadVcs(BaseVcs):
         raise IncorrectParameterError("There is no code review system associated with this VCS type")
 
     def prepare_repository(self):
+        raise NotImplementedError
+
+    def copy_cl_files_and_revert(self):
         raise NotImplementedError
 
     def calculate_file_diff(self):
