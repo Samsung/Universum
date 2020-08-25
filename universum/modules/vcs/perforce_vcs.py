@@ -1,3 +1,6 @@
+from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple
+from types import ModuleType
+
 import importlib
 import os
 import shutil
@@ -25,6 +28,11 @@ __all__ = [
 ]
 
 P4Exception = None
+
+
+class P4stub(ModuleType):  # replace with proper stubs
+    P4Exception: Exception
+    P4: Callable
 
 
 def catch_p4exception(ignore_if=None):
@@ -72,7 +80,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
             by setting P4PASSWD environment variable.""")
 
         try:
-            p4_module = importlib.import_module("P4")
+            p4_module = cast(P4stub, importlib.import_module("P4"))
         except ImportError as e:
             text = "Error: using VCS type 'p4' requires official Helix CLI and Python package 'perforce-p4python' " \
                    "to be installed. Please refer to `Prerequisites` chapter of project documentation for " \
@@ -96,7 +104,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
         self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     @make_block("Disconnecting")
-    def disconnect(self):
+    def disconnect(self) -> None:
         with warnings.catch_warnings(record=True) as w:
             self.p4.disconnect()
             if not w:
@@ -105,7 +113,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
                 return
             text = ""
             for line in w:
-                text += "\n" + warnings.formatwarning(line.message, line.category, line.filename, line.lineno)
+                text += "\n" + warnings.formatwarning(str(line.message), line.category, line.filename, line.lineno)
             self.structure.fail_current_block("Unexpected warning(s): " + text)
             raise SilentAbortException()
 
@@ -225,7 +233,8 @@ class PerforceWithMappings(PerforceVcs):
 
         if not getattr(self.settings, "project_depot_path", None) and not getattr(self.settings, "mappings", None):
             raise IncorrectParameterError("both P4_PATH (-p4d) and P4_MAPPINGS (-p4m) are not set.\n\n"
-                                          "Universum needs one of these parameters to be set in order to download sources.\n")
+                                          "Universum needs one of these parameters to be set in order to download "
+                                          "sources.\n")
 
         # Convert old-style depot path into mappings
         if self.settings.project_depot_path:
@@ -239,7 +248,6 @@ class PerforceWithMappings(PerforceVcs):
 
 
 class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
-    supports_copy_cl_files_and_revert = True
     swarm_factory = Dependency(Swarm)
     artifacts_factory = Dependency(ArtifactCollector)
     reporter_factory = Dependency(Reporter)
@@ -296,8 +304,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.client_view = []
         self.mappings_dict = {}
 
-        self.unshelved_files = []
-        self.diff_in_files = []
+        self.unshelved_files: List[Dict[str, str]] = []
+        self.diff_in_files: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []
 
     def code_review(self):
         self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
@@ -441,13 +449,13 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.append_repo_status("\n")
 
     @catch_p4exception(ignore_if="file(s) up-to-date")
-    def check_diff_for_depot(self, depot):
+    def check_diff_for_depot(self, depot: str) -> str:
         try:
             p4cmd = sh.Command("p4")
             diff_result = p4cmd("-c", self.settings.client, "-u", self.settings.user,
                                 "-P", self.settings.password, "-p", self.settings.port,
                                 "diff", depot)
-            result = utils.trim_and_convert_to_unicode(diff_result.stdout)
+            result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
             for line in e.stderr.splitlines():
                 if not (line.startswith("Librarian checkout")
@@ -458,14 +466,14 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result
 
-    def calculate_file_diff(self):
-        action_list = {}
+    def calculate_file_diff(self) -> List[Dict[str, str]]:
+        action_list: Dict[str, str] = {}
         for entry in self.p4.run_opened():
             action_list[entry["depotFile"]] = entry["action"]
         if not action_list:
-            return {}
+            return [{}]
 
-        result = []
+        result: List[Dict[str, str]] = []
         # Both 'p4 opened' and 'p4 where' entries have same key 'depotFile'
         for entry in self.p4.run_where(list(action_list.keys())):
             result.append({"action": action_list[entry["depotFile"]],
@@ -474,11 +482,11 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         return result
 
     @make_block("Checking diff")
-    def diff(self):
-        rep_diff = []
+    def diff(self) -> None:
+        rep_diff: List[str] = []
         for depot in self.depots:
-            line = depot["path"] + '@' + depot["cl"]
-            result = self.check_diff_for_depot(line)
+            line: str = depot["path"] + '@' + depot["cl"]
+            result: str = self.check_diff_for_depot(line)
             if result:
                 rep_diff.append(result + "\n")
 
@@ -486,7 +494,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             file_name = "REPOSITORY_DIFFERENCE.txt"
             self.append_repo_status("See '" + file_name + "' for details on unshelved changes\n")
 
-            f = self.artifacts.create_text_file(file_name)
+            f: TextIO = self.artifacts.create_text_file(file_name)
             for result in rep_diff:
                 f.write(result)
             f.close()
@@ -499,34 +507,34 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
     @make_block("Revert workspace to depot state")
     @catch_p4exception()
-    def copy_cl_files_and_revert(self):
+    def copy_cl_files_and_revert(self) -> List[Tuple[Optional[str], Optional[str], Optional[str]]]:
         self.unshelved_files = self.p4.run_opened()
-        unshelved_path = []
+        unshelved_path: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []
 
-        unshelved_filtered = [item for item in self.unshelved_files if item["action"] != "move/delete"]
+        unshelved_filtered: List[Dict[str, str]] =\
+            [item for item in self.unshelved_files if item["action"] != "move/delete"]
 
         for item in unshelved_filtered:
-            if item["action"] != "delete":
+            relative: Optional[str] = None
+            copied: Optional[str] = None
+            absolute: Optional[str]
+            if item["action"] == "delete":
+                absolute = os.path.join(self.client_root, item["clientFile"].replace("//" + item["client"] + "/", ""))
+            else:
                 relative = item["clientFile"].replace("//" + item["client"] + "/", "")
                 copied = os.path.join(self.client_root, "new_temp", relative)
                 absolute = os.path.join(self.client_root, relative)
-
                 try:
                     shutil.copy(absolute, copied)
                 except IOError:
                     os.makedirs(os.path.dirname(copied))
                     shutil.copy(absolute, copied)
-
                 # absolute = None to make sure content of 'add' and 'branch' won't participate in diff after revert
                 # for 'branch' diff we will assume it is a new file
                 # be careful, file for 'add' will be present in repo after revert
                 if item["action"] in ["add", "branch"]:
                     absolute = None
-                unshelved_path.append((relative, copied, absolute))
-
-            else:
-                absolute = os.path.join(self.client_root, item["clientFile"].replace("//" + item["client"] + "/", ""))
-                unshelved_path.append((None, None, absolute))
+            unshelved_path.append((relative, copied, absolute))
 
         if self.shelve_cls:
             self.p4.run_revert("//...")

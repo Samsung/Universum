@@ -1,3 +1,4 @@
+# pylint: disable=W0223
 import glob
 import importlib
 import os
@@ -186,9 +187,6 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
         self.check_out()
         if self.settings.cherrypick_id:
             self.cherry_pick()
-
-    def copy_cl_files_and_revert(self):
-        raise NotImplementedError
 
 
 class GitSubmitVcs(GitVcs, BaseSubmitVcs):

@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import codecs
 import distutils
 from distutils import dir_util, errors
@@ -125,7 +127,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                 if item["clean"]:
                     for matching_path in matches:
                         try:
-                            os.remove(matching_path) #TODO: use shutil by default
+                            os.remove(matching_path)  # TODO: use shutil by default
                         except OSError as e:
                             if "Is a directory" not in e.strerror:
                                 raise
