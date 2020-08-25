@@ -4,7 +4,7 @@ import os
 
 from .base_vcs import BaseVcs, BaseDownloadVcs, BasePollVcs, BaseSubmitVcs
 from ..output import HasOutput
-from ..structure_handler import needs_structure
+from ..structure_handler import HasStructure
 from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
 from ...lib.module_arguments import IncorrectParameterError
@@ -23,8 +23,7 @@ def catch_git_exception(ignore_if=None):
     return utils.catch_exception("GitCommandError", ignore_if)
 
 
-@needs_structure
-class GitVcs(BaseVcs, HasOutput):
+class GitVcs(BaseVcs, HasOutput, HasStructure):
     """
     This class contains CI functions for interaction with Git
     """
@@ -40,17 +39,17 @@ class GitVcs(BaseVcs, HasOutput):
                             help="Any additional refspec to be fetched")
 
     def __init__(self, *args, **kwargs):
-        super(GitVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         global git
         try:
             git = importlib.import_module("git")
             remote = importlib.import_module("git.remote")
-        except ImportError:
+        except ImportError as e:
             text = "Error: using VCS type 'git' requires official Git CLI and Python package 'gitpython' " \
                    "to be installed to the system. Please refer to `Prerequisites` chapter of project " \
                    "documentation for detailed instructions"
-            raise ImportError(text)
+            raise ImportError(text) from e
 
         utils.check_required_option(self.settings, "repo", """
             the git repo is not specified.
@@ -62,7 +61,7 @@ class GitVcs(BaseVcs, HasOutput):
 
         class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
-                super(Progress, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self.out = out
 
             def line_dropped(self, line):
@@ -102,7 +101,6 @@ class GitVcs(BaseVcs, HasOutput):
             self.repo = git.Repo.clone_from(clone_url, destination_directory, progress=self.logger)
 
 
-@needs_structure
 class GitMainVcs(GitVcs, BaseDownloadVcs):
     @staticmethod
     def define_arguments(argument_parser):
@@ -118,7 +116,7 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
                                  "'--git-cherry-pick-id' can be added to the command line several times")
 
     def __init__(self, *args, **kwargs):
-        super(GitMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.checkout_id = None
 
     @make_block("Checking out")
@@ -201,7 +199,7 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs):
                             help="Git user email for submitting")
 
     def __init__(self, *args, **kwargs):
-        super(GitSubmitVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "user", None) or not getattr(self.settings, "email", None):
             raise IncorrectParameterError("user name or email is not specified. \n\n"
@@ -256,10 +254,10 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs):
     def git_commit_locally(self, description, file_list, edit_only=False):
         try:
             self.repo = git.Repo(convert_to_str(self.settings.project_root))
-        except git.exc.NoSuchPathError:
-            raise CriticalCiException("No such directory as '" + self.settings.project_root + "'")
-        except git.exc.InvalidGitRepositoryError:
-            raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository")
+        except git.exc.NoSuchPathError as e:
+            raise CriticalCiException("No such directory as '" + self.settings.project_root + "'") from e
+        except git.exc.InvalidGitRepositoryError as e:
+            raise CriticalCiException("'" + self.settings.project_root + "' does not contain a Git repository") from e
 
         with self.repo.config_writer() as configurator:
             configurator.set_value("user", "name", self.settings.user)

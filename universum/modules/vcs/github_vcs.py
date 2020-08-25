@@ -66,12 +66,12 @@ class GithubToken(Module):
         global github
         try:
             github = importlib.import_module("github")
-        except ImportError:
+        except ImportError as e:
             text = "Error: using GitHub Handler or VCS type 'github' requires Python package 'pygithub' " \
                    "to be installed to the system for correct GitHub App token processing. " \
                    "It also requires Python package 'cryptography' to be installed in addition. " \
                    "Please refer to `Prerequisites` chapter of project documentation for detailed instructions"
-            raise ImportError(text)
+            raise ImportError(text) from e
 
         self.token_issued = None
         self._token = None

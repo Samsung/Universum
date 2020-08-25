@@ -98,13 +98,14 @@ def read_and_check_multiline_option(settings, setting_name, error_message):
                 with open(value.lstrip('@')) as file_name:
                     result = file_name.read()
             except FileNotFoundError as e:
-                raise IncorrectParameterError(f"Error reading argument {setting_name} from file {e.filename}: no such file")
+                raise IncorrectParameterError(f"Error reading argument {setting_name} from file {e.filename}: no such "
+                                              f"file") from e
         elif value == '-':
             result = "".join(sys.stdin.readlines())
         else:
             result = value
-    except AttributeError:
-        raise IncorrectParameterError(inspect.cleandoc(error_message))
+    except AttributeError as e:
+        raise IncorrectParameterError(inspect.cleandoc(error_message)) from e
 
     if not result:
         raise IncorrectParameterError(inspect.cleandoc(error_message))
@@ -125,7 +126,7 @@ def catch_exception(exception_name, ignore_if=None):
                 if ignore_if is not None:
                     if ignore_if in str(e):
                         return result
-                raise CriticalCiException(str(e))
+                raise CriticalCiException(str(e)) from e
         return function_to_run
     return decorated_function
 
@@ -214,5 +215,5 @@ def make_request(url, request_method="GET", critical=True, **kwargs):
     except requests.RequestException as error:
         text = f"Error opening URL, got '{type(error).__name__}' with following message:\n{error}"
         if critical:
-            raise CriticalCiException(text)
-        raise CiException(text)
+            raise CriticalCiException(text) from error
+        raise CiException(text) from error

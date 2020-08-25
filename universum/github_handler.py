@@ -3,14 +3,13 @@ import urllib.parse
 
 from .modules.vcs.github_vcs import GithubToken
 from .modules.output import HasOutput
-from .modules.structure_handler import needs_structure
+from .modules.structure_handler import HasStructure
 from .lib.ci_exception import CriticalCiException
 from .lib.utils import make_block
 from .lib import utils
 
 
-@needs_structure
-class GithubHandler(HasOutput, GithubToken):
+class GithubHandler(GithubToken, HasOutput, HasStructure):
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -65,7 +64,7 @@ class GithubHandler(HasOutput, GithubToken):
             payload = json.loads(self.payload)
         except json.decoder.JSONDecodeError as error:
             text = f"Provided payload value could not been parsed as JSON and returned the following error:\n {error}"
-            raise CriticalCiException(text)
+            raise CriticalCiException(text) from error
 
         try:
             if self.settings.target_repo:
@@ -107,9 +106,9 @@ class GithubHandler(HasOutput, GithubToken):
             else:
                 self.out.log("Unhandled event, skipping...")
         except KeyError as error:
-            raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}")
-        except TypeError:
-            raise CriticalCiException("Parsed payload JSON does not correspond to expected format")
+            raise CriticalCiException(f"Could not find key {error} in provided payload:\n{payload}") from error
+        except TypeError as error:
+            raise CriticalCiException("Parsed payload JSON does not correspond to expected format") from error
 
     def finalize(self):
         pass

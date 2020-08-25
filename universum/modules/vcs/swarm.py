@@ -38,7 +38,7 @@ class Swarm(ReportObserver, HasOutput):
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
 
     def __init__(self, user, password, *args, **kwargs):
-        super(Swarm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.user = user
         self.password = password
         self.review_version = None
@@ -98,10 +98,10 @@ class Swarm(ReportObserver, HasOutput):
                                     critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as e:
             text = "Error parsing Swarm server response. Full response is the following:\n"
             text += result.text
-            raise CiException(text)
+            raise CiException(text) from e
 
         self.review_latest_version = str(len(versions))
 

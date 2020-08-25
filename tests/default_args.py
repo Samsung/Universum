@@ -7,7 +7,7 @@ class ArgGroupWithDefault(universum.lib.module_arguments.ModuleArgumentGroup):
             kwargs["required"] = False
             kwargs["default"] = ""
 
-        super(ArgGroupWithDefault, self).add_argument(*args, **kwargs)
+        super().add_argument(*args, **kwargs)
 
 
 class ArgParserWithDefault(universum.lib.module_arguments.ModuleArgumentParser):
@@ -16,8 +16,8 @@ class ArgParserWithDefault(universum.lib.module_arguments.ModuleArgumentParser):
             kwargs["required"] = False
             kwargs["default"] = ""
 
-        super(ArgParserWithDefault, self).add_argument(*args, **kwargs)
+        super().add_argument(*args, **kwargs)
 
     def add_argument_group(self, *args, **kwargs):
-        group = super(ArgParserWithDefault, self).add_argument_group(*args, **kwargs)
+        group = super().add_argument_group(*args, **kwargs)
         return ArgGroupWithDefault(group)

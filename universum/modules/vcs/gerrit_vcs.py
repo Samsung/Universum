@@ -21,7 +21,7 @@ class GerritVcs(git_vcs.GitVcs):
     """
 
     def __init__(self, *args, **kwargs):
-        super(GerritVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reporter = None
 
         if not self.settings.repo.startswith("ssh://"):
@@ -47,14 +47,14 @@ class GerritVcs(git_vcs.GitVcs):
             text = f"Got exit code {e.exit_code} while executing the following command:\n{e.full_cmd}"
             if e.stderr:
                 text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
-            raise CiException(text)
+            raise CiException(text) from e
 
 
 class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
     reporter_factory = Dependency(Reporter)
 
     def __init__(self, *args, **kwargs):
-        super(GerritMainVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         utils.check_required_option(self.settings, "refspec", """
             git refspec for gerrit is not specified.
@@ -108,10 +108,10 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
             decoder = json.JSONDecoder()
             result = decoder.raw_decode(response)
             return result[0]
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as e:
             text = "Error parsing gerrit server response. Full response is the following:\n"
             text += response
-            raise CiException(text)
+            raise CiException(text) from e
 
     def is_latest_version(self):
         self.update_review_version()
@@ -164,7 +164,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
         self.run_ssh_command(text)
 
     def prepare_repository(self):
-        super(GerritMainVcs, self).prepare_repository()
+        super().prepare_repository()
         self.commit_id = str(self.repo.head.commit)
 
 

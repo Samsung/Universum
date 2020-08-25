@@ -233,7 +233,7 @@ class P4Environment(utils.TestEnvironment):
         self.p4 = perforce_workspace.p4
         self.depot = perforce_workspace.depot
         self.client_name = "p4_disposable_workspace"
-        super(P4Environment, self).__init__(directory, test_type)
+        super().__init__(directory, test_type)
 
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port

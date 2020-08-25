@@ -17,7 +17,7 @@ from .automation_server import AutomationServerForHostingBuild
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
-from .structure_handler import needs_structure
+from .structure_handler import HasStructure
 
 __all__ = [
     "ArtifactCollector"
@@ -57,8 +57,7 @@ def make_big_archive(target, source):
     return filename
 
 
-@needs_structure
-class ArtifactCollector(HasOutput, ProjectDirectory):
+class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServerForHostingBuild)
 
@@ -75,7 +74,7 @@ class ArtifactCollector(HasOutput, ProjectDirectory):
                                  "This option turn archiving off to copy bare directories to artifact directory")
 
     def __init__(self, *args, **kwargs):
-        super(ArtifactCollector, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
 
@@ -111,7 +110,7 @@ class ArtifactCollector(HasOutput, ProjectDirectory):
             return codecs.open(file_name, "a", encoding="utf-8")
 
         except IOError as e:
-            raise CiException("The following error occurred while working with file: " + str(e))
+            raise CiException("The following error occurred while working with file: " + str(e)) from e
 
     def preprocess_artifact_list(self, artifact_list, ignore_already_existing=False):
         """

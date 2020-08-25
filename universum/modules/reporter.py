@@ -4,7 +4,7 @@ from ..lib.gravity import Module, Dependency
 from ..lib.utils import make_block
 from . import automation_server
 from .output import HasOutput
-from .structure_handler import needs_structure
+from .structure_handler import HasStructure
 
 __all__ = [
     "ReportObserver",
@@ -30,8 +30,7 @@ class ReportObserver:
         raise NotImplementedError
 
 
-@needs_structure
-class Reporter(HasOutput):
+class Reporter(HasOutput, HasStructure):
     automation_server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
 
     @staticmethod
@@ -49,7 +48,7 @@ class Reporter(HasOutput):
                             help="Do not vote up/down review depending on result")
 
     def __init__(self, *args, **kwargs):
-        super(Reporter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.observers = []
         self.report_initialized = False
         self.blocks_to_report = []

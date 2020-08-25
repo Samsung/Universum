@@ -21,7 +21,7 @@ class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger):
                                  'replaced by CL number, for example: http://localhost/%%s', metavar="URL")
 
     def __init__(self, *args, **kwargs):
-        super(JenkinsServerForTrigger, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if not getattr(self.settings, "trigger_url", None):
             raise IncorrectParameterError("the Jenkins url for triggering build\n"
                                           "is not specified\n\n"
@@ -43,7 +43,7 @@ class JenkinsServerForHostingBuild(BaseServerForHostingBuild):
                             help="Link to build on Jenkins (automatically set by Jenkins)")
 
     def __init__(self, *args, **kwargs):
-        super(JenkinsServerForHostingBuild, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if not getattr(self.settings, "build_url", None):
             raise IncorrectParameterError("the Jenkins url of the ongoing build\n"
                                           "is not specified\n\n"

@@ -16,7 +16,7 @@ class CriticalCiException(Exception):
 
 class SilentAbortException(Exception):
     def __init__(self, application_exit_code=1):
-        super(SilentAbortException, self).__init__()
+        super().__init__()
         self.application_exit_code = application_exit_code
 
 

@@ -12,7 +12,7 @@ __all__ = [
 
 class ApiSupport(Module):
     def __init__(self, api_mode=False, **kwargs):
-        super(ApiSupport, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if api_mode:
             if "UNIVERSUM_DATA_FILE" not in os.environ:

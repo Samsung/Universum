@@ -18,7 +18,7 @@ class BaseVcs(ProjectDirectory):
     """
 
     def __init__(self, *args, **kwargs):
-        super(BaseVcs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.repo_status = u""
         self.sources_need_cleaning = False
 
@@ -38,7 +38,7 @@ class BaseVcs(ProjectDirectory):
                     "\n * Sources were not copied due to runtime errors" + \
                     "\n * Copied sources are already deleted while executing generated scenario" + \
                     "\n * Source vcs permissions do not allow deleting"
-            raise CiException(text)
+            raise CiException(text) from e
 
     def finalize(self):
         if self.sources_need_cleaning:

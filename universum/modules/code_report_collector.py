@@ -11,11 +11,10 @@ from . import artifact_collector, reporter
 from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
-from .structure_handler import needs_structure
+from .structure_handler import HasStructure
 
 
-@needs_structure
-class CodeReportCollector(ProjectDirectory, HasOutput):
+class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
     reporter_factory = Dependency(reporter.Reporter)
     artifacts_factory = Dependency(artifact_collector.ArtifactCollector)
 
