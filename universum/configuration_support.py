@@ -1,6 +1,7 @@
 import copy
 import os
 import six
+from typing import Any, Callable, Dict, Generator, List, Union
 
 __all__ = [
     "Variations",
@@ -12,13 +13,13 @@ __all__ = [
 skip_attributes = {"children", "critical", "skip_numbering_level"}
 
 
-def combine(dictionary_a, dictionary_b):
+def combine(dictionary_a: Dict, dictionary_b: Dict) -> Dict:
     """
     Combine two dictionaries using plus operator for matching keys
 
     :param dictionary_a: may have any keys and values
     :param dictionary_b: may have any keys, but the values of keys, matching `dictionary_a`,
-        should be the same type
+        should be the compatible, so that 'dictionary_a'[key] + 'dictionary_b'[key] is a valid expression
     :return: new dictionary containing all keys from both `dictionary_a` and `dictionary_b`;
         for each matching key the value in resulting dictionary is a sum of two corresponding values
 
@@ -55,7 +56,7 @@ def combine(dictionary_a, dictionary_b):
     return result
 
 
-def stringify(obj):
+def stringify(obj: Dict[str, str]) -> bool:
     result = False
     command_line = ""
     for argument in obj["command"]:
@@ -116,7 +117,7 @@ class Variations(list):
 
     """
 
-    def __add__(self, other):
+    def __add__(self, other: List[Any]) -> 'Variations':
         """
         This functions defines operator ``+`` for :class:`.Variations` class objects by
         concatenating lists of dictionaries into one list.
@@ -128,7 +129,7 @@ class Variations(list):
         """
         return Variations(list.__add__(list(self), other))
 
-    def __mul__(self, other):
+    def __mul__(self, other: Union[int, List[Any]]) -> 'Variations':
         """
         This functions defines operator ``*`` for :class:`.Variations` class objects.
         The resulting object is created by combining every `self` list member with
@@ -155,7 +156,7 @@ class Variations(list):
         result = Variations(result_list)
         return result
 
-    def all(self):
+    def all(self) -> Generator[Dict, None, None]:
         """
         Function for configuration iterating.
 
@@ -173,15 +174,15 @@ class Variations(list):
             else:
                 yield obj_a_copy
 
-    def dump(self, produce_string_command=True):
+    def dump(self, produce_string_command: bool = True) -> str:
         """
         Function for :class:`.Variations` objects pretty printing.
 
         :param produce_string_command: if set to False, prints "command" as list instead of string
         :return: a user-friendly string representation of all configurations list
         """
-        space_found = False
-        result = "["
+        space_found: bool = False
+        result: str = "["
         for obj in self.all():
             if len(result) > 1:
                 result += ",\n"
@@ -199,7 +200,7 @@ class Variations(list):
             result += "Please make sure you are not trying to pass two or more parameters as one."
         return result
 
-    def filter(self, checker, parent=None):
+    def filter(self, checker: Callable[..., bool], parent: Dict = None) -> 'Variations':
         """
         This function is supposed to be called from main script, not configuration file.
         It uses provided `checker` to find all the configurations that pass the check,
@@ -213,10 +214,10 @@ class Variations(list):
         if parent is None:
             parent = dict()
 
-        filtered_variations = []
+        filtered_variations: List = []
 
         for obj_a in self:
-            item = combine(parent, copy.deepcopy(obj_a))
+            item: Dict = combine(parent, copy.deepcopy(obj_a))
 
             if "children" in obj_a:
                 active_children = obj_a["children"].filter(checker, item)
@@ -241,7 +242,7 @@ class Variations(list):
 global_project_root = os.getcwd()
 
 
-def set_project_root(project_root):
+def set_project_root(project_root: str) -> None:
     """
     Function to be called from main script; not supposed to be used in configuration file.
     Stores generated project location for further usage. This function is needed because
@@ -254,7 +255,7 @@ def set_project_root(project_root):
     global_project_root = project_root
 
 
-def get_project_root():
+def get_project_root() -> str:
     """
     Function to be used in configuration file. Inserts actual project location after
     that location is generated. If project root is not set, function returns current directory.

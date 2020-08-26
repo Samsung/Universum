@@ -11,12 +11,12 @@ __all__ = [
 
 
 class ModuleSettings:
-    def __init__(self, cls: Type['Module'], main_settings: 'HasModulesMapping') -> None:
+    def __init__(self, cls, main_settings) -> None:
         object.__setattr__(self, "cls", cls)
         object.__setattr__(self, "main_settings", main_settings)
 
-    def __getattribute__(self, item: str) -> Union[str, List[str]]:
-        cls: Type['Module'] = object.__getattribute__(self, "cls")
+    def __getattribute__(self, item):
+        cls = object.__getattribute__(self, "cls")
         main_settings = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
@@ -27,9 +27,9 @@ class ModuleSettings:
 
         raise AttributeError("'" + cls.__name__ + "' object has no setting '" + item + "'")
 
-    def __setattr__(self, key: str, value: Union[str, List[str]]) -> None:
-        cls: Type['Module'] = object.__getattribute__(self, "cls")
-        main_settings: 'HasModulesMapping' = object.__getattribute__(self, "main_settings")
+    def __setattr__(self, key, value):
+        cls = object.__getattribute__(self, "cls")
+        main_settings = object.__getattribute__(self, "main_settings")
         for entry in cls.__mro__:
             try:
                 settings = getattr(main_settings, entry.__name__)
