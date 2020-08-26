@@ -1,7 +1,7 @@
+from typing import Any, Callable, Dict, Generator, List, Union
 import copy
 import os
 import six
-from typing import Any, Callable, Dict, Generator, List, Union
 
 __all__ = [
     "Variations",

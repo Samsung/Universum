@@ -1,10 +1,10 @@
+from typing import Dict
 import inspect
 import os
 import pickle
 import tempfile
 
 from ..lib.gravity import Module
-from typing import Dict
 
 __all__ = [
     "ApiSupport"

@@ -6,12 +6,12 @@ import sys
 import traceback
 
 import requests
+from requests.models import Response
+from sh import RunningCommand
 
 from .ci_exception import CiException, CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
 from .gravity import ModuleSettings
-from requests.models import Response
-from sh import RunningCommand
 
 __all__ = [
     "strip_path_start",
@@ -31,8 +31,8 @@ __all__ = [
     "make_request"
 ]
 
-T = TypeVar('T')
-DecoratorT = Callable[[Callable[..., T]], Callable[..., T]]
+ReturnT = TypeVar('ReturnT')
+DecoratorT = Callable[[Callable[..., ReturnT]], Callable[..., ReturnT]]
 
 
 def strip_path_start(line: str) -> str:

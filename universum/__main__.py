@@ -1,3 +1,4 @@
+from typing import List, Optional
 import signal
 import sys
 
@@ -13,7 +14,6 @@ from .modules.error_state import GlobalErrorState
 from .nonci import Nonci
 from .poll import Poll
 from .submit import Submit
-from typing import List, Optional
 
 
 def define_arguments() -> ModuleArgumentParser:
