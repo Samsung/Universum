@@ -1,6 +1,39 @@
 Change log
 ==========
 
+0.19.0 (2020-08-??)
+-------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **migrate to Python3.7**
+* **disable entry points and switch to ``python -m`` calls**
+* **rename ``_universum`` to ``universum``** *(configs need to be fixed)*
+
+New features
+~~~~~~~~~~~~
+
+* **github-handler:** add :doc:`a new Universum mode <args_github_handler>` to serve as a GitHub App
+* **pylint:** allow selecting exact python version
+* **nonci:** set project root to current directory
+* **github_vcs:** aquire GitHub token only when needed
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** only update status for latest revisions
+* **nonci:** remove code report from nonci, launching steps twice
+* **report:** error message with successful build if not set to be reported
+* **setup:** make installing modules for GitHub VCS type non-mandatory
+* **docs:** limit nav panel depth to remove confusing subparagraphs
+* **p4:** add disconnect before any connect to fix `connection lost` issues
+* **code_report:** replace code report pseudo-variable not only in ``command``
+* **vcs:** raw exceptions shown during finalize
+* **vcs:** exception if vcs is 'none' and there are code report steps
+* **p4:** ignore additional whitespaces in mappings
+
+
 0.18.6 (2020-04-27)
 -------------------
 
