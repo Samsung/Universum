@@ -209,6 +209,9 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
         __main__.run(settings)
 
 
+mappings_error_match = get_match_all("P4_PATH", "P4_MAPPINGS")
+
+
 @parametrize_unset("unset_mappings")
 @parametrize_unset("unset_depot_path")
 def test_missing_both_perforce_mappings_and_depot_path(unset_mappings, unset_depot_path):
@@ -246,7 +249,7 @@ def test_missing_jenkins_params(unset, vcs_type):
     settings.TeamcityServer.server_url = ""
 
     # the regular expression verifies that the string is not located in the error text
-    with pytest.raises(IncorrectParameterError, match=f"(?is)^((?!Jenkins url for triggering build).)*$"):
+    with pytest.raises(IncorrectParameterError, match="(?is)^((?!Jenkins url for triggering build).)*$"):
         __main__.run(settings)
 
 
