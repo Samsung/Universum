@@ -132,7 +132,7 @@ def read_and_check_multiline_option(settings: ModuleSettings, setting_name: str,
 def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
     def decorated_function(function):
         def function_to_run(*args, **kwargs):
-            result: T = None
+            result: ReturnT = None
             try:
                 result = function(*args, **kwargs)
                 return result
