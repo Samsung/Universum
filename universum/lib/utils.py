@@ -31,6 +31,9 @@ __all__ = [
     "make_request"
 ]
 
+T = TypeVar('T')
+DecoratorT = Callable[[Callable[..., T]], Callable[..., T]]
+
 
 def strip_path_start(line: str) -> str:
     if line.startswith("./"):
@@ -126,10 +129,7 @@ def read_and_check_multiline_option(settings: ModuleSettings, setting_name: str,
     return result
 
 
-T = TypeVar('T')
-
-
-def catch_exception(exception_name: str, ignore_if: str = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
     def decorated_function(function):
         def function_to_run(*args, **kwargs):
             result: T = None
@@ -213,7 +213,7 @@ class Uninterruptible:
             raise SilentAbortException(application_exit_code=self.return_code)
 
 
-def make_block(block_name: str, pass_errors: bool = True) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def make_block(block_name: str, pass_errors: bool = True) -> DecoratorT:
     def decorated_function(func):
         def function_in_block(self, *args, **kwargs):
             return self.structure.run_in_block(func, block_name, pass_errors, self, *args, **kwargs)
