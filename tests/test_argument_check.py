@@ -90,14 +90,13 @@ def create_settings(test_type, vcs_type):
 
 def parametrize_unset(parameter_name="unset"):
     return pytest.mark.parametrize(parameter_name, [
-        lambda x, y, z: delattr(getattr(x, y), z),
         lambda x, y, z: setattr(getattr(x, y), z, None),
         lambda x, y, z: setattr(getattr(x, y), z, "")
-    ], ids=["del", "none", "empty"])
+    ], ids=["none", "empty"])
 
 
-def assert_incorrect_parameter(settings, match):
-    with pytest.raises(IncorrectParameterError, match=match):
+def assert_incorrect_parameter(settings, *args):
+    with pytest.raises(IncorrectParameterError, match=get_match_all(*args)):
         __main__.run(settings)
 
 
@@ -227,14 +226,14 @@ def test_missing_both_perforce_mappings_and_depot_path(unset_mappings, unset_dep
     unset_mappings(settings, "PerforceWithMappings", "mappings")
     unset_depot_path(settings, "PerforceWithMappings", "project_depot_path")
 
-    assert_incorrect_parameter(settings, mappings_error_match)
+    assert_incorrect_parameter(settings, "P4_PATH", "P4_MAPPINGS")
 
 
 def test_present_both_perforce_mappings_and_depot_path():
     settings = create_settings("main", "p4")
     settings.PerforceWithMappings.mappings = ["//depot/... /..."]
 
-    assert_incorrect_parameter(settings, mappings_error_match)
+    assert_incorrect_parameter(settings, "P4_PATH", "P4_MAPPINGS")
 
 
 @parametrize_unset()
@@ -314,13 +313,35 @@ def test_vcs_type_and_config_path():
     settings.Launcher.config_path = None
     settings.Vcs.type = None
 
-    assert_incorrect_parameter(settings, get_match_all("CONFIG_PATH", "repository type"))
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "repository type")
 
 
 def test_source_dir_and_config_path():
-    settings = create_settings("main", "p4")
-    settings.Vcs.type = "none"
+    settings = create_settings("main", "none")
     settings.Launcher.config_path = None
     settings.LocalMainVcs.source_dir = None
 
-    assert_incorrect_parameter(settings, get_match_all("CONFIG_PATH", "SOURCE_DIR"))
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "SOURCE_DIR")
+
+
+def test_multiple_errors_main_p4_params_and_config_path():
+    settings = create_settings("main", "p4")
+    settings.Launcher.config_path = None
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceMainVcs.client = None
+    settings.PerforceWithMappings.project_depot_path = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace")
+
+
+def test_multiple_errors_submit_p4_params_and_commit_message():
+    settings = create_settings("submit", "p4")
+    settings.Submit.commit_message = None
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceSubmitVcs.client = None
+
+    assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "port", "user name", "password", "P4CLIENT")
