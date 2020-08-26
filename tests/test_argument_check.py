@@ -184,7 +184,12 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
     """
     settings = create_settings(test_type, vcs_type)
 
-    # remove some other setting and make sure there is no error message for current one
+    # The idea of the test is to remove some other setting and make sure there is no error message for the current
+    # one. For each test type (universum launch type), we choose some settings field to be set to the empty string.
+    # At the same time we do not set the current settings field to the empty string. This should generate exception
+    # with proper error message, which doesn't contain error regarding the current field passed in parameters.
+    # However, this doesn't work if the chosen setting is equal to the one passed in parameters. In that case we use
+    # some other setting.
     if test_type == "main":
         if module == "Launcher" and field == "config_path":
             settings.Vcs.type = ""
@@ -196,6 +201,9 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
         else:
             settings.Submit.commit_message = ""
     elif test_type == "poll":
+        # The jenkins trigger_url is the only common mandatory settings field of the 'poll' launch type.
+        # However, this field is not added to the test parametrization list, so there is no need to set some other
+        # field to the empty string to check trigger_url. This parameter is checked in separate test.
         settings.AutomationServer.type = "jenkins"
         settings.JenkinsServerForTrigger.trigger_url = ""
     elif test_type == "github-handler":
@@ -232,17 +240,29 @@ def test_present_both_perforce_mappings_and_depot_path():
 @parametrize_unset()
 @pytest.mark.parametrize("vcs_type", ["p4", "git", "gerrit"])
 def test_missing_jenkins_params(unset, vcs_type):
+    """
+    Since varying the type of automation server seems like an overkill for the majority of argument checks,
+    it is always set to "tc" (TeamCity). This test checks the correctness of checks for jeknins-specific settings.
+    """
     settings = create_settings("main", vcs_type)
     settings.AutomationServer.type = "jenkins"
     unset(settings, "JenkinsServerForHostingBuild", "build_url")
 
-    assert_incorrect_parameter(settings, "build-url")
+    assert_incorrect_parameter(settings, "Jenkins url of the ongoing build")
 
     settings = create_settings("poll", vcs_type)
     settings.AutomationServer.type = "jenkins"
     unset(settings, "JenkinsServerForTrigger", "trigger_url")
 
-    assert_incorrect_parameter(settings, "trigger-url")
+    assert_incorrect_parameter(settings, "Jenkins url for triggering build")
+
+    settings = create_settings("main", vcs_type)
+    settings.AutomationServer.type = "tc"
+    settings.TeamcityServer.server_url = ""
+
+    # the regular expression verifies that the string is not located in the error text
+    with pytest.raises(IncorrectParameterError, match="(?is)^((?!Jenkins url of the ongoing build).)*$"):
+        __main__.run(settings)
 
     settings = create_settings("poll", vcs_type)
     settings.AutomationServer.type = "tc"
