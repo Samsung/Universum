@@ -3,7 +3,7 @@
 import pytest
 
 from universum import __main__
-from . import git_utils, perforce_utils
+from . import git_utils, perforce_utils, utils
 
 
 def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):
@@ -174,3 +174,14 @@ def test_changes_several_times(poll_parameters, poll_environment):
     parameters.http_check.assert_request_was_made({"cl": [change4]})
     parameters.http_check.assert_request_was_not_made({"cl": [change1]})
     parameters.http_check.assert_request_was_not_made({"cl": [change2]})
+
+
+def test_poll_local_vcs(tmpdir):
+    settings = utils.create_empty_settings("poll")
+    settings.Vcs.type = "none"
+    settings.Poll.db_file = tmpdir / "poll.json"
+    settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
+    settings.AutomationServer.type = "jenkins"
+    settings.ProjectDirectory.project_root = str(tmpdir.mkdir("project_root"))
+
+    assert __main__.run(settings) == 0
