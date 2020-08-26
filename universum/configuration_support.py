@@ -117,7 +117,7 @@ class Variations(list):
 
     """
 
-    def __add__(self, other: List[Any]) -> 'Variations':
+    def __add__(self, other: List) -> 'Variations':
         """
         This functions defines operator ``+`` for :class:`.Variations` class objects by
         concatenating lists of dictionaries into one list.
@@ -129,7 +129,7 @@ class Variations(list):
         """
         return Variations(list.__add__(list(self), other))
 
-    def __mul__(self, other: Union[int, List[Any]]) -> 'Variations':
+    def __mul__(self, other: Union[int, List]) -> 'Variations':
         """
         This functions defines operator ``*`` for :class:`.Variations` class objects.
         The resulting object is created by combining every `self` list member with
@@ -140,7 +140,7 @@ class Variations(list):
         """
 
         if isinstance(other, six.integer_types):
-            result_list = list.__mul__(list(self), other)
+            result_list: List = list.__mul__(list(self), other)
         else:
             result_list = []
             for obj_a in self:
@@ -214,7 +214,7 @@ class Variations(list):
         if parent is None:
             parent = dict()
 
-        filtered_variations: List = []
+        filtered_variations: List[Dict] = []
 
         for obj_a in self:
             item: Dict = combine(parent, copy.deepcopy(obj_a))
