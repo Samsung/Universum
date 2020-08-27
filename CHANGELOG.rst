@@ -7,29 +7,35 @@ Change log
 BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
-* **migrate to Python3.7**
-* **disable entry points and switch to ``python -m`` calls**
-* **rename ``_universum`` to ``universum``** *(configs need to be fixed)*
+* **migrate to Python3.7** due to Python2 is no longer supported
+    Python3.7 is now :doc:`required <prerequisites>` for Universum to work
+* **disable entry points** and switch to ``python3.7 -m universum`` calls
+    to avoid possible collisions, especially when using :doc:`analyzers <code_report>`
+* **rename `_universum` to `universum`**
+    :class:`~universum.configuration_support.Variations` imports in configs need to be fixed
 
 New features
 ~~~~~~~~~~~~
 
-* **github-handler:** add :doc:`a new Universum mode <args_github_handler>` to serve as a GitHub App
-* **pylint:** allow selecting exact python version
+* **github-handler:** add :doc:`a new Universum mode <github_handler>`
+    to serve as a `GitHub App <https://docs.github.com/en/developers/apps>`__. GitHub Applications,
+    for example, are needed to run checks on newly commmited changes, or on changes to be merged yet
+* **pylint:** allow selecting any Python version for checks
+    e.g. ``3.5`` instead of simple ``2``/``3`` switch earlier
 * **nonci:** set project root to current directory
-* **github_vcs:** aquire GitHub token only when needed
+    to simply run ``universum nonci`` from sources location without :doc:`setting <args>` ``--project-root`` manually
 
 Bug fixes
 ~~~~~~~~~
 
-* **swarm:** only update status for latest revisions
-* **nonci:** remove code report from nonci, launching steps twice
-* **report:** error message with successful build if not set to be reported
+* **swarm:** only update status for latest revisions (as Swarm no longer supports outdated review status update)
+* **github_vcs:** acquire GitHub token when needed (so it no longer expires for long builds)
+* **nonci:** fix the issue with launching ``code_report=True`` steps twice
+* **report:** successful build not set to be reported no longer causes errors
 * **setup:** make installing modules for GitHub VCS type non-mandatory
-* **docs:** limit nav panel depth to remove confusing subparagraphs
-* **p4:** add disconnect before any connect to fix `connection lost` issues
-* **code_report:** replace code report pseudo-variable not only in ``command``
-* **vcs:** raw exceptions shown during finalize
+* **p4:** add disconnect before any connect to fix ``connection lost`` issues
+* **code_report:** replace code report pseudo-variable ``${CODE_REPORT_FILE}`` not only in ``command`` field
+* **vcs:** raw exceptions no longer shown during finalize
 * **vcs:** exception if vcs is 'none' and there are code report steps
 * **p4:** ignore additional whitespaces in mappings
 
