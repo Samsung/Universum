@@ -7,9 +7,10 @@ Project 'Universum'
     prerequisites.rst
     guide.rst
     args.rst
-    code_report.rst
     configuring.rst
     configuration_support.rst
+    code_report.rst
+    github_handler.rst
     universum_docs.rst
     teamcity.rst
     examples.rst

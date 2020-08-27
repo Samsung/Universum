@@ -19,7 +19,7 @@ class Output(Module):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
         parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins"],
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
-                                 "TeamCity environment is detected automatically when launched on build agent.")
+                                 "TeamCity and Jenkins environments are detected automatically when launched on build agent.")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
