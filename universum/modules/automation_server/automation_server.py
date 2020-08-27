@@ -1,4 +1,5 @@
 from typing import Union
+from requests import Response
 from ...lib.gravity import Dependency, Module
 from ...lib import utils
 from ...lib.module_arguments import ModuleArgumentParser
@@ -42,7 +43,7 @@ class AutomationServerForHostingBuild(AutomationServer):
     def artifact_path(self, local_artifacts_dir: str, item: str) -> str:
         return self.driver.artifact_path(local_artifacts_dir, item)
 
-    def add_build_tag(self, tag: str) -> str:
+    def add_build_tag(self, tag: str) -> Response:
         return self.driver.add_build_tag(tag)
 
 

@@ -1,8 +1,9 @@
 import requests
-
+from requests import Response
 from ...lib import utils
 from ...lib.module_arguments import ModuleArgumentParser
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
+
 
 __all__ = [
     "TeamcityServer"
@@ -100,8 +101,8 @@ class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger):
     def artifact_path(self, local_artifacts_dir: str, item: str) -> str:
         return self.tc_artifact_link + item
 
-    def add_build_tag(self, tag: str) -> str:
+    def add_build_tag(self, tag: str) -> Response:
         return requests.post("%s/httpAuth/app/rest/builds/id:%s/tags" %
                              (self.settings.server_url, self.settings.build_id),
                              auth=(self.settings.user_id, self.settings.passwd),
-                             data=tag, headers={'Content-Type': 'text/plain'}, verify=False).text
+                             data=tag, headers={'Content-Type': 'text/plain'}, verify=False)

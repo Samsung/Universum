@@ -24,8 +24,8 @@ class Api(Module):
         super().__init__(*args, **kwargs)
         try:
             self.api_support: ApiSupport = self.api_support_factory(api_mode=True)
-        except EnvironmentError as e:
-            sys.stderr.write(str(e) + '\n')
+        except EnvironmentError as error:
+            sys.stderr.write(str(error) + '\n')
             sys.exit(2)
 
         class MinimalOut:

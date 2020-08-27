@@ -1,3 +1,4 @@
+from requests import Response
 from ...lib.gravity import Module
 
 __all__ = [
@@ -20,7 +21,7 @@ class BaseServerForHostingBuild(Module):
     Abstract base class for API of hosting CI builds on automation server
     """
 
-    def add_build_tag(self, tag: str) -> str:  # pylint: disable=no-self-use
+    def add_build_tag(self, tag: str) -> Response:  # pylint: disable=no-self-use
         raise RuntimeError("Tag adding function is not defined for current driver.")
 
     def report_build_location(self) -> str:
