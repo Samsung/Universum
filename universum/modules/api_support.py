@@ -1,3 +1,4 @@
+from typing import Dict
 import inspect
 import os
 import pickle
@@ -11,7 +12,7 @@ __all__ = [
 
 
 class ApiSupport(Module):
-    def __init__(self, api_mode=False, **kwargs):
+    def __init__(self, api_mode: bool = False, **kwargs) -> None:
         super().__init__(**kwargs)
 
         if api_mode:
@@ -24,25 +25,25 @@ class ApiSupport(Module):
                     please don't. If you got this message by running it with Universum: something must
                     have gone wrong, may be a bug in Universum itself. Feel free to contact the developers."""))
 
-            with open(os.getenv("UNIVERSUM_DATA_FILE"), "rb+") as data_file:
+            with open(os.getenv("UNIVERSUM_DATA_FILE", ""), "rb+") as data_file:
                 self.data = pickle.load(data_file)
         else:
             self.data_file = tempfile.NamedTemporaryFile(mode="wb+")
             self.data = {}
 
-    def _set_entry(self, name, entry):
+    def _set_entry(self, name: str, entry: str) -> None:
         self.data[name] = entry
 
-    def _get_entry(self, name):
+    def _get_entry(self, name: str) -> str:
         return self.data.get(name, "")
 
-    def get_environment_settings(self):
+    def get_environment_settings(self) -> Dict[str, str]:
         pickle.dump(self.data, self.data_file)
         self.data_file.flush()
         return {"UNIVERSUM_DATA_FILE": self.data_file.name}
 
-    def add_file_diff(self, entry):
+    def add_file_diff(self, entry: str) -> None:
         self._set_entry("DIFF", entry)
 
-    def get_file_diff(self):
+    def get_file_diff(self) -> str:
         return self._get_entry("DIFF")

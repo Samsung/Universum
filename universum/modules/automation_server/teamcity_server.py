@@ -1,7 +1,9 @@
 import requests
-
+from requests import Response
 from ...lib import utils
+from ...lib.module_arguments import ModuleArgumentParser
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
+
 
 __all__ = [
     "TeamcityServer"
@@ -10,22 +12,22 @@ __all__ = [
 
 class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger):
     @staticmethod
-    def define_arguments(argument_parser):
+    def define_arguments(argument_parser: ModuleArgumentParser) -> None:
         parser = argument_parser.get_or_create_group("TeamCity variables",
                                                      "TeamCity-specific parameters")
 
         parser.add_argument("--tc-server", "-ts", dest="server_url", metavar="TEAMCITY_SERVER",
-                            help="TeamCity server URL")
+                            help="TeamCity server URL", type=str)
         parser.add_argument("--tc-build-id", "-tbi", dest="build_id", metavar="BUILD_ID",
-                            help="teamcity.build.id")
+                            help="teamcity.build.id", type=str)
         parser.add_argument("--tc-configuration-id", "-tci", dest="configuration_id",
-                            metavar="CONFIGURATION_ID", help="system.teamcity.buildType.id")
+                            metavar="CONFIGURATION_ID", help="system.teamcity.buildType.id", type=str)
         parser.add_argument("--tc-auth-user-id", "-tcu", dest="user_id",
-                            metavar="TC_USER", help="system.teamcity.auth.userId")
+                            metavar="TC_USER", help="system.teamcity.auth.userId", type=str)
         parser.add_argument("--tc-auth-passwd", "-tcp", dest="passwd",
-                            metavar="TC_PASSWD", help="system.teamcity.auth.password")
+                            metavar="TC_PASSWD", help="system.teamcity.auth.password", type=str)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         utils.check_required_option(self.settings, "server_url", """
             the URL of the TeamCity server is not specified.
@@ -87,17 +89,19 @@ class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger):
             of the top-level project on the TeamCity.
             """)
 
-        self.tc_build_link = self.settings.server_url + "/viewLog.html?tab=buildLog&buildId=" + self.settings.build_id
-        self.tc_artifact_link = self.settings.server_url + "/repository/download/" + \
-            self.settings.configuration_id + "/" + self.settings.build_id + ":id/"
+        server_url: str = self.settings.server_url
+        build_id: str = self.settings.build_id
+        conf_id: str = self.settings.configuration_id
+        self.tc_build_link: str = server_url + "/viewLog.html?tab=buildLog&buildId=" + build_id
+        self.tc_artifact_link: str = server_url + "/repository/download/" + conf_id + "/" + build_id + ":id/"
 
-    def report_build_location(self):
+    def report_build_location(self) -> str:
         return "Here is the link to TeamCity build: " + self.tc_build_link
 
-    def artifact_path(self, local_artifacts_dir, item):
+    def artifact_path(self, local_artifacts_dir: str, item: str) -> str:
         return self.tc_artifact_link + item
 
-    def add_build_tag(self, tag):
+    def add_build_tag(self, tag: str) -> Response:
         return requests.post("%s/httpAuth/app/rest/builds/id:%s/tags" %
                              (self.settings.server_url, self.settings.build_id),
                              auth=(self.settings.user_id, self.settings.passwd),

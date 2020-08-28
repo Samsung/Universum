@@ -7,8 +7,8 @@ __all__ = [
 
 class LocalServer(BaseServerForHostingBuild, BaseServerForTrigger):
 
-    def report_build_location(self):
+    def report_build_location(self) -> str:
         return "Local build. No external logs provided"
 
-    def artifact_path(self, local_artifacts_dir, item):
+    def artifact_path(self, local_artifacts_dir: str, item: str) -> str:
         return local_artifacts_dir + "/" + item

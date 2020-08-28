@@ -1,3 +1,4 @@
+from typing import List, Optional
 import signal
 import sys
 
@@ -6,7 +7,7 @@ from .api import Api
 from .github_handler import GithubHandler
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import define_arguments_recursive, construct_component
-from .lib.module_arguments import ModuleArgumentParser, IncorrectParameterError
+from .lib.module_arguments import ModuleArgumentParser, ModuleNamespace, IncorrectParameterError
 from .lib.utils import Uninterruptible, format_traceback
 from .main import Main
 from .modules.error_state import GlobalErrorState
@@ -15,7 +16,7 @@ from .poll import Poll
 from .submit import Submit
 
 
-def define_arguments():
+def define_arguments() -> ModuleArgumentParser:
     parser = ModuleArgumentParser(prog="python3.7 -m universum",
                                   description=__title__ + " " + __version__)
     parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
@@ -40,7 +41,7 @@ def define_arguments():
     return parser
 
 
-def run(settings) -> int:
+def run(settings: ModuleNamespace) -> int:
     result = 0
     error_state_module = construct_component(GlobalErrorState, settings)
     main_module = construct_component(settings.main_class, settings)
@@ -73,7 +74,7 @@ def run(settings) -> int:
     return result
 
 
-def main(args=None):
+def main(args: Optional[List[str]] = None) -> int:
     parser = define_arguments()
     settings = parser.parse_args(args)
     settings.main_class = getattr(settings, "main_class", Main)

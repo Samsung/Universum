@@ -1,12 +1,16 @@
+from typing import Any, Callable, List, Optional, TypeVar, Union
+from types import TracebackType
 import inspect
 import os
 import sys
 import traceback
 
 import requests
+from requests.models import Response
 
 from .ci_exception import CiException, CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
+from .gravity import Module, HasModulesMapping
 
 __all__ = [
     "strip_path_start",
@@ -26,14 +30,17 @@ __all__ = [
     "make_request"
 ]
 
+ReturnT = TypeVar('ReturnT')
+DecoratorT = Callable[[Callable[..., ReturnT]], Callable[..., ReturnT]]
 
-def strip_path_start(line):
+
+def strip_path_start(line: str) -> str:
     if line.startswith("./"):
         return line[2:]
     return line
 
 
-def parse_path(path, starting_point):
+def parse_path(path: str, starting_point: str) -> str:
     if path.startswith('/'):
         path = os.path.join(path)
     else:
@@ -42,7 +49,7 @@ def parse_path(path, starting_point):
     return os.path.abspath(path)
 
 
-def calculate_file_absolute_path(target_directory, file_basename):
+def calculate_file_absolute_path(target_directory: str, file_basename: str) -> str:
     name = file_basename.replace(" ", "_")
     name = name.replace("/", "\\")
     if name.startswith('_'):
@@ -50,7 +57,7 @@ def calculate_file_absolute_path(target_directory, file_basename):
     return os.path.join(target_directory, name)
 
 
-def detect_environment():
+def detect_environment() -> str:
     """
     :return: "tc" if the script is launched on TeamCity agent,
              "jenkins" is launched on Jenkins agent,
@@ -68,7 +75,15 @@ def detect_environment():
     return "terminal"
 
 
-def create_driver(local_factory, teamcity_factory, jenkins_factory, env_type=""):
+LocalFactoryT = TypeVar('LocalFactoryT', bound=Module)
+TeamcityFactoryT = TypeVar('TeamcityFactoryT', bound=Module)
+JenkinsFactoryT = TypeVar('JenkinsFactoryT', bound=Module)
+
+
+def create_driver(local_factory: Callable[[], LocalFactoryT],
+                  teamcity_factory: Callable[[], TeamcityFactoryT],
+                  jenkins_factory: Callable[[], JenkinsFactoryT],
+                  env_type: str = "") -> Union[LocalFactoryT, TeamcityFactoryT, JenkinsFactoryT]:
     if not env_type:
         env_type = detect_environment()
 
@@ -79,20 +94,20 @@ def create_driver(local_factory, teamcity_factory, jenkins_factory, env_type="")
     return local_factory()
 
 
-def format_traceback(exc, trace):
-    tb_lines = traceback.format_exception(exc.__class__, exc, trace)
-    tb_text = ''.join(tb_lines)
+def format_traceback(exc: Exception, trace: Optional[TracebackType]) -> str:
+    tb_lines: List[str] = traceback.format_exception(exc.__class__, exc, trace)
+    tb_text: str = ''.join(tb_lines)
     return tb_text
 
 
-def check_required_option(settings, setting_name, error_message):
+def check_required_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> None:
     if not getattr(settings, setting_name, None):
         raise IncorrectParameterError(inspect.cleandoc(error_message))
 
 
-def read_and_check_multiline_option(settings, setting_name, error_message):
+def read_and_check_multiline_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> str:
     try:
-        value = getattr(settings, setting_name, None)
+        value: str = getattr(settings, setting_name, None)
         if value.startswith('@'):
             try:
                 with open(value.lstrip('@')) as file_name:
@@ -113,10 +128,10 @@ def read_and_check_multiline_option(settings, setting_name, error_message):
     return result
 
 
-def catch_exception(exception_name, ignore_if=None):
+def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
     def decorated_function(function):
         def function_to_run(*args, **kwargs):
-            result = None
+            result: ReturnT = None
             try:
                 result = function(*args, **kwargs)
                 return result
@@ -131,7 +146,7 @@ def catch_exception(exception_name, ignore_if=None):
     return decorated_function
 
 
-def trim_and_convert_to_unicode(line):
+def trim_and_convert_to_unicode(line: Union[bytes, str]) -> str:
     if not isinstance(line, str):
         line = str(line)
 
@@ -141,17 +156,15 @@ def trim_and_convert_to_unicode(line):
     return line
 
 
-def convert_to_str(line):
+def convert_to_str(line: Union[bytes, str]) -> str:
     if isinstance(line, bytes):
         return line.decode("utf8", "replace")
     return str(line)
 
 
-def unify_argument_list(source_list, separator=',', additional_list=None):
-    if additional_list is None:
-        resulting_list = []
-    else:
-        resulting_list = additional_list
+def unify_argument_list(source_list: Optional[List[str]], separator: str = ',',
+                        additional_list: Optional[List[str]] = None) -> List[str]:
+    resulting_list: List[str] = additional_list if additional_list else []
 
     # Add arguments parsed by ModuleArgumentParser, including list elements generated by nargs='+'
     if source_list is not None:
@@ -171,13 +184,13 @@ def unify_argument_list(source_list, separator=',', additional_list=None):
 
 
 class Uninterruptible:
-    def __init__(self, error_logger):
-        self.return_code = 0
-        self.error_logger = error_logger
-        self.exceptions = []
+    def __init__(self, error_logger: Callable[[str], None]) -> None:
+        self.return_code: int = 0
+        self.error_logger: Callable[[str], None] = error_logger
+        self.exceptions: List[str] = []
 
-    def __enter__(self):
-        def excepted_function(func, *args, **kwargs):
+    def __enter__(self) -> Callable[..., None]:
+        def excepted_function(func: Callable[..., None], *args, **kwargs):
             try:
                 func(*args, **kwargs)
             except SilentAbortException as e:
@@ -191,7 +204,7 @@ class Uninterruptible:
                 self.return_code = max(self.return_code, 2)
         return excepted_function
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self.return_code == 2:
             for entry in self.exceptions:
                 sys.stderr.write(entry)
@@ -199,7 +212,7 @@ class Uninterruptible:
             raise SilentAbortException(application_exit_code=self.return_code)
 
 
-def make_block(block_name, pass_errors=True):
+def make_block(block_name: str, pass_errors: bool = True) -> DecoratorT:
     def decorated_function(func):
         def function_in_block(self, *args, **kwargs):
             return self.structure.run_in_block(func, block_name, pass_errors, self, *args, **kwargs)
@@ -207,9 +220,9 @@ def make_block(block_name, pass_errors=True):
     return decorated_function
 
 
-def make_request(url, request_method="GET", critical=True, **kwargs):
+def make_request(url: str, request_method: str = "GET", critical: bool = True, **kwargs) -> Response:
     try:
-        response = requests.request(method=request_method, url=url, **kwargs)
+        response: Response = requests.request(method=request_method, url=url, **kwargs)
         response.raise_for_status()
         return response
     except requests.RequestException as error:
