@@ -10,8 +10,8 @@ from requests.models import Response
 from sh import RunningCommand
 
 from .ci_exception import CiException, CriticalCiException, SilentAbortException
-from .module_arguments import IncorrectParameterError
-from .gravity import ModuleSettings
+from .module_arguments import IncorrectParameterError, ModuleNamespace
+from .gravity import HasModulesMapping
 
 __all__ = [
     "strip_path_start",
@@ -101,12 +101,12 @@ def format_traceback(exc: Exception, trace: Optional[TracebackType]) -> str:
     return tb_text
 
 
-def check_required_option(settings: ModuleSettings, setting_name: str, error_message: str) -> None:
+def check_required_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> None:
     if not getattr(settings, setting_name, None):
         raise IncorrectParameterError(inspect.cleandoc(error_message))
 
 
-def read_and_check_multiline_option(settings: ModuleSettings, setting_name: str, error_message: str) -> str:
+def read_and_check_multiline_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> str:
     try:
         value = getattr(settings, setting_name, None)
         if value.startswith('@'):

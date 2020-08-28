@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Generator, List, Union
+from typing import Callable, Dict, Iterable, List, Union
 import copy
 import os
 import six
@@ -124,18 +124,18 @@ class Variations(list):
         The order of list members in resulting list is preserved: first all dictionaries from `self`,
         then all dictionaries from `other`.
 
-        :param other: `Variations` object to be added to `self`
+        :param other: `Variations` object OR list to be added to `self`
         :return: new `Variations` object, including all configurations from both `self` and `other` objects
         """
         return Variations(list.__add__(list(self), other))
 
-    def __mul__(self, other: Union[int, List]) -> 'Variations':
+    def __mul__(self, other: Union[int, 'Variations']) -> 'Variations':
         """
         This functions defines operator ``*`` for :class:`.Variations` class objects.
         The resulting object is created by combining every `self` list member with
         every `other` list member using :func:`.combine()` function.
 
-        :param other: `Variations` object to be multiplied to `self`
+        :param other: `Variations` object  OR an integer value to be multiplied to `self`
         :return: new `Variations` object, consisting of the list of combined configurations
         """
 
@@ -156,7 +156,7 @@ class Variations(list):
         result = Variations(result_list)
         return result
 
-    def all(self) -> Generator[Dict, None, None]:
+    def all(self) -> Iterable[Dict]:
         """
         Function for configuration iterating.
 
