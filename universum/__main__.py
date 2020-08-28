@@ -74,7 +74,7 @@ def run(settings: ModuleNamespace) -> int:
     return result
 
 
-def main(args: Optional[List[str]]=None) -> int:
+def main(args: Optional[List[str]] = None) -> int:
     parser = define_arguments()
     settings = parser.parse_args(args)
     settings.main_class = getattr(settings, "main_class", Main)
