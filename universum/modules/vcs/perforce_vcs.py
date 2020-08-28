@@ -8,11 +8,11 @@ import warnings
 
 import sh
 
+from ..error_state import HasErrorState
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
 from ...lib.ci_exception import CriticalCiException, SilentAbortException
 from ...lib.gravity import Dependency
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block, Uninterruptible, convert_to_str
 from ...lib import utils
 from ..output import HasOutput
@@ -39,7 +39,7 @@ def catch_p4exception(ignore_if=None):
     return utils.catch_exception("P4Exception", ignore_if)
 
 
-class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
+class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
     """
     This class contains global functions for interaction with Perforce
     """
@@ -57,27 +57,27 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        utils.check_required_option(self.settings, "port", """
-            the perforce 'port' is not specified.
+        self.check_required_option("port", """
+            The perforce 'port' is not specified.
 
-            The perforce port defines protocol, host and listening port
-            of the perforce server. Please specify perforce port by
-            using '--p4-port' ('-p4p') command line parameter or
-            by setting P4PORT environment variable.""")
-        utils.check_required_option(self.settings, "user", """
-            the perforce user name is not specified.
+            The perforce port defines protocol, host and listening port of the perforce
+            server. Please specify perforce port by using '--p4-port' ('-p4p') command line
+            parameter or by setting P4PORT environment variable.
+            """)
+        self.check_required_option("user", """
+            The perforce user name is not specified.
 
-            The perforce user name is required to authenticate with
-            perforce server. Please specify the perforce user name by
-            using '--p4-user' ('-p4u') command line parameter or
-            by setting P4USER environment variable.""")
-        utils.check_required_option(self.settings, "password", """
-            the perforce password is not specified.
+            The perforce user name is required to authenticate with perforce server. Please
+            specify the perforce user name by using '--p4-user' ('-p4u') command line
+            parameter or by setting P4USER environment variable.
+            """)
+        self.check_required_option("password", """
+            The perforce password is not specified.
 
-            The perforce password is required to authenticate with
-            perforce server. Please specify the perforce password by
-            using '--p4-password' ('-p4P') command line parameter or
-            by setting P4PASSWD environment variable.""")
+            The perforce password is required to authenticate with perforce server. Please
+            specify the perforce password by using '--p4-password' ('-p4P') command line
+            parameter or by setting P4PASSWD environment variable.
+            """)
 
         try:
             p4_module = cast(P4stub, importlib.import_module("P4"))
@@ -133,12 +133,14 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not getattr(self.settings, "client", None):
-            raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
-                                          "This parameter is required for submitting changes to the perforce.\n"
-                                          "It defines the name of the existing workspace to use for submit.\n"
-                                          "Please specify the workspace name by using '--p4-client' ('-p4c')\n"
-                                          "command-line parameter or P4CLIENT environment variable.")
+        self.check_required_option("client", """
+            Perforce workspace name is not specified.
+            
+            This parameter is required for submitting changes to the perforce. It defines
+            the name of the existing workspace to use for submit. Please specify the
+            workspace name by using '--p4-client' ('-p4c') command-line parameter or
+            P4CLIENT environment variable.
+            """)
 
     def p4reconcile(self, *args, **kwargs):
         try:
@@ -232,14 +234,16 @@ class PerforceWithMappings(PerforceVcs):
         super().__init__(*args, **kwargs)
 
         if not getattr(self.settings, "project_depot_path", None) and not getattr(self.settings, "mappings", None):
-            raise IncorrectParameterError("both P4_PATH (-p4d) and P4_MAPPINGS (-p4m) are not set.\n\n"
-                                          "Universum needs one of these parameters to be set in order to download "
-                                          "sources.\n")
+            self.error("""
+                Both P4_PATH (-p4d) and P4_MAPPINGS (-p4m) are not set.
+                
+                Universum needs one of these parameters to be set in order to download sources.
+                """)
 
         # Convert old-style depot path into mappings
         if self.settings.project_depot_path:
             if self.settings.mappings:
-                raise IncorrectParameterError("Both 'P4_PATH' and 'P4_MAPPINGS' cannot be processed simultaneously")
+                self.error("Both 'P4_PATH' and 'P4_MAPPINGS' cannot be processed simultaneously")
             mappings = [self.settings.project_depot_path + " /..."]
         else:
             mappings = self.settings.mappings
@@ -283,12 +287,13 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not getattr(self.settings, "client", None):
-            raise IncorrectParameterError("perforce workspace name is not specified.\n\n"
-                                          "This parameter is required for creating temporary workspace\n"
-                                          "for downloading project sources. Please specify the workspace\n"
-                                          "name by using '--p4-client' ('-p4c') command-line parameter\n"
-                                          "or P4CLIENT environment variable.")
+        self.check_required_option("client", """
+            Perforce workspace name is not specified.
+        
+            This parameter is required for creating temporary workspace for downloading
+            project sources. Please specify the workspace name by using '--p4-client'
+            ('-p4c') command-line parameter or P4CLIENT environment variable.
+            """)
 
         self.artifacts = self.artifacts_factory()
         self.reporter = self.reporter_factory()

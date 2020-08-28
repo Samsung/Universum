@@ -1,15 +1,15 @@
 from .lib import utils
-from .lib.gravity import Module, Dependency
-from .lib.module_arguments import IncorrectParameterError
+from .lib.gravity import Dependency
 from .lib.utils import make_block
 from .modules import vcs
+from .modules.error_state import HasErrorState
 from .modules.output import HasOutput
 from .modules.structure_handler import HasStructure
 
 __all__ = ["Submit"]
 
 
-class Submit(HasOutput, HasStructure):
+class Submit(HasOutput, HasStructure, HasErrorState):
     description = "Submitting module of Universum"
     vcs_factory = Dependency(vcs.SubmitVcs)
 
@@ -30,10 +30,12 @@ class Submit(HasOutput, HasStructure):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if not getattr(self.settings, "commit_message", None):
-            raise IncorrectParameterError("commit message is not specified.\n\n"
-                                          "Please use '--commit-message' option or COMMIT_MESSAGE\n"
-                                          "environment variable")
+
+        self.check_required_option("commit_message", """
+            Commit message is not specified.
+            
+            Please use '--commit-message' option or COMMIT_MESSAGE environment variable.
+            """)
 
         self.vcs = self.vcs_factory()
         self.client = None
