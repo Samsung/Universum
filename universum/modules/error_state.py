@@ -23,7 +23,7 @@ class HasErrorState(Module):
         super().__init__(*args, **kwargs)  # type: ignore
         self.global_error_state: GlobalErrorState = self.global_error_state_factory()
 
-    def error(self, message: str):
+    def error(self, message: str) -> None:
         self.global_error_state.errors.append(inspect.cleandoc(message))
 
     def is_in_error_state(self) -> bool:
