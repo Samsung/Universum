@@ -2,10 +2,8 @@ import os
 import re
 import sys
 from inspect import cleandoc
-
-import sh
-
 from typing import Callable, List, Tuple
+import sh
 
 from .error_state import HasErrorState
 from .. import configuration_support

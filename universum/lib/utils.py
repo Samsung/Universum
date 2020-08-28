@@ -10,7 +10,7 @@ from requests.models import Response
 
 from .ci_exception import CiException, CriticalCiException, SilentAbortException
 from .module_arguments import IncorrectParameterError
-from .gravity import HasModulesMapping
+from .gravity import Module, HasModulesMapping
 
 __all__ = [
     "strip_path_start",
@@ -75,15 +75,15 @@ def detect_environment() -> str:
     return "terminal"
 
 
-T1 = TypeVar('T1')
-T2 = TypeVar('T2')
-T3 = TypeVar('T3')
+LocalFactoryT = TypeVar('LocalFactoryT', bound=Module)
+TeamcityFactoryT = TypeVar('TeamcityFactoryT', bound=Module)
+JenkinsFactoryT = TypeVar('JenkinsFactoryT', bound=Module)
 
 
-def create_driver(local_factory: Callable[[], T1],
-                  teamcity_factory: Callable[[], T2],
-                  jenkins_factory: Callable[[], T3],
-                  env_type: str = "") -> Union[T1, T2, T3]:
+def create_driver(local_factory: Callable[[], LocalFactoryT],
+                  teamcity_factory: Callable[[], TeamcityFactoryT],
+                  jenkins_factory: Callable[[], JenkinsFactoryT],
+                  env_type: str = "") -> Union[LocalFactoryT, TeamcityFactoryT, JenkinsFactoryT]:
     if not env_type:
         env_type = detect_environment()
 
