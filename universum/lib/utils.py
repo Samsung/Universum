@@ -7,10 +7,9 @@ import traceback
 
 import requests
 from requests.models import Response
-from sh import RunningCommand
 
 from .ci_exception import CiException, CriticalCiException, SilentAbortException
-from .module_arguments import IncorrectParameterError, ModuleNamespace
+from .module_arguments import IncorrectParameterError
 from .gravity import HasModulesMapping
 
 __all__ = [
@@ -108,7 +107,7 @@ def check_required_option(settings: HasModulesMapping, setting_name: str, error_
 
 def read_and_check_multiline_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> str:
     try:
-        value = getattr(settings, setting_name, None)
+        value: str = getattr(settings, setting_name, None)
         if value.startswith('@'):
             try:
                 with open(value.lstrip('@')) as file_name:
@@ -147,7 +146,7 @@ def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
     return decorated_function
 
 
-def trim_and_convert_to_unicode(line: Union[bytes, str, RunningCommand]) -> str:
+def trim_and_convert_to_unicode(line: Union[bytes, str]) -> str:
     if not isinstance(line, str):
         line = str(line)
 
@@ -157,7 +156,7 @@ def trim_and_convert_to_unicode(line: Union[bytes, str, RunningCommand]) -> str:
     return line
 
 
-def convert_to_str(line: Union[bytes, str, RunningCommand]) -> str:
+def convert_to_str(line: Union[bytes, str]) -> str:
     if isinstance(line, bytes):
         return line.decode("utf8", "replace")
     return str(line)

@@ -3,6 +3,7 @@ from requests import Response
 from ...lib.gravity import Dependency, Module
 from ...lib import utils
 from ...lib.module_arguments import ModuleArgumentParser
+from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 from .jenkins_server import JenkinsServerForHostingBuild, JenkinsServerForTrigger
 from .local_server import LocalServer
 from .teamcity_server import TeamcityServer
@@ -31,7 +32,7 @@ class AutomationServerForHostingBuild(AutomationServer):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.driver: Union[LocalServer, TeamcityServer, JenkinsServerForHostingBuild] = \
+        self.driver: BaseServerForHostingBuild = \
             utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.jenkins_driver_factory,
                                 local_factory=self.local_driver_factory,
@@ -54,7 +55,7 @@ class AutomationServerForTrigger(AutomationServer):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.driver: Union[LocalServer, TeamcityServer, JenkinsServerForTrigger] = \
+        self.driver: BaseServerForTrigger = \
             utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.jenkins_driver_factory,
                                 local_factory=self.local_driver_factory,

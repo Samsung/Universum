@@ -5,6 +5,8 @@ from inspect import cleandoc
 
 import sh
 
+from typing import Callable, List, Tuple
+
 from .error_state import HasErrorState
 from .. import configuration_support
 from ..lib import utils
@@ -161,7 +163,7 @@ def get_match_patterns(filters):
 
 class Step:
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment):
+    def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment) -> None:
         super().__init__()
         self.configuration = item
         self.out = out
@@ -175,10 +177,10 @@ class Step:
         self.environment.update(user_environment)
         self.environment.update(additional_environment)
 
-        self.cmd = None
-        self.process = None
-        self._is_background = False
-        self._postponed_out = []
+        self.cmd: sh.Command = None
+        self.process: sh.RunningCommand = None
+        self._is_background: bool = False
+        self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
 
     def prepare_command(self): #FIXME: refactor
         try: #TODO: move try-catch block in a separate method
@@ -203,7 +205,7 @@ class Step:
             raise StepException() from ex
         return True
 
-    def start(self, is_background):
+    def start(self, is_background) -> None:
         if not self.prepare_command():
             return
 
