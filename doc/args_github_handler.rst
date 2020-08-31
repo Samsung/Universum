@@ -3,7 +3,15 @@
 GitHub Handler command line
 ---------------------------
 
-.. Insert some description here
+These are the parameters of :doc:`github_handler`. For GitHub Handler to work, these parameters are mandatory:
+
+* ``--payload``
+* ``--event``
+* ``--trigger-url``
+* ``--github-app-id``
+* ``--github-private-key``
+
+These and other parameters are described below.
 
 .. argparse::
     :module: universum.__main__
