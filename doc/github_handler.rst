@@ -64,8 +64,7 @@ On this picture numbers depict the following events:
 2. GitHub detects a commit, creates a check suite and sends a web-hook payload with ``check_suite`` event
    in "x-github-event" header to an already set up automation server (in this case, Jenkins)
 3. `Generic Webhook Trigger` plugin triggers a preconfigured Jenkins job ('GitHub Webhook handler'),
-   passing payload contents via ``genericVariable`` and "x-github-event" header via ``genericHeaderVariable``
-   job parameters
+   passing payload and "x-github-event" header contents
 4. GitHub Handler checks that repo name and web-hook event are applicable, and if so, sends a request via
    `GitHub API <https://docs.github.com/en/rest/reference/checks#create-a-check-suite>`__
    to create a new check run to GitHub
