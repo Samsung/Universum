@@ -345,3 +345,61 @@ def test_multiple_errors_submit_p4_params_and_commit_message():
     settings.PerforceSubmitVcs.client = None
 
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "port", "user name", "password", "P4CLIENT")
+
+
+def test_multiple_errors_main_git_params_and_config_path():
+    settings = create_settings("main", "git")
+    settings.Launcher.config_path = None
+    settings.GitVcs.repo = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo")
+
+
+def test_multiple_errors_submit_git_params_commit_message():
+    settings = create_settings("submit", "git")
+    settings.Submit.commit_message = None
+    settings.GitVcs.repo = None
+    settings.GitSubmitVcs.user = None
+    settings.GitSubmitVcs.email = None
+
+    assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "repo", "git user name", "git user email")
+
+
+def test_multiple_errors_main_gerrit_repo_and_config_path():
+    settings = create_settings("main", "gerrit")
+    settings.Launcher.config_path = None
+    settings.GitVcs.repo = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo")
+
+    settings = create_settings("main", "gerrit")
+    settings.Launcher.config_path = None
+    settings.GitVcs.repo = "http://"
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "ssh protocol")
+
+    settings = create_settings("main", "gerrit")
+    settings.Launcher.config_path = None
+    settings.GitVcs.repo = "ssh://127.0.0.1"
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "user name for accessing gerrit")
+
+
+def test_multiple_errors_main_gerrit_refspec_and_config_path():
+    settings = create_settings("main", "gerrit")
+    settings.Launcher.config_path = None
+    settings.GitVcs.refspec = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit")
+
+    settings = create_settings("main", "gerrit")
+    settings.Launcher.config_path = None
+    settings.GitVcs.refspec = "ABCDEF"
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit")
+
+    settings = create_settings("main", "gerrit")
+    settings.Launcher.config_path = None
+    settings.GitMainVcs.checkout_id = "HEAD"
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "git checkout ID")

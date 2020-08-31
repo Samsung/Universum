@@ -4,11 +4,11 @@ import importlib
 import os
 
 from .base_vcs import BaseVcs, BaseDownloadVcs, BasePollVcs, BaseSubmitVcs
+from ..error_state import HasErrorState
 from ..output import HasOutput
 from ..structure_handler import HasStructure
 from ...lib import utils
 from ...lib.ci_exception import CriticalCiException
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block, convert_to_str
 
 __all__ = [
@@ -24,7 +24,7 @@ def catch_git_exception(ignore_if=None):
     return utils.catch_exception("GitCommandError", ignore_if)
 
 
-class GitVcs(BaseVcs, HasOutput, HasStructure):
+class GitVcs(BaseVcs, HasOutput, HasStructure, HasErrorState):
     """
     This class contains CI functions for interaction with Git
     """
@@ -52,13 +52,13 @@ class GitVcs(BaseVcs, HasOutput, HasStructure):
                    "documentation for detailed instructions"
             raise ImportError(text) from e
 
-        utils.check_required_option(self.settings, "repo", """
-            the git repo is not specified.
+        self.check_required_option("repo", """
+            The git repo is not specified.
 
-            The repo defines the location of project source codes.
-            Please specify the git repo by using '--git-repo' ('-gr')
-            command line parameter or by setting GIT_REPO environment
-            variable.""")
+            The repo defines the location of project source codes. Please specify the git
+            repo by using '--git-repo' ('-gr') command line parameter or by setting GIT_REPO
+            environment variable.
+            """)
 
         class Progress(remote.RemoteProgress):
             def __init__(self, out, *args, **kwargs):
@@ -189,7 +189,7 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
             self.cherry_pick()
 
 
-class GitSubmitVcs(GitVcs, BaseSubmitVcs):
+class GitSubmitVcs(GitVcs, BaseSubmitVcs, HasErrorState):
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Git")
@@ -202,10 +202,21 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not getattr(self.settings, "user", None) or not getattr(self.settings, "email", None):
-            raise IncorrectParameterError("user name or email is not specified. \n\n"
-                                          "Submitting changes to repository requires setting user name and email.\n"
-                                          "Please use '--git-user' (GITUSER) and '--git-email' (GITEMAIL) parameters.")
+        self.check_required_option("user", """
+            The git user name is not specified.
+
+            Submitting changes to repository requires setting user name and email. Please
+            specify the user name by using '--git-user' ('-gu') command line parameter or by
+            setting GITUSER environment variable
+            """)
+
+        self.check_required_option("email", """
+            The git user email is not specified.
+
+            Submitting changes to repository requires setting user name and email. Please
+            specify the user email by using '--git-email' ('-ge') command line parameter or
+            by setting GITEMAIL environment variable
+            """)
 
     def get_list_of_modified(self, file_list):
         """
