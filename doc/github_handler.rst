@@ -51,7 +51,8 @@ See example of such Jenkins job `in the next section <Jenkins jobs example_>`_.
 
 The following picture represents the event sequence leading to check result for a commit displayed on GitHub:
 
-*(picture here)*
+.. raw:: html
+    :file: _static/github_handler.svg
 
 On this picture numbers depict the following events:
 
