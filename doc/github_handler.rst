@@ -49,6 +49,10 @@ and triggers the set up automation server to run a previously described check by
 
 See example of such Jenkins job `in the next section <Jenkins jobs example_>`_.
 
+.. note::
+
+    Webhook Handler job and a checking job can be set up on different automation servers
+
 The following picture represents a possible event sequence leading to a check result for a commit displayed on GitHub:
 
 .. raw:: html
@@ -57,21 +61,20 @@ The following picture represents a possible event sequence leading to a check re
 On this picture numbers depict the following events:
 
 1. User makes a new commit
-2. GitHub detects a commit, creates a check suite and sends a web-hook payload with event ``check_suite``
+2. GitHub detects a commit, creates a check suite and sends a web-hook payload with ``check_suite`` event
    in "x-github-event" header to an already set up automation server (in this case, Jenkins)
 3. `Generic Webhook Trigger` plugin triggers a preconfigured Jenkins job ('GitHub Webhook handler'),
    passing payload contents via ``genericVariable`` and "x-github-event" header via ``genericHeaderVariable``
+   job parameters
 4. GitHub Handler checks that repo name and web-hook event are applicable, and if so, sends a request via
    `GitHub API <https://docs.github.com/en/rest/reference/checks#create-a-check-suite>`__
    to create a new check run to GitHub
-5. GitHub creates a new check run and sends a new web-hook payload with event ``check_run``
+5. GitHub creates a new check run and sends a new web-hook payload with ``check_run`` event
 6. `Generic Webhook Trigger` plugin triggers the 'GitHub Webhook handler' job again, now with different event and
    payload
 7. Based on received event, GitHub Handler triggers another preconfigured job with usual `Universum` call
    ('Check commit') via HTTP call, retrieving all required parameters from GitHub web-hook payload and passing them
    to the build via `build with parameters` trigger mechanism
-
-   * in fact, this job may be configured on any other automation server
 8. Receiving all required parameters, Universum in default mode with ``--report-to-review`` on and ``--vcs-type=github``
    performs a commit check according to :doc:`configuration file <configuring>`,
    set up in `build parameters <args.html#Configuration\ execution>`__
