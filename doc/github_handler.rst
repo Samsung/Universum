@@ -57,24 +57,28 @@ The following picture represents a possible event sequence leading to a check re
 On this picture numbers depict the following events:
 
 1. User makes a new commit
-2. GitHub detects a commit, creates a check suite and sends a web-hook payload to Jenkins server
-3. `Generic Webhook Trigger` plugin triggers a preconfigured Jenkins job ('GitHub Webhook handler') on an already set up
-   automation server, passing required parameters, such as payload contents and "x-github-event" header
-4. GitHub Handler checks that repo name and web-hook event are applicable, and if so, sends a request
+2. GitHub detects a commit, creates a check suite and sends a web-hook payload with event ``check_suite``
+   in "x-github-event" header to an already set up automation server (in this case, Jenkins)
+3. `Generic Webhook Trigger` plugin triggers a preconfigured Jenkins job ('GitHub Webhook handler'),
+   passing payload contents via ``genericVariable`` and "x-github-event" header via ``genericHeaderVariable``
+4. GitHub Handler checks that repo name and web-hook event are applicable, and if so, sends a request via
+   `GitHub API <https://docs.github.com/en/rest/reference/checks#create-a-check-suite>`__
    to create a new check run to GitHub
-5. GitHub creates a new check run and sends a new web-hook payload about this event
+5. GitHub creates a new check run and sends a new web-hook payload with event ``check_run``
 6. `Generic Webhook Trigger` plugin triggers the 'GitHub Webhook handler' job again, now with different event and
    payload
 7. Based on received event, GitHub Handler triggers another preconfigured job with usual `Universum` call
-   ('Check commit'), retrieving all required parameters from GitHub web-hook payload and passing them to the build
-   via `build with parameters` trigger mechanism
+   ('Check commit') via HTTP call, retrieving all required parameters from GitHub web-hook payload and passing them
+   to the build via `build with parameters` trigger mechanism
 
-   * this job may be configured on another Jenkins instance
+   * in fact, this job may be configured on any other automation server
 8. Receiving all required parameters, Universum in default mode with ``--report-to-review`` on and ``--vcs-type=github``
    performs a commit check according to :doc:`configuration file <configuring>`,
    set up in `build parameters <args.html#Configuration\ execution>`__
-9. [optional] If ``--report-build-start`` set in `build parameters <args.html#Result\ reporting>`__, GitHub will be
-   informed that a check is already in progress, leaving a message to wait until it's over
+9. [optional] If ``--report-build-start`` set in `build parameters <args.html#Result\ reporting>`__, Universum will
+   inform the GitHub that a check is already in progress using
+   `GitHub API <https://docs.github.com/en/rest/reference/checks#update-a-check-run>`__,
+   leaving a message to wait until it's over
 10. Depending on build result, Universum either reports build success or failure to GitHub
 
     * to report successful build, a ``--report-build-success`` `option <args.html#Result\ reporting>`__ is required
