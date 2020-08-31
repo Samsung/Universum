@@ -23,7 +23,7 @@ class GerritVcs(git_vcs.GitVcs):
         super().__init__(*args, **kwargs)
         self.reporter = None
 
-        if self.is_in_error_state():
+        if not getattr(self.settings, "repo", None):
             return
 
         if not self.settings.repo.startswith("ssh://"):
@@ -70,8 +70,14 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not getattr(self.settings, "refspec", None):
+        if self.settings.checkout_id:
             self.error("""
+            The git checkout ID is supplied.
+
+            Please use '--git-refspec' ('-grs') instead of checkout ID for gerrit.
+            """)
+
+        if not self.check_required_option("refspec", """
                 The git refspec for gerrit is not specified.
     
                 For gerrit the git refspec defines the branch to download and the review to work
@@ -81,7 +87,7 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
                 Usually, it is enough to set refspec to 'refs/changes/<path>'. For example, on a
                 TeamCity server it is enough to set GIT_REFSPEC variable to
                 %teamcity.build.branch% for the entire project.
-                """)
+                """):
             return
 
         refspec = self.settings.refspec
@@ -98,13 +104,6 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
             """)
 
         self.refspec = refspec
-
-        if self.settings.checkout_id:
-            self.error("""
-            The git checkout ID is supplied.
-            
-            Please use '--git-refspec' ('-grs') instead of checkout ID for gerrit.
-            """)
 
     def code_review(self):
         self.reporter = self.reporter_factory()

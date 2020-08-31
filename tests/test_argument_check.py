@@ -389,17 +389,13 @@ def test_multiple_errors_main_gerrit_refspec_and_config_path():
     settings = create_settings("main", "gerrit")
     settings.Launcher.config_path = None
     settings.GitVcs.refspec = None
+    settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit")
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
 
     settings = create_settings("main", "gerrit")
     settings.Launcher.config_path = None
     settings.GitVcs.refspec = "ABCDEF"
-
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit")
-
-    settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "git checkout ID")
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
