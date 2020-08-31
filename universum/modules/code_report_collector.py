@@ -2,10 +2,9 @@ import glob
 import json
 import os
 from copy import deepcopy
-from typing import Dict, List, Optional, TextIO, Tuple
-from typing_extensions import TypedDict
+from typing import cast, Dict, List, Optional, TextIO, Tuple
 
-from universum.configuration_support import Variations
+from ..configuration_support import Variations, ProjectConfig, ProjectConfigKeyType
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
@@ -13,12 +12,6 @@ from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from .structure_handler import HasStructure
-
-
-class ProjectConfig(TypedDict, total=False):  # TODO: define a proper class for this
-    name: str
-    code_report: Optional[str]
-    command: List[str]
 
 
 class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
@@ -49,13 +42,14 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             temp_filename: str = "${CODE_REPORT_FILE}"
             name: str = utils.calculate_file_absolute_path(self.report_path, item.get("name", "")) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
-
-            for key in item:
+            key: ProjectConfigKeyType
+            for key in item:  # type: ignore #  https://github.com/python/mypy/issues/7981
                 if key == "command":
-                    item[key] = [word.replace(temp_filename, actual_filename) for word in item[key]]  # type: ignore
+                    item[key] = [word.replace(temp_filename, actual_filename) for word in item[key]]
                 else:
                     try:
-                        item[key] = item[key].replace(temp_filename, actual_filename)  # type: ignore
+                        val: str = cast(str, item[key])
+                        item[key] = val.replace(temp_filename, actual_filename)
                     except AttributeError as error:
                         if "object has no attribute 'replace'" not in str(error):
                             raise

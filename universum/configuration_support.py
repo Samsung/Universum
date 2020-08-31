@@ -1,8 +1,12 @@
 from typing import Callable, Dict, Iterable, List, Union
 import copy
 import os
+from typing_extensions import Literal, TypedDict
+
 
 __all__ = [
+    "ProjectConfigKeyType",
+    "ProjectConfig",
     "Variations",
     "combine",
     "set_project_root",
@@ -10,6 +14,27 @@ __all__ = [
 ]
 
 skip_attributes = {"children", "critical", "skip_numbering_level"}
+
+ProjectConfigKeyType = Literal["name", "command", "environment", "artifacts", "report_artifacts",
+                               "artifact_prebuild_clean", "directory", "critical", "background", "finish_background",
+                               "code_report", "pass_tag", "fail_tag", "if_env_set"]
+
+
+class ProjectConfig(TypedDict, total=False):
+    name: str
+    command: List[str]
+    environment: Dict[str, str]
+    artifacts: List[str]
+    report_artifacts: List[str]
+    artifact_prebuild_clean: bool
+    directory: str
+    critical: bool
+    background: bool
+    finish_background: bool
+    code_report: str
+    pass_tag: str
+    fail_tag: str
+    if_env_set: str
 
 
 def combine(dictionary_a: Dict, dictionary_b: Dict) -> Dict:
