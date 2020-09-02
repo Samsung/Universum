@@ -7,23 +7,28 @@ Change log
 BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
-* **migrate to Python3.7** due to Python2 is no longer supported
-    Python3.7 is now :doc:`required <prerequisites>` for Universum to work
-* **disable entry points** and switch to ``python3.7 -m universum`` calls
-    to avoid possible collisions, especially when using :doc:`analyzers <code_report>`
+* **migrate to Python 3.7** due to Python 2 is no longer supported
+   Python3.7 is now :doc:`required <prerequisites>` for Universum to work; please switch ``print ""`` into
+   ``print("")`` in config files if needed
+* **disable entry points** (calling ``universum`` from command line) and switch to ``python3.7 -m universum`` calls
+   to avoid possible situations where wrong version of Universum is executed, especially when using
+   :doc:`analyzers <code_report>`, that are launched from inside an active Universum
 * **rename `_universum` to `universum`**
-    :class:`~universum.configuration_support.Variations` imports in configs need to be fixed
+   :class:`~universum.configuration_support.Variations` imports in configs need to be fixed: use
+   ``from universum.configuration_support import Variations`` instead of
+   ``from _universum.configuration_support import Variations``
 
 New features
 ~~~~~~~~~~~~
 
 * **github-handler:** add :doc:`a new Universum mode <github_handler>`
-    to serve as a `GitHub App <https://docs.github.com/en/developers/apps>`__. GitHub Applications,
-    for example, are needed to run checks on newly commmited changes, or on changes to be merged yet
+   to serve as a `GitHub App <https://docs.github.com/en/developers/apps>`__. GitHub Applications
+   are needed to run checks and report their status to GitHub for changes newly commmited or those to be merged yet.
+   With this mode it is possible to implement full GitHub workflow with Universum
 * **pylint:** allow selecting any Python version for checks
-    e.g. ``3.5`` instead of simple ``2``/``3`` switch earlier
+   e.g. ``3.5`` instead of simple ``2``/``3`` switch earlier
 * **nonci:** set project root to current directory
-    to simply run ``universum nonci`` from sources location without :doc:`setting <args>` ``--project-root`` manually
+   to simply run ``universum nonci`` from sources location without :doc:`setting <args>` ``--project-root`` manually
 
 Bug fixes
 ~~~~~~~~~
@@ -31,7 +36,7 @@ Bug fixes
 * **swarm:** only update status for latest revisions (as Swarm no longer supports outdated review status update)
 * **github_vcs:** acquire GitHub token when needed (so it no longer expires for long builds)
 * **nonci:** fix the issue with launching ``code_report=True`` steps twice
-* **report:** successful build not set to be reported no longer causes errors
+* **report:** successful build not set to be reported no longer causes errors in the terminal
 * **setup:** make installing modules for GitHub VCS type non-mandatory
 * **p4:** add disconnect before any connect to fix ``connection lost`` issues
 * **code_report:** replace code report pseudo-variable ``${CODE_REPORT_FILE}`` not only in ``command`` field
