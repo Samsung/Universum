@@ -2,7 +2,7 @@ Prerequisites
 =============
 
 * OS Linux
-* Python version 2.7
+* Python version 3.7
 
 Preinstalled packages
 ---------------------
