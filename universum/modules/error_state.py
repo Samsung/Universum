@@ -29,6 +29,8 @@ class HasErrorState(Module):
     def is_in_error_state(self) -> bool:
         return self.global_error_state.is_in_error_state()
 
-    def check_required_option(self, setting_name: str, message: str) -> None:
+    def check_required_option(self, setting_name: str, message: str) -> bool:
         if not getattr(self.settings, setting_name, None):
             self.error(message)
+            return False
+        return True

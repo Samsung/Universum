@@ -4,7 +4,6 @@ import sh
 
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Dependency
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib import utils
 from ..reporter import ReportObserver, Reporter
 from . import git_vcs
@@ -24,17 +23,32 @@ class GerritVcs(git_vcs.GitVcs):
         super().__init__(*args, **kwargs)
         self.reporter = None
 
+        if not getattr(self.settings, "repo", None):
+            return
+
         if not self.settings.repo.startswith("ssh://"):
-            raise IncorrectParameterError("only ssh access is supported for gerrit.\n\n"
-                                          "Please change the git repo to ssh protocol by using '--git-repo' ('-gr')\n"
-                                          "command line parameter or by setting GIT_REPO environment variable.")
+            self.error("""
+            Only ssh access is supported for gerrit.
+            
+            Please change the git repo to ssh protocol by using '--git-repo' ('-gr') command
+            line parameter or by setting GIT_REPO environment variable.
+
+            Please note that the user name should also be included into git repo
+            specification for SSH protocol: --git-repo=ssh://<user>@<host>:<port>/<path>
+            """)
 
         parsed_repo = urllib.parse.urlparse(self.settings.repo)
         self.hostname = parsed_repo.hostname
+
         if not parsed_repo.username:
-            raise IncorrectParameterError("the user name for accessing gerrit is not specified.\n\n"
-                                          "The user name should be included into git repo specification for SSH protocol:\n"
-                                          "--git-repo=ssh://<user>@<host>:<port>/<path>")
+            self.error("""
+            The user name for accessing gerrit is not specified.
+            
+            The user name should be included into git repo specification for SSH protocol:
+            --git-repo=ssh://<user>@<host>:<port>/<path>
+            """)
+            return
+
         self.ssh = sh.ssh.bake(parsed_repo.username+"@"+self.hostname, p=parsed_repo.port)
         self.commit_id = None
         self.review = None
@@ -56,32 +70,40 @@ class GerritMainVcs(ReportObserver, GerritVcs, git_vcs.GitMainVcs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        utils.check_required_option(self.settings, "refspec", """
-            git refspec for gerrit is not specified.
+        if self.settings.checkout_id:
+            self.error("""
+            The git checkout ID is supplied.
 
-            For gerrit the git refspec defines the branch to download and the review to
-            work with. Please specify the refspec by using '--git-refspec' ('-grs')
-            command line parameter or by setting GIT_REFSPEC environment variable.
+            Please use '--git-refspec' ('-grs') instead of checkout ID for gerrit.
+            """)
 
-            Usually, it is enough to set refspec to 'refs/changes/<path>'. For example,
-            on a TeamCity server it is enough to set GIT_REFSPEC variable to
-            %teamcity.build.branch% for the entire project.
-        """)
+        if not self.check_required_option("refspec", """
+                The git refspec for gerrit is not specified.
+    
+                For gerrit the git refspec defines the branch to download and the review to work
+                with. Please specify the refspec by using '--git-refspec' ('-grs') command line
+                parameter or by setting GIT_REFSPEC environment variable.
+
+                Usually, it is enough to set refspec to 'refs/changes/<path>'. For example, on a
+                TeamCity server it is enough to set GIT_REFSPEC variable to
+                %teamcity.build.branch% for the entire project.
+                """):
+            return
 
         refspec = self.settings.refspec
         if refspec.startswith("refs/"):
             refspec = refspec[5:]
 
         if refspec.count("/") < 2:
-            raise IncorrectParameterError("the git refspec for gerrit has incorrect format.\n\n"
-                                          "The git refspec for gerrit must contain components, separated by slash:\n"
-                                          "/refs/changes/<number>/<change>/<patch set>.\n"
-                                          "Those components define change id and patch set number.")
+            self.error("""
+            The git refspec for gerrit has incorrect format.
+            
+            The git refspec for gerrit must contain components, separated by slash:
+            /refs/changes/<number>/<change>/<patch set>.
+            Those components define change id and patch set number.
+            """)
 
         self.refspec = refspec
-        if self.settings.checkout_id:
-            raise IncorrectParameterError("git checkout ID is supplied.\n\n"
-                                          "Please use '--git-refspec' ('-grs') instead of checkout ID for gerrit.")
 
     def code_review(self):
         self.reporter = self.reporter_factory()
