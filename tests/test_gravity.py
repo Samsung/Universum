@@ -1,29 +1,28 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name, invalid-name
 
 from argparse import ArgumentError
-import mock
+from unittest import mock
 import pytest
+import six
 
-from _universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
-from _universum.lib.gravity import get_dependencies
-import _universum.lib.module_arguments
-import _universum.lib.gravity
+from universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
+from universum.lib.gravity import get_dependencies
+import universum.lib.module_arguments
+import universum.lib.gravity
 
 
 @pytest.fixture()
 def mock_module():
-    class MockedModule(object):
+    class MockedModule:
         def __new__(cls, *args, **kwargs):
             return old_module.__new__(cls, *args, **kwargs)
 
-    old_module = _universum.lib.gravity.Module
-    _universum.lib.gravity.Module = MockedModule
+    old_module = universum.lib.gravity.Module
+    universum.lib.gravity.Module = MockedModule
 
     yield MockedModule
 
-    _universum.lib.gravity.Module = old_module
+    universum.lib.gravity.Module = old_module
 
 
 def mock_define_arguments(klass):
@@ -106,21 +105,21 @@ def test_define_arguments_3(mock_module):
         def define_arguments(parser):
             parser.add_argument('--option1')
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainStart, parser)
     settings = parser.parse_args(["--option2=abc"])
     assert settings.ChainStart.option1 is None
     assert settings.ChainSecond.option2 == "abc"
     assert settings.ChainEnd.option3 is None
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainSecond, parser)
     settings = parser.parse_args(["--option2=def"])
     assert 'ChainStart' not in dir(settings)
     assert settings.ChainSecond.option2 == "def"
     assert settings.ChainEnd.option3 is None
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ChainEnd, parser)
     settings = parser.parse_args([])
     assert 'ChainStart' not in dir(settings)
@@ -147,7 +146,7 @@ def test_define_arguments_inheritance(mock_module, capsys):
         def define_arguments(parser):
             parser.add_argument('--parent')
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(ParentModule, parser)
     settings = parser.parse_args(["--parent=abc"])
     assert settings.ParentModule.parent == "abc"
@@ -156,21 +155,21 @@ def test_define_arguments_inheritance(mock_module, capsys):
     assert exception_info.value.code == 2
     assert "unrecognized arguments: --child=def" in capsys.readouterr()[1]
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(InheritedModule1, parser)
     settings = parser.parse_args(["--parent=abc"])
     assert settings.ParentModule.parent == "abc"
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(InheritedModule2, parser)
     settings = parser.parse_args(["--parent=abc", "--child=def"])
     assert settings.ParentModule.parent == "abc"
     assert settings.InheritedModule2.child == "def"
 
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     with pytest.raises(ArgumentError) as exception_info:
         define_arguments_recursive(WrongInheritedModule, parser)
-    assert "conflicting option string(s): --parent" in str(exception_info.value)
+    assert "conflicting option string: --parent" in str(exception_info.value)
 
 
 def test_settings_access(mock_module):
@@ -185,8 +184,8 @@ def test_settings_access(mock_module):
         def __init__(self):
             self.s = self.dep()
 
-    settings = _universum.lib.module_arguments.ModuleNamespace()
-    child_settings = _universum.lib.module_arguments.ModuleNamespace()
+    settings = universum.lib.module_arguments.ModuleNamespace()
+    child_settings = universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = "abc"
     setattr(settings, 'S', child_settings)
     r = construct_component(R, settings)
@@ -196,12 +195,12 @@ def test_settings_access(mock_module):
 
     # get non-existing settings
     with pytest.raises(AttributeError) as exception_info:
-        print r.settings.option
+        print(r.settings.option)
     assert "'R' object has no setting 'option'" in str(exception_info.value)
 
     # get non-existing option
     with pytest.raises(AttributeError) as exception_info:
-        print r.s.settings.another_option
+        print(r.s.settings.another_option)
     assert "'S' object has no setting 'another_option'" in str(exception_info.value)
 
     # set non-existing option
@@ -216,11 +215,11 @@ def test_settings_access(mock_module):
 
 
 def make_settings(name, value):
-    settings = _universum.lib.module_arguments.ModuleNamespace()
-    child_settings = _universum.lib.module_arguments.ModuleNamespace()
+    settings = universum.lib.module_arguments.ModuleNamespace()
+    child_settings = universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = value
 
-    if not isinstance(name, basestring):
+    if not isinstance(name, six.string_types):
         name = name.__name__
     setattr(settings, name, child_settings)
     return settings
@@ -285,7 +284,7 @@ def test_construct_component_same_instance(mock_module):
             self.u = self.dep1()
             self.v = self.dep2()
 
-    settings = _universum.lib.module_arguments.ModuleNamespace()
+    settings = universum.lib.module_arguments.ModuleNamespace()
     t = construct_component(T, settings)
     assert t.v == t.u.v
     assert "T" in repr(t)
@@ -307,7 +306,7 @@ def test_construct_component_same_name(mock_module):
 
         return TheOnlyClass
 
-    settings = _universum.lib.module_arguments.ModuleNamespace()
+    settings = universum.lib.module_arguments.ModuleNamespace()
     first_object = construct_component(get_class("abc"), settings)
     second_object = construct_component(get_class("def"), settings)
 
@@ -339,7 +338,7 @@ def test_additional_init_parameters(mock_module):
 
 
 def parse_settings(klass, arguments):
-    parser = _universum.lib.module_arguments.ModuleArgumentParser()
+    parser = universum.lib.module_arguments.ModuleArgumentParser()
     define_arguments_recursive(klass, parser)
     return parser.parse_args(arguments)
 
@@ -351,7 +350,7 @@ def test_construct_component_inheritance(mock_module):
             parser.add_argument('--base_option')
 
         def __init__(self, base_param, **kwargs):
-            super(BaseModule, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base_option = self.settings.base_option
             self.base_param = base_param
 
@@ -361,7 +360,7 @@ def test_construct_component_inheritance(mock_module):
             parser.add_argument('--derived_option')
 
         def __init__(self, **kwargs):
-            super(DerivedModule, self).__init__(456, **kwargs)
+            super().__init__(456, **kwargs)
             self.derived_option = self.settings.derived_option
             self.derived_member = 123
 
@@ -382,13 +381,13 @@ def test_construct_component_multiple_inheritance(mock_module):
             parser.add_argument('--base1_option')
 
         def __init__(self, base1_param, **kwargs):
-            super(Base1, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base1_option = self.settings.base1_option
             self.base1_param = base1_param
 
-    class Base2(object):
+    class Base2:
         def __init__(self, base2_param, **kwargs):
-            super(Base2, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base2_param = base2_param
 
     class Base3(mock_module):
@@ -397,13 +396,13 @@ def test_construct_component_multiple_inheritance(mock_module):
             parser.add_argument('--base3_option')
 
         def __init__(self, base3_param, **kwargs):
-            super(Base3, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base3_option = self.settings.base3_option
             self.base3_param = base3_param
 
     class Base4(mock_module):
         def __init__(self, base4_param, **kwargs):
-            super(Base4, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.base4_param = base4_param
 
     class DerivedMulti(Base1, Base2, Base3, Base4):
@@ -412,7 +411,7 @@ def test_construct_component_multiple_inheritance(mock_module):
             parser.add_argument('--derived_option')
 
         def __init__(self, **kwargs):
-            super(DerivedMulti, self).__init__(base1_param="ab",
+            super().__init__(base1_param="ab",
                                                base2_param="cd",
                                                base3_param="ef",
                                                base4_param="gh",
@@ -445,7 +444,7 @@ def test_construct_component_multiple_instance(mock_module):
             parser.add_argument('--wparam')
 
         def __init__(self):
-            super(W, self).__init__()
+            super().__init__()
             if self.settings.wparam == "z":
                 self.z = self.dep()
             else:
@@ -464,11 +463,11 @@ def test_construct_component_multiple_instance(mock_module):
     assert w2.nz.settings.zparam == "def"
 
     with pytest.raises(AttributeError) as exception_info:
-        print w1.nz.settings.zparam
+        print(w1.nz.settings.zparam)
     assert "'W' object has no attribute 'nz'" in str(exception_info.value)
 
     with pytest.raises(AttributeError) as exception_info:
-        print w2.z.settings.zparam
+        print(w2.z.settings.zparam)
     assert "'W' object has no attribute 'z'" in str(exception_info.value)
 
     w1.settings.wparam = "new_value"
@@ -509,11 +508,11 @@ def test_settings_access_multiple_inheritance(mock_module):
     assert b2.settings.basetwo == "def"
 
     with pytest.raises(AttributeError) as exception_info:
-        print b1.settings.derived
+        print(b1.settings.derived)
     assert "'BaseOne' object has no setting 'derived'" in str(exception_info.value)
 
     with pytest.raises(AttributeError) as exception_info:
-        print b2.settings.baseone
+        print(b2.settings.baseone)
     assert "'BaseTwo' object has no setting 'baseone'" in str(exception_info.value)
 
     b1.settings.baseone = "zyx"

@@ -1,4 +1,6 @@
-from _universum.configuration_support import Variations
+#!/usr/bin/env python3.7
+
+from universum.configuration_support import Variations
 
 script_name = './basic_build_script.sh'
 
@@ -16,4 +18,4 @@ configs = build * platforms * bits
 
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

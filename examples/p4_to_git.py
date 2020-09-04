@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3.7
 
 import argparse
 from P4 import P4
-import universum
+from universum import __main__ as universum
 
 
 def main():

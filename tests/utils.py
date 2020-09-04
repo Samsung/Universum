@@ -1,13 +1,13 @@
-# -*- coding: UTF-8 -*-
-
 import datetime
 import os
 import random
 import socket
 import string
+import six
+from six.moves import range
 
-from _universum import submit, poll, main
-from _universum.lib import gravity
+from universum import submit, poll, main, github_handler
+from universum.lib import gravity
 from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-class Params(object):
+class Params:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -62,6 +62,8 @@ def create_empty_settings(test_type):
         main_class = poll.Poll
     elif test_type == "submit":
         main_class = submit.Submit
+    elif test_type == "github-handler":
+        main_class = github_handler.GithubHandler
     elif test_type == "main":
         main_class = main.Main
     else:
@@ -74,13 +76,13 @@ def create_empty_settings(test_type):
 
 
 simple_test_config = """
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
 
-class TestEnvironment(object):
+class TestEnvironment:
     def __init__(self, temp_dir, test_type):
         self.temp_dir = temp_dir
         self.settings = create_empty_settings(test_type)
@@ -88,19 +90,19 @@ class TestEnvironment(object):
             self.settings.Poll.db_file = self.db_file
             self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
-            self.settings.ProjectDirectory.project_root = unicode(self.temp_dir.mkdir("project_root"))
+            self.settings.ProjectDirectory.project_root = six.text_type(self.temp_dir.mkdir("project_root"))
         elif test_type == "submit":
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
-            self.settings.ProjectDirectory.project_root = unicode(self.vcs_cooking_dir)
+            self.settings.ProjectDirectory.project_root = six.text_type(self.vcs_cooking_dir)
         elif test_type == "main":
-            configs_file = self.temp_dir.join("configs.py")
-            configs_file.write(simple_test_config)
-            self.settings.Launcher.config_path = unicode(configs_file)
-            self.settings.ArtifactCollector.artifact_dir = unicode(self.temp_dir.mkdir("artifacts"))
+            self.configs_file = self.temp_dir.join("configs.py")
+            self.configs_file.write(simple_test_config)
+            self.settings.Launcher.config_path = six.text_type(self.configs_file)
+            self.settings.ArtifactCollector.artifact_dir = six.text_type(self.temp_dir.mkdir("artifacts"))
             # The project_root directory must not exist before launching main
-            self.settings.ProjectDirectory.project_root = unicode(self.temp_dir.join("project_root"))
+            self.settings.ProjectDirectory.project_root = six.text_type(self.temp_dir.join("project_root"))
 
         self.settings.Output.type = "term"
 

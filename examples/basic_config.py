@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3.7
 
 import os.path
-from _universum.configuration_support import Variations, get_project_root
+from universum.configuration_support import Variations, get_project_root
 
 #
 # One way to specify path to the script: add full path to the command
@@ -28,4 +27,4 @@ bits64 = Variations([dict(name='64 bits', command=['--64'])])
 configs += build64 * (platforms32 + platforms64) * bits64
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

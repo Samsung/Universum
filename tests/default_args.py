@@ -1,23 +1,23 @@
-import _universum.lib.module_arguments
+import universum.lib.module_arguments
 
 
-class ArgGroupWithDefault(_universum.lib.module_arguments.ModuleArgumentGroup):
+class ArgGroupWithDefault(universum.lib.module_arguments.ModuleArgumentGroup):
     def add_argument(self, *args, **kwargs):
         if "required" in kwargs and "default" not in kwargs:
             kwargs["required"] = False
             kwargs["default"] = ""
 
-        super(ArgGroupWithDefault, self).add_argument(*args, **kwargs)
+        super().add_argument(*args, **kwargs)
 
 
-class ArgParserWithDefault(_universum.lib.module_arguments.ModuleArgumentParser):
+class ArgParserWithDefault(universum.lib.module_arguments.ModuleArgumentParser):
     def add_argument(self, *args, **kwargs):
         if "required" in kwargs and "default" not in kwargs:
             kwargs["required"] = False
             kwargs["default"] = ""
 
-        super(ArgParserWithDefault, self).add_argument(*args, **kwargs)
+        super().add_argument(*args, **kwargs)
 
     def add_argument_group(self, *args, **kwargs):
-        group = super(ArgParserWithDefault, self).add_argument_group(*args, **kwargs)
+        group = super().add_argument_group(*args, **kwargs)
         return ArgGroupWithDefault(group)

@@ -1,17 +1,18 @@
 Command line
 ------------
 
-Main script of project `Universum` is ``universum.py``.
-All command-line parameters, general and module-related, are passed to this main script.
+Main script of project `Universum` is ``__main__.py``.
+All command-line parameters, general and module-related, are passed to this entry point
+via ``python3.7 -m universum``.
 
 .. note::
     Most of command-line parameters can be replaced by setting up corresponding environment
     variables (see 'env' comment in descriptions)
 
 .. argparse::
-    :module: universum
+    :module: universum.__main__
     :func: define_arguments
-    :prog: universum
+    :prog: python3.7 -m universum
     :nosubcommands:
 
     --version : @replace
@@ -34,7 +35,8 @@ All command-line parameters, general and module-related, are passed to this main
         | * -f='test 1:!unit test 1'    - run all steps with 'test 1' substring in their names except those
          containing 'unit test 1'
 
-    {poll,submit,nonci} : @replace
+    {poll,submit,nonci,github-handler} : @replace
         | :doc:`universum poll <args_poll>`
         | :doc:`universum submit <args_submit>`
         | :doc:`universum nonci <args_nonci>`
+        | :doc:`universum github-handler <args_github_handler>`

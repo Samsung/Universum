@@ -1,26 +1,27 @@
 Configuring the project
 =======================
 
-.. currentmodule:: _universum.configuration_support
+.. currentmodule:: universum.configuration_support
 
 In order to use the `Universum`, the project should provide a configuration file.
 This file is a regular python script with specific interface, which is recognized
 by the `Universum`.
 
 The path to the configuration file is supplied to the main script via the `CONFIG_PATH`
-environment variable or ``--launcher-config-path`` / ``-lcp`` `command-line parameter
-<args.html#launcher>`__.
-Internally the config file is processed by the :mod:`_universum.launcher` module. The path is passed
+environment variable or ``--config`` / ``-cfg`` `command-line parameter
+<args.html#Configuration\ execution>`__.
+Internally the config file is processed by the :mod:`universum.launcher` module. The path is passed
 to this module in `config_path` member of its input settings.
 
 .. note::
 
     Generally there should be no need to implement complex logic in the configuration file,
     however the `Universum` doesn't limit what project uses its configuration file for. Also,
-    there are no restriction on using of external python modules, libraries or on the 
+    there are no restriction on using of external python modules, libraries or on the
     structure of the configuration file itself.
 
-    The project is free to use whatever it needs in the configuration file for its needs.
+    The project is free to use whatever it needs in the configuration file; just remember,
+    all the calculations are done on config processing, not step execution.
 
 
 Project configuration
@@ -46,12 +47,12 @@ Below is an example of the configuration file in its most basic form:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="Build", command=["build.sh"])])
 
 This configuration file uses a :class:`Variations` class
-from the :mod:`_universum.configuration_support`
+from the :mod:`universum.configuration_support`
 module and defines one build configuration.
 
 .. note::
@@ -59,7 +60,7 @@ module and defines one build configuration.
     Creating a :class:`Variations` instance takes a list of dictionaries as an argument,
     where every new list member describes a new `project configuration`_.
 
-* The :mod:`_universum.configuration_support` module provides several functions to be used by project configuration files
+* The :mod:`universum.configuration_support` module provides several functions to be used by project configuration files
 * The `Universum` expects project configuration file to define global variable with
   name `configs`. This variable defines all project configurations to be used in a build.
 
@@ -68,6 +69,9 @@ the following parameters:
 
 #. **name** is a string `"Build"`
 #. **command** is a list with a string item `"build.sh"`
+
+Both `name` and `command`, however, can be missing. A build configuration without a name will still have a step number;
+a build configuration without issued command will do nothing, but will still appear in log and have a step number.
 
 .. note::
 
@@ -91,11 +95,11 @@ using `directory` keyword:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     configs = Variations([dict(name="Make Special Module", directory="specialModule", command=["make"])])
 
-To use a `Makefile` located in `"specialModule"` directory without passing "-C SpecialModule/"
+To use a `Makefile` located in `"specialModule"` directory without passing "-C specialModule/"
 arguments to ``make`` command, the launch directory is specified.
 
 
@@ -107,7 +111,7 @@ arguments to ``make`` command, the launch directory is specified.
 By default for any launched external command `current directory` is the actual directory
 containing project files. So any internal relative paths for the project should not cause any troubles.
 But when, for any reason, there's a need to refer to project location absolute path, it is
-recommended to use :func:`get_project_root` function from :mod:`_universum.configuration_support` module.
+recommended to use :func:`get_project_root` function from :mod:`universum.configuration_support` module.
 
 .. note::
 
@@ -118,14 +122,14 @@ recommended to use :func:`get_project_root` function from :mod:`_universum.confi
     (not only the `working directory`, mentioned above), so the path to this directory
     can not be hardcoded too.
 
-The :mod:`_universum.configuration_support` module processes current `Universum` run settings and returns
+The :mod:`universum.configuration_support` module processes current `Universum` run settings and returns
 actual project root to the config processing module.
 
 See the following example configuration file:
 
 .. testcode::
 
-    from _universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Variations, get_project_root
 
     configs = Variations([dict(name="Run tests", directory="/home/scripts", command=["./run_tests.sh", "--directory", get_project_root()])])
 
@@ -145,22 +149,23 @@ Below is an example of the configuration file with three different configuration
 
 .. testcode::
 
-    from _universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Variations, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
-    configs = Variations([dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
-                          dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
-                          dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
-                          ])
+    configs = Variations([
+        dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
+        dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
+        dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
+    ])
 
 The example configuration file declares the following `Universum` run steps:
 
-1. Make a module, located in `"specialModule"` directory
+1. `Make` a module, located in `"specialModule"` directory
 2. Run a `"run_tests.sh"` script, located in `"scripts"` directory
-3. Run a `"run_tests.sh"` script, located in external directory `"home/scripts"`
+3. Run a `"run_tests.sh"` script, located in external directory `"/home/scripts"`
    and pass an absolute path to a directory `"out/tests"` inside project location
-4. Copy artifact directory `"out"` to the working directory
+4. Copy resulting directory `"out"` to the artifact directory
 
 .. note::
 
@@ -181,7 +186,7 @@ name
     name of the log file if the option for storing to log files is selected.
     A project configuration can have no name, but it is not recommended for aesthetic reasons.
     If several project configurations have the same names, and logs are stored to files
-    (see ``--launcher-output`` / ``-lo``  `command-line parameter <args.html#launcher>`__ for details),
+    (see ``--out`` / ``-o``  `command-line parameter <args.html#Output>`__ for details),
     all logs for such configurations will be stored to one file in order of their appearances.
 
 ..
@@ -197,6 +202,12 @@ command
     A project configuration can have an empty list as a command. Such configuration
     won't do anything except informing user about missing it.
 
+.. note::
+
+    Some common actions, such as ``echo`` or ``cp``, are bash features and not actual programs to run. These
+    features should be called as ``["bash", "-c", "echo -e 'Some line goes here'"]``. Note that in this case
+    the string to be passed to bash is one argument containing white spaces and therefore not splat by commas.
+
 .. _build_environment:
 
 environment
@@ -210,7 +221,7 @@ artifacts
     Path to the file or directory to be copied to the working directory as an execution result.
     Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
     (e.g. `"out/**/index.html"`).
-    If not stated otherwise (see ``--no-archive`` `command-line parameter <args.html#artifacts>`__
+    If not stated otherwise (see ``--no-archive`` `command-line parameter <args.html#Artifact\ collection>`__
     for details), artifact directories are copied as archives.
     If :ref:`'artifact_prebuild_clean' key <clean_artifacts>` is either absent or set to `False` and
     stated artifacts are present in downloaded sources, it is considered a failure and configuration
@@ -283,35 +294,36 @@ code_report
     Basic usage is adding ``code_report=True`` to configuration description and ``--result-file="${CODE_REPORT_FILE}"``
     to 'command' arguments.
     Specifies step that performs static or syntax analysis of code.
-    Analyzers currently provided by Universum: ``universum_pylint``, ``universum_svace`` and ``universum_uncrustify``
-    (see `code_report parameter <code_report.html>`__ for details).
+    Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
+    (see `code_report parameters <code_report.html>`__ for details).
 
 .. _tc_tags:
 
 pass_tag, fail_tag
     Basic usage is adding ``pass_tag="PASS", fail_tag="FAIL"`` to the configuration description.
-    These keys is implemented only for TeamCity build. You can specify one, both or neither of them per step.
-    Defining ``pass_tag="PASS"`` means that current build on TeamCity will be tagged with label ``PASS``
+    These keys are currently implemented only for TeamCity build. You can specify one, both or neither of them
+    per step. Defining ``pass_tag="PASS"`` means that current build on TeamCity will be tagged with label ``PASS``
     if this particular step succeeds. Defining ``fail_tag="FAIL"`` means that current build on TeamCity will be
     tagged with label ``FAIL`` if this particular step fails. Key values can be set to any strings acceptable by
     TeamCity as tags. It is not recommended to separate words in the tag with spaces, since you cannot create
     a tag with spaces in TeamCity's web-interface. Every tag is added (if matching condition) after executing
     build step it is set in, not in the end of all run.
-    ``pass_tag`` and ``fail_tag`` can also be used in configurations multiplications, like this:
+    ``pass_tag`` and ``fail_tag`` can also be used when `multiplying build configurations`_, like this:
 
     .. testsetup::
 
-        #!/usr/bin/env python
+        #!/usr/bin/env python3.7
 
-        from _universum.configuration_support import Variations
+        from universum.configuration_support import Variations
 
     .. testcode::
 
         make = Variations([dict(name="Make ", command=["make"], pass_tag="pass_")])
 
-        target = Variations([dict(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
-                             dict(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
-                             ])
+        target = Variations([
+            dict(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
+            dict(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
+        ])
 
         configs = make * target
 
@@ -320,14 +332,14 @@ pass_tag, fail_tag
     .. testcode::
         :hide:
 
-        print "$ ./configs.py"
-        print configs.dump()
+        print("$ ./configs.py")
+        print(configs.dump())
 
     .. testoutput::
 
         $ ./configs.py
-        [{'command': 'make --platform Linux', 'name': 'Make Linux', 'pass_tag': 'pass_Linux'},
-        {'command': 'make --platform Windows', 'name': 'Make Windows', 'pass_tag': 'pass_Windows'}]
+        [{'name': 'Make Linux', 'command': 'make --platform Linux', 'pass_tag': 'pass_Linux'},
+        {'name': 'Make Windows', 'command': 'make --platform Windows', 'pass_tag': 'pass_Windows'}]
 
     This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
 
@@ -351,29 +363,30 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
     def mock_project_root():
         return "/home/Project"
 
-    import _universum.configuration_support
-    _universum.configuration_support.get_project_root = mock_project_root
+    import universum.configuration_support
+    universum.configuration_support.get_project_root = mock_project_root
 
 .. testcode::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3.7
 
-    from _universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Variations, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
-    configs = Variations([dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
-                          dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
-                          dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
-                          ])
+    configs = Variations([
+        dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
+        dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
+        dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
+    ])
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
-The combination of ``#!/usr/bin/env python`` and ``if __name__ == '__main__':`` allows launching
+The combination of ``#!/usr/bin/env python3.7`` and ``if __name__ == '__main__':`` allows launching
 the `configs.py` script from shell.
 
-For ``from _universum.configuration_support import`` to work correctly, `configs.py` should be copied to
+For ``from universum.configuration_support import`` to work correctly, `configs.py` should be copied to
 `Universum` root directory and launched there.
 
 When launched from shell instead of being used by `Universum` system, :ref:`get_project_root` function
@@ -385,15 +398,15 @@ it includes. For example, running the script, given above, will result in the fo
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make -C SpecialModule/', 'name': 'Make Special Module'},
-    {'command': 'scripts/run_tests.sh', 'name': 'Run internal tests'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests', 'name': 'Run external tests'}]
+    [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
+    {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
+    {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
 
 As second and third build configurations have the same names, if log files are created,
 only two logs will be created: one for the first build step, another for both second and third,
@@ -417,9 +430,9 @@ See the following example:
 
 .. testcode::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3.7
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     one = Variations([dict(name="Make project", command=["make"])])
     two = Variations([dict(name="Run tests", command=["run_tests.sh"])])
@@ -427,7 +440,7 @@ See the following example:
     configs = one + two
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 The addition operator will just concatenate two lists into one, so
 the `result <Dump configurations list_>`_ of such configuration file will be
@@ -436,14 +449,14 @@ the following list of configurations:
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'command': 'make', 'name': 'Make project'},
-    {'command': 'run_tests.sh', 'name': 'Run tests'}]
+    [{'name': 'Make project', 'command': 'make'},
+    {'name': 'Run tests', 'command': 'run_tests.sh'}]
 
 
 Multiplying build configurations
@@ -469,34 +482,33 @@ For example, this configuration file:
 
 .. testcode::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3.7
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     make = Variations([dict(name="Make ", command=["make"], artifacts="out")])
 
     target = Variations([dict(name="Platform A", command=["--platform", "A"]),
-                         dict(name="Platform B", command=["--platform", "B"])
-                         ])
+                         dict(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 will `produce <Dump configurations list_>`_ this list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make --platform A', 'name': 'Make Platform A'},
-    {'artifacts': 'out', 'command': 'make --platform B', 'name': 'Make Platform B'}]
+    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
 
 * `command` and `name` values are produced of `command` and `name` values of each of two configurations
 * `artifacts` value, united with no corresponding value in second configuration, remains unchanged
@@ -518,43 +530,41 @@ can be combined in any required way. For example:
 
 .. testcode::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3.7
 
-    from _universum.configuration_support import Variations
+    from universum.configuration_support import Variations
 
     make = Variations([dict(name="Make ", command=["make"], artifacts="out")])
     test = Variations([dict(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
 
     debug = Variations([dict(name=" - Release"),
-                        dict(name=" - Debug", command=["-d"])
-                        ])
+                        dict(name=" - Debug", command=["-d"])])
 
     target = Variations([dict(name="Platform A", command=["--platform", "A"]),
-                         dict(name="Platform B", command=["--platform", "B"])
-                         ])
+                         dict(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target + test * target * debug
 
     if __name__ == '__main__':
-        print configs.dump()
+        print(configs.dump())
 
 This file `will get us <Dump configurations list_>`_ the following list of configurations:
 
 .. testcode::
     :hide:
 
-    print "$ ./configs.py"
-    print configs.dump()
+    print("$ ./configs.py")
+    print(configs.dump())
 
 .. testoutput::
 
     $ ./configs.py
-    [{'artifacts': 'out', 'command': 'make --platform A', 'name': 'Make Platform A'},
-    {'artifacts': 'out', 'command': 'make --platform B', 'name': 'Make Platform B'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A', 'name': 'Run tests for Platform A - Release'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d', 'name': 'Run tests for Platform A - Debug'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B', 'name': 'Run tests for Platform B - Release'},
-    {'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d', 'name': 'Run tests for Platform B - Debug'}]
+    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
+    {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
+    {'name': 'Run tests for Platform A - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d'},
+    {'name': 'Run tests for Platform B - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B'},
+    {'name': 'Run tests for Platform B - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d'}]
 
 As in common arithmetic, multiplication is done before addition. To change the operations
 order, use parentheses:

@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3.7
 
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 mkdir = Variations([dict(name="Create directory", command=["mkdir", "-p"])])
 mkfile = Variations([dict(name="Create file", command=["touch"])])
@@ -20,4 +19,4 @@ artifacts = Variations([dict(name="Existing artifacts", artifacts="one/**/file*"
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

@@ -1,21 +1,20 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3.7
 
 import os
 import subprocess
 import re
 
-
 def run_universum():
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
-    cmd = """universum --clean-build --vcs-type=none --server-type=local --out-type=term 
-        --launcher-output=console --file-source-dir=. --launcher-config-path=./universum_config/configs.py"""
+    cmd = """python3.7 -m universum --clean-build --vcs-type=none --server-type=local --out-type=term 
+        --launcher-output=console --file-source-dir=./universum_log_collapser/e2e --launcher-config-path=./universum_config/configs.py"""
     stdout = launch_process(*cmd.split(), env=env)
     return re.sub("\\[.+?m", "", stdout)
 
 
 def run_plugin_cli(log):
-    jar_path = os.path.join(os.getcwd(), "..", "universum_log_collapser", "target", 
+    jar_path = os.path.join(os.getcwd(), "universum_log_collapser", "universum_log_collapser", "target",
         "universum_log_collapser-jar-with-dependencies.jar")
     assert os.path.exists(jar_path), "Run maven build for CLI jar first"
     return launch_process("java", "-cp", jar_path, "io.jenkins.plugins.universum_log_collapser.Main", log)
@@ -43,7 +42,7 @@ def write_to_html(log):
     </html>
     """
 
-    with open("generated.html", "w") as file:
+    with open(os.path.join(os.getcwd(), "universum_log_collapser", "e2e", "generated.html"), "w") as file:
         file.write(html_start + log + html_end)
 
 

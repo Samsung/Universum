@@ -1,6 +1,50 @@
 Change log
 ==========
 
+0.19.0 (2020-08-??)
+-------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **migrate to Python 3.7** due to Python 2 is no longer supported
+   Python3.7 is now :doc:`required <prerequisites>` for Universum to work; please switch ``print ""`` into
+   ``print("")`` in config files if needed
+* **disable entry points** (calling ``universum`` from command line) and switch to ``python3.7 -m universum`` calls
+   to avoid possible situations where wrong version of Universum is executed, especially when using
+   :doc:`analyzers <code_report>`, that are launched from inside an active Universum
+* **rename `_universum` to `universum`**
+   :class:`~universum.configuration_support.Variations` imports in configs need to be fixed: use
+   ``from universum.configuration_support import Variations`` instead of
+   ``from _universum.configuration_support import Variations``
+
+New features
+~~~~~~~~~~~~
+
+* **github-handler:** add :doc:`a new Universum mode <github_handler>`
+   to serve as a `GitHub App <https://docs.github.com/en/developers/apps>`__. GitHub Applications
+   are needed to run checks and report their status to GitHub for changes on review and for committed changes.
+   With this mode it is possible to implement full GitHub workflow with Universum
+* **pylint:** allow selecting any Python version for checks
+   e.g. ``3.5`` instead of simple ``2``/``3`` switch that was available before
+* **nonci:** set project root to current directory
+   to simply run ``universum nonci`` from sources location without :doc:`setting <args>` ``--project-root`` manually
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** only update status for latest revisions (as Swarm no longer supports outdated review status update)
+* **github_vcs:** acquire GitHub token when needed (so it no longer expires for long builds)
+* **nonci:** fix the issue with launching ``code_report=True`` steps twice
+* **report:** if the report is not enabled for successful builds, it doesn't cause errors in the terminal anymore
+* **setup:** make installing modules for GitHub VCS type non-mandatory
+* **p4:** add disconnect before any connect to fix ``connection lost`` issues
+* **code_report:** replace code report pseudo-variable ``${CODE_REPORT_FILE}`` not only in ``command`` field
+* **vcs:** raw exceptions no longer shown during finalize
+* **vcs:** exception if vcs is 'none' and there are code report steps
+* **p4:** ignore additional whitespaces in mappings
+
+
 0.18.6 (2020-04-27)
 -------------------
 
@@ -802,7 +846,7 @@ New features
 ~~~~~~~~~~~~
 
 * **docs:** add :doc:`system prerequisites page <prerequisites>` to user manual
-* **docs:** add documentation for :mod:`_universum.configuration_support` module
+* **docs:** add documentation for :mod:`universum.configuration_support` module
 * **launcher:** add support for more than one environment variable to
   :ref:`filter configurations <filtering>`
 

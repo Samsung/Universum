@@ -5,24 +5,24 @@
 #
 # Copyright (c) 2006, Steve R. Hastings
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
-# 
+#
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in
 #       the documentation and/or other materials provided with the
 #       distribution.
-# 
+#
 #     * Neither the name of Steve R. Hastings nor the names
 #       of any contributors may be used to endorse or promote products
 #       derived from this software without specific prior written
 #       permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 # IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
 # TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
@@ -126,14 +126,14 @@ def parse_time_offset(s):
     try:
         s = s.lstrip().rstrip().lower()
     except AttributeError:
-        raise TypeError, "time offset must be a string"
+        raise TypeError("time offset must be a string")
 
     if s in _tz_offset_dict:
         return _tz_offset_dict[s] * 3600
 
     m = _pat_time_offset.search(s)
     if not m:
-        raise ValueError, "invalid time offset string"
+        raise ValueError("invalid time offset string")
 
     sign = m.group(1)
     offset_hour = int(m.group(2))
@@ -168,7 +168,7 @@ def tf_from_s(s):
 
 
 
-class TimeSeq(object):
+class TimeSeq:
     """
     A class to generate a sequence of timestamps.
 
@@ -210,11 +210,11 @@ if __name__ == "__main__":
 
         if result != correct:
             failed_tests += 1
-            print module_banner
-            print "test failed:", message
-            print "    correct:", correct
-            print "    result: ", result
-            print
+            print(module_banner)
+            print("test failed:", message)
+            print("    correct:", correct)
+            print("    result: ", result)
+            print()
 
 
     correct = 1141607495.0
@@ -237,11 +237,11 @@ if __name__ == "__main__":
     from sys import exit
     s_module = module_name + " " + module_version
     if failed_tests == 0:
-        print s_module + " self-test: all tests succeeded!"
+        print(s_module + " self-test: all tests succeeded!")
         exit(0)
     elif failed_tests == 1:
-        print s_module + " self-test: 1 test failed."
+        print(s_module + " self-test: 1 test failed.")
         exit(1)
     else:
-        print s_module + " self-test: %d tests failed." % failed_tests
+        print(s_module + " self-test: %d tests failed." % failed_tests)
         exit(1)

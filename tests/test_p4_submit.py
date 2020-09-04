@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 # pylint: disable = redefined-outer-name
 
 import pytest
@@ -19,7 +17,7 @@ def test_fail_changing_non_checked_out_file(p4_submit_environment):
         with open(str(target_file), "w") as tmpfile:
             tmpfile.write(text + "\n")
 
-    assert "Permission denied" in unicode(excinfo.value)
+    assert "Permission denied" in str(excinfo.value)
 
 
 def test_success_changing_checked_out_file(p4_submit_environment):

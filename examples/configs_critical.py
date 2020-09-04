@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python3.7
 
-from _universum.configuration_support import Variations
+from universum.configuration_support import Variations
 
 not_script = Variations([dict(name='Not script', command=["not_run.sh"], critical=True)])
 
@@ -16,4 +15,4 @@ configs = script * step * substep + not_script + script
 
 
 if __name__ == '__main__':
-    print configs.dump()
+    print(configs.dump())

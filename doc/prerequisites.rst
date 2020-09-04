@@ -2,7 +2,7 @@ Prerequisites
 =============
 
 * OS Linux
-* Python version 2.7
+* Python version 3.7
 
 Preinstalled packages
 ---------------------
@@ -32,6 +32,17 @@ Git
 
 * `Git` client (use ``sudo apt-get install git``)
 * :mod:`gitpython` module for Python (use ``sudo pip install gitpython``)
+
+GitHub
+......
+
+If used as GitHub Handler:
+
+* :mod:`pygithub` module for Python (use ``sudo pip install pygithub``)
+* :mod:`cryptography` module for Python (use ``sudo pip install cryptography``), used by :mod:`pygithub` for
+  GitHub App token calculation
+
+If used as ``github`` VCS type, also includes `Git` requirements.
 
 
 Optional (used for internal tests)

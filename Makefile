@@ -1,9 +1,9 @@
 TEST_TARGETS = pytest doc_doctest
 
 
-.PHONY: all doc test $(TEST_TARGETS) pylint images
+.PHONY: all doc test $(TEST_TARGETS) pylint images rebuild
 
-all: doc 
+all: doc
 
 clean: doc_clean
 
@@ -20,15 +20,18 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	python2 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
-	--cov=_universum --cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
-	--ignore=universum_log_collapser
+	python3.7 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
+	--cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
+	--ignore=universum_log_collapser --ignore=configs.py
 
 doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	python2 -m pylint --rcfile=pylintrc *.py _universum/ tests/
+	python3.7 -m pylint --rcfile=pylintrc *.py universum/ tests/
 
 images:
 	+$(MAKE) -C tests/docker all
+
+rebuild:
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" all

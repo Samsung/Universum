@@ -45,6 +45,8 @@ if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
         -P $P4PASSWD \
         $SERVER_NAME
 
+    p4 -p $P4PORT configure set server=1
+
     echo Server info:
     p4 -p $P4PORT info
 else
@@ -59,5 +61,5 @@ PID_FILE=/var/run/p4d.$SERVER_NAME.pid
 # wait forever
 while true
 do
-  /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/log" & wait ${!}
+  /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log" & wait ${!}
 done
