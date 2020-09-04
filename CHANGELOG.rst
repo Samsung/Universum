@@ -23,10 +23,10 @@ New features
 
 * **github-handler:** add :doc:`a new Universum mode <github_handler>`
    to serve as a `GitHub App <https://docs.github.com/en/developers/apps>`__. GitHub Applications
-   are needed to run checks and report their status to GitHub for changes newly commmited or those to be merged yet.
+   are needed to run checks and report their status to GitHub for changes on review and for committed changes.
    With this mode it is possible to implement full GitHub workflow with Universum
 * **pylint:** allow selecting any Python version for checks
-   e.g. ``3.5`` instead of simple ``2``/``3`` switch earlier
+   e.g. ``3.5`` instead of simple ``2``/``3`` switch that was available before
 * **nonci:** set project root to current directory
    to simply run ``universum nonci`` from sources location without :doc:`setting <args>` ``--project-root`` manually
 
@@ -36,7 +36,7 @@ Bug fixes
 * **swarm:** only update status for latest revisions (as Swarm no longer supports outdated review status update)
 * **github_vcs:** acquire GitHub token when needed (so it no longer expires for long builds)
 * **nonci:** fix the issue with launching ``code_report=True`` steps twice
-* **report:** successful build not set to be reported no longer causes errors in the terminal
+* **report:** if the report is not enabled for successful builds, it doesn't cause errors in the terminal anymore
 * **setup:** make installing modules for GitHub VCS type non-mandatory
 * **p4:** add disconnect before any connect to fix ``connection lost`` issues
 * **code_report:** replace code report pseudo-variable ``${CODE_REPORT_FILE}`` not only in ``command`` field
