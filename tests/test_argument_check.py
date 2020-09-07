@@ -399,3 +399,30 @@ def test_multiple_errors_main_gerrit_refspec_and_config_path():
     settings.GitMainVcs.checkout_id = "HEAD"
 
     assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
+
+
+def test_multiple_errors_main_github_and_config_path():
+    settings = create_settings("main", "github")
+    settings.Launcher.config_path = None
+    settings.GitVcs.repo = None
+    settings.GitMainVcs.checkout_id = None
+    settings.GithubToken.integration_id = None
+    settings.GithubToken.key = None
+    settings.GithubTokenWithInstallation.installation_id = None
+    settings.GithubMainVcs.check_id = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "git repo", "checkout id for github", "GitHub App ID",
+                               "GitHub App private key", "GitHub App installation ID", "GitHub Check Run ID")
+
+
+def test_multiple_errors_githubhandler():
+    settings = create_settings("github-handler", "github")
+
+    settings.GithubHandler.event = None
+    settings.GithubHandler.payload = None
+    settings.GithubHandler.trigger_url = None
+    settings.GithubToken.integration_id = None
+    settings.GithubToken.key = None
+
+    assert_incorrect_parameter(settings, "GitHub web-hook event", "build trigger URL", "GitHub web-hook payload",
+                               "GitHub App ID", "GitHub App private key")
