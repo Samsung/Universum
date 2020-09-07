@@ -2,13 +2,11 @@ import datetime
 import importlib
 import urllib.parse
 
-import requests
-
-from ...lib.gravity import Dependency
-from ...lib import utils
-from ...lib.gravity import Module
-from ..reporter import ReportObserver, Reporter
 from . import git_vcs
+from ..error_state import HasErrorState
+from ..reporter import ReportObserver, Reporter
+from ...lib import utils
+from ...lib.gravity import Dependency
 
 __all__ = [
     "GithubToken",
@@ -22,7 +20,7 @@ def get_time():
     return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
-class GithubToken(Module):
+class GithubToken(HasErrorState):
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -40,28 +38,37 @@ class GithubToken(Module):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        utils.check_required_option(self.settings, "integration_id", """
-                    GitHub App ID not specified.
+        self.check_required_option("integration_id", """
+            The GitHub App ID is not specified.
+    
+            Only GitHub Application owner knows this ID. If you are the App owner, please
+            check your App's general settings. If not, please contact the App owner for this
+            information.
+    
+            Please note that 'universum github-handler' DOES NOT pass App ID to CI builds.
+            It is assumed that one CI configuration (job, build, workflow) serves as one
+            GitHub App. Because of that, it is required to specify App ID within the CI
+            configuration.
+    
+            Please specify the GitHub App ID by using '--github-app-id' ('-gta') command
+            line parameter or by setting GITHUB_APP_ID environment variable.
+            """)
 
-                    Only GitHub Application owner knows this ID. If you are the App owner,
-                    please check your App's general settings. If not, please contact the App owner
-                    for this information.
-                    
-                    Please note that `universum github-handler` DOES NOT pass App ID to CI builds. 
-                    Please specify the checkout id by using '--github-app-id' ('-gta')
-                    command line parameter or by setting GITHUB_APP_ID environment variable.
-                """)
+        self.key = self.read_and_check_multiline_option("key", """
+            The GitHub App private key is not specified.
 
-        self.key = utils.read_and_check_multiline_option(self.settings, "key", """
-                    GitHub App private key not specified.
+            Please note that 'universum github-handler' DOES NOT pass private key to CI
+            builds. It is assumed that one CI configuration (job, build, workflow) serves as
+            one GitHub App. Because of that, it is required to specify private key within
+            the CI configuration.
 
-                    As a multiline string, the private key is not very convenient to pass via command line directly.
-                    Please store it in environment variable ("GITHUB_PRIVATE_KEY"), or enter through the stdin
-                    (pass '-' param value for redirection), or pass a filename starting with '@' character, absolute or
-                    relative starting from project root.
-
-                    Please note that `universum github-handler` DOES NOT pass private key to CI builds.
-                """)
+            As the private key is a multiline string, it is not convenient to pass it
+            directly via command line. If you start the parameter with '@', the rest should
+            be the path to a file containing the key. The path can be absolute or relative
+            to the project root. You can pass '-' if you want the universum to read the key
+            from the stdin.   You can also store the key in GITHUB_PRIVATE_KEY environment
+            variable.
+            """)
 
         global github
         try:
@@ -70,7 +77,7 @@ class GithubToken(Module):
             text = "Error: using GitHub Handler or VCS type 'github' requires Python package 'pygithub' " \
                    "to be installed to the system for correct GitHub App token processing. " \
                    "It also requires Python package 'cryptography' to be installed in addition. " \
-                   "Please refer to `Prerequisites` chapter of project documentation for detailed instructions"
+                   "Please refer to 'Prerequisites' chapter of project documentation for detailed instructions"
             raise ImportError(text) from e
 
         self.token_issued = None
@@ -101,21 +108,22 @@ class GithubTokenWithInstallation(GithubToken):
                             metavar="GITHUB_INSTALLATION_ID",
                             help="GitHub installation ID identifies specific app installation into user account "
                                  "or organization. Can be retrieved from web-hook or obtained via REST API; "
-                                 "in standard workflow should be received from `universum github-handler`")
+                                 "in standard workflow should be received from 'universum github-handler'")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        utils.check_required_option(self.settings, "installation_id", """
-                    GitHub App installation ID not specified.
-
-                    An installation refers to any user or organization account that has installed the app.
-                    Even if someone installs the app on more than one repository, it only counts as one
-                    installation because it's within the same account.
-                    Installation ID can be retrieved via REST API or simply parsed from GitHub App web-hook.
-                    
-                    If using `universum github-handler`, installation ID is passed automatically to 
-                    GITHUB_INSTALLATION_ID environment variable.
-                """)
+        self.check_required_option("installation_id", """
+            The GitHub App installation ID not specified.
+    
+            An installation refers to any user or organization account that has installed
+            the app. Even if someone installs the app on more than one repository, it only
+            counts as one installation because it's within the same account. Installation ID
+            can be retrieved via REST API or simply parsed from GitHub App web-hook.
+    
+            If using 'universum github-handler', installation ID is automatically extracted
+            from the webhook payload and  passed via GITHUB_INSTALLATION_ID environment
+            variable.
+            """)
 
     def get_token(self, installation_id=None):
         return super().get_token(installation_id=self.settings.installation_id)
@@ -141,24 +149,30 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.reporter = None
-        utils.check_required_option(self.settings, "checkout_id", """
-                    git checkout id for github is not specified.
 
-                    For github the git checkout id defines the commit to be checked and reported.
-                    Please specify the checkout id by using '--git-checkout-id' ('-gco')
-                    command line parameter or by setting GIT_CHECKOUT_ID environment variable.
+        self.check_required_option("checkout_id", """
+            The git checkout id for github is not specified.
 
-                    In CI builds commit ID is usually extracted from webhook and handled automatically.
-                """)
+            For github the git checkout id defines the commit to be checked and reported.
+            Please specify the checkout id by using '--git-checkout-id' ('-gco') command
+            line parameter or by setting GIT_CHECKOUT_ID environment variable.
 
-        utils.check_required_option(self.settings, "check_id", """
-                    github check id is not specified.
+            If using 'universum github-handler', the checkout ID is automatically extracted
+            from the webhook payload and passed via GIT_CHECKOUT_ID environment variable.
+            """)
 
-                    GitHub check runs each have unique ID, that is used to update check result.
-                    To integrate Universum with GitHub, check run should be already created before performing
-                    actual check. Please specify check run ID by using '--github-check-id' ('-ghi')
-                    command line parameter or by setting GITHUB_CHECK_ID environment variable.
-                """)
+        self.check_required_option("check_id", """
+            The GitHub Check Run ID is not specified.
+
+            GitHub check runs each have unique ID, that is used to update check result. To
+            integrate Universum with GitHub, check run should be already created before
+            performing actual check. Please specify check run ID by using
+            '--github-check-id' ('-ghi') command line parameter or by setting
+            GITHUB_CHECK_ID environment variable.
+
+            If using 'universum github-handler', the check ID is automatically extracted
+            from the webhook payload and passed via GITHUB_CHECK_ID environment variable.
+            """)
 
         self.request = dict()
         self.request["status"] = "in_progress"
