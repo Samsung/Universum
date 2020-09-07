@@ -25,9 +25,12 @@ https://universum.readthedocs.io/en/latest/prerequisites.html)):
 1. OS Linux
 2. Python 3.7
 3. Pip for python3.7
-4. Git client
 ```bash
-sudo python3.7 -m pip install -U git+https://github.com/Samsung/Universum/@release
+sudo python3.7 -m pip install -U universum
+```
+or
+```bash
+python3.7 -m pip install --user -U universum
 ```
 
 ### Latest development + tests
