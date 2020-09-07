@@ -25,9 +25,12 @@ https://universum.readthedocs.io/en/latest/prerequisites.html)):
 1. OS Linux
 2. Python 3.7
 3. Pip for python3.7
-4. Git client
 ```bash
-sudo python3.7 -m pip install -U git+https://github.com/Samsung/Universum/@release
+sudo pip3.7 install -U universum
+```
+or
+```bash
+pip3.7 install --user -U universum
 ```
 
 ### Latest development + tests
@@ -43,7 +46,7 @@ https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce))
 git clone https://github.com/Samsung/Universum.git universum-working-dir
 cd universum-working-dir
 git checkout master
-pip install .[test] -U
+pip3.7 install --user -U .[test]
 make images
 ```
 After this run `make tests` and ensure all tests are passing.
