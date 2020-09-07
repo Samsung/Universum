@@ -26,6 +26,7 @@ setup(
     version=universum.__version__,
     description='Unifier of Continuous Integration',
     long_description=readme(),
+    long_description_content_type='text/markdown',
     author='Ivan Keliukh <i.keliukh@samsung.com>, Kateryna Dovgan <k.dovgan@samsung.com>',
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
