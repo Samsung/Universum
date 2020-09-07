@@ -46,7 +46,7 @@ https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce))
 git clone https://github.com/Samsung/Universum.git universum-working-dir
 cd universum-working-dir
 git checkout master
-pip3.7 install -U .[test]
+pip3.7 install --user -U .[test]
 make images
 ```
 After this run `make tests` and ensure all tests are passing.
