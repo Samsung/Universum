@@ -64,20 +64,23 @@ https://universum.readthedocs.io/en/latest/configuring.html)
 https://universum.readthedocs.io/en/latest/code_report.html) compatible with Universum
 for implementing static (and other types of) analysis support.
 * `lib` - utility functions libraries
+
   * `ci_exception` - internal exceptions
   * `module_arguments` - handles [command line](
-  https://universum.readthedocs.io/en/latest/args.html) and other parameters
+    https://universum.readthedocs.io/en/latest/args.html) and other parameters
   * `gravity` - inter-module communication
   * `utils` - miscellaneous
+  
 * `modules` - independent packages
+
   * `api_support` - 'main' mode module to answer API requests
   * `automation_server` - drivers for CI systems (e.g. Jenkins)
   * `artifact_collector` - implements [build artifacts](
-  https://universum.readthedocs.io/en/latest/configuring.html#common-variations-keys)
+    https://universum.readthedocs.io/en/latest/configuring.html#common-variations-keys)
   * `code_report_collector` - support for [external 'code report' modules](
-  https://universum.readthedocs.io/en/latest/code_report.html)
+    https://universum.readthedocs.io/en/latest/code_report.html)
   * `launcher` - executes build scenario, described in [project configuration file](
-  https://universum.readthedocs.io/en/latest/configuring.html)
+    https://universum.readthedocs.io/en/latest/configuring.html)
   * `output` - drivers for environment-based logs
   * `project_directory` - interaction with host file system
   * `reporter` - interaction with code review systems
@@ -107,13 +110,15 @@ The plugin implements coloring of failed steps and provides collapsing/expansion
 ## Quick architecture overview
 
 1. Project only entry point (except ['analyzers'](https://universum.readthedocs.io/en/latest/code_report.html))
-is `universum.py`. Based on chosen execution mode (default, submitting, polling, etc.)
-it calls one of 'main' modules, passing them all parameters
+   is `universum.py`. Based on chosen execution mode (default, submitting, polling, etc.)
+   it calls one of 'main' modules, passing them all parameters
 2. Universum is a set of separate modules, each implementing its own piece of functionality.
    They are connected using special `gravity` library
 3. All classes, inherited from `Module` (defined in `gravity`), automatically can:
+
    * use `Dependency` mechanism to use other modules
    * describe any module parameters in `define_arguments()` and receive them parsed via `self.settings`
+
 4. `configuration_support` is, in fact, an 'external' module, used not only by Universum,
    but by [user configuration file](https://universum.readthedocs.io/en/latest/configuring.html)
    for generating project configuration
