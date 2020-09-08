@@ -2,7 +2,7 @@ config = """
 from universum.configuration_support import Variations
 
 configs = Variations([dict(name="artifact check",
-                           command=["bash", "-c", '''cat {}/artifacts/test_nonci.txt''']),
+                           command=["bash", "-c", '''cat {}/test_nonci.txt''']),
 #                                                    ^ this helps to check artifact is deleted before launch 
 
                       dict(name="test_step", artifacts="test_nonci.txt",
@@ -22,14 +22,15 @@ def test_launcher_output(docker_nonci):
      - project root is set to current directory
     """
     cwd = docker_nonci.local.root_directory.strpath
-    file_output_expected = f"Adding file {cwd}/artifacts/test_step_log.txt to artifacts"
+    artifacts = docker_nonci.artifact_dir
+    file_output_expected = f"Adding file {artifacts}/test_step_log.txt to artifacts"
     pwd_string_in_logs = f"pwd:[{cwd}]"
 
     docker_nonci.environment.assert_successful_execution(
-        f"bash -c 'mkdir {cwd}/artifacts; echo \"Old artifact\" > {cwd}/artifacts/test_nonci.txt'")
+        f"bash -c 'mkdir {artifacts}; echo \"Old artifact\" > {artifacts}/test_nonci.txt'")
 
     docker_nonci.project_root = None
-    console_out_log = docker_nonci.run(config.format(cwd), workdir=cwd)
+    console_out_log = docker_nonci.run(config.format(artifacts), workdir=cwd)
 
     # the following logs are only present in the default mode of the universum
     assert file_output_expected not in console_out_log          # nonci doesn't write logs to the file by default
@@ -43,12 +44,12 @@ def test_launcher_output(docker_nonci):
     assert pwd_string_in_logs in console_out_log                # nonci launches step in the same directory
 
     # nonci doesn't require to clean artifacts between calls
-    log = docker_nonci.run(config.format(cwd), additional_parameters='-lo file', workdir=cwd)
+    log = docker_nonci.run(config.format(artifacts), additional_parameters='-lo file', workdir=cwd)
     assert file_output_expected in log
 
     assert console_out_log != log
     step_log = docker_nonci.environment.assert_successful_execution(
-        f"cat {cwd}/artifacts/test_step_log.txt")
+        f"cat {artifacts}/test_step_log.txt")
     assert pwd_string_in_logs in step_log
 
     # second call of universum must not contain previous step log
@@ -60,7 +61,7 @@ configs = Variations([dict(name="test_step",
 """, additional_parameters='-lo file', workdir=cwd)
 
     second_run_step_log = docker_nonci.environment.assert_successful_execution(
-        f"cat {cwd}/artifacts/test_step_log.txt")
+        f"cat {artifacts}/test_step_log.txt")
     assert pwd_string_in_logs not in second_run_step_log
     assert "Separate run" in second_run_step_log
 
