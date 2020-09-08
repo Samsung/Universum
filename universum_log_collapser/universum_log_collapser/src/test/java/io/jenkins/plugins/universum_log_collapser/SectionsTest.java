@@ -323,7 +323,7 @@ public class SectionsTest extends TestSuite {
             String failedResultClose = "</span>";
             String[] out = new String[] {
                     replaceWithHtmlEntities(logStartLine),
-                    failedResultOpen + line + failedResultClose + sectionEndClose,
+                    line + failedResultOpen + failedResultClose + sectionEndClose,
             };
             checkAnnotation(in, out);
         }

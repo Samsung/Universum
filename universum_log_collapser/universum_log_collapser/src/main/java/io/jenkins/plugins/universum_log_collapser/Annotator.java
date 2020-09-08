@@ -173,7 +173,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
         if (sectionFailMatcher.find()) {
             logger.info("Failed section found");
-            text.addMarkup(0, "<span class=\"failed_result\">");
+            text.addMarkup(sectionFailMatcher.end(0), "<span class=\"failed_result\">");
             text.addMarkup(text.length(), "</span>");
         }
         text.addMarkup(text.length(), "</div><span class=\"nl\"></span>");
