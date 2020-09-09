@@ -79,13 +79,10 @@ configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
                       background=True, artifacts="file")])
 """)
     assert "All ongoing background steps completed" in log
-    artifacts_must_collect = not docker_main_and_nonci.nonci
-    assert artifacts_must_collect == os.path.exists(
-        os.path.join(docker_main_and_nonci.artifact_dir, "file"))
+    assert os.path.exists(os.path.join(docker_main_and_nonci.artifact_dir, "file"))
 
     # Test TC step failing
-    if artifacts_must_collect:
-        docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Variations
 
@@ -94,8 +91,7 @@ configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], bac
     assert "##teamcity[buildProblem description" in log
 
     # Test multiple failing background steps
-    if artifacts_must_collect:
-        docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Variations
 

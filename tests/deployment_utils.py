@@ -197,11 +197,8 @@ class UniversumRunner:
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
-    def _basic_args(self):
-        return " -lo console -ad '{}'".format(self.artifact_dir)
-
     def _mandatory_args(self, config_file):
-        result = f" -lcp '{config_file}'"
+        result = f" -lcp '{config_file}' -ad '{self.artifact_dir}'"
         if self.project_root:
             result += f" -pr '{self.project_root}'"
         return result
@@ -246,7 +243,7 @@ class UniversumRunner:
         if self.nonci:
             cmd += ' nonci'
         else:
-            cmd += self._basic_args() + self._vcs_args(vcs_type)
+            cmd += " -lo console" + self._vcs_args(vcs_type)
 
         config_file = self._create_temp_config(config)
         cmd += self._mandatory_args(config_file) + ' ' + additional_parameters
