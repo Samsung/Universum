@@ -71,10 +71,6 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
 
     # Test background after failed foreground (regression)
     docker_main_and_nonci.clean_artifacts()
-    try:
-        docker_main_and_nonci.local.root_directory.join("file").remove()
-    except OSError:
-        pass
 
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Variations

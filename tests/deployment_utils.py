@@ -152,7 +152,13 @@ def clean_execution_environment(request):
 @pytest.fixture()
 def local_sources(tmpdir):
     if utils.is_pycharm():
-        source_dir = py.path.local(".work").ensure(dir=True)
+        source_dir = py.path.local(".work")
+        try:
+            source_dir.remove(rec=1, ignore_errors=True)
+        except OSError:
+            pass
+        source_dir.ensure(dir=True)
+
     else:
         source_dir = tmpdir.mkdir("project_sources")
     local_file = source_dir.join("readme.txt")
