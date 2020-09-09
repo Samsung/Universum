@@ -71,7 +71,6 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
 
     # Test background after failed foreground (regression)
     docker_main_and_nonci.clean_artifacts()
-
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Variations
 
