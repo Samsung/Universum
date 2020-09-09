@@ -105,10 +105,10 @@ public class LogActiveTest extends TestSuite {
                     sectionStartOpen(1) + "1. Step name" + sectionStartClose,
                     paddingSpan + " |   step data",
                     "some random line",
-                    " └ [Success]",
-                    "1. Step name",
-                    " |   step data",
-                    " └ [Success]"
+                    paddingSpan + " └ [Success]" + sectionEndClose,
+                    sectionStartOpen(2) + "1. Step name" + sectionStartClose,
+                    paddingSpan + " |   step data",
+                    paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }
@@ -130,10 +130,10 @@ public class LogActiveTest extends TestSuite {
                     timestampCorrect + " " + sectionStartOpen(1) + "1. Step name" + sectionStartClose,
                     timestampCorrect + " " + paddingSpan + " |   step data",
                     timestampCorrect + " some random line",
-                    timestampCorrect + "  └ [Success]",
-                    timestampCorrect + " 1. Step name",
-                    timestampCorrect + "  |   step data",
-                    timestampCorrect + "  └ [Success]"
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
+                    timestampCorrect + " " + sectionStartOpen(2) + "1. Step name" + sectionStartClose,
+                    timestampCorrect + " " + paddingSpan + " |   step data",
+                    timestampCorrect + " " + paddingSpan + " └ [Success]" + sectionEndClose,
             };
             checkAnnotation(in, out);
         }

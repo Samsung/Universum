@@ -107,9 +107,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
         for (PaddingItem p : paddings) {
             if (!healthyLogPattern.matcher(textStr).find()) {
-                logger.info("Log is broken, indentation expected");
-                universumLogActive = false;
-                return this;
+                logger.warning("Non-indented log found");
+                continue;
             }
             text.addMarkup(p.position, "<span style=\"display: inline-block; " +
                 " width: " + (p.spacesNumber + 2) + "ch;\"></span>");
