@@ -308,18 +308,18 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
                             help="Path to project config file (example: -cfg=my/prject/my_conf.py). "
-                                 "Mandatory parameter.")
+                                 "Mandatory parameter")
 
-        parser.add_argument("--filter", "-f", dest="step_filter", action='append',
+        parser.add_argument("--filter", "-f", dest="step_filter", action='append', metavar="STEP_FILTER",
                             help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
-                                 "Exlude using '!' symbol before filter. "
+                                 "Exclude using '!' symbol before filter. "
                                  "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
-                                 "See online docs for more details.")
+                                 "See online documentation for more details")
 
         parser.add_hidden_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
-                                   help="Deprecated option. Please use '--out' instead.", is_hidden=True)
+                                   help="Deprecated option. Please use '--out' instead", is_hidden=True)
         parser.add_hidden_argument("--launcher-config-path", "-lcp", dest="config_path", is_hidden=True,
-                                   help="Deprecated option. Please use '--steps-config' instead.")
+                                   help="Deprecated option. Please use '--steps-config' instead")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
