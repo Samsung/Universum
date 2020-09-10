@@ -308,7 +308,7 @@ def test_swarm_changelist_incorrect_format():
     assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
 
 
-def test_vcs_type_and_config_path():
+def test_multiple_errors_main_vcs_type_and_config_path():
     settings = create_settings("main", "p4")
     settings.Launcher.config_path = None
     settings.Vcs.type = None
@@ -316,24 +316,47 @@ def test_vcs_type_and_config_path():
     assert_incorrect_parameter(settings, "CONFIG_PATH", "repository type")
 
 
-def test_source_dir_and_config_path():
+def test_multiple_errors_main_none_source_dir_and_config_path():
     settings = create_settings("main", "none")
     settings.Launcher.config_path = None
     settings.LocalMainVcs.source_dir = None
+    settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "SOURCE_DIR")
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "SOURCE_DIR", "no code review system")
 
 
 def test_multiple_errors_main_p4_params_and_config_path():
     settings = create_settings("main", "p4")
+
     settings.Launcher.config_path = None
     settings.PerforceVcs.port = None
     settings.PerforceVcs.user = None
     settings.PerforceVcs.password = None
     settings.PerforceMainVcs.client = None
     settings.PerforceWithMappings.project_depot_path = None
+    settings.Swarm.review_id = None
+    settings.Swarm.change = None
+    settings.Swarm.server_url = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace")
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
+                               "URL of the Swarm", "Swarm review number",
+                               "Swarm changelist for unshelving is not specified")
+
+    settings = create_settings("main", "p4")
+
+    settings.Launcher.config_path = None
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceMainVcs.client = None
+    settings.PerforceWithMappings.project_depot_path = None
+    settings.Swarm.review_id = None
+    settings.Swarm.change = "123,456"
+    settings.Swarm.server_url = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
+                               "URL of the Swarm", "Swarm review number",
+                               "Swarm changelist for unshelving is incorrect")
 
 
 def test_multiple_errors_submit_p4_params_and_commit_message():
@@ -351,8 +374,9 @@ def test_multiple_errors_main_git_params_and_config_path():
     settings = create_settings("main", "git")
     settings.Launcher.config_path = None
     settings.GitVcs.repo = None
+    settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo")
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo", "no code review system")
 
 
 def test_multiple_errors_submit_git_params_commit_message():

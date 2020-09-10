@@ -1,22 +1,22 @@
 import os
+
 import urllib3
 
-from ...lib.ci_exception import CiException
-from ...lib.gravity import Module, Dependency
-from ...lib.module_arguments import IncorrectParameterError
-from ...lib import utils
-from ..reporter import ReportObserver, Reporter
+from ..error_state import HasErrorState
 from ..output import HasOutput
+from ..reporter import ReportObserver, Reporter
+from ...lib import utils
+from ...lib.ci_exception import CiException
+from ...lib.gravity import Dependency
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
-
 
 __all__ = [
     "Swarm"
 ]
 
 
-class Swarm(ReportObserver, HasOutput):
+class Swarm(ReportObserver, HasOutput, HasErrorState):
     """
     This class contains CI functions for interaction with Swarm via 'swarm_cli.py'
     """
@@ -46,43 +46,45 @@ class Swarm(ReportObserver, HasOutput):
         self.client_root = ""
         self.mappings_dict = {}
 
-        utils.check_required_option(self.settings, "server_url", """
-            the URL of the Swarm server is not specified.
+        self.check_required_option("server_url", """
+            The URL of the Swarm server is not specified.
 
-            The URL is needed for communicating with swarm code review system:
-            getting review revision, posting comments, voting. Please specify
-            the server URL by using '--swarm-server-url' ('-ssu') command
-            line parameter or by setting SWARM_SERVER environment variable.""")
-        utils.check_required_option(self.settings, "review_id", """
-            the Swarm review number is not specified.
+            The URL is needed for communicating with swarm code review system: getting
+            review revision, posting comments, voting. Please specify the server URL by
+            using '--swarm-server-url' ('-ssu') command line parameter or by setting
+            SWARM_SERVER environment variable.
+            """)
+        self.check_required_option("review_id", """
+            The Swarm review number is not specified.
 
             The review number is needed for communicating with swarm code review system:
-            getting review revision, posting comments, voting. Please specify the number
-            by using '--swarm-review-id' ('-sre') command line parameter or by setting
-            REVIEW environment variable.
+            getting review revision, posting comments, voting. Please specify the number by
+            using '--swarm-review-id' ('-sre') command line parameter or by setting REVIEW
+            environment variable.
 
-            In order to setup sending of the review number for pre-commit in Swarm,
-            please use the '{review}' argument in Automated Tests field of the Project
-            Settings.
+            In order to setup sending of the review number for pre-commit in Swarm, please
+            use the '{review}' argument in Automated Tests field of the Project Settings.
             """)
-        utils.check_required_option(self.settings, "change", """
-            the Swarm changelist for unshelving is not specified.
+        self.check_required_option("change", """
+            The Swarm changelist for unshelving is not specified.
 
-            The changelist is used for unshelving change before build and for
-            determining review revision. Please specify the changelist by using
-            '--swarm-change' ('-sch') command line parameter or by setting
-            SWARM_CHANGELIST environment variable.
+            The changelist is used for unshelving change before build and for determining
+            review revision. Please specify the changelist by using '--swarm-change'
+            ('-sch') command line parameter or by setting SWARM_CHANGELIST environment
+            variable.
 
-            In order to setup sending of the review number for pre-commit in Swarm,
-            please use the '{change}' argument in Automated Tests field of the Project
-            Settings.
+            In order to setup sending of the review number for pre-commit in Swarm, please
+            use the '{change}' argument in Automated Tests field of the Project Settings.
             """)
 
-        if " " in self.settings.change or "," in self.settings.change:
-            raise IncorrectParameterError("the Swarm changelist for unshelving is incorrect.\n\n"
-                                          "The changelist parameter must only contain one number. Please specify the\n"
-                                          "changelist by using '--swarm-change' ('-sch') command line parameter or by\n"
-                                          "setting SWARM_CHANGELIST environment variable.")
+        if getattr(self.settings, "change", None) and (" " in self.settings.change or "," in self.settings.change):
+            self.error("""
+                The Swarm changelist for unshelving is incorrect.
+                
+                The changelist parameter must only contain one number. Please specify the
+                changelist by using '--swarm-change' ('-sch') command line parameter or by
+                setting SWARM_CHANGELIST environment variable.
+                """)
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
@@ -95,7 +97,8 @@ class Swarm(ReportObserver, HasOutput):
             return
 
         result = utils.make_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
-                                    critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
+                                    critical=False, data={"id": self.settings.review_id},
+                                    auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
         except (KeyError, ValueError) as e:

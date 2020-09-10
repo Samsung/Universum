@@ -1,5 +1,6 @@
 import shutil
 
+from ..error_state import HasErrorState
 from ...lib.ci_exception import CiException
 from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
@@ -45,13 +46,13 @@ class BaseVcs(ProjectDirectory):
             self.clean_sources()
 
 
-class BaseDownloadVcs(BaseVcs):
+class BaseDownloadVcs(BaseVcs, HasErrorState):
     """
     Base class for default CI build VCS drivers
     """
 
     def code_review(self):  # pylint: disable=no-self-use
-        raise IncorrectParameterError("There is no code review system associated with this VCS type")
+        return None
 
     def prepare_repository(self):
         raise NotImplementedError
