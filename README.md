@@ -1,4 +1,5 @@
 This is a test change, please don't merge.
+New line.
 
 # Project 'Universum'
 [![Documentation Status](https://readthedocs.org/projects/universum/badge/?version=latest)](
