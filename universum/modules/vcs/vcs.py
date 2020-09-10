@@ -99,19 +99,17 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                            format(", ".join(vcs_types)))
                 return
 
-            try:
-                if self.settings.type == "none":
-                    driver_factory = self.local_driver_factory
-                elif self.settings.type == "git":
-                    driver_factory = self.git_driver_factory
-                elif self.settings.type == "gerrit":
-                    driver_factory = self.gerrit_driver_factory
-                elif self.settings.type == "github":
-                    driver_factory = self.github_driver_factory
-                else:
-                    driver_factory = self.perforce_driver_factory
-            except AttributeError as e:  # TODO: how it can be generated?
-                raise NotImplementedError() from e
+            if self.settings.type == "none":
+                driver_factory = self.local_driver_factory
+            elif self.settings.type == "git":
+                driver_factory = self.git_driver_factory
+            elif self.settings.type == "gerrit":
+                driver_factory = self.gerrit_driver_factory
+            elif self.settings.type == "github":
+                driver_factory = self.github_driver_factory
+            else:
+                driver_factory = self.perforce_driver_factory
+
             self.driver = driver_factory()
 
         @make_block("Finalizing")
@@ -142,9 +140,26 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         self.artifacts: artifact_collector.ArtifactCollector = self.artifacts_factory()
         self.api_support: ApiSupport = self.api_support_factory()
 
-        if self.settings.report_to_review:
-            if not self.is_in_error_state():
-                self.code_review = self.driver.code_review()
+        if not self.settings.report_to_review:
+            return
+
+        if not getattr(self, "driver", None):
+            return
+
+        self.code_review = self.driver.code_review()
+        if not self.code_review:
+            self.error("""
+                There is no code review system associated with current VCS type, but reporting
+                to the code review system is requested.
+                
+                If the reporting to the code review system is requested, the universum updates
+                the review request based on the build status. However, the currently chosen VCS
+                doesn't have associated code review system.
+                
+                Please either disable reporting to the code review system by removing
+                '--report-to-review' command-line parameter or change the VCS type by using
+                '--vcs-type' ('-vt') command-line option or VCS_TYPE environment variable
+                """)
 
     def is_latest_review_version(self):
         if self.settings.report_to_review:
