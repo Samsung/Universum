@@ -1,7 +1,8 @@
 from typing import Union
 import os
 
-from ...lib.module_arguments import IncorrectParameterError, ModuleArgumentParser
+from ..error_state import HasErrorState
+from ...lib.module_arguments import ModuleArgumentParser
 from ...lib import utils
 from ..output import HasOutput
 from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
@@ -12,7 +13,7 @@ __all__ = [
 ]
 
 
-class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger):
+class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger, HasErrorState):
 
     @staticmethod
     def define_arguments(argument_parser: ModuleArgumentParser) -> None:
@@ -23,11 +24,12 @@ class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if not getattr(self.settings, "trigger_url", None):
-            raise IncorrectParameterError("the Jenkins url for triggering build\n"
-                                          "is not specified\n\n"
-                                          "Please specify the url by using '--jenkins-trigger-url' ('-jtu')\n"
-                                          "command-line option or URL environment variable.")
+        self.check_required_option("trigger_url", """
+            The Jenkins url for triggering build is not specified.
+            
+            Please specify the url by using '--jenkins-trigger-url' ('-jtu') command-line
+            option or URL environment variable.
+            """)
 
     def trigger_build(self, revision: str) -> None:
         processed_url = self.settings.trigger_url % revision
@@ -35,7 +37,7 @@ class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger):
         utils.make_request(processed_url)
 
 
-class JenkinsServerForHostingBuild(BaseServerForHostingBuild):
+class JenkinsServerForHostingBuild(BaseServerForHostingBuild, HasErrorState):
 
     @staticmethod
     def define_arguments(argument_parser: ModuleArgumentParser) -> None:
@@ -45,11 +47,13 @@ class JenkinsServerForHostingBuild(BaseServerForHostingBuild):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if not getattr(self.settings, "build_url", None):
-            raise IncorrectParameterError("the Jenkins url of the ongoing build\n"
-                                          "is not specified\n\n"
-                                          "Please specify the url by using '--jenkins-build-url' ('-jbu')\n"
-                                          "command-line option or BUILD_URL environment variable.")
+
+        self.check_required_option("build_url", """
+            The Jenkins url of the ongoing build is not specified
+            
+            Please specify the url by using '--jenkins-build-url' ('-jbu') command-line
+            option or BUILD_URL environment variable.
+            """)
 
     def report_build_location(self) -> str:
         log_link: str = self.settings.build_url + "console"
