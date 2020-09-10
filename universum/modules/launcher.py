@@ -314,7 +314,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                             help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
                                  "Exclude using '!' symbol before filter. "
                                  "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
-                                 "See online documentation for more details")
+                                 "See https://universum.readthedocs.io/en/latest/args.html#Configuration%20execution for more details")
 
         parser.add_hidden_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
                                    help="Deprecated option. Please use '--out' instead", is_hidden=True)
