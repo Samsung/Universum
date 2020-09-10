@@ -173,7 +173,7 @@ def test_missing_params(unset, test_type, module, field, vcs_type, error_match):
     settings = create_settings(test_type, vcs_type)
     unset(settings, module, field)
 
-    assert_incorrect_parameter(settings, "(?i)" + error_match)
+    assert_incorrect_parameter(settings, error_match)
 
 
 @pytest.mark.parametrize("test_type, module, field, vcs_type, error_match", missing_params)
