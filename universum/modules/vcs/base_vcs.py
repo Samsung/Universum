@@ -2,7 +2,6 @@ import shutil
 
 from ..error_state import HasErrorState
 from ...lib.ci_exception import CiException
-from ...lib.module_arguments import IncorrectParameterError
 from ...lib.utils import make_block
 from ..project_directory import ProjectDirectory
 

@@ -337,10 +337,17 @@ def test_multiple_errors_main_p4_params_and_config_path():
     settings.Swarm.review_id = None
     settings.Swarm.change = None
     settings.Swarm.server_url = None
+    settings.TeamcityServer.server_url = None
+    settings.TeamcityServer.build_id = None
+    settings.TeamcityServer.configuration_id = None
+    settings.TeamcityServer.user_id = None
+    settings.TeamcityServer.passwd = None
 
     assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
                                "URL of the Swarm", "Swarm review number",
-                               "Swarm changelist for unshelving is not specified")
+                               "Swarm changelist for unshelving is not specified", "URL of the TeamCity",
+                               "id of the build on TeamCity", "id of the configuration on TeamCity",
+                               "id of the TeamCity user", "password of the TeamCity user")
 
     settings = create_settings("main", "p4")
 
@@ -357,6 +364,20 @@ def test_multiple_errors_main_p4_params_and_config_path():
     assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
                                "URL of the Swarm", "Swarm review number",
                                "Swarm changelist for unshelving is incorrect")
+
+    settings = create_settings("main", "p4")
+
+    settings.Launcher.config_path = None
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceMainVcs.client = None
+    settings.PerforceWithMappings.project_depot_path = None
+    settings.AutomationServer.type = "jenkins"
+    settings.JenkinsServerForHostingBuild.build_url = None
+
+    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
+                               "Jenkins url of the ongoing build")
 
 
 def test_multiple_errors_submit_p4_params_and_commit_message():
@@ -450,3 +471,15 @@ def test_multiple_errors_githubhandler():
 
     assert_incorrect_parameter(settings, "GitHub web-hook event", "build trigger URL", "GitHub web-hook payload",
                                "GitHub App ID", "GitHub App private key")
+
+
+def test_multiple_errors_poll_p4_params_and_jenkins():
+    settings = create_settings("poll", "p4")
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceWithMappings.project_depot_path = None
+    settings.AutomationServer.type = "jenkins"
+    settings.JenkinsServerForTrigger.trigger_url = None
+
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "Jenkins url for triggering")
