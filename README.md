@@ -1,5 +1,3 @@
-This is a test change, please don't merge.
-
 # Project 'Universum'
 [![Documentation Status](https://readthedocs.org/projects/universum/badge/?version=latest)](
 https://universum.readthedocs.io/en/latest/?badge=latest)
