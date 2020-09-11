@@ -1,3 +1,4 @@
+import locale
 import pytest
 
 from universum import __main__
@@ -45,3 +46,14 @@ def test_p4_multiple_spaces_in_mappings(perforce_workspace, tmpdir):
     environment.settings.PerforceMainVcs.force_clean = True
     environment.settings.PerforceWithMappings.mappings = [f"{perforce_workspace.depot}   /..."]
     assert not __main__.run(environment.settings)
+
+
+def test_non_utf8_environment(docker_main):
+    docker_main.environment.assert_successful_execution('apt install -y locales')
+    docker_main.environment.assert_successful_execution('locale-gen --purge en_US')
+    docker_main.environment.assert_successful_execution('update-locale LANG=en_US')
+    docker_main.run("""
+from universum.configuration_support import Variations
+
+configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+""", vcs_type="none", environment=['LANG=en_US', 'LC_ALL=en_US'])
