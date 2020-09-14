@@ -49,11 +49,20 @@ def test_p4_multiple_spaces_in_mappings(perforce_workspace, tmpdir):
 
 
 def test_non_utf8_environment(docker_main):
+    output = docker_main.run("""
+from universum.configuration_support import Variations
+
+configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+""", vcs_type="none", environment=['LANG=POSIX', 'LC_ALL=POSIX'])
+    assert "\u2514" in output
+
+    docker_main.clean_artifacts()
     docker_main.environment.assert_successful_execution('apt install -y locales')
     docker_main.environment.assert_successful_execution('locale-gen --purge en_US')
     docker_main.environment.assert_successful_execution('update-locale LANG=en_US')
-    docker_main.run("""
+    output = docker_main.run("""
 from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="none", environment=['LANG=en_US', 'LC_ALL=en_US'])
+    assert "\u2514" not in output
