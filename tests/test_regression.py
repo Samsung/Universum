@@ -1,4 +1,3 @@
-import locale
 import pytest
 
 from universum import __main__
