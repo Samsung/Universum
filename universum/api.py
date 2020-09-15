@@ -26,6 +26,7 @@ class Api(Module):
             sys.exit(2)
 
         self.out = MinimalOut()
+        self.out.log = lambda line: None
 
     def execute(self) -> None:
         if self.settings.action == "file-diff":

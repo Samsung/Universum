@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from .modules.output.output import MinimalOut
-from .lib.gravity import Module, Dependency
+from .lib.gravity import Module
 from .lib.module_arguments import ModuleArgumentParser
 
 __all__ = ["Initializer"]
