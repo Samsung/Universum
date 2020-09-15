@@ -1,12 +1,9 @@
-from types import TracebackType
-from typing import Optional
-
 import sys
 
 from .modules.api_support import ApiSupport
+from .modules.output.output import MinimalOut
 from .lib.gravity import Module, Dependency
 from .lib.module_arguments import ModuleArgumentParser
-from .lib.utils import format_traceback
 
 __all__ = ["Api"]
 
@@ -27,20 +24,6 @@ class Api(Module):
         except EnvironmentError as error:
             sys.stderr.write(str(error) + '\n')
             sys.exit(2)
-
-        class MinimalOut:
-            @staticmethod
-            def log(line: str) -> None:
-                pass
-
-            @staticmethod
-            def report_build_problem(problem: str) -> None:
-                pass
-
-            @staticmethod
-            def log_exception(exc: Exception) -> None:
-                ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
-                sys.stderr.write("Unexpected error.\n" + format_traceback(exc, ex_traceback))
 
         self.out = MinimalOut()
 
