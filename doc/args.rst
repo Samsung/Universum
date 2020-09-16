@@ -36,7 +36,7 @@ via ``python3.7 -m universum``.
          containing 'unit test 1'
 
     {init,poll,submit,nonci,github-handler} : @replace
-        | :doc:`universum init <args_init>`
+        | :doc:`universum init <init>`
         | :doc:`universum poll <args_poll>`
         | :doc:`universum submit <args_submit>`
         | :doc:`universum nonci <args_nonci>`
