@@ -83,9 +83,11 @@ class MinimalOut:
         if not self.silent:
             print(line)
 
-    def report_build_problem(self, problem: str) -> None:
+    @staticmethod
+    def report_build_problem(problem: str) -> None:
         pass
 
-    def log_exception(self, exc: Exception) -> None:
+    @staticmethod
+    def log_exception(exc: Exception) -> None:
         ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
         sys.stderr.write("Unexpected error.\n" + utils.format_traceback(exc, ex_traceback))
