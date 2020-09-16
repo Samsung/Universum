@@ -26,7 +26,8 @@ class Api(Module):
             sys.exit(2)
 
         self.out = MinimalOut()
-        self.out.log = lambda line: None
+        self.out.log = lambda line: None  # type: ignore
+        # mypy doesn't allow to assign class methods
 
     def execute(self) -> None:
         if self.settings.action == "file-diff":
