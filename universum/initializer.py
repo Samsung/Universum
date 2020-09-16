@@ -33,11 +33,11 @@ class Initializer(Module):
         self.target_dir.mkdir(parents=True, exist_ok=True)
 
         script = self.target_dir / script_name
-        script.chmod(0o777)
         script.write_text("""#!/usr/bin/env bash
 echo "This is an example of a build artifact.\\n" > {}
 echo "Replace this script with actual project sources"
 """.format(artifact_name))
+        script.chmod(0o777)
 
         config = self.target_dir / config_name
         config.write_text("""#!/usr/bin/env python3.7
