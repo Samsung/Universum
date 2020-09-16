@@ -25,9 +25,7 @@ class Api(Module):
             sys.stderr.write(str(error) + '\n')
             sys.exit(2)
 
-        self.out = MinimalOut()
-        self.out.log = lambda line: None  # type: ignore
-        # mypy doesn't allow to assign class methods
+        self.out = MinimalOut(silent=True)
 
     def execute(self) -> None:
         if self.settings.action == "file-diff":
