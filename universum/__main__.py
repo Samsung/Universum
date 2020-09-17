@@ -5,7 +5,7 @@ import sys
 from . import __version__, __title__
 from .api import Api
 from .github_handler import GithubHandler
-from .project_initializer import ProjectInitializer
+from .config_creator import ConfigCreator
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import define_arguments_recursive, construct_component
 from .lib.module_arguments import ModuleArgumentParser, ModuleNamespace, IncorrectParameterError
@@ -24,7 +24,7 @@ def define_arguments() -> ModuleArgumentParser:
     define_arguments_recursive(Main, parser)
 
     subparsers = parser.add_subparsers(title="Additional commands",
-                                       metavar="{init,poll,submit,nonci,github-handler}",
+                                       metavar="{create-config,poll,submit,nonci,github-handler}",
                                        help="Use 'universum <subcommand> --help' for more info")
 
     def define_command(klass, command):
@@ -34,7 +34,7 @@ def define_arguments() -> ModuleArgumentParser:
         define_arguments_recursive(klass, command_parser)
 
     define_command(Api, "api")
-    define_command(ProjectInitializer, "init")
+    define_command(ConfigCreator, "create-config")
     define_command(Poll, "poll")
     define_command(Submit, "submit")
     define_command(Nonci, "nonci")
