@@ -23,7 +23,7 @@ to this module in `config_path` member of its input settings.
     The project is free to use whatever it needs in the configuration file; just remember,
     all the calculations are done on config processing, not step execution.
 
-To :doc:`create an example config and get a command to launch it with Universum <create-config>`,
+To :doc:`create an example config and get a command to launch it with Universum <create_config>`,
 run ``python3.7 -m universum create-config``.
 
 
