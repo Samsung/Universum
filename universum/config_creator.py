@@ -22,7 +22,7 @@ class ConfigCreator(Module):
 from universum.configuration_support import Variations
 
 configs = Variations([dict(name='Show directory contents', command=['ls', '-la']),
-                      dict(name='Print a line', command=['echo', 'Hello, this is text'])])
+                      dict(name='Print a line', command=['bash', '-c', 'echo Hello world'])])
 
 if __name__ == '__main__':
     print(configs.dump())
