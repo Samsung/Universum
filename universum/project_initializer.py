@@ -2,12 +2,10 @@ from pathlib import Path
 
 from .modules.output.output import MinimalOut
 from .lib.gravity import Module
-from .lib.module_arguments import ModuleArgumentParser
-
-__all__ = ["Initializer"]
+__all__ = ["ProjectInitializer"]
 
 
-class Initializer(Module):
+class ProjectInitializer(Module):
     description: str = "Create a dummy project"
 
     def __init__(self, *args, **kwargs) -> None:
