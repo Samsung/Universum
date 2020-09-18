@@ -7,4 +7,7 @@ def test_create_config():
     new_command = result.stdout.splitlines()[3]
     new_result = subprocess.run(new_command.split(), capture_output=True, check=True)
     Path("universum_config.py").unlink()
+    artifacts = Path("universum_artifacts")
+    artifacts.joinpath("CONFIGS_DUMP.txt").unlink()
+    artifacts.rmdir()
     assert 'Hello world' in str(new_result.stdout)
