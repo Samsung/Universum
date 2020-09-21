@@ -1,3 +1,4 @@
+import locale
 import sys
 
 from six.moves import range
@@ -28,6 +29,7 @@ class TerminalBasedOutput(BaseOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.block_level = 0
+        self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")
 
     def indent(self):
         for x in range(0, self.block_level):
@@ -48,11 +50,15 @@ class TerminalBasedOutput(BaseOutput):
     def close_block(self, num_str, name, status):
         self.block_level -= 1
         self.indent()
+        if self.unicode_acceptable:
+            block_end = " \u2514 "
+        else:
+            block_end = " | "
 
         if status == "Failed":
-            stdout(self.block_level * "  ", " \u2514 ", Colors.red, "[Failed]", Colors.reset)
+            stdout(self.block_level * "  ", block_end, Colors.red, "[Failed]", Colors.reset)
         else:
-            stdout(self.block_level * "  ", " \u2514 ", Colors.green, "[Success]", Colors.reset)
+            stdout(self.block_level * "  ", block_end, Colors.green, "[Success]", Colors.reset)
         self.indent()
         stdout()
 
