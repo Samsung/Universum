@@ -28,3 +28,9 @@ The goal of this project is to provide unified approach for adding continuous in
 to any project. It currently supports Perforce, Git, Gerrit, Swarm, Jenkins and TeamCity.
 
 Sometimes `Universum` system can be referred to as the framework or just CI.
+
+To install Universum, make sure to :doc:`meet prerequisites <prerequisites>` and then simply run
+``pip3.7 install -U universum`` from command line.
+
+To :doc:`create an example config and generate a command line to run it with Universum <init>`,
+run ``python3.7 -m universum init``.

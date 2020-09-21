@@ -1,4 +1,6 @@
-from typing import ClassVar, Union
+import sys
+from types import TracebackType
+from typing import ClassVar, Optional, Union
 
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
@@ -6,7 +8,8 @@ from .terminal_based_output import TerminalBasedOutput
 from .teamcity_output import TeamcityOutput
 
 __all__ = [
-    "HasOutput"
+    "HasOutput",
+    "MinimalOut"
 ]
 
 
@@ -70,3 +73,21 @@ class HasOutput(Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.out: Output = self.out_factory()
+
+
+class MinimalOut:
+    def __init__(self, silent=False):
+        self.silent = silent
+
+    def log(self, line: str) -> None:
+        if not self.silent:
+            print(line)
+
+    @staticmethod
+    def report_build_problem(problem: str) -> None:
+        pass
+
+    @staticmethod
+    def log_exception(exc: Exception) -> None:
+        ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
+        sys.stderr.write("Unexpected error.\n" + utils.format_traceback(exc, ex_traceback))
