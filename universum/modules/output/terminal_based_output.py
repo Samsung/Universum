@@ -29,10 +29,7 @@ class TerminalBasedOutput(BaseOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.block_level = 0
-        if locale.getpreferredencoding() == "UTF-8":
-            self.unicode_acceptable = True
-        else:
-            self.unicode_acceptable = False
+        self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")
 
     def indent(self):
         for x in range(0, self.block_level):
