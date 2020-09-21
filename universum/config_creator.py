@@ -13,8 +13,7 @@ class ConfigCreator(Module):
         self.out = MinimalOut()
 
     def execute(self) -> None:
-        config_name = "universum_config.py"
-        artifact_directory = "universum_artifacts"
+        config_name = ".universum.py"
         self.out.log(f"Creating an example configuration file '{config_name}'")
 
         config = Path(config_name)
@@ -29,8 +28,7 @@ if __name__ == '__main__':
     print(configs.dump())
 """)
         self.out.log("To run with Universum, execute the following command:\n"
-                     "python3.7 -m universum nonci --launcher-config-path={} --artifact-dir={}"
-                     "".format(config_name, artifact_directory))
+                     "$ python3.7 -m universum nonci --launcher-config-path={}".format(config_name))
 
     def finalize(self) -> None:
         pass
