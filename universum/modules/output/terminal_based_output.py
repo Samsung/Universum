@@ -29,7 +29,6 @@ class TerminalBasedOutput(BaseOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.block_level = 0
-        self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")
 
     def indent(self):
         for x in range(0, self.block_level):
@@ -50,7 +49,7 @@ class TerminalBasedOutput(BaseOutput):
     def close_block(self, num_str, name, status):
         self.block_level -= 1
         self.indent()
-        if self.unicode_acceptable:
+        if locale.getpreferredencoding() == "UTF-8":
             block_end = " \u2514 "
         else:
             block_end = " | "
