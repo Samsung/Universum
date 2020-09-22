@@ -307,8 +307,8 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                                                      "External command launching and reporting parameters")
 
         parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
-                            help="Path to project config file (example: -cfg=my/prject/my_conf.py). "
-                                 "Mandatory parameter")
+                            help="Path to project configuration file (example: -cfg=my/prject/my_conf.py). "
+                                 "Default is ``.universum.py``")
 
         parser.add_argument("--filter", "-f", dest="step_filter", action='append', metavar="STEP_FILTER",
                             help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
@@ -369,21 +369,21 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         except IOError as e:
             text = f"""{e}\n
                 Possible reasons of this error:\n
-                * There is no file named 'configs.py' in project repository\n
-                * Config path, passed to the script ('{self.config_path}'), does not lead to
-                 actual 'configs.py' location\n
+                * There is no Universum configuration file in project repository\n
+                * Config path, passed to the script ('{self.config_path}'),
+                  does not lead to actual Universum configuration file location\n
                 * Some problems occurred while downloading or copying the repository
                 """
             raise CriticalCiException(cleandoc(text)) from e
         except KeyError as e:
             text = "KeyError: " + str(e) + '\n'
-            text += "Possible reason of this error: variable 'configs' is not defined in 'configs.py'"
+            text += "Possible reason of this error: variable 'configs' is not defined in Universum configuration file"
             raise CriticalCiException(text) from e
         except Exception as e:
             ex_traceback = sys.exc_info()[2]
-            text = "Exception while processing 'configs.py'\n" + utils.format_traceback(e, ex_traceback) + \
-                   "\nPlease copy 'configs.py' script to the CI scripts folder and run it " + \
-                   "to make sure no exceptions occur in that case."
+            text = "Exception while processing Universum configuration file:\n" + \
+                   utils.format_traceback(e, ex_traceback) + \
+                   "\nTry to execute ``confgs.dump()`` to make sure no exceptions occur in that case."
             raise CriticalCiException(text) from e
         return self.project_configs
 
