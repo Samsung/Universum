@@ -333,18 +333,9 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             else:
                 self.output = "console"
 
-        if not getattr(self.settings, "config_path", None):
-            self.error("""
-                The path to the config file is not specified.
-
-                The config defines all steps performed by Universum for your project. The status
-                of each step can be reported to the code review system. The config file for a
-                project can be created and debugged locally. There are examples of config files
-                in the documentation.
-
-                Please specify the path to project config file by using '--launcher-config-path'
-                ('-lcp') command-line option or CONFIG_PATH environment variable
-                """)
+        self.config_path = self.settings.config_path
+        if not self.config_path:
+            self.config_path = ".universum.py"
 
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()

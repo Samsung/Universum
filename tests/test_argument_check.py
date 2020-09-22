@@ -128,7 +128,6 @@ def param(test_type: str, module: str, field: str,
     missing_params.append(pytest.param(test_type, module, field, vcs_type, error_match, id=test_id))
 
 
-param("main",           "Launcher",                     "config_path")
 param("submit",         "Submit",                       "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
 param("submit",         "PerforceSubmitVcs",            "client",          vcs_type="p4")
 param("main",           "PerforceMainVcs",              "client",          vcs_type="p4")
