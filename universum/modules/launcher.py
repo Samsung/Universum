@@ -346,7 +346,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
     @make_block("Processing project configs")
     def process_project_configs(self):
-        config_path = utils.parse_path(self.settings.config_path, self.settings.project_root)
+        config_path = utils.parse_path(self.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
         config_globals = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -370,7 +370,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             text = f"""{e}\n
                 Possible reasons of this error:\n
                 * There is no file named 'configs.py' in project repository\n
-                * Config path, passed to the script ('{self.settings.config_path}'), does not lead to
+                * Config path, passed to the script ('{self.config_path}'), does not lead to
                  actual 'configs.py' location\n
                 * Some problems occurred while downloading or copying the repository
                 """
