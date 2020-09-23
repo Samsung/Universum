@@ -24,7 +24,7 @@ to this module in `config_path` member of its input settings.
     all the calculations are done on config processing, not step execution.
 
 To :doc:`create an example config and get a command to launch it with Universum <init>`,
-run ``python3.7 -m universum init``.
+run ``{python} -m universum init``.
 
 
 Project configuration
@@ -315,7 +315,7 @@ pass_tag, fail_tag
 
     .. testsetup::
 
-        #!/usr/bin/env python3.7
+        #!/usr/bin/env {python}
 
         from universum.configuration_support import Variations
 
@@ -371,7 +371,7 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
 
 .. testcode::
 
-    #!/usr/bin/env python3.7
+    #!/usr/bin/env {python}
 
     from universum.configuration_support import Variations, get_project_root
     import os.path
@@ -386,7 +386,7 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
     if __name__ == '__main__':
         print(configs.dump())
 
-The combination of ``#!/usr/bin/env python3.7`` and ``if __name__ == '__main__':`` allows launching
+The combination of ``#!/usr/bin/env {python}`` and ``if __name__ == '__main__':`` allows launching
 the `configs.py` script from shell.
 
 For ``from universum.configuration_support import`` to work correctly, `configs.py` should be copied to
@@ -433,7 +433,7 @@ See the following example:
 
 .. testcode::
 
-    #!/usr/bin/env python3.7
+    #!/usr/bin/env {python}
 
     from universum.configuration_support import Variations
 
@@ -485,7 +485,7 @@ For example, this configuration file:
 
 .. testcode::
 
-    #!/usr/bin/env python3.7
+    #!/usr/bin/env {python}
 
     from universum.configuration_support import Variations
 
@@ -533,7 +533,7 @@ can be combined in any required way. For example:
 
 .. testcode::
 
-    #!/usr/bin/env python3.7
+    #!/usr/bin/env {python}
 
     from universum.configuration_support import Variations
 

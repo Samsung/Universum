@@ -34,7 +34,7 @@ Pylint
 
 .. argparse::
     :ref: universum.analyzers.pylint.form_arguments_for_documentation
-    :prog: python3.7 -m universum.analyzers.pylint
+    :prog: {python} -m universum.analyzers.pylint
 
 Config example for ``universum.analyzers.pylint``:
 
@@ -43,7 +43,7 @@ Config example for ``universum.analyzers.pylint``:
     from universum.configuration_support import Variations
 
     configs = Variations([dict(name="pylint", code_report=True, command=[
-        "python3.7", "-m", "universum.analyzers.pylint", "--python-version", "2.7",
+        "{python}", "-m", "universum.analyzers.pylint", "--python-version", "2.7",
         "--result-file", "${CODE_REPORT_FILE}", "--files", "*.py", "examples/"
     ])])
 
@@ -61,7 +61,7 @@ This file will get us the following list of configurations:
 .. testoutput::
 
     $ ./configs.py
-    [{'name': 'pylint', 'code_report': True, 'command': 'python3.7 -m universum.analyzers.pylint --python-version 2.7 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
+    [{'name': 'pylint', 'code_report': True, 'command': '{python} -m universum.analyzers.pylint --python-version 2.7 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
 
 
 .. _code_report#svace:
@@ -71,7 +71,7 @@ Svace
 
 .. argparse::
     :ref: universum.analyzers.svace.form_arguments_for_documentation
-    :prog: python3.7 -m universum.analyzers.svace
+    :prog: {python} -m universum.analyzers.svace
 
 Config example for ``universum.analyzers.svace``:
 
@@ -80,7 +80,7 @@ Config example for ``universum.analyzers.svace``:
     from universum.configuration_support import Variations
 
     configs = Variations([dict(name="svace", code_report=True, command=[
-        "python3.7", "-m", "universum.analyzers.svace", "--build-cmd", "make", "--lang", "CXX",
+        "{python}", "-m", "universum.analyzers.svace", "--build-cmd", "make", "--lang", "CXX",
         "--result-file", "${CODE_REPORT_FILE}"
     ])])
 
@@ -98,7 +98,7 @@ will produce this list of configurations:
 .. testoutput::
 
     $ ./configs.py
-    [{'name': 'svace', 'code_report': True, 'command': 'python3.7 -m universum.analyzers.svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}'}]
+    [{'name': 'svace', 'code_report': True, 'command': '{python} -m universum.analyzers.svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}'}]
 
 
 .. _code_report#uncrustify:
@@ -108,7 +108,7 @@ Uncrustify
 
 .. argparse::
     :ref: universum.analyzers.uncrustify.form_arguments_for_documentation
-    :prog: python3.7 -m universum.analyzers.uncrustify
+    :prog: {python} -m universum.analyzers.uncrustify
     :nodefault:
 
 Config example for ``universum.analyzers.uncrustify``:
@@ -118,7 +118,7 @@ Config example for ``universum.analyzers.uncrustify``:
     from universum.configuration_support import Variations
 
     configs = Variations([dict(name="uncrustify", code_report=True, command=[
-        "python3.7", "-m", "universum.analyzers.uncrustify",  "--files", "project_root_directory",
+        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "project_root_directory",
         "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
         "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
     ])])
@@ -137,4 +137,4 @@ will produce this list of configurations:
 .. testoutput::
 
     $ ./configs.py
-    [{'name': 'uncrustify', 'code_report': True, 'command': 'python3.7 -m universum.analyzers.uncrustify --files project_root_directory --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
+    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files project_root_directory --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
