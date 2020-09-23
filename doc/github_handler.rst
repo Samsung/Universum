@@ -141,7 +141,7 @@ Here's DSL script for GitHub Handler::
                 stage ('Run GitHub Handler') {
                   steps {
                     ansiColor('xterm') {
-                      sh("python3.7 -m universum github-handler -e \^${x_github_event}")
+                      sh("{python} -m universum github-handler -e \^${x_github_event}")
                     }
                   }
                 }
@@ -180,7 +180,7 @@ And here's DSL script for the job it triggers::
                   steps {
                     cleanWs()
                     ansiColor('xterm') {
-                      sh "python3.7 -m universum --no-diff -vt github --report-to-review -rst -rsu -rof"
+                      sh "{python} -m universum --no-diff -vt github --report-to-review -rst -rsu -rof"
                     }
                     junit '**/junit_results.xml'
                     junit '**/TEST*.xml'
