@@ -8,5 +8,5 @@ Submit command line
 .. argparse::
     :module: universum.__main__
     :func: define_arguments
-    :prog:  python3.7 -m universum
+    :prog: {python} -m universum
     :path: submit
