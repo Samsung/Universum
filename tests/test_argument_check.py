@@ -40,9 +40,6 @@ def create_settings(test_type, vcs_type):
     elif test_type == "submit":
         settings.Submit.commit_message = "Test CL"
     elif test_type == "main":
-        settings.Launcher.config_path = "../configs.py"
-        settings.ArtifactCollector.artifact_dir = "artifacts"
-
         settings.AutomationServer.type = "tc"
         settings.TeamcityServer.server_url = "https://teamcity"
         settings.TeamcityServer.build_id = "BuildId_167"
@@ -189,10 +186,19 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
     # However, this doesn't work if the chosen setting is equal to the one passed in parameters. In that case we use
     # some other setting.
     if test_type == "main":
-        if module == "Launcher" and field == "config_path":
-            settings.Vcs.type = ""
+        if module == "Vcs" and field == "type":
+            return
+        elif module == "LocalMainVcs" and field == "source_dir":
+            return
+        elif module == "GitVcs" and field == "refspec" and settings.Vcs.type == "gerrit":
+            return
+        elif module in ["PerforceVcs", "PerforceMainVcs"]:
+            if field == "port":
+                settings.PerforceVcs.user = ""
+            else:
+                settings.PerforceVcs.port = ""
         else:
-            settings.Launcher.config_path = ""
+            settings.Vcs.type = ""
     elif test_type == "submit":
         if module == "Submit" and field == "commit_message":
             settings.Vcs.type = ""
@@ -307,27 +313,17 @@ def test_swarm_changelist_incorrect_format():
     assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
 
 
-def test_multiple_errors_main_vcs_type_and_config_path():
-    settings = create_settings("main", "p4")
-    settings.Launcher.config_path = None
-    settings.Vcs.type = None
-
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repository type")
-
-
-def test_multiple_errors_main_none_source_dir_and_config_path():
+def test_multiple_errors_main_none_source_dir():
     settings = create_settings("main", "none")
-    settings.Launcher.config_path = None
     settings.LocalMainVcs.source_dir = None
     settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "SOURCE_DIR", "no code review system")
+    assert_incorrect_parameter(settings, "SOURCE_DIR", "no code review system")
 
 
-def test_multiple_errors_main_p4_params_and_config_path():
+def test_multiple_errors_main_p4_params():
     settings = create_settings("main", "p4")
 
-    settings.Launcher.config_path = None
     settings.PerforceVcs.port = None
     settings.PerforceVcs.user = None
     settings.PerforceVcs.password = None
@@ -342,7 +338,7 @@ def test_multiple_errors_main_p4_params_and_config_path():
     settings.TeamcityServer.user_id = None
     settings.TeamcityServer.passwd = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "workspace",
                                "URL of the Swarm", "Swarm review number",
                                "Swarm changelist for unshelving is not specified", "URL of the TeamCity",
                                "id of the build on TeamCity", "id of the configuration on TeamCity",
@@ -350,7 +346,6 @@ def test_multiple_errors_main_p4_params_and_config_path():
 
     settings = create_settings("main", "p4")
 
-    settings.Launcher.config_path = None
     settings.PerforceVcs.port = None
     settings.PerforceVcs.user = None
     settings.PerforceVcs.password = None
@@ -360,13 +355,12 @@ def test_multiple_errors_main_p4_params_and_config_path():
     settings.Swarm.change = "123,456"
     settings.Swarm.server_url = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "workspace",
                                "URL of the Swarm", "Swarm review number",
                                "Swarm changelist for unshelving is incorrect")
 
     settings = create_settings("main", "p4")
 
-    settings.Launcher.config_path = None
     settings.PerforceVcs.port = None
     settings.PerforceVcs.user = None
     settings.PerforceVcs.password = None
@@ -375,7 +369,7 @@ def test_multiple_errors_main_p4_params_and_config_path():
     settings.AutomationServer.type = "jenkins"
     settings.JenkinsServerForHostingBuild.build_url = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace",
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "workspace",
                                "Jenkins url of the ongoing build")
 
 
@@ -390,13 +384,12 @@ def test_multiple_errors_submit_p4_params_and_commit_message():
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "port", "user name", "password", "P4CLIENT")
 
 
-def test_multiple_errors_main_git_params_and_config_path():
+def test_multiple_errors_main_git_params():
     settings = create_settings("main", "git")
-    settings.Launcher.config_path = None
     settings.GitVcs.repo = None
     settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo", "no code review system")
+    assert_incorrect_parameter(settings, "repo", "no code review system")
 
 
 def test_multiple_errors_submit_git_params_commit_message():
@@ -409,45 +402,22 @@ def test_multiple_errors_submit_git_params_commit_message():
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "repo", "git user name", "git user email")
 
 
-def test_multiple_errors_main_gerrit_repo_and_config_path():
+def test_multiple_errors_main_gerrit_refspec():
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
-    settings.GitVcs.repo = None
-
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo")
-
-    settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
-    settings.GitVcs.repo = "http://"
-
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "ssh protocol")
-
-    settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
-    settings.GitVcs.repo = "ssh://127.0.0.1"
-
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "user name for accessing gerrit")
-
-
-def test_multiple_errors_main_gerrit_refspec_and_config_path():
-    settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
     settings.GitVcs.refspec = None
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
+    assert_incorrect_parameter(settings, "Git refspec for gerrit", "git checkout ID")
 
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
     settings.GitVcs.refspec = "ABCDEF"
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
+    assert_incorrect_parameter(settings, "Git refspec for gerrit", "git checkout ID")
 
 
-def test_multiple_errors_main_github_and_config_path():
+def test_multiple_errors_main_github():
     settings = create_settings("main", "github")
-    settings.Launcher.config_path = None
     settings.GitVcs.repo = None
     settings.GitMainVcs.checkout_id = None
     settings.GithubToken.integration_id = None
@@ -455,7 +425,7 @@ def test_multiple_errors_main_github_and_config_path():
     settings.GithubTokenWithInstallation.installation_id = None
     settings.GithubMainVcs.check_id = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "git repo", "checkout id for github", "GitHub App ID",
+    assert_incorrect_parameter(settings, "git repo", "checkout id for github", "GitHub App ID",
                                "GitHub App private key", "GitHub App installation ID", "GitHub Check Run ID")
 
 
