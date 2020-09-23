@@ -188,11 +188,11 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
     if test_type == "main":
         if module == "Vcs" and field == "type":
             return
-        elif module == "LocalMainVcs" and field == "source_dir":
+        if module == "LocalMainVcs" and field == "source_dir":
             return
-        elif module == "GitVcs" and field == "refspec" and settings.Vcs.type == "gerrit":
+        if module == "GitVcs" and field == "refspec" and settings.Vcs.type == "gerrit":
             return
-        elif module in ["PerforceVcs", "PerforceMainVcs"]:
+        if module in ["PerforceVcs", "PerforceMainVcs"]:
             if field == "port":
                 settings.PerforceVcs.user = ""
             else:
