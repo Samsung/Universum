@@ -188,6 +188,7 @@ add_module_names = False
 
 
 # Add replacement for Python version
+# Solution from https://stackoverflow.com/a/56328457
 import sys
 
 
