@@ -7,7 +7,7 @@ Before installing or launching the `Universum`, please make sure your system mee
 The main module (`universum`) is used for performing all CI-related actions.
 If using raw sources, launch Universum from project root via running main module with :doc:`parameters <args>`::
 
-    $ python3.7 -m universum --help
+    $ {python} -m universum --help
 
 If using an installed module (e.g, via PyPi), use the same command from any suitable directory.
 
