@@ -35,9 +35,9 @@ via ``{python} -m universum``.
         | * -f='test 1:!unit test 1'    - run all steps with 'test 1' substring in their names except those
          containing 'unit test 1'
 
-    {create-config,poll,submit,nonci,github-handler} : @replace
+    {init,run,poll,submit,github-handler} : @replace
         | :doc:`universum init <init>`
+        | :doc:`universum run <nonci>`
         | :doc:`universum poll <args_poll>`
         | :doc:`universum submit <args_submit>`
-        | :doc:`universum nonci <args_nonci>`
         | :doc:`universum github-handler <args_github_handler>`

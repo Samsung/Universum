@@ -24,7 +24,7 @@ def define_arguments() -> ModuleArgumentParser:
     define_arguments_recursive(Main, parser)
 
     subparsers = parser.add_subparsers(title="Additional commands",
-                                       metavar="{init,poll,submit,nonci,github-handler}",
+                                       metavar="{init,run,poll,submit,github-handler}",
                                        help="Use 'universum <subcommand> --help' for more info")
 
     def define_command(klass, command):
@@ -37,6 +37,7 @@ def define_arguments() -> ModuleArgumentParser:
     define_command(ConfigCreator, "init")
     define_command(Poll, "poll")
     define_command(Submit, "submit")
+    define_command(Nonci, "run")
     define_command(Nonci, "nonci")
     define_command(GithubHandler, "github-handler")
 
