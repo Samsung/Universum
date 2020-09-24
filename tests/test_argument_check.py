@@ -384,12 +384,13 @@ def test_multiple_errors_submit_p4_params_and_commit_message():
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "port", "user name", "password", "P4CLIENT")
 
 
-def test_multiple_errors_main_git_params():
+def test_multiple_errors_main_git_params_and_build_id():
     settings = create_settings("main", "git")
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = None
     settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "repo", "no code review system")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "repo", "no code review system")
 
 
 def test_multiple_errors_submit_git_params_commit_message():
