@@ -27,8 +27,7 @@ configs = Variations([dict(name='Show directory contents', command=['ls', '-la']
 if __name__ == '__main__':
     print(configs.dump())
 """)
-        self.out.log("To run with Universum, execute the following command:\n"
-                     "$ python3.7 -m universum run --launcher-config-path={}".format(config_name))
+        self.out.log("To run with Universum, execute the following command:\n$ python3.7 -m universum run")
 
     def finalize(self) -> None:
         pass
