@@ -18,7 +18,7 @@ from .submit import Submit
 
 
 def define_arguments() -> ModuleArgumentParser:
-    parser = ModuleArgumentParser(prog="python3.7 -m universum",
+    parser = ModuleArgumentParser(prog=f"python{sys.version_info.major}.{sys.version_info.minor} -m universum",
                                   description=__title__ + " " + __version__)
     parser.add_argument("--version", action="version", version=__title__ + " " + __version__)
     define_arguments_recursive(Main, parser)

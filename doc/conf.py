@@ -200,8 +200,8 @@ def ultimateReplace(app, docname, source):
 
 
 ultimate_replacements = {
-    "{pip}": "pip" + str(sys.version_info.major)+'.'+str(sys.version_info.minor),
-    "{python}": "python" + str(sys.version_info.major)+'.'+str(sys.version_info.minor)
+    "{pip}": f"pip{sys.version_info.major}.{sys.version_info.minor}",
+    "{python}": f"python{sys.version_info.major}.{sys.version_info.minor}"
 }
 
 
