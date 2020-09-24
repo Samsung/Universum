@@ -186,19 +186,10 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
     # However, this doesn't work if the chosen setting is equal to the one passed in parameters. In that case we use
     # some other setting.
     if test_type == "main":
-        if module == "Vcs" and field == "type":
-            return
-        if module == "LocalMainVcs" and field == "source_dir":
-            return
-        if module == "GitVcs" and field == "refspec" and settings.Vcs.type == "gerrit":
-            return
-        if module in ["PerforceVcs", "PerforceMainVcs"]:
-            if field == "port":
-                settings.PerforceVcs.user = ""
-            else:
-                settings.PerforceVcs.port = ""
+        if module == "TeamcityServer" and field == "build_id":
+            settings.TeamcityServer.configuration_id = ""
         else:
-            settings.Vcs.type = ""
+            settings.TeamcityServer.build_id = ""
     elif test_type == "submit":
         if module == "Submit" and field == "commit_message":
             settings.Vcs.type = ""
