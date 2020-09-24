@@ -304,12 +304,21 @@ def test_swarm_changelist_incorrect_format():
     assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
 
 
-def test_multiple_errors_main_none_source_dir():
+def test_multiple_errors_main_vcs_type_and_build_id():
+    settings = create_settings("main", "p4")
+    settings.TeamcityServer.build_id = None
+    settings.Vcs.type = None
+
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "repository type")
+
+
+def test_multiple_errors_main_none_source_dir_and_build_id():
     settings = create_settings("main", "none")
+    settings.TeamcityServer.build_id = None
     settings.LocalMainVcs.source_dir = None
     settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "SOURCE_DIR", "no code review system")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "SOURCE_DIR", "no code review system")
 
 
 def test_multiple_errors_main_p4_params():
@@ -393,22 +402,45 @@ def test_multiple_errors_submit_git_params_commit_message():
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "repo", "git user name", "git user email")
 
 
-def test_multiple_errors_main_gerrit_refspec():
+def test_multiple_errors_main_gerrit_repo_and_build_id():
     settings = create_settings("main", "gerrit")
+    settings.TeamcityServer.build_id = None
+    settings.GitVcs.repo = None
+
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "repo")
+
+    settings = create_settings("main", "gerrit")
+    settings.TeamcityServer.build_id = None
+    settings.GitVcs.repo = "http://"
+
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "ssh protocol")
+
+    settings = create_settings("main", "gerrit")
+    settings.TeamcityServer.build_id = None
+    settings.GitVcs.repo = "ssh://127.0.0.1"
+
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "user name for accessing gerrit")
+
+
+def test_multiple_errors_main_gerrit_refspec_and_build_id():
+    settings = create_settings("main", "gerrit")
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.refspec = None
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "Git refspec for gerrit", "git checkout ID")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "Git refspec for gerrit", "git checkout ID")
 
     settings = create_settings("main", "gerrit")
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.refspec = "ABCDEF"
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "Git refspec for gerrit", "git checkout ID")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "Git refspec for gerrit", "git checkout ID")
 
 
-def test_multiple_errors_main_github():
+def test_multiple_errors_main_github_and_build_id():
     settings = create_settings("main", "github")
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = None
     settings.GitMainVcs.checkout_id = None
     settings.GithubToken.integration_id = None
@@ -416,8 +448,9 @@ def test_multiple_errors_main_github():
     settings.GithubTokenWithInstallation.installation_id = None
     settings.GithubMainVcs.check_id = None
 
-    assert_incorrect_parameter(settings, "git repo", "checkout id for github", "GitHub App ID",
-                               "GitHub App private key", "GitHub App installation ID", "GitHub Check Run ID")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "git repo", "checkout id for github",
+                               "GitHub App ID", "GitHub App private key", "GitHub App installation ID",
+                               "GitHub Check Run ID")
 
 
 def test_multiple_errors_githubhandler():
