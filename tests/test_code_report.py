@@ -83,8 +83,7 @@ def test_pylint_analyzer_wrong_params(runner_with_pylint, args, expected_log):
     assert expected_log in log
 
 
-# def test_code_report_extended_arg_search(tmpdir, stdout_checker):
-def test_code_report_extended_arg_search(tmpdir):
+def test_code_report_extended_arg_search(tmpdir, stdout_checker):
     env = utils.TestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
@@ -107,5 +106,5 @@ configs = Variations([dict(name="Run static pylint", code_report=True, artifacts
     res = __main__.run(env.settings)
 
     assert res == 0
-    # stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
+    stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
