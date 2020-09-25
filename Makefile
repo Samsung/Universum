@@ -20,7 +20,7 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	python3.7 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
+	python -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
 	--cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
 	--ignore=universum_log_collapser --ignore=configs.py
 
@@ -28,7 +28,7 @@ doc_doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	python3.7 -m pylint --rcfile=pylintrc *.py universum/ tests/
+	python -m pylint --rcfile=pylintrc *.py universum/ tests/
 
 images:
 	+$(MAKE) -C tests/docker all
