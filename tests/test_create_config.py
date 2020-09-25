@@ -1,9 +1,11 @@
 from pathlib import Path
 import subprocess
 
+from .utils import PYTHON_VERSION
+
 
 def test_create_config():
-    result = subprocess.run(["python3.7", "-m", "universum", "init"], capture_output=True, check=True)
+    result = subprocess.run(["python" + PYTHON_VERSION, "-m", "universum", "init"], capture_output=True, check=True)
     new_command = ''
     for line in result.stdout.splitlines():
         if line.startswith(b'$ '):           # result.stdout is a byte string
