@@ -7,6 +7,7 @@ import pytest
 
 from universum import __main__
 from . import utils
+from .utils import PYTHON
 
 
 @pytest.fixture(name='runner_with_pylint')
@@ -21,7 +22,7 @@ def get_config(args: List[str]):
         from universum.configuration_support import Variations
 
         configs = Variations([dict(name="Run static pylint", code_report=True,
-            command=['python{utils.PYTHON_VERSION}', '-m', 'universum.analyzers.pylint'{''.join(args)}])])
+            command=['{PYTHON}', '-m', 'universum.analyzers.pylint'{''.join(args)}])])
     """)
 
 
@@ -90,7 +91,7 @@ def test_code_report_extended_arg_search(tmpdir):
 
     tmpdir.join("source_file.py").write(source_code + '\n')
 
-    cmd = "cd \"{0}\" && python" + utils.PYTHON_VERSION + \
+    cmd = "cd \"{0}\" && " + PYTHON + \
           " -m universum.analyzers.pylint --result-file=\"${{CODE_REPORT_FILE}}\" " + \
           "--python-version=3 --files {1}/source_file.py"
 

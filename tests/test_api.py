@@ -1,18 +1,18 @@
 import json
 from os import path
 
-from .utils import PYTHON_VERSION
+from .utils import PYTHON
 
 config = """
 from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run script", artifacts="output.json",
                            command=["bash", "-c", "python{} -m universum api file-diff > output.json"])])
-""".format(PYTHON_VERSION)
+""".format(PYTHON)
 
 
 def test_error_wrong_environment(docker_main_and_nonci):
-    cmd = f"python{PYTHON_VERSION} -m universum api file-diff"
+    cmd = "{} -m universum api file-diff".format(PYTHON)
     log = docker_main_and_nonci.environment.assert_unsuccessful_execution(cmd)
     assert "Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment" in log
 

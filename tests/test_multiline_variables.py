@@ -6,7 +6,7 @@ import subprocess
 from universum.lib.gravity import construct_component
 from universum.lib.module_arguments import ModuleArgumentParser
 from universum.modules.error_state import HasErrorState
-from .utils import PYTHON_VERSION
+from .utils import PYTHON
 
 text = "This is text\nwith some line breaks\n"
 error_message = "This is some missing argument error message"
@@ -62,13 +62,13 @@ def test_multiline_variable_stdin(tmp_path):
     env['PYTHONPATH'] = os.getcwd()
     common_args = {"capture_output": True, "text": True, "env": env}
 
-    result = subprocess.run(["python" + PYTHON_VERSION, script_path, "-a", "-"], **common_args, input=text, check=True)
+    result = subprocess.run([PYTHON, script_path, "-a", "-"], **common_args, input=text, check=True)
     assert result.stdout[:-1] == text
 
     env['ARGUMENT'] = '-'
-    result = subprocess.run(["python" + PYTHON_VERSION, script_path], **common_args, input=text, check=True)
+    result = subprocess.run([PYTHON, script_path], **common_args, input=text, check=True)
     assert result.stdout[:-1] == text
     del env['ARGUMENT']
 
-    result = subprocess.run(["python" + PYTHON_VERSION, script_path, "-a", "-"], **common_args, input="", check=False)
+    result = subprocess.run([PYTHON, script_path, "-a", "-"], **common_args, input="", check=False)
     assert error_message in result.stdout

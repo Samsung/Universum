@@ -10,6 +10,7 @@ import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
+from .utils import PYTHON
 
 
 class ExecutionEnvironment:
@@ -234,9 +235,9 @@ class UniversumRunner:
         """
 
         if force_installed:
-            cmd = F"python{utils.PYTHON_VERSION} -I -m universum"
+            cmd = "{} -I -m universum".format(PYTHON)
         elif utils.is_pycharm() or workdir:
-            cmd = F"python{utils.PYTHON_VERSION} -m universum"
+            cmd = "{} -m universum".format(PYTHON)
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
