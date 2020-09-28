@@ -9,8 +9,8 @@ import re
 def run_universum():
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
-    cmd = "python{}.{} -m universum --clean-build ".format(sys.version_info.major, sys.version_info.minor) + \
-          "--vcs-type=none --server-type=local --out-type=term --launcher-output=console " + \
+    cmd = f"python{sys.version_info.major}.{sys.version_info.minor} -m universum --clean-build --vcs-type=none " + \
+          "--server-type=local --out-type=term --launcher-output=console " + \
           "--file-source-dir=./universum_log_collapser/e2e --launcher-config-path=./universum_config/configs.py"
     stdout = launch_process(*cmd.split(), env=env)
     return re.sub("\\[.+?m", "", stdout)
