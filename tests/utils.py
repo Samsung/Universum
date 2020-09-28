@@ -22,7 +22,11 @@ __all__ = [
     "TestEnvironment"
 ]
 
-python = f"python{sys.version_info.major}.{sys.version_info.minor}"
+PYTHON_VERSION = f"python{sys.version_info.major}.{sys.version_info.minor}"
+
+
+def python():
+    return PYTHON_VERSION
 
 
 class Params:

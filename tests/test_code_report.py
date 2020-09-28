@@ -22,7 +22,7 @@ def get_config(args: List[str]):
         from universum.configuration_support import Variations
 
         configs = Variations([dict(name="Run static pylint", code_report=True,
-            command=['{python}', '-m', 'universum.analyzers.pylint'{''.join(args)}])])
+            command=['{python()}', '-m', 'universum.analyzers.pylint'{''.join(args)}])])
     """)
 
 
@@ -90,7 +90,7 @@ def test_code_report_extended_arg_search(tmpdir, stdout_checker):
 
     tmpdir.join("source_file.py").write(source_code + '\n')
 
-    cmd = "cd \"{0}\" && " + python + \
+    cmd = "cd \"{0}\" && " + python() + \
           " -m universum.analyzers.pylint --result-file=\"${{CODE_REPORT_FILE}}\" " + \
           "--python-version=3 --files {1}/source_file.py"
 

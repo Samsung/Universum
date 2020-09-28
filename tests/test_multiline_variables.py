@@ -62,13 +62,13 @@ def test_multiline_variable_stdin(tmp_path):
     env['PYTHONPATH'] = os.getcwd()
     common_args = {"capture_output": True, "text": True, "env": env}
 
-    result = subprocess.run([python, script_path, "-a", "-"], **common_args, input=text, check=True)
+    result = subprocess.run([python(), script_path, "-a", "-"], **common_args, input=text, check=True)
     assert result.stdout[:-1] == text
 
     env['ARGUMENT'] = '-'
-    result = subprocess.run([python, script_path], **common_args, input=text, check=True)
+    result = subprocess.run([python(), script_path], **common_args, input=text, check=True)
     assert result.stdout[:-1] == text
     del env['ARGUMENT']
 
-    result = subprocess.run([python, script_path, "-a", "-"], **common_args, input="", check=False)
+    result = subprocess.run([python(), script_path, "-a", "-"], **common_args, input="", check=False)
     assert error_message in result.stdout

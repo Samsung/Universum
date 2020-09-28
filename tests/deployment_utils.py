@@ -235,9 +235,9 @@ class UniversumRunner:
         """
 
         if force_installed:
-            cmd = f"{python} -I -m universum"
+            cmd = f"{python()} -I -m universum"
         elif utils.is_pycharm() or workdir:
-            cmd = f"{python} -m universum"
+            cmd = f"{python()} -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
