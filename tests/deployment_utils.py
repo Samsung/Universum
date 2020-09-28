@@ -10,7 +10,7 @@ import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
-from .utils import PYTHON
+from .utils import python
 
 
 class ExecutionEnvironment:
@@ -114,7 +114,7 @@ class ExecutionEnvironment:
         try:
             user_id = getpwnam(getpass.getuser()).pw_uid
             for path in self._volumes:
-                self._container.exec_run("chown -R {} {}".format(user_id, path))
+                self._container.exec_run(f"chown -R {user_id} {path}")
             if utils.is_pycharm() and not self._force_clean:
                 self.request.config.cache.set("ci_test/" + self._image_name, self._container_id)
             else:
@@ -206,10 +206,10 @@ class UniversumRunner:
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none -fsd '{}'".format(str(self.local.root_directory))
+            return f" -vt none -fsd '{self.local.root_directory}'"
 
         if vcs_type == "git":
-            return " -vt git -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
+            return f" -vt git -gr '{self.git.server.url}' -grs '{self.git.server.target_branch}'"
 
         return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
             .format(self.perforce.p4.port,
@@ -235,9 +235,9 @@ class UniversumRunner:
         """
 
         if force_installed:
-            cmd = "{} -I -m universum".format(PYTHON)
+            cmd = f"{python} -I -m universum"
         elif utils.is_pycharm() or workdir:
-            cmd = "{} -m universum".format(PYTHON)
+            cmd = f"{python} -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
@@ -258,7 +258,7 @@ class UniversumRunner:
         return result
 
     def clean_artifacts(self):
-        self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
+        self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
 
 
 @pytest.fixture()

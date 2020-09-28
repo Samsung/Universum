@@ -11,7 +11,7 @@ from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
 __all__ = [
-    "PYTHON",
+    "python",
     "Params",
     "is_pycharm",
     "randomize_name",
@@ -22,7 +22,7 @@ __all__ = [
     "TestEnvironment"
 ]
 
-PYTHON = f"python{sys.version_info.major}.{sys.version_info.minor}"
+python = f"python{sys.version_info.major}.{sys.version_info.minor}"
 
 
 class Params:
