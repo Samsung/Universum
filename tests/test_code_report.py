@@ -8,9 +8,7 @@ import pytest
 
 from universum import __main__
 from . import utils
-from .utils import python
-
-python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+from .utils import python, python_version
 
 
 @pytest.fixture(name='runner_with_pylint')
@@ -93,18 +91,15 @@ def test_code_report_extended_arg_search(tmpdir, stdout_checker):
 
     tmpdir.join("source_file.py").write(source_code + '\n')
 
-    cmd = "cd \"{0}\" && " + python() + \
-          " -m universum.analyzers.pylint --result-file=\"${{CODE_REPORT_FILE}}\" " + \
-          "--python-version " + python_version + " --files {1}/source_file.py"
-
-    config = """
+    config = f"""
 from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${{CODE_REPORT_FILE}}", command=[
-    'bash', '-c', '""" + cmd + """'
-])])"""
+    'bash', '-c', 'cd {os.getcwd()} && {python()} -m universum.analyzers.pylint --result-file="${{CODE_REPORT_FILE}}" \
+                   --python-version {python_version()} --files {str(tmpdir.join("source_file.py"))}'])])
+"""
 
-    env.configs_file.write(config.format(os.getcwd(), str(tmpdir)))
+    env.configs_file.write(config)
 
     res = __main__.run(env.settings)
 

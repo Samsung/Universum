@@ -12,6 +12,7 @@ from . import default_args
 
 __all__ = [
     "python",
+    "python_version",
     "Params",
     "is_pycharm",
     "randomize_name",
@@ -22,10 +23,15 @@ __all__ = [
     "TestEnvironment"
 ]
 
-PYTHON_VERSION = f"python{sys.version_info.major}.{sys.version_info.minor}"
+PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
+PYTHON = "python" + PYTHON_VERSION
 
 
 def python():
+    return PYTHON
+
+
+def python_version():
     return PYTHON_VERSION
 
 
