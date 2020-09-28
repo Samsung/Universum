@@ -43,7 +43,7 @@ class Main(HasOutput):
                                           "disables calculating analysis diff for changed files, "
                                           "in this case full analysis report will be published")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.vcs: vcs.MainVcs = self.vcs_factory()
         self.launcher: launcher.Launcher = self.launcher_factory()

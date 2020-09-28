@@ -1,12 +1,10 @@
-from typing import Callable, Dict, Iterable, List, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, TypeVar, Union
 import copy
 import os
-from typing_extensions import Literal, TypedDict
 
 
 __all__ = [
-    "ProjectConfigKeyType",
-    "ProjectConfig",
+    "ProjectConfiguration",
     "Variations",
     "combine",
     "set_project_root",
@@ -15,29 +13,134 @@ __all__ = [
 
 skip_attributes = {"children", "critical", "skip_numbering_level"}
 
-ProjectConfigKeyType = Literal["name", "command", "environment", "artifacts", "report_artifacts",
-                               "artifact_prebuild_clean", "directory", "critical", "background", "finish_background",
-                               "code_report", "pass_tag", "fail_tag", "if_env_set"]
+
+class ProjectConfiguration(dict):  # dict inheritance is a temporary measure to simplify transition
+
+    # pylint: disable-msg=too-many-locals
+    def __init__(self,
+                 name: str = '',
+                 command: Optional[List[str]] = None,
+                 environment: Optional[Dict[str, str]] = None,
+                 artifacts: str = '',
+                 report_artifacts: str = '',
+                 artifact_prebuild_clean: bool = False,
+                 directory: str = '',
+                 critical: bool = False,
+                 background: bool = False,
+                 finish_background: bool = False,
+                 code_report: bool = False,
+                 pass_tag: str = '',
+                 fail_tag: str = '',
+                 if_env_set: str = '',
+                 **kwargs) -> None:  # explicit constructor for client's type safety
+        self['name'] = name
+        self['command'] = command if command else []
+        self['environment'] = environment if environment else {}
+        self['artifacts'] = artifacts
+        self['report_artifacts'] = report_artifacts
+        self['artifact_prebuild_clean'] = artifact_prebuild_clean
+        self['directory'] = directory
+        self['critical'] = critical
+        self['background'] = background
+        self['finish_background'] = finish_background
+        self['code_report'] = code_report
+        self['pass_tag'] = pass_tag
+        self['fail_tag'] = fail_tag
+        self['if_env_set'] = if_env_set
+        for key, value in kwargs.items():
+            self[key] = value
+
+    @property
+    def name(self) -> str:
+        return self.get('name', '')
+
+    @property
+    def command(self) -> List[str]:
+        return self.get('command', [])
+
+    @property
+    def environment(self) -> Dict[str, str]:
+        return self.get('environment', {})
+
+    @property
+    def artifacts(self) -> str:
+        return self.get('artifacts', '')
+
+    @property
+    def report_artifacts(self) -> str:
+        return self.get('report_artifacts', '')
+
+    @property
+    def artifact_prebuild_clean(self) -> bool:
+        return self.get('artifact_prebuild_clean', False)
+
+    @property
+    def directory(self) -> str:
+        return self.get('directory', '')
+
+    @property
+    def critical(self) -> bool:
+        return self.get('critical', False)
+
+    @critical.setter
+    def critical(self, val: bool) -> None:
+        self['critical'] = val
+
+    @property
+    def background(self) -> bool:
+        return self.get('background', False)
+
+    @property
+    def finish_background(self) -> bool:
+        return self.get('finish_background', False)
+
+    @property
+    def code_report(self) -> bool:
+        return self.get('code_report', False)
+
+    @property
+    def pass_tag(self) -> str:
+        return self.get('pass_tag', '')
+
+    @property
+    def fail_tag(self) -> str:
+        return self.get('fail_tag', '')
+
+    @property
+    def children(self) -> Optional['Variations']:
+        return self.get('children', None)
+
+    @children.setter
+    def children(self, val: 'Variations') -> None:
+        self['children'] = val
+
+    @property
+    def skip_numbering_level(self) -> bool:
+        return self.get('skip_numbering_level', False)
+
+    @skip_numbering_level.setter
+    def skip_numbering_level(self, val: bool):
+        self['skip_numbering_level'] = val
+
+    def replace_string(self, from_string: str, to_string: str) -> None:
+        for key, val in self.items():  # type: ignore #  https://github.com/python/mypy/issues/7981
+            if key == 'command':
+                self[key] = [word.replace(from_string, to_string) for word in val]
+            else:
+                if isinstance(val, str):
+                    self[key] = val.replace(from_string, to_string)
+
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return super().__eq__(ProjectConfiguration(**other))
+        return super().__eq__(other)
 
 
-class ProjectConfig(TypedDict, total=False):
-    name: str
-    command: List[str]
-    environment: Dict[str, str]
-    artifacts: List[str]
-    report_artifacts: List[str]
-    artifact_prebuild_clean: bool
-    directory: str
-    critical: bool
-    background: bool
-    finish_background: bool
-    code_report: str
-    pass_tag: str
-    fail_tag: str
-    if_env_set: str
+DictType = TypeVar('DictType', bound=dict)
 
 
-def combine(dictionary_a: Dict, dictionary_b: Dict) -> Dict:
+def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
+    # this should probably be a method in ProjectConfiguration
     """
     Combine two dictionaries using plus operator for matching keys
 
@@ -57,7 +160,7 @@ def combine(dictionary_a: Dict, dictionary_b: Dict) -> Dict:
 
     """
 
-    result = {}
+    result = dictionary_a.__class__()
     for key in dictionary_a:
         if key in skip_attributes:
             continue
@@ -97,7 +200,7 @@ def stringify(obj: Dict[str, str]) -> bool:
     return result
 
 
-class Variations(list):
+class Variations:
     """
     `Variations` is a class for establishing project configurations.
     This class object is a list of dictionaries:
@@ -141,57 +244,74 @@ class Variations(list):
 
     """
 
-    def __add__(self, other: List) -> 'Variations':
+    def __init__(self, lst: Optional[Union[List[Dict[str, Any]], List[ProjectConfiguration]]]):
+        #  lst can be List[Dict[str, Any]] to support legacy cases - should be removed after project migration
+        self.configs: List[ProjectConfiguration] = []  # aggregation is used instead of inheritance for type safety
+        if lst:
+            for item in lst:
+                if isinstance(item, ProjectConfiguration):
+                    self.configs.append(item)
+                else:
+                    self.configs.append(ProjectConfiguration(**item))
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, Variations):
+            return self.configs == other.configs
+        if isinstance(other, list):
+            return self.configs == other
+        return super().__eq__(other)
+
+    def __getitem__(self, item: int) -> ProjectConfiguration:
+        return self.configs[item]
+
+    def __add__(self, other: Union['Variations', List[ProjectConfiguration]]) -> 'Variations':
         """
         This functions defines operator ``+`` for :class:`.Variations` class objects by
         concatenating lists of dictionaries into one list.
         The order of list members in resulting list is preserved: first all dictionaries from `self`,
         then all dictionaries from `other`.
 
-        :param other: `Variations` object OR list to be added to `self`
+        :param other: `Variations` object OR list of project configurations to be added to `configs`
         :return: new `Variations` object, including all configurations from both `self` and `other` objects
         """
-        return Variations(list.__add__(list(self), other))
+        list_other: List[ProjectConfiguration] = other.configs if isinstance(other, Variations) else other
+        return Variations(list.__add__(self.configs, list_other))
 
-    def __mul__(self, other: Union[int, 'Variations']) -> 'Variations':
+    def __mul__(self, other: Union['Variations', int]) -> 'Variations':
         """
         This functions defines operator ``*`` for :class:`.Variations` class objects.
-        The resulting object is created by combining every `self` list member with
+        The resulting object is created by combining every `configs` list member with
         every `other` list member using :func:`.combine()` function.
 
         :param other: `Variations` object  OR an integer value to be multiplied to `self`
         :return: new `Variations` object, consisting of the list of combined configurations
         """
-
         if isinstance(other, int):
-            result_list: List = list.__mul__(list(self), other)
-        else:
-            result_list = []
-            for obj_a in self:
-                obj_a_copy = copy.deepcopy(obj_a)
-                if "children" in obj_a:
-                    obj_a_copy["children"] = obj_a["children"] * other
-                else:
-                    obj_a_copy["children"] = copy.deepcopy(other)
-                obj_a_copy["skip_numbering_level"] = len(self) <= 1
+            return Variations(list.__mul__(self.configs, other))
+        config_list: List[ProjectConfiguration] = []
+        for obj_a in self.configs:
+            obj_a_copy = copy.deepcopy(obj_a)
+            if obj_a.children:
+                obj_a_copy.children = obj_a.children * other
+            else:
+                obj_a_copy.children = copy.deepcopy(other)
+            obj_a_copy.skip_numbering_level = len(self.configs) <= 1
 
-                result_list.append(obj_a_copy)
+            config_list.append(obj_a_copy)
+        return Variations(config_list)
 
-        result = Variations(result_list)
-        return result
-
-    def all(self) -> Iterable[Dict]:
+    def all(self) -> Iterable[ProjectConfiguration]:
         """
         Function for configuration iterating.
 
         :return: iterable for all dictionary objects in :class:`.Variations` list
         """
-        for obj_a in self:
+        for obj_a in self.configs:
 
             obj_a_copy = copy.deepcopy(obj_a)
 
-            if "children" in obj_a_copy:
-                for obj_b in obj_a_copy["children"].all():
+            if obj_a_copy.children:
+                for obj_b in obj_a_copy.children.all():
                     res = combine(obj_a_copy, obj_b)
 
                     yield res
@@ -224,7 +344,7 @@ class Variations(list):
             result += "Please make sure you are not trying to pass two or more parameters as one."
         return result
 
-    def filter(self, checker: Callable[..., bool], parent: Dict = None) -> 'Variations':
+    def filter(self, checker: Callable[[ProjectConfiguration], bool], parent: ProjectConfiguration = None) -> 'Variations':
         """
         This function is supposed to be called from main script, not configuration file.
         It uses provided `checker` to find all the configurations that pass the check,
@@ -236,31 +356,31 @@ class Variations(list):
         """
 
         if parent is None:
-            parent = dict()
+            parent = ProjectConfiguration()
 
-        filtered_variations: List[Dict] = []
+        filtered_configs: List[ProjectConfiguration] = []
 
-        for obj_a in self:
-            item: Dict = combine(parent, copy.deepcopy(obj_a))
+        for obj_a in self.configs:
+            item: ProjectConfiguration = combine(parent, copy.deepcopy(obj_a))
 
-            if "children" in obj_a:
-                active_children = obj_a["children"].filter(checker, item)
-                if active_children:
-                    if len(active_children) == 1:
-                        obj_a_copy = combine(obj_a, active_children[0])
-                        if "children" in active_children[0]:
-                            obj_a_copy["children"] = active_children[0]["children"]
-                        obj_a_copy["critical"] = \
-                            obj_a.get("critical", False) or active_children[0].get("critical", False)
+            if obj_a.children:
+                active_children_configs = obj_a.children.filter(checker, item).configs
+                if active_children_configs:
+                    if len(active_children_configs) == 1:
+                        obj_a_copy = combine(obj_a, active_children_configs[0])
+                        if active_children_configs[0].children:
+                            obj_a_copy.children = active_children_configs[0].children
+                        obj_a_copy.critical = \
+                            obj_a.critical or active_children_configs[0].critical
                     else:
                         obj_a_copy = copy.deepcopy(obj_a)
-                        obj_a_copy["children"] = active_children
-                    filtered_variations.append(obj_a_copy)
+                        obj_a_copy.children = Variations(active_children_configs)
+                    filtered_configs.append(obj_a_copy)
             else:
                 if checker(item):
-                    filtered_variations.append(copy.deepcopy(obj_a))
+                    filtered_configs.append(copy.deepcopy(obj_a))
 
-        return Variations(filtered_variations)
+        return Variations(filtered_configs)
 
 
 global_project_root = os.getcwd()

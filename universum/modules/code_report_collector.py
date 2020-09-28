@@ -4,7 +4,7 @@ import os
 from copy import deepcopy
 from typing import cast, Dict, List, Optional, TextIO, Tuple
 
-from ..configuration_support import Variations, ProjectConfig, ProjectConfigKeyType
+from ..configuration_support import Variations, ProjectConfiguration
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
@@ -32,30 +32,18 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
         if not os.path.exists(self.report_path):
             os.makedirs(self.report_path)
 
-    def prepare_environment(self, project_configs: List[ProjectConfig]) -> Variations:
-        afterall_steps: List[ProjectConfig] = []
-        for item in project_configs:
-            if not item.get("code_report", False):
+    def prepare_environment(self, project_config_variations: Variations) -> Variations:
+        afterall_steps: List[ProjectConfiguration] = []
+        for item in project_config_variations.configs:
+            if not item.code_report:
                 continue
 
             self.set_code_report_directory(self.settings.project_root)
             temp_filename: str = "${CODE_REPORT_FILE}"
-            name: str = utils.calculate_file_absolute_path(self.report_path, item.get("name", "")) + ".json"
+            name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
-            key: ProjectConfigKeyType
-            for key in item:  # type: ignore #  https://github.com/python/mypy/issues/7981
-                if key == "command":
-                    item[key] = [word.replace(temp_filename, actual_filename) for word in item[key]]
-                else:
-                    try:
-                        val: str = cast(str, item[key])
-                        item[key] = val.replace(temp_filename, actual_filename)
-                    except AttributeError as error:
-                        if "object has no attribute 'replace'" not in str(error):
-                            raise
-
-            afterall_item: ProjectConfig = deepcopy(item)
-            afterall_steps.append(afterall_item)
+            item.replace_string(temp_filename, actual_filename)
+            afterall_steps.append(deepcopy(item))
         return Variations(afterall_steps)
 
     @make_block("Processing code report results")
