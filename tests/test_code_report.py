@@ -45,7 +45,7 @@ log_success = r'Issues not found.'
 ])
 def test_code_report(runner_with_pylint, args, tested_content, expected_log):
     runner_with_pylint.local.root_directory.join("source_file.py").write(tested_content)
-    config = get_config(["--python-version", python_version, "--files", "source_file.py"] + args)
+    config = get_config(["--python-version", python_version(), "--files", "source_file.py"] + args)
 
     log = runner_with_pylint.run(config)
     assert re.findall(expected_log, log)
@@ -62,16 +62,16 @@ configs = Variations([dict(name="Run usual command", command=["ls", "-la"])])
 
 
 @pytest.mark.parametrize('args, expected_log', [
-    [["--python-version", python_version, "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}", '--rcfile'],
+    [["--python-version", python_version(), "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}", '--rcfile'],
      'rcfile: expected one argument'],
-    [["--python-version", python_version, "--files", "source_file.py", "--result-file"],
+    [["--python-version", python_version(), "--files", "source_file.py", "--result-file"],
      'result-file: expected one argument'],
-    [["--python-version", python_version, "--files", "--result-file", "${CODE_REPORT_FILE}"],
+    [["--python-version", python_version(), "--files", "--result-file", "${CODE_REPORT_FILE}"],
      "files: expected at least one argument"],
 
     [["--python-version", "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}"],
      "python-version: expected one argument"],
-    [["--python-version", python_version, "--result-file", "${CODE_REPORT_FILE}"],
+    [["--python-version", python_version(), "--result-file", "${CODE_REPORT_FILE}"],
      "error: the following arguments are required: --files"],
 ])
 def test_pylint_analyzer_wrong_params(runner_with_pylint, args, expected_log):
