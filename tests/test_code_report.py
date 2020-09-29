@@ -94,7 +94,7 @@ def test_code_report_extended_arg_search(tmpdir, stdout_checker):
 from universum.configuration_support import Variations
 
 configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${{CODE_REPORT_FILE}}", command=[
-    'bash', '-c', 'cd {os.getcwd()} && {python()} -m universum.analyzers.pylint --result-file="${{CODE_REPORT_FILE}}" \
+    'bash', '-c', 'cd "{os.getcwd()}" && {python()} -m universum.analyzers.pylint --result-file="${{CODE_REPORT_FILE}}" \
                    --python-version {python_version()} --files {str(tmpdir.join("source_file.py"))}'])])
 """
 
