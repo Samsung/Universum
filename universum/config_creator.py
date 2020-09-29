@@ -1,8 +1,11 @@
 from pathlib import Path
+import sys
 
 from .modules.output.output import MinimalOut
 from .lib.gravity import Module
 __all__ = ["ConfigCreator"]
+
+PYTHON_VERSION = f"python{sys.version_info.major}.{sys.version_info.minor}"
 
 
 class ConfigCreator(Module):
@@ -17,7 +20,7 @@ class ConfigCreator(Module):
         self.out.log(f"Creating an example configuration file '{config_name}'")
 
         config = Path(config_name)
-        config.write_text("""#!/usr/bin/env python3.7
+        config.write_text("""#!/usr/bin/env {}
 
 from universum.configuration_support import Variations
 
@@ -26,8 +29,8 @@ configs = Variations([dict(name='Show directory contents', command=['ls', '-la']
 
 if __name__ == '__main__':
     print(configs.dump())
-""")
-        self.out.log("To run with Universum, execute the following command:\n$ python3.7 -m universum run")
+""".format(PYTHON_VERSION))
+        self.out.log(f"To run with Universum, execute the following command:\n$ {PYTHON_VERSION} -m universum run")
 
     def finalize(self) -> None:
         pass

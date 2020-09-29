@@ -5,6 +5,8 @@ import time
 
 import pytest
 
+from .utils import python
+
 
 def get_line_with_text(text, log):
     for line in log.splitlines():
@@ -326,7 +328,7 @@ configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
     config_file = tmpdir.join("configs.py")
     config_file.write(config)
 
-    process = subprocess.Popen(["python3.7", "-m", "universum",
+    process = subprocess.Popen([python(), "-m", "universum",
                                 "-o", "console", "-vt", "none",
                                 "-pr", str(tmpdir.join("project_root")),
                                 "-ad", str(tmpdir.join("artifacts")),

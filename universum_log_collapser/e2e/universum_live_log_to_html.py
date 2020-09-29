@@ -1,14 +1,17 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python
 
 import os
 import subprocess
+import sys
 import re
+
 
 def run_universum():
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
-    cmd = """python3.7 -m universum --clean-build --vcs-type=none --server-type=local --out-type=term 
-        --launcher-output=console --file-source-dir=./universum_log_collapser/e2e --launcher-config-path=./universum_config/configs.py"""
+    cmd = f"python{sys.version_info.major}.{sys.version_info.minor} -m universum --clean-build --vcs-type=none " + \
+          "--server-type=local --out-type=term --launcher-output=console " + \
+          "--file-source-dir=./universum_log_collapser/e2e --launcher-config-path=./universum_config/configs.py"
     stdout = launch_process(*cmd.split(), env=env)
     return re.sub("\\[.+?m", "", stdout)
 
