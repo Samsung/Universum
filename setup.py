@@ -38,7 +38,6 @@ setup(
         'requests',
         'sh',
         'lxml',
-        'six',
         'typing-extensions'
     ],
     extras_require={

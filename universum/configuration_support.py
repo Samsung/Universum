@@ -1,7 +1,6 @@
 from typing import Callable, Dict, Iterable, List, Union
 import copy
 import os
-import six
 
 __all__ = [
     "Variations",
@@ -139,9 +138,9 @@ class Variations(list):
         :return: new `Variations` object, consisting of the list of combined configurations
         """
 
-        if isinstance(other, six.integer_types):
+        try:
             result_list: List = list.__mul__(list(self), other)
-        else:
+        except TypeError:
             result_list = []
             for obj_a in self:
                 obj_a_copy = copy.deepcopy(obj_a)
