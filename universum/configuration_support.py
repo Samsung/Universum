@@ -138,9 +138,9 @@ class Variations(list):
         :return: new `Variations` object, consisting of the list of combined configurations
         """
 
-        try:
+        if isinstance(other, int):
             result_list: List = list.__mul__(list(self), other)
-        except TypeError:
+        else:
             result_list = []
             for obj_a in self:
                 obj_a_copy = copy.deepcopy(obj_a)
