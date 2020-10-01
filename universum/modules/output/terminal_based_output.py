@@ -1,7 +1,6 @@
 import locale
 import sys
 
-from six.moves import range
 from .base_output import BaseOutput
 
 __all__ = [
