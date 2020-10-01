@@ -14,12 +14,13 @@ docs = (
     'sphinx_rtd_theme'
 )
 
-vcs = (
-    'gitpython>=3.0.5',
-    'p4python>=2019.1',
-    'pygithub',
-    'cryptography'
-)
+p4 = ('pip>=19', 'p4python>=2019.1')
+
+git = 'gitpython>=3.0.5'
+
+github = (git, 'cryptography', 'pygithub')
+
+vcs = p4 + github
 
 setup(
     name=universum.__title__,
@@ -32,7 +33,6 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum'],
     python_requires='>=3.7',
-    setup_requires=['setuptools'],
     install_requires=[
         'glob2',
         'requests',
@@ -41,8 +41,10 @@ setup(
         'typing-extensions'
     ],
     extras_require={
+        'p4': [p4],
+        'git': [git],
+        'github': [github],
         'docs': [docs],
-        'development': [docs, vcs],
         'test': [
             docs,
             vcs,

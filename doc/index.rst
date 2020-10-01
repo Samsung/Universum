@@ -4,8 +4,8 @@ Project 'Universum'
 .. toctree::
     :hidden:
 
-    prerequisites.rst
     guide.rst
+    install.rst
     args.rst
     configuring.rst
     configuration_support.rst
