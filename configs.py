@@ -22,7 +22,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                                                           "-U", "--user", "--progress-bar", "off", "pylint"]),
                       dict(name="Create virtual environment",
                            command=[python, "-m", "venv", env_name]),
-                      dict(name="Install development", command=run_virtual(pip_install(".[development]"))),
+                      dict(name="Install development", command=run_virtual(pip_install(".[docs]"))),
                       dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
 
                       dict(name="Install tests", artifacts="junit_results.xml",
