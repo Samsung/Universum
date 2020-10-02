@@ -4,12 +4,13 @@ Configuring the project
 .. currentmodule:: universum.configuration_support
 
 In order to use the `Universum`, the project should provide a configuration file.
-This file is a regular python script with specific interface, which is recognized
-by the `Universum`.
+This file is a regular python script with specific interface, which is recognized by the `Universum`.
 
-The path to the configuration file is supplied to the main script via the `CONFIG_PATH`
-environment variable or ``--config`` / ``-cfg`` `command-line parameter
-<args.html#Configuration\ execution>`__.
+By default, configuration file is called ``.universum.py`` and is located in the project root directory.
+To create one automatically, execute ``{python} -m universum init`` in the project root directory. To use another
+file name or file path, use ``--config`` / ``-cfg`` `command-line parameter <args.html#Configuration\ execution>`__
+or `CONFIG_PATH` environment variable.
+
 Internally the config file is processed by the :mod:`universum.launcher` module. The path is passed
 to this module in `config_path` member of its input settings.
 
@@ -22,9 +23,6 @@ to this module in `config_path` member of its input settings.
 
     The project is free to use whatever it needs in the configuration file; just remember,
     all the calculations are done on config processing, not step execution.
-
-To :doc:`create an example config and get a command to launch it with Universum <init>`,
-run ``{python} -m universum init``.
 
 
 Project configuration

@@ -92,7 +92,7 @@ On this picture numbers depict the following events:
     GitHub also sends web-hook payloads on other events (such as *'check run completed'*), that are
     currently ignored by GitHub Handler
 
-The list of GitHub Handler parameters can be found :doc:`here <args_github_handler>`.
+The list of GitHub Handler parameters can be found :ref:`here <additional_commandst#github-handler>`.
 
 
 Jenkins jobs example
