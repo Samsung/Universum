@@ -28,21 +28,16 @@ execute it with Universum.
 Run Universum locally (Non-CI mode)
 -----------------------------------
 
-The purpose of this mode is improving usability of 'Universum' on a local host PC.
-This mode is designed to use 'Universum' as a wrapper for a complex build system.
-In particular such wrapper could help to resolve the following issues:
+The ``{python} -m universum run`` subcommand uses provided :doc:`Universum config <configuring>` to execute
+the set up scenario locally. This allows to easily perform all required checks *before* submitting a change
+to VCS. This mode can generally be used as a wrapper for a complex build system.
 
-- every build command run requires setting up a lot of input parameters
-- bash script is used to wrap build system like GNU Make
-- :doc:`Universum configs <configuring>` contain duplications of build system wrapper
+Unlike default `Universum` mode using ``{python} -m universum run``:
 
-
-The 'universum nonci' has the following differences from the regular mode:
-
-- report to code review system, such as 'GitHub' or 'Swarm', is disabled
-- version control is disabled
-- implemented removing of artifacts before build
-- `Universum` works with sources 'in place', without copying
+* does not require most of :doc:`build parameters <args>` - especially VCS-related ones
+* does not :doc:`report build results <code_report>` to any code review system
+* works with sources 'in place', without copying
+* :ref:`cleans artifact folder <clean_artifacts>` before build automatically.
 
 .. argparse::
     :module: universum.__main__
@@ -56,7 +51,7 @@ The 'universum nonci' has the following differences from the regular mode:
 Poll chosen VCS for updates
 ---------------------------
 
-Used as ``{python} -m universum poll`` with the following parameters:
+Here are the parameters for poller mode:
 
 .. argparse::
     :module: universum.__main__
@@ -70,7 +65,7 @@ Used as ``{python} -m universum poll`` with the following parameters:
 Detect changes and submit them automatically
 --------------------------------------------
 
-Used as ``{python} -m universum submit`` with the following parameters:
+Here are the parameters for submitter mode:
 
 .. argparse::
     :module: universum.__main__
