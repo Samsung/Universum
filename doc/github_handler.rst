@@ -95,6 +95,8 @@ On this picture numbers depict the following events:
 The list of GitHub Handler parameters can be found :ref:`here <additional_commandst#github-handler>`.
 
 
+.. _github_handler#jenkins:
+
 Jenkins jobs example
 --------------------
 
