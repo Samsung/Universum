@@ -40,9 +40,10 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
 
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",
-                           command=["mvn", "-B", "test"], directory="universum_log_collapser/universum_log_collapser"),
+                           command=["mvn", "-B", "package"], directory="universum_log_collapser/universum_log_collapser"),
                       dict(name="Run Jenkins plugin CLI version",
                            command=["mvn", "-B", "compile", "assembly:single"],
+                           artifacts="universum_log_collapser/universum_log_collapser/target/universum_log_collapser.hpi",
                            directory="universum_log_collapser/universum_log_collapser"),
                       dict(name="Generate HTML for JavaScript tests",
                            command=[python, "universum_log_collapser/e2e/universum_live_log_to_html.py"]),
