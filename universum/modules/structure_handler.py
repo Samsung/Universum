@@ -2,7 +2,7 @@ import copy
 
 from typing import Callable, ClassVar, List, Optional, TypeVar
 from typing_extensions import TypedDict
-from ..configuration_support import combine, ProjectConfiguration, Variations
+from ..configuration_support import ProjectConfiguration, Variations
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Dependency, Module
 from .output import HasOutput
@@ -171,7 +171,7 @@ class StructureHandler(HasOutput):
         child_step_failed = False
         for obj_a in variations.configs:
             try:
-                item: ProjectConfiguration = combine(parent, copy.deepcopy(obj_a))
+                item: ProjectConfiguration = parent + copy.deepcopy(obj_a)
 
                 if obj_a.children:
                     # Here pass_errors=True, because any exception outside executing build step
@@ -206,7 +206,7 @@ class StructureHandler(HasOutput):
                                       item, step_executor, obj_a.critical)
             except StepException:
                 child_step_failed = True
-                if obj_a.get("critical", False):
+                if obj_a.critical:
                     self.report_critical_block_failure()
                     skipped = True
         if child_step_failed:

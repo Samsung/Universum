@@ -25,7 +25,7 @@ def setup_env_vars(env_vars: Optional[dict]):
 
 def check(if_env_set_key, env_vars: Optional[dict]):
     setup_env_vars(env_vars)
-    if_env_set_var = dict(if_env_set=if_env_set_key)
+    if_env_set_var = Variations([dict(if_env_set=if_env_set_key)])[0]
     return check_if_env_set(if_env_set_var)
 
 

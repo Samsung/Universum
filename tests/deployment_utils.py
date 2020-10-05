@@ -4,11 +4,11 @@ import getpass
 import os
 from pwd import getpwnam
 
+from typing import Generator
 import docker
 import py
 import pytest
 from requests.exceptions import ReadTimeout
-from typing import Generator
 from . import utils
 from .utils import python
 

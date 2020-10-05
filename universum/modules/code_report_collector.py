@@ -33,18 +33,18 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             os.makedirs(self.report_path)
 
     def prepare_environment(self, project_config_variations: Variations) -> Variations:
-        afterall_steps: List[ProjectConfiguration] = []
+        afterall_steps: Variations = Variations()
         for item in project_config_variations.configs:
             if not item.code_report:
                 continue
 
-            self.set_code_report_directory(self.settings.project_root)
-            temp_filename: str = "${CODE_REPORT_FILE}"
+            self.set_code_report_directory(self.settings.project_root)  # why is this in a loop?
+            temp_filename: str = "${CODE_REPORT_FILE}"  # should we move this logic to configuration_support?
             name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
             item.replace_string(temp_filename, actual_filename)
-            afterall_steps.append(deepcopy(item))
-        return Variations(afterall_steps)
+            afterall_steps += [deepcopy(item)]
+        return afterall_steps
 
     @make_block("Processing code report results")
     def report_code_report_results(self) -> None:

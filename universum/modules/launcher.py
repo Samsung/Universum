@@ -30,7 +30,7 @@ def make_command(name: str) -> sh.Command:
         raise CiException(f"No such file or command as '{name}'") from e
 
 
-def check_if_env_set(configuration: Dict) -> bool:
+def check_if_env_set(configuration: configuration_support.ProjectConfiguration) -> bool:
     """
     Predicate function for :func:`universum.configuration_support.Variations.filter`,
     used to decide whether this particular configuration should be executed in this
@@ -50,13 +50,12 @@ def check_if_env_set(configuration: Dict) -> bool:
     >>> check_if_env_set(c[0])
     True
 
-    :param configuration: :class:`~universum.configuration_support.Variations`
-           object containing one leaf configuration
+    :param configuration: :class:`~universum.configuration_support.ProjectConfiguration` object
     :return: True if environment satisfies described requirements; False otherwise
     """
 
-    if "if_env_set" in configuration:
-        variables = configuration["if_env_set"].split("&&")
+    if configuration.if_env_set:
+        variables = configuration.if_env_set.split("&&")
         for var in variables:
             if var.strip():
                 match = re.match(r"\s*([A-Za-z_]\w*)\s*(!=|==)\s*(.*?)\s*$", var)
@@ -178,8 +177,7 @@ class Step:
         self.working_directory: str = working_directory
 
         self.environment: Dict[str, str] = os.environ.copy()
-        user_environment = item.get("environment", {})
-        self.environment.update(user_environment)
+        self.environment.update(item.environment)
         self.environment.update(additional_environment)
 
         self.cmd: sh.Command
@@ -209,7 +207,7 @@ class Step:
 
         self._is_background = is_background
         self._postponed_out = []
-        self.process = self.cmd(*self.configuration["command"][1:],
+        self.process = self.cmd(*self.configuration.command[1:],
                                 _iter=True,
                                 _bg_exc=False,
                                 _cwd=self.working_directory,
@@ -271,10 +269,10 @@ class Step:
                 if self.file:
                     self.file.write(text + "\n")
                 self.fail_block(text)
-                self.add_tag(self.configuration.get("fail_tag", ""))
+                self.add_tag(self.configuration.fail_tag)
                 raise StepException()
 
-            self.add_tag(self.configuration.get("pass_tag", ""))
+            self.add_tag(self.configuration.pass_tag)
         finally:
             self.handle_stdout()
             if self.file:
@@ -324,7 +322,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.source_project_configs: configuration_support.Variations
-        self.project_config_variations: configuration_support.Variations = configuration_support.Variations(None)
+        self.project_config_variations: configuration_support.Variations = configuration_support.Variations()
 
         self.output: Output = self.settings.output
         if self.output is None:
@@ -385,7 +383,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         return self.project_config_variations
 
     def create_process(self, item: configuration_support.ProjectConfiguration) -> Step:
-        working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
+        working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
         # get_current_block() should be called while inside the required block, not afterwards
@@ -396,7 +394,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         log_file: Optional[TextIO] = None
         if self.output == "file":
-            log_file = self.artifacts.create_text_file(item.get("name", "") + "_log.txt")
+            log_file = self.artifacts.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()

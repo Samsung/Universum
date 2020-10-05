@@ -5,6 +5,7 @@ from .lib.gravity import Dependency
 from .lib.module_arguments import ModuleArgumentParser
 from .modules import vcs, artifact_collector, reporter, launcher, code_report_collector
 from .modules.output import HasOutput
+from .configuration_support import Variations
 
 
 __all__ = ["Main"]
@@ -69,8 +70,8 @@ class Main(HasOutput):
                 raise SilentAbortException(application_exit_code=0)
 
         self.vcs.prepare_repository()
-        project_configs = self.launcher.process_project_configs()
-        afterall_configs = self.code_report_collector.prepare_environment(project_configs)
+        project_configs: Variations = self.launcher.process_project_configs()
+        afterall_configs: Variations = self.code_report_collector.prepare_environment(project_configs)
         self.artifacts.set_and_clean_artifacts(project_configs)
 
         self.reporter.report_build_started()

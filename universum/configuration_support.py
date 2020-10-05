@@ -6,15 +6,16 @@ import os
 __all__ = [
     "ProjectConfiguration",
     "Variations",
-    "combine",
     "set_project_root",
     "get_project_root"
 ]
 
-skip_attributes = {"children", "critical", "skip_numbering_level"}
 
-
-class ProjectConfiguration(dict):  # dict inheritance is a temporary measure to simplify transition
+class ProjectConfiguration:
+    """
+    ProjectConfiguration is a collection of configurable project-specific data needed for Universum operations.
+    Legacy constructor supports dictionary data, but for static type checking please use new explicit constructor.
+    """
 
     # pylint: disable-msg=too-many-locals
     def __init__(self,
@@ -32,115 +33,88 @@ class ProjectConfiguration(dict):  # dict inheritance is a temporary measure to 
                  pass_tag: str = '',
                  fail_tag: str = '',
                  if_env_set: str = '',
+                 extras: Optional[Dict[str, str]] = None,
                  **kwargs) -> None:  # explicit constructor for client's type safety
-        self['name'] = name
-        self['command'] = command if command else []
-        self['environment'] = environment if environment else {}
-        self['artifacts'] = artifacts
-        self['report_artifacts'] = report_artifacts
-        self['artifact_prebuild_clean'] = artifact_prebuild_clean
-        self['directory'] = directory
-        self['critical'] = critical
-        self['background'] = background
-        self['finish_background'] = finish_background
-        self['code_report'] = code_report
-        self['pass_tag'] = pass_tag
-        self['fail_tag'] = fail_tag
-        self['if_env_set'] = if_env_set
+        self.name: str = name
+        self.directory: str = directory
+        self.code_report: bool = code_report
+        self.command: List[str] = command if command else []
+        self.environment: Dict[str, str] = environment if environment else {}
+        self.artifacts: str = artifacts
+        self.report_artifacts: str = report_artifacts
+        self.artifact_prebuild_clean: bool = artifact_prebuild_clean
+        self.critical: bool = critical
+        self.background: bool = background
+        self.finish_background: bool = finish_background
+        self.pass_tag: str = pass_tag
+        self.fail_tag: str = fail_tag
+        self.if_env_set: str = if_env_set
+        self.skip_numbering_level: bool = False
+        self.children: Optional['Variations'] = None
+        self.extras: Dict[str, str] = extras if extras else {}
         for key, value in kwargs.items():
-            self[key] = value
-
-    @property
-    def name(self) -> str:
-        return self.get('name', '')
-
-    @property
-    def command(self) -> List[str]:
-        return self.get('command', [])
-
-    @property
-    def environment(self) -> Dict[str, str]:
-        return self.get('environment', {})
-
-    @property
-    def artifacts(self) -> str:
-        return self.get('artifacts', '')
-
-    @property
-    def report_artifacts(self) -> str:
-        return self.get('report_artifacts', '')
-
-    @property
-    def artifact_prebuild_clean(self) -> bool:
-        return self.get('artifact_prebuild_clean', False)
-
-    @property
-    def directory(self) -> str:
-        return self.get('directory', '')
-
-    @property
-    def critical(self) -> bool:
-        return self.get('critical', False)
-
-    @critical.setter
-    def critical(self, val: bool) -> None:
-        self['critical'] = val
-
-    @property
-    def background(self) -> bool:
-        return self.get('background', False)
-
-    @property
-    def finish_background(self) -> bool:
-        return self.get('finish_background', False)
-
-    @property
-    def code_report(self) -> bool:
-        return self.get('code_report', False)
-
-    @property
-    def pass_tag(self) -> str:
-        return self.get('pass_tag', '')
-
-    @property
-    def fail_tag(self) -> str:
-        return self.get('fail_tag', '')
-
-    @property
-    def children(self) -> Optional['Variations']:
-        return self.get('children', None)
-
-    @children.setter
-    def children(self, val: 'Variations') -> None:
-        self['children'] = val
-
-    @property
-    def skip_numbering_level(self) -> bool:
-        return self.get('skip_numbering_level', False)
-
-    @skip_numbering_level.setter
-    def skip_numbering_level(self, val: bool):
-        self['skip_numbering_level'] = val
+            self.extras[key] = value
 
     def replace_string(self, from_string: str, to_string: str) -> None:
-        for key, val in self.items():  # type: ignore #  https://github.com/python/mypy/issues/7981
-            if key == 'command':
-                self[key] = [word.replace(from_string, to_string) for word in val]
-            else:
-                if isinstance(val, str):
-                    self[key] = val.replace(from_string, to_string)
+        self.command = [word.replace(from_string, to_string) for word in self.command]
+        self.artifacts = self.artifacts.replace(from_string, to_string)
+        self.report_artifacts = self.report_artifacts.replace(from_string, to_string)
+        self.directory = self.directory.replace(from_string, to_string)
+        # should we update extras? (user-defined)
 
-    def __eq__(self, other):
+    def __repr__(self) -> str:
+        res = {k: v for k, v in self.__dict__.items() if v and k != 'extras'}
+        res.update(self.extras)
+        if len(self.command) == 1:  # command should be printed as one string, instead of list
+            res['command'] = self.command[0]
+        return str(res)
+
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, dict):
-            return super().__eq__(ProjectConfiguration(**other))
+            for key, val in other.items():
+                if getattr(self, key, None) != val:
+                    return False
+            return True
         return super().__eq__(other)
+
+    def __getitem__(self, item: str) -> Optional[str]:
+        return self.extras.get(item, None)
+
+    def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
+        return ProjectConfiguration(
+            name=self.name + other.name,
+            command=self.command + other.command,
+            environment=combine(self.environment, other.environment),
+            artifacts=self.artifacts + other.artifacts,
+            report_artifacts=self.report_artifacts + other.report_artifacts,
+            artifact_prebuild_clean=self.artifact_prebuild_clean or other.artifact_prebuild_clean,
+            directory=self.directory + other.directory,
+            background=self.background or other.background,
+            finish_background=self.finish_background or other.finish_background,
+            code_report=self.code_report or other.code_report,
+            pass_tag=self.pass_tag + other.pass_tag,
+            fail_tag=self.fail_tag + other.fail_tag,
+            if_env_set=self.if_env_set + other.if_env_set,
+            extras=combine(self.extras, other.extras)
+        )
+
+    def stringify_command(self) -> bool:
+        result = False
+        command_line = ""
+        for argument in self.command:
+            if " " in argument:
+                argument = "\"" + argument + "\""
+                result = True
+            command_line = command_line + " " + argument if command_line else argument
+        self.command = [command_line] if command_line else []
+        return result
 
 
 DictType = TypeVar('DictType', bound=dict)
 
 
 def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
-    # this should probably be a method in ProjectConfiguration
+    # TODO: move to utils, as this is no longer specific to configurations
     """
     Combine two dictionaries using plus operator for matching keys
 
@@ -162,10 +136,10 @@ def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
 
     result = dictionary_a.__class__()
     for key in dictionary_a:
-        if key in skip_attributes:
-            continue
         if key in dictionary_b:
             if isinstance(dictionary_a[key], dict) and isinstance(dictionary_b[key], dict):
+                # TODO: shouldn't we use recursion here?
+                # also why not write result[key] = {**dictionary_a[key], **dictionary_b[key]} ?
                 new_value = dictionary_a[key].copy()
                 new_value.update(dictionary_b[key])
                 result[key] = new_value
@@ -175,28 +149,9 @@ def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
             result[key] = dictionary_a[key]
 
     for key in dictionary_b:
-        if key in skip_attributes:
-            continue
         if key not in dictionary_a:
             result[key] = dictionary_b[key]
 
-    return result
-
-
-def stringify(obj: Dict[str, str]) -> bool:
-    result = False
-    command_line = ""
-    for argument in obj["command"]:
-        if " " in argument:
-            argument = "\"" + argument + "\""
-            result = True
-
-        if command_line == "":
-            command_line = argument
-        else:
-            command_line += " " + argument
-
-    obj["command"] = command_line
     return result
 
 
@@ -206,7 +161,7 @@ class Variations:
     This class object is a list of dictionaries:
 
     >>> v1 = Variations([{"field1": "string"}])
-    >>> v1
+    >>> v1.configs
     [{'field1': 'string'}]
 
     Build-in method all() generates iterable for all configuration dictionaries for further usage:
@@ -244,7 +199,7 @@ class Variations:
 
     """
 
-    def __init__(self, lst: Optional[Union[List[Dict[str, Any]], List[ProjectConfiguration]]]):
+    def __init__(self, lst: Optional[Union[List[Dict[str, Any]], List[ProjectConfiguration]]] = None):
         #  lst can be List[Dict[str, Any]] to support legacy cases - should be removed after project migration
         self.configs: List[ProjectConfiguration] = []  # aggregation is used instead of inheritance for type safety
         if lst:
@@ -254,7 +209,7 @@ class Variations:
                 else:
                     self.configs.append(ProjectConfiguration(**item))
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, Variations):
             return self.configs == other.configs
         if isinstance(other, list):
@@ -307,16 +262,11 @@ class Variations:
         :return: iterable for all dictionary objects in :class:`.Variations` list
         """
         for obj_a in self.configs:
-
-            obj_a_copy = copy.deepcopy(obj_a)
-
-            if obj_a_copy.children:
-                for obj_b in obj_a_copy.children.all():
-                    res = combine(obj_a_copy, obj_b)
-
-                    yield res
+            if obj_a.children:
+                for obj_b in obj_a.children.all():
+                    yield obj_a + obj_b
             else:
-                yield obj_a_copy
+                yield copy.deepcopy(obj_a)
 
     def dump(self, produce_string_command: bool = True) -> str:
         """
@@ -331,9 +281,8 @@ class Variations:
             if len(result) > 1:
                 result += ",\n"
 
-            if produce_string_command and "command" in obj:
-                if stringify(obj):
-                    space_found = True
+            if produce_string_command and obj.stringify_command():
+                space_found = True
 
             result += str(obj)
 
@@ -358,16 +307,16 @@ class Variations:
         if parent is None:
             parent = ProjectConfiguration()
 
-        filtered_configs: List[ProjectConfiguration] = []
+        filtered_configs: Variations = Variations()
 
         for obj_a in self.configs:
-            item: ProjectConfiguration = combine(parent, copy.deepcopy(obj_a))
+            item: ProjectConfiguration = parent + obj_a
 
             if obj_a.children:
                 active_children_configs = obj_a.children.filter(checker, item).configs
                 if active_children_configs:
                     if len(active_children_configs) == 1:
-                        obj_a_copy = combine(obj_a, active_children_configs[0])
+                        obj_a_copy = obj_a + active_children_configs[0]
                         if active_children_configs[0].children:
                             obj_a_copy.children = active_children_configs[0].children
                         obj_a_copy.critical = \
@@ -375,12 +324,12 @@ class Variations:
                     else:
                         obj_a_copy = copy.deepcopy(obj_a)
                         obj_a_copy.children = Variations(active_children_configs)
-                    filtered_configs.append(obj_a_copy)
+                    filtered_configs += [obj_a_copy]
             else:
                 if checker(item):
-                    filtered_configs.append(copy.deepcopy(obj_a))
+                    filtered_configs += [copy.deepcopy(obj_a)]
 
-        return Variations(filtered_configs)
+        return filtered_configs
 
 
 global_project_root = os.getcwd()
