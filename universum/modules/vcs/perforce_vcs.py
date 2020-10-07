@@ -510,7 +510,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 abs_path = self.p4.run("where", line["depotFile"])[0]["path"]
                 self.mappings_dict[abs_path] = line["depotFile"]
 
-    @make_block("Revert workspace to depot state", pass_errors=False)
+    @make_block("Revert workspace to depot state")
     @catch_p4exception()
     def copy_cl_files_and_revert(self) -> List[Tuple[Optional[str], Optional[str], Optional[str]]]:
         self.unshelved_files = self.p4.run_opened()
