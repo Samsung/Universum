@@ -60,7 +60,7 @@ class Block:
         return self.status == "Success"
 
 
-class BackgroundStep(TypedDict):
+class BackgroundStepInfo(TypedDict):
     name: str
     finalizer: Callable[[], None]
     is_critical: bool
@@ -72,7 +72,7 @@ class StructureHandler(HasOutput):
         self.current_block: Optional[Block] = Block("Universum")
         self.configs_current_number: int = 0
         self.configs_total_count: int = 0
-        self.active_background_steps: List[BackgroundStep] = []
+        self.active_background_steps: List[BackgroundStepInfo] = []
 
     def open_block(self, name: str) -> None:
         new_block = Block(name, self.current_block)
@@ -148,7 +148,7 @@ class StructureHandler(HasOutput):
                                              'finalizer': process.finalize,
                                              'is_critical': is_critical})
 
-    def finalize_background_step(self, background_step: BackgroundStep):
+    def finalize_background_step(self, background_step: BackgroundStepInfo):
         try:
             background_step['finalizer']()
             self.out.log("This background step finished successfully")
