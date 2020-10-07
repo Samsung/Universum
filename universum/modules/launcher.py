@@ -343,7 +343,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         self.include_patterns, self.exclude_patterns = get_match_patterns(self.settings.step_filter)
 
     @make_block("Processing project configs")
-    def process_project_configs(self) -> List[configuration_support.ProjectConfiguration]:
+    def process_project_configs(self) -> configuration_support.Variations:
         config_path = utils.parse_path(self.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
         config_globals: Dict[str, configuration_support.Variations] = {}
