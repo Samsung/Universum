@@ -79,9 +79,12 @@ class ProjectConfiguration:
 
         >>> cfg1 = ProjectConfiguration(name='foo', my_var='bar')
         >>> cfg2 = ProjectConfiguration(name='foo', my_var='bar')
+        >>> cfg3 = ProjectConfiguration(name='foo', my_var='bar', critical=True)
         >>> cfg1 == cfg1
         True
         >>> cfg1 == cfg2
+        True
+        >>> cfg1 == cfg3
         False
         >>> cfg1 == {'name': 'foo', 'my_var': 'bar'}
         True
@@ -89,12 +92,14 @@ class ProjectConfiguration:
         True
         >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': None}
         True
-        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ''}
+        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ' '}
         False
         """
+        if isinstance(other, ProjectConfiguration):
+            return self == other.__dict__
         if isinstance(other, dict):
             for key, val in other.items():
-                if self[key] != val:
+                if val and self[key] != val:
                     return False
             return True
         return super().__eq__(other)
@@ -296,6 +301,32 @@ class Variations:
                     self.configs.append(ProjectConfiguration(**item))
 
     def __eq__(self, other: Any) -> bool:
+        """
+
+        :param other:
+        :return: 'True' if stored configurations match
+
+        >>> l = [{'name': 'foo', 'critical': True}, {'name': 'bar', 'myvar': 'baz'}]
+        >>> v1 = Variations(l)
+        >>> cfg1 = ProjectConfiguration(name='foo', critical=True)
+        >>> cfg2 = ProjectConfiguration(name='bar', myvar='baz')
+        >>> v2 = Variations([cfg1]) + Variations([cfg2])
+        >>> v3 = Variations() + Variations([l[0]]) + Variations([cfg2])
+        >>> v1 == v1
+        True
+        >>> v1 == v2
+        True
+        >>> v1 == v3
+        True
+        >>> v1 == v2 + Variations()
+        True
+        >>> v1 == v1 * 1
+        True
+        >>> v1 == v1 * Variations()
+        True
+        >>> v1 == v2 + v3
+        False
+        """
         if isinstance(other, Variations):
             return self.configs == other.configs
         if isinstance(other, list):
@@ -397,7 +428,8 @@ class Variations:
             result += "Please make sure you are not trying to pass two or more parameters as one."
         return result
 
-    def filter(self, checker: Callable[[ProjectConfiguration], bool], parent: ProjectConfiguration = None) -> 'Variations':
+    def filter(self, checker: Callable[[ProjectConfiguration], bool],
+               parent: ProjectConfiguration = None) -> 'Variations':
         """
         This function is supposed to be called from main script, not configuration file.
         It uses provided `checker` to find all the configurations that pass the check,
