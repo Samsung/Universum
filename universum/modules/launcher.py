@@ -30,7 +30,7 @@ def make_command(name: str) -> sh.Command:
         raise CiException(f"No such file or command as '{name}'") from e
 
 
-def check_if_env_set(configuration: configuration_support.ProjectConfiguration) -> bool:
+def check_if_env_set(configuration: configuration_support.ProjectConfiguration) -> bool:  # TODO move to configuration
     """
     Predicate function for :func:`universum.configuration_support.Variations.filter`,
     used to decide whether this particular configuration should be executed in this

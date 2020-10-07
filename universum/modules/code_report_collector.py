@@ -39,7 +39,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                 continue
 
             self.set_code_report_directory(self.settings.project_root)  # why is this in a loop?
-            temp_filename: str = "${CODE_REPORT_FILE}"  # should we move this logic to configuration_support?
+            temp_filename: str = "${CODE_REPORT_FILE}"  # TODO: move to global constant and update docs to use it
             name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
             item.replace_string(temp_filename, actual_filename)

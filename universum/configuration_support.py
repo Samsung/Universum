@@ -60,7 +60,9 @@ class ProjectConfiguration:
         self.artifacts = self.artifacts.replace(from_string, to_string)
         self.report_artifacts = self.report_artifacts.replace(from_string, to_string)
         self.directory = self.directory.replace(from_string, to_string)
-        # should we update extras? (user-defined)
+        for k, v in self.extras.items():
+            if isinstance(v, str):
+                self.extras[k] = v.replace(from_string, to_string)
 
     def __repr__(self) -> str:
         res = {k: v for k, v in self.__dict__.items() if v and k != 'extras'}
