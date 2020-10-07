@@ -55,16 +55,15 @@ class ProjectConfiguration:
         for key, value in kwargs.items():
             self.extras[key] = value
 
-    def replace_string(self, from_string: str, to_string: str) -> None:
-        self.command = [word.replace(from_string, to_string) for word in self.command]
-        self.artifacts = self.artifacts.replace(from_string, to_string)
-        self.report_artifacts = self.report_artifacts.replace(from_string, to_string)
-        self.directory = self.directory.replace(from_string, to_string)
-        for k, v in self.extras.items():
-            if isinstance(v, str):
-                self.extras[k] = v.replace(from_string, to_string)
-
     def __repr__(self) -> str:
+        """
+        This function simulates dict-like legacy representation for output
+        :return: dict-like string
+
+        >>> cfg = ProjectConfiguration(name='foo', command=['bar'], my_var='baz')
+        >>> repr(cfg)
+        "{'name': 'foo', 'command': 'bar', 'my_var': 'baz'}"
+        """
         res = {k: v for k, v in self.__dict__.items() if v and k != 'extras'}
         res.update(self.extras)
         if len(self.command) == 1:  # command should be printed as one string, instead of list
@@ -72,17 +71,63 @@ class ProjectConfiguration:
         return str(res)
 
     def __eq__(self, other: Any) -> bool:
+        """
+        This functions simulates dict-like legacy comparison
+
+        :param other: dict to compare values, or object to check exact equality
+        :return: 'True' if 'other' matches
+
+        >>> cfg1 = ProjectConfiguration(name='foo', my_var='bar')
+        >>> cfg2 = ProjectConfiguration(name='foo', my_var='bar')
+        >>> cfg1 == cfg1
+        True
+        >>> cfg1 == cfg2
+        False
+        >>> cfg1 == {'name': 'foo', 'my_var': 'bar'}
+        True
+        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'critical': False}
+        True
+        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': None}
+        True
+        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ''}
+        False
+        """
         if isinstance(other, dict):
             for key, val in other.items():
-                if getattr(self, key, None) != val:
+                if self[key] != val:
                     return False
             return True
         return super().__eq__(other)
 
     def __getitem__(self, item: str) -> Optional[str]:
-        return self.extras.get(item, None)
+        """
+        This functions simulates dict-like legacy access
+
+        :param item: client-defined item
+        :return: client-defined value
+
+        >>> cfg = ProjectConfiguration(name='foo', my_var='bar')
+        >>> cfg['name']
+        'foo'
+        >>> cfg['my_var']
+        'bar'
+        >>> cfg['test']
+        """
+        return self.extras.get(item, self.__dict__.get(item, None))
 
     def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
+        """
+        This functions defines operator ``+`` for :class:`.ProjectConfiguration` class objects by
+        concatenating strings and contents of dictionaries
+
+        :param other: `ProjectConfiguration` object
+        :return: new `ProjectConfiguration` object, including all attributes from both `self` and `other` objects
+
+        >>> cfg1 = ProjectConfiguration(name='foo', command=['foo'], critical=True, my_var1='foo')
+        >>> cfg2 = ProjectConfiguration(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
+        >>> cfg1 + cfg2
+        {'name': 'foobar', 'command': ['foo', 'bar'], 'background': True, 'my_var1': 'foobar', 'my_var2': 'baz'}
+        """
         return ProjectConfiguration(
             name=self.name + other.name,
             command=self.command + other.command,
@@ -100,7 +145,46 @@ class ProjectConfiguration:
             extras=combine(self.extras, other.extras)
         )
 
+    def replace_string(self, from_string: str, to_string: str) -> None:
+        """
+        Replace instances of a string, used for pseudo-variables
+
+        :param from_string: string to replace, e.g. ${CODE_REPORT_FILE}
+        :param to_string: value to put in place of 'from_string'
+
+        >>> cfg = ProjectConfiguration(name='foo test', command=['foo', 'baz', 'foobar'], \
+        myvar1='foo', myvar2='bar', myvar3=1)
+        >>> cfg.replace_string('foo', 'bar')
+        >>> cfg
+        {'name': 'foo test', 'command': ['bar', 'baz', 'barbar'], 'myvar1': 'bar', 'myvar2': 'bar', 'myvar3': 1}
+
+        >>> cfg = ProjectConfiguration(artifacts='foo', report_artifacts='foo', directory='foo')
+        >>> cfg.replace_string('foo', 'bar')
+        >>> cfg
+        {'directory': 'bar', 'artifacts': 'bar', 'report_artifacts': 'bar'}
+        """
+        self.command = [word.replace(from_string, to_string) for word in self.command]
+        self.artifacts = self.artifacts.replace(from_string, to_string)
+        self.report_artifacts = self.report_artifacts.replace(from_string, to_string)
+        self.directory = self.directory.replace(from_string, to_string)
+        for k, v in self.extras.items():
+            if isinstance(v, str):
+                self.extras[k] = v.replace(from_string, to_string)
+
     def stringify_command(self) -> bool:
+        """
+        Concatenates components of a command into one element
+
+        :return: 'True', if any of the command components have space inside
+
+        >>> cfg = ProjectConfiguration(name='stringify test', command=['foo', 'bar', '--baz'])
+        >>> cfg.stringify_command()
+        False
+        >>> cfg
+        {'name': 'stringify test', 'command': 'foo bar --baz'}
+        >>> cfg.stringify_command()
+        True
+        """
         result = False
         command_line = ""
         for argument in self.command:
