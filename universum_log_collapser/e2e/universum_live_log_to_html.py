@@ -54,3 +54,4 @@ if __name__ == "__main__":
     wrapped_log = run_plugin_cli(raw_log)
     print(raw_log)
     write_to_html(wrapped_log)
+    print(wrapped_log)
