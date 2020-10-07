@@ -303,6 +303,21 @@ class Variations:
         return super().__eq__(other)
 
     def __bool__(self) -> bool:
+        """
+        This function defines truthiness of :class:`.Variations` object
+
+        :return: 'True' if :class:`.Variations` class object is empty
+
+        >>> v1 = Variations()
+        >>> bool(v1)
+        False
+        >>> v2 = Variations([])
+        >>> bool(v2)
+        False
+        >>> v3 = Variations([{}])
+        >>> bool(v3)
+        True
+        """
         return len(self.configs) != 0
 
     def __getitem__(self, item: int) -> ProjectConfiguration:
