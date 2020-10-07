@@ -52,6 +52,4 @@ def write_to_html(log):
 if __name__ == "__main__":
     raw_log = run_universum()
     wrapped_log = run_plugin_cli(raw_log)
-    print(raw_log)
     write_to_html(wrapped_log)
-    print(wrapped_log)
