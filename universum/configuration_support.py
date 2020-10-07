@@ -302,6 +302,9 @@ class Variations:
             return self.configs == other
         return super().__eq__(other)
 
+    def __bool__(self) -> bool:
+        return len(self.configs) != 0
+
     def __getitem__(self, item: int) -> ProjectConfiguration:
         return self.configs[item]
 
