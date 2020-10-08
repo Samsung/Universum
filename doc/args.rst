@@ -1,12 +1,12 @@
 Parametrizing execution
 =======================
 
-`Univesrum` can be executed via ``{python} -m universum`` with various parameters. These parameters can either be
-passed via command line or environment variables.
+`Univesrum` can be executed via ``{python} -m universum`` with various parameters. These parameters can be
+passed via command line; most of them can also be passed via environment variables.
 
 Apart from default mode, actually used for CI, `Universum` also has several other
-:doc:`helpful modes <additional_commands>` and a bunch of :doc:`analyzers <code_report>` that can add comments on
-found issues right to the selected code review system.
+:doc:`helpful modes <additional_commands>` and a bunch of :doc:`analyzers <code_report>` that are used to
+add comments on found issues right to the selected code review system.
 
 .. argparse::
     :module: universum.__main__

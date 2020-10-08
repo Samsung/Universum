@@ -20,13 +20,12 @@ def pip_install(module_name):
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
                       dict(name="Update Pylint", command=[python, "-m", "pip", "install",
                                                           "-U", "--user", "--progress-bar", "off", "pylint"]),
-                      dict(name="Create virtual environment",
-                           command=[python, "-m", "venv", env_name]),
-                      dict(name="Install development", command=run_virtual(pip_install(".[docs]"))),
-                      dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
+                      dict(name="Create virtual environment", command=[python, "-m", "venv", env_name]),
 
-                      dict(name="Install tests", artifacts="junit_results.xml",
+                      dict(name="Install Universum for tests", artifacts="junit_results.xml",
                            command=run_virtual(pip_install(".[test]"))),
+                      dict(name="Make", artifacts="doc/_build",
+                           command=run_virtual("make")),
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
 
@@ -44,6 +43,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                       dict(name="Run Jenkins plugin CLI version",
                            command=["mvn", "-B", "compile", "assembly:single"],
                            directory="universum_log_collapser/universum_log_collapser"),
+
                       dict(name="Generate HTML for JavaScript tests",
                            command=[python, "universum_log_collapser/e2e/universum_live_log_to_html.py"]),
                       dict(name="Prepare Jenkins plugin JavaScript tests project",

@@ -32,12 +32,12 @@ The ``{python} -m universum run`` subcommand uses provided :doc:`Universum confi
 the set up scenario locally. This allows to easily perform all required checks *before* submitting a change
 to VCS. This mode can generally be used as a wrapper for a complex build system.
 
-Unlike default `Universum` mode, using ``{python} -m universum run``:
+Unlike default `Universum` mode, using the ``{python} -m universum run``:
 
-* does not require most of :doc:`build parameters <args>` - especially VCS-related ones
+* does not require most of :doc:`build parameters <args>` - especially the VCS-related ones
 * does not :doc:`report build results <code_report>` to any code review system
 * works with sources 'in place', without copying
-* :ref:`cleans artifact folder <clean_artifacts>` before build automatically.
+*  automatically :ref:`cleans the artifact folder <clean_artifacts>` before the build
 
 .. argparse::
     :module: universum.__main__
@@ -50,6 +50,8 @@ Unlike default `Universum` mode, using ``{python} -m universum run``:
 
 Poll chosen VCS for updates
 ---------------------------
+
+.. TODO: Add description
 
 Here are the parameters for poller mode:
 
@@ -65,6 +67,8 @@ Here are the parameters for poller mode:
 Detect changes and submit them automatically
 --------------------------------------------
 
+.. TODO: Add description
+
 Here are the parameters for submitter mode:
 
 .. argparse::
@@ -79,9 +83,10 @@ Here are the parameters for submitter mode:
 GitHub Handler
 --------------
 
-:doc:`GitHub Handler <github_handler>` is a Universum mode that serves as GitHub Application, helping to perform and report checks
-on new commits to a repository. It can create new check runs on GitHub and trigger an already set up automation
-server to perform these checks. GitHub Handler parses all required params and passes them to the triggered builds.
+:doc:`GitHub Handler <github_handler>` is a Universum mode that serves as GitHub Application, helping
+to perform and report checks on new commits to a repository. It can create new check runs on GitHub and trigger
+an already set up automation server to perform these checks. GitHub Handler parses all required params and
+passes them to the triggered builds.
 
 For GitHub Handler to work, these parameters are mandatory:
 

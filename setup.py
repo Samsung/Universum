@@ -8,12 +8,6 @@ def readme():
         return f.read()
 
 
-docs = (
-    'sphinx',
-    'sphinx-argparse',
-    'sphinx_rtd_theme'
-)
-
 p4 = ('pip>=19', 'p4python>=2019.1')
 
 git = 'gitpython>=3.0.5'
@@ -44,10 +38,11 @@ setup(
         'p4': [p4],
         'git': [git],
         'github': [github],
-        'docs': [docs],
         'test': [
-            docs,
             vcs,
+            'sphinx',
+            'sphinx-argparse',
+            'sphinx_rtd_theme'
             'docker',
             'httpretty',
             'mock',

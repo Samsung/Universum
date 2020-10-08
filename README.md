@@ -16,15 +16,14 @@ Independent analyzers are executed with their module name, e.g. `python3.7 -m un
 Other Universum modes, such as poller or submitter, are called via command line, e.g.
 `python3.7 -m universum poll`
 
-## Installation from GitHub
+## Installation
 
-### Latest release
+### Latest release from PyPI
 
-Minimum prerequisites ([see documentation for details](
-https://universum.readthedocs.io/en/latest/prerequisites.html)):
+Minimum prerequisites ([see documentation for details](https://universum.readthedocs.io/en/latest/install.html)):
 1. OS Linux
-2. Python 3.7
-3. Pip for python3.7
+2. Python version 3.7 or greater
+3. Pip version 9.0 or greater
 ```bash
 sudo pip3.7 install -U universum
 ```
@@ -32,21 +31,51 @@ or
 ```bash
 pip3.7 install --user -U universum
 ```
+Can also be installed with [extras for using VCS](
+https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras), but they also require
+additional installations via `apt`.
 
 ### Latest development + tests
 
-Additional prerequisites ([see documentation for details](
-https://universum.readthedocs.io/en/latest/prerequisites.html#optional-used-for-internal-tests)):
-1. Perforce CLI, P4Python (['helix-cli' and 'perforce-p4python'](
-https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.install.html))
-2. Docker (['docker-ce', 'docker-ce-cli'](
-https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce))
-3. Current user added to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+Additional prerequisites for testing Universum locally:
+1. Support of all [VCS extras](https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
+   including installation of Git and P4 CLI
+2. Manual installation of Docker (`docker-ce`, `docker-ce-cli`) (see [official installation manual](
+   https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository) for details)
+
+   * Also add currnt user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+
+3. Additional Python modules:
+
+    * `sphinx`
+    * `sphinx-argparse` (extension for `Sphinx`)
+    * `sphinx_rtd_theme` (extension for `Sphinx`)
+    * `pytest`
+    * `pylint`
+    * `docker`
+    * `httpretty`
+    * `mock`
+
+Although it is possible to get these modules via `pip3.7 install -U universum[test]`, it might be more convenient
+to checkout the Universum branch you are currently working on, change working directory to project root and
+run a `pip3.7 install -U .[test]` command from there for more flexibility.
+
+Docker images, used in tests, can be built via ``make images`` command (or ``make rebuild`` if images
+must be updated skipping tests).
+
+This will allow to run Universum tests using ``pytest`` (via ``pytest`` command with any parameters required).
+Commnd ``make test`` will run all the tests and collect coverage; it will also rebuild the documentation and run
+all doctests.
+
+After installing and tuning Docker, Perforce and Git, use the following commands
+(shown using `venv` as it is recommended):
 ```bash
+python3.7 -m venv virtual-environment
+source ./virtual-environment/bin/activate
 git clone https://github.com/Samsung/Universum.git universum-working-dir
 cd universum-working-dir
 git checkout master
-pip3.7 install --user -U .[test]
+pip install -U .[test]
 make images
 ```
 After this run `make tests` and ensure all tests are passing.
