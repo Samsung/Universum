@@ -49,7 +49,6 @@ class ProjectConfiguration:
         self.pass_tag: str = pass_tag
         self.fail_tag: str = fail_tag
         self.if_env_set: str = if_env_set
-        self.skip_numbering_level: bool = False
         self.children: Optional['Variations'] = None
         self.extras: Dict[str, str] = extras if extras else {}
         for key, value in kwargs.items():
@@ -385,7 +384,6 @@ class Variations:
                 obj_a_copy.children = obj_a.children * other
             else:
                 obj_a_copy.children = copy.deepcopy(other)
-            obj_a_copy.skip_numbering_level = len(self.configs) <= 1
 
             config_list.append(obj_a_copy)
         return Variations(config_list)

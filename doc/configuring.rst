@@ -224,7 +224,7 @@ artifacts
     Path to the file or directory to be copied to the working directory as an execution result.
     Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
     (e.g. `"out/**/index.html"`).
-    If not stated otherwise (see ``--no-archive`` `command-line parameter <args.html#Artifact\\ collection>`__
+    If not stated otherwise (see ``--no-archive`` `command-line parameter <args.html#Artifact\ collection>`__
     for details), artifact directories are copied as archives.
     If :ref:`'artifact_prebuild_clean' key <clean_artifacts>` is either absent or set to `False` and
     stated artifacts are present in downloaded sources, it is considered a failure and configuration
