@@ -42,7 +42,7 @@ setup(
             vcs,
             'sphinx',
             'sphinx-argparse',
-            'sphinx_rtd_theme'
+            'sphinx_rtd_theme',
             'docker',
             'httpretty',
             'mock',
