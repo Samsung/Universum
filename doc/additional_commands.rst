@@ -32,7 +32,7 @@ The ``{python} -m universum run`` subcommand uses provided :doc:`Universum confi
 the set up scenario locally. This allows to easily perform all required checks *before* submitting a change
 to VCS. This mode can generally be used as a wrapper for a complex build system.
 
-Unlike default `Universum` mode, using the ``{python} -m universum run``:
+Universum in non-CI mode has the following differences from default mode:
 
 * does not require most of :doc:`build parameters <args>` - especially the VCS-related ones
 * does not :doc:`report build results <code_report>` to any code review system
