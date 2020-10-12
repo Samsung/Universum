@@ -132,6 +132,9 @@ class ProjectConfiguration:
         'bar'
         >>> cfg['test']
         """
+        #  _extras are checked first - just in case _extras field is added manually
+        # do note that __setitem__ checks pre_defined fields first, however it's impossible to shadow them by
+        # modifying _extras
         return self._extras.get(item, self.__dict__.get(item, None))
 
     def __setitem__(self, key: str, value: Any) -> None:
@@ -152,12 +155,14 @@ class ProjectConfiguration:
         [<warnings.WarningMessage object at ...>]
         >>> set_cfg_and_get_warnings(cfg, 'directory', 'foo')  # doctest: +ELLIPSIS
         [<warnings.WarningMessage object at ...>]
-        >>> set_cfg_and_get_warnings(cfg, '_extras', 'baz')
-        []
         >>> set_cfg_and_get_warnings(cfg, 'test', 42)
         []
+        >>> set_cfg_and_get_warnings(cfg, '_extras', {'name': 'baz'})
+        []
         >>> cfg
-        {'name': 'bar', 'directory': 'foo', 'my_var': 'bar', '_extras': 'baz', 'test': 42}
+        {'name': 'bar', 'directory': 'foo', 'my_var': 'bar', 'test': 42, '_extras': {'name': 'baz'}}
+        >>> cfg['name']
+        'bar'
         """
         if key in self.__dict__ and key != '_extras':
             warn("Re-defining the value of a read-only ProjectConfiguration field", UserWarning, 3)
