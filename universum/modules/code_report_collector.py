@@ -2,10 +2,9 @@ import glob
 import json
 import os
 from copy import deepcopy
-from typing import Dict, List, Optional, TextIO, Tuple
-from typing_extensions import TypedDict
+from typing import cast, Dict, List, Optional, TextIO, Tuple
 
-from universum.configuration_support import Variations
+from ..configuration_support import Variations, ProjectConfiguration
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
@@ -13,12 +12,6 @@ from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from .structure_handler import HasStructure
-
-
-class ProjectConfig(TypedDict, total=False):  # TODO: define a proper class for this
-    name: str
-    code_report: Optional[str]
-    command: List[str]
 
 
 class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
@@ -32,37 +25,21 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
         self.report_path: str = ""
         self.repo_diff: Optional[List[Tuple[Optional[str], Optional[str], Optional[str]]]]
 
-    def set_code_report_directory(self, project_root: str) -> None:
-        if self.report_path:
-            return
-        self.report_path = os.path.join(project_root, "code_report_results")
-        if not os.path.exists(self.report_path):
-            os.makedirs(self.report_path)
-
-    def prepare_environment(self, project_configs: List[ProjectConfig]) -> Variations:
-        afterall_steps: List[ProjectConfig] = []
-        for item in project_configs:
-            if not item.get("code_report", False):
+    def prepare_environment(self, project_config_variations: Variations) -> Variations:
+        afterall_steps: Variations = Variations()
+        for item in project_config_variations.configs:
+            if not item.code_report:
                 continue
-
-            self.set_code_report_directory(self.settings.project_root)
+            if not self.report_path:
+                self.report_path = os.path.join(self.settings.project_root, "code_report_results")
+                if not os.path.exists(self.report_path):
+                    os.makedirs(self.report_path)
             temp_filename: str = "${CODE_REPORT_FILE}"
-            name: str = utils.calculate_file_absolute_path(self.report_path, item.get("name", "")) + ".json"
+            name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
-
-            for key in item:
-                if key == "command":
-                    item[key] = [word.replace(temp_filename, actual_filename) for word in item[key]]  # type: ignore
-                else:
-                    try:
-                        item[key] = item[key].replace(temp_filename, actual_filename)  # type: ignore
-                    except AttributeError as error:
-                        if "object has no attribute 'replace'" not in str(error):
-                            raise
-
-            afterall_item: ProjectConfig = deepcopy(item)
-            afterall_steps.append(afterall_item)
-        return Variations(afterall_steps)
+            item.replace_string(temp_filename, actual_filename)
+            afterall_steps += [deepcopy(item)]
+        return afterall_steps
 
     @make_block("Processing code report results")
     def report_code_report_results(self) -> None:

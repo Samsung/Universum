@@ -4,6 +4,7 @@ import getpass
 import os
 from pwd import getpwnam
 
+from typing import Generator
 import docker
 import py
 import pytest
@@ -129,7 +130,7 @@ class ExecutionEnvironment:
 
 
 @pytest.fixture()
-def execution_environment(request) -> ExecutionEnvironment:
+def execution_environment(request) -> Generator[ExecutionEnvironment, None, None]:
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd())
@@ -262,7 +263,7 @@ class UniversumRunner:
 
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources) -> UniversumRunner:
+def runner_without_environment(perforce_workspace, git_client, local_sources) -> Generator[UniversumRunner, None, None]:
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
     runner.clean_artifacts()

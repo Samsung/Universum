@@ -260,9 +260,9 @@ artifact_prebuild_clean
 
 directory
     Path to a current working directory for launched process.
-    Please see the `Execution directory`_ section for details. No `directory` is equal to
-    empty string passed as `directory` and means the `command` will be launched
-    from project root directory.
+    Please see the `execution directory section <configuring.html#execution-directory>`__ for details. No `directory`
+    is equal to empty string passed as `directory` value and means the `command` will be launched from project
+    root directory.
 
 .. _critical_step:
 
@@ -311,7 +311,8 @@ pass_tag, fail_tag
     TeamCity as tags. It is not recommended to separate words in the tag with spaces, since you cannot create
     a tag with spaces in TeamCity's web-interface. Every tag is added (if matching condition) after executing
     build step it is set in, not in the end of all run.
-    ``pass_tag`` and ``fail_tag`` can also be used when `multiplying build configurations`_, like this:
+    ``pass_tag`` and ``fail_tag`` can also be used when
+    `multiplying build configuration <configuring.html#multiplying-build-configurations>`__, like this:
 
     .. testsetup::
 

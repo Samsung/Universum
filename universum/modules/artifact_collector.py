@@ -9,6 +9,7 @@ import zipfile
 
 import glob2
 
+from ..configuration_support import ProjectConfiguration, Variations
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
@@ -154,18 +155,16 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         return new_artifact_list
 
     @make_block("Preprocessing artifact lists")
-    def set_and_clean_artifacts(self, project_configs, ignore_existing_artifacts=False):
+    def set_and_clean_artifacts(self, project_configs: Variations, ignore_existing_artifacts: bool = False) -> None:
         artifact_list = []
         report_artifact_list = []
         for configuration in project_configs.all():
-            if "artifacts" in configuration:
-                path = utils.parse_path(configuration["artifacts"], self.settings.project_root)
-                clean = configuration.get("artifact_prebuild_clean", False)
-                artifact_list.append(dict(path=path, clean=clean))
-            if "report_artifacts" in configuration:
-                path = utils.parse_path(configuration["report_artifacts"], self.settings.project_root)
-                clean = configuration.get("artifact_prebuild_clean", False)
-                report_artifact_list.append(dict(path=path, clean=clean))
+            if configuration.artifacts:
+                path = utils.parse_path(configuration.artifacts, self.settings.project_root)
+                artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
+            if configuration.report_artifacts:
+                path = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
+                report_artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
 
         if artifact_list:
             name = "Setting and preprocessing artifacts according to configs"
