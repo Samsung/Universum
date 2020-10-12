@@ -32,8 +32,8 @@ or
 pip3.7 install --user -U universum
 ```
 Can also be installed with [extras for using VCS](
-https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras), but they also require
-additional installations via `apt`.
+https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),  but they also require
+installing respective command-line tools, such as git or p4.
 
 ### Latest development + tests
 
@@ -60,12 +60,11 @@ Although it is possible to get these modules via `pip3.7 install -U universum[te
 to checkout the Universum branch you are currently working on, change working directory to project root and
 run a `pip3.7 install -U .[test]` command from there for more flexibility.
 
-Docker images, used in tests, can be built via ``make images`` command (or ``make rebuild`` if images
-must be updated skipping tests).
+Docker images, used in tests, can be built via ``make images`` command. Also ``make rebuild`` command can be used
+to update images ignoring cache.
 
 This will allow to run Universum tests using ``pytest`` (via ``pytest`` command with any parameters required).
-Commnd ``make test`` will run all the tests and collect coverage; it will also rebuild the documentation and run
-all doctests.
+Commnd ``make test`` will run all the tests (including the doctests) and collect coverage.
 
 After installing and tuning Docker, Perforce and Git, use the following commands
 (shown using `venv` as it is recommended):

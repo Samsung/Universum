@@ -1,5 +1,5 @@
-Parametrizing execution
-=======================
+Command line and parameters
+===========================
 
 `Univesrum` can be executed via ``{python} -m universum`` with various parameters. These parameters can be
 passed via command line; most of them can also be passed via environment variables.

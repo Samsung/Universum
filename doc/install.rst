@@ -27,7 +27,8 @@ Before installing `Universum` for Perforce, make sure to install `P4 CLI` (see `
 <https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.install.html>`__ for details)
 
 To install `Universum` for Perfoce, use ``{pip} install -U universum[p4]``. This will update :mod:`pip` to latest
-version, as we recommentd :mod:`pip` version not lower than 19.0 for installing the :mod:`p4python`.
+version, as we recommend :mod:`pip` version not lower than 19.0 for installing the :mod:`p4python`. Pip older than
+version 19.0 uses FTP to install :mod:`p4python`, while the latter versions use HTTP.
 
 
 Git
