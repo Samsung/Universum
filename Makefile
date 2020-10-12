@@ -30,6 +30,9 @@ doctest:
 pylint:
 	python -m pylint --rcfile=pylintrc *.py universum/ tests/
 
+mypy:
+	python -m mypy universum/ --ignore-missing-imports
+
 images:
 	+$(MAKE) -C tests/docker all
 

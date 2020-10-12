@@ -51,7 +51,8 @@ setup(
             'pytest-pylint',
             'teamcity-messages',
             'pytest-cov',
-            'coverage'
+            'coverage',
+            'mypy'
         ]
     }
 )

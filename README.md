@@ -40,10 +40,11 @@ and then use the commands listed below. Please note we use `venv` to properly se
 python interpreter version and to isolate development environment from the system.
 
 Prerequisites:
-1. Support of all [VCS extras](https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
-   including installation of Git and P4 CLI
-2. Manual installation of Docker (`docker-ce`, `docker-ce-cli`) (see [official installation manual](
-   https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository) for details)
+1. Install all of the VCS extras as described in the [Universum installation manual](
+   https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
+   (including installation of Git and P4 CLI)
+2. Install Docker (`docker-ce`, `docker-ce-cli`) as described in the [official installation manual](
+   https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
 
    * Also add current user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
 
@@ -56,19 +57,24 @@ cd universum-working-dir
 git checkout master
 pip install -U .[test]
 make images
-make test
 ```
+And after this the `pytest` or `make test` commands can be executed (see below).
 
 The `[test]` extra will install/update the following additional Python modules:
 
     * `sphinx`
     * `sphinx-argparse` (extension for `Sphinx`)
     * `sphinx_rtd_theme` (extension for `Sphinx`)
-    * `pytest`
-    * `pylint`
     * `docker`
     * `httpretty`
     * `mock`
+    * `pytest`
+    * `pylint`
+    * `pytest-pylint`
+    * `teamcity-messages` (is not actually used in manual testing, but is there for CI)
+    * `pytest-cov`
+    * `coverage`
+    * `mypy`
 
 Although it is possible to get these modules via `pip3.7 install -U universum[test]`, it might be more convenient
 to checkout the Universum branch you are currently working on, change working directory to project root and
@@ -78,11 +84,12 @@ command) allows to separate test environment from system and provides even more 
 Uninstalling Universum via `pip uninstall universum` will not uninstall all the dependencies installed along with it.
 Simply deleting the directory with virtual environment will leave the system completely cleaned of all changes.
 
-Docker images, used in tests, can be built manually or using the `make images` command.
+Docker images used in tests can be built manually or using the `make images` command.
 Also `make rebuild` command can be used to update images ignoring cache (e.g. to rerun `apt update`).
 
-The `make test` command runs all the tests (including the doctests) and collects coverage; tests can also be launched
-manually via `pytest` command with any required options (such as `-k` for limited execution or `-s` for output).
+The `make test` command runs all the tests (including the doctests) and collects coverage. Tests can also be launched
+manually via `pytest` command with any required options (such as `-k` for running tests based on keywords
+or `-s` for showing the suppressed output).
 
 
 ## Project contents
