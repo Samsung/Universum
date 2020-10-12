@@ -18,8 +18,6 @@ Other Universum modes, such as poller or submitter, are called via command line,
 
 ## Installation
 
-### Latest release from PyPI
-
 Minimum prerequisites ([see documentation for details](https://universum.readthedocs.io/en/latest/install.html)):
 1. OS Linux
 2. Python version 3.7 or greater
@@ -35,15 +33,21 @@ Can also be installed with [extras for using VCS](
 https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),  but they also require
 installing respective command-line tools, such as git or p4.
 
-### Latest development + tests
+## Development
 
-Additional prerequisites for testing Universum locally:
+In order to prepare the development environment for the Universum, please fulfill the prerequisites,
+and then use the commands listed below. Please note we use `venv` to properly select
+python interpreter version and to isolate development environment from the system.
+
+Prerequisites:
 1. Support of all [VCS extras](https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
    including installation of Git and P4 CLI
 2. Manual installation of Docker (`docker-ce`, `docker-ce-cli`) (see [official installation manual](
    https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository) for details)
 
    * Also add current user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+
+Further commands:
 ```bash
 python3.7 -m venv virtual-environment-python3.7
 source ./virtual-environment/bin/activate
@@ -55,7 +59,7 @@ make images
 make test
 ```
 
-The `[test]` extension will install/update the following additional Python modules:
+The `[test]` extra will install/update the following additional Python modules:
 
     * `sphinx`
     * `sphinx-argparse` (extension for `Sphinx`)
@@ -72,12 +76,12 @@ run a `pip3.7 install -U .[test]` command from there for more flexibility. Using
 command) allows to separate test environment from system and provides even more control over additional modules.
 
 Uninstalling Universum via `pip uninstall universum` will not uninstall all the dependencies installed along with it.
-Simply deleting the created virtual environment will leave the system completely cleaned of all changes.
+Simply deleting the directory with virtual environment will leave the system completely cleaned of all changes.
 
 Docker images, used in tests, can be built manually or using the `make images` command.
 Also `make rebuild` command can be used to update images ignoring cache (e.g. to rerun `apt update`).
 
-Commnd `make test` runs all the tests (including the doctests) and collects coverage; tests can also be launched
+The `make test` command runs all the tests (including the doctests) and collects coverage; tests can also be launched
 manually via `pytest` command with any required options (such as `-k` for limited execution or `-s` for output).
 
 
