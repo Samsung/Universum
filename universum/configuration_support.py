@@ -1,4 +1,5 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, TypeVar, Union
+from warnings import warn
 import copy
 import os
 
@@ -33,8 +34,19 @@ class ProjectConfiguration:
                  pass_tag: str = '',
                  fail_tag: str = '',
                  if_env_set: str = '',
-                 extras: Optional[Dict[str, str]] = None,
-                 **kwargs) -> None:  # explicit constructor for client's type safety
+                 **kwargs) -> None:
+        """
+        All params supplied via named attributed shall be  type-checked for safety. Clients may provide custom
+        parameters in kwargs - these parameters will be stored internally in '_extras' dict and can be retrieved by
+        indexing.
+        >>> cfg = ProjectConfiguration(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True})
+        >>> cfg
+        {'name': 'foo', 'command': ['1', '2', '3'], '_extras': {'_extras': 'test', 'bool': True}}
+        >>> cfg['name']
+        'foo'
+        >>> cfg['_extras']
+        {'_extras': 'test', 'bool': True}
+        """  # TODO: move param description from configuration.rst
         self.name: str = name
         self.directory: str = directory
         self.code_report: bool = code_report
@@ -50,21 +62,22 @@ class ProjectConfiguration:
         self.fail_tag: str = fail_tag
         self.if_env_set: str = if_env_set
         self.children: Optional['Variations'] = None
-        self.extras: Dict[str, str] = extras if extras else {}
+        self._extras: Dict[str, str] = {}
         for key, value in kwargs.items():
-            self.extras[key] = value
+            self._extras[key] = value
 
     def __repr__(self) -> str:
         """
-        This function simulates dict-like legacy representation for output
+        This function simulates dict-like representation for string output. This is useful when printing contents of
+        :class:`.Variations` objects, as internally they wrap a list of :class:`.ProjectConfiguration` objects
         :return: dict-like string
 
         >>> cfg = ProjectConfiguration(name='foo', command=['bar'], my_var='baz')
         >>> repr(cfg)
         "{'name': 'foo', 'command': 'bar', 'my_var': 'baz'}"
         """
-        res = {k: v for k, v in self.__dict__.items() if v and k != 'extras'}
-        res.update(self.extras)
+        res = {k: v for k, v in self.__dict__.items() if v and k != '_extras'}
+        res.update(self._extras)
         if len(self.command) == 1:  # command should be printed as one string, instead of list
             res['command'] = self.command[0]
         return str(res)
@@ -91,6 +104,8 @@ class ProjectConfiguration:
         True
         >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': None}
         True
+        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ''}
+        True
         >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ' '}
         False
         """
@@ -105,7 +120,7 @@ class ProjectConfiguration:
 
     def __getitem__(self, item: str) -> Optional[str]:
         """
-        This functions simulates dict-like legacy access
+        This functions simulates dict-like legacy read access
 
         :param item: client-defined item
         :return: client-defined value
@@ -117,7 +132,38 @@ class ProjectConfiguration:
         'bar'
         >>> cfg['test']
         """
-        return self.extras.get(item, self.__dict__.get(item, None))
+        return self._extras.get(item, self.__dict__.get(item, None))
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """
+        This functions simulates dict-like legacy write access
+
+        :param key: client-defined key
+        :param value: client-defined value
+
+        >>> import warnings
+        >>> def set_cfg_and_get_warnings(c, k, v):
+        ...     with warnings.catch_warnings(record=True) as w:
+        ...         warnings.simplefilter("always")
+        ...         c[k] = v
+        ...         return w
+        >>> cfg = ProjectConfiguration(name='foo', my_var='bar')
+        >>> set_cfg_and_get_warnings(cfg, 'name', 'bar')  # doctest: +ELLIPSIS
+        [<warnings.WarningMessage object at ...>]
+        >>> set_cfg_and_get_warnings(cfg, 'directory', 'foo')  # doctest: +ELLIPSIS
+        [<warnings.WarningMessage object at ...>]
+        >>> set_cfg_and_get_warnings(cfg, '_extras', 'baz')
+        []
+        >>> set_cfg_and_get_warnings(cfg, 'test', 42)
+        []
+        >>> cfg
+        {'name': 'bar', 'directory': 'foo', 'my_var': 'bar', '_extras': 'baz', 'test': 42}
+        """
+        if key in self.__dict__ and key != '_extras':
+            warn("Re-defining the value of a read-only ProjectConfiguration field", UserWarning, 3)
+            self.__dict__[key] = value
+        else:
+            self._extras[key] = value
 
     def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
         """
@@ -146,7 +192,7 @@ class ProjectConfiguration:
             pass_tag=self.pass_tag + other.pass_tag,
             fail_tag=self.fail_tag + other.fail_tag,
             if_env_set=self.if_env_set + other.if_env_set,
-            extras=combine(self.extras, other.extras)
+            **combine(self._extras, other._extras)
         )
 
     def replace_string(self, from_string: str, to_string: str) -> None:
@@ -171,9 +217,9 @@ class ProjectConfiguration:
         self.artifacts = self.artifacts.replace(from_string, to_string)
         self.report_artifacts = self.report_artifacts.replace(from_string, to_string)
         self.directory = self.directory.replace(from_string, to_string)
-        for k, v in self.extras.items():
+        for k, v in self._extras.items():
             if isinstance(v, str):
-                self.extras[k] = v.replace(from_string, to_string)
+                self._extras[k] = v.replace(from_string, to_string)
 
     def stringify_command(self) -> bool:
         """
