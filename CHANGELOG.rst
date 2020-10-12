@@ -8,7 +8,7 @@ BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
 * **migrate to Python 3.7** due to Python 2 is no longer supported
-   Python3.7 is now :doc:`required <prerequisites>` for Universum to work; please switch ``print ""`` into
+   Python3.7 is now :doc:`required <install>` for Universum to work; please switch ``print ""`` into
    ``print("")`` in config files if needed
 * **disable entry points** (calling ``universum`` from command line) and switch to ``python3.7 -m universum`` calls
    to avoid possible situations where wrong version of Universum is executed, especially when using
@@ -96,7 +96,7 @@ New features
    * old options `--launcher-config-path` and `--launcher-output` are still supported
      but not recommended to use any more
 * **launcher:**  add '--filter' option filtering steps to be executed
-* **nonci:** add :doc:`nonci <args_nonci>` mode of running Universum
+* **nonci:** add :ref:`nonci <additional_commandst#run>` mode of running Universum
 * **jenkins_plugin:** expand failed steps by default
 * **test:** add Java & JS tests for Jenkins plugin
 
@@ -845,7 +845,7 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* **docs:** add :doc:`system prerequisites page <prerequisites>` to user manual
+* **docs:** add :doc:`system prerequisites page <install>` to user manual
 * **docs:** add documentation for :mod:`universum.configuration_support` module
 * **launcher:** add support for more than one environment variable to
   :ref:`filter configurations <filtering>`

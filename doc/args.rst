@@ -1,13 +1,12 @@
-Command line
-------------
+Command line and parameters
+===========================
 
-Main script of project `Universum` is ``__main__.py``.
-All command-line parameters, general and module-related, are passed to this entry point
-via ``{python} -m universum``.
+`Univesrum` can be executed via ``{python} -m universum`` with various parameters. These parameters can be
+passed via command line; most of them can also be passed via environment variables.
 
-.. note::
-    Most of command-line parameters can be replaced by setting up corresponding environment
-    variables (see 'env' comment in descriptions)
+Apart from default mode, actually used for CI, `Universum` also has several other
+:doc:`helpful modes <additional_commands>` and a bunch of :doc:`analyzers <code_report>` that are used to
+add comments on found issues right to the selected code review system.
 
 .. argparse::
     :module: universum.__main__
@@ -36,8 +35,4 @@ via ``{python} -m universum``.
          containing 'unit test 1'
 
     {init,run,poll,submit,github-handler} : @replace
-        | :doc:`universum init <init>`
-        | :doc:`universum run <nonci>`
-        | :doc:`universum poll <args_poll>`
-        | :doc:`universum submit <args_submit>`
-        | :doc:`universum github-handler <args_github_handler>`
+        | See detailed description of additional commands :doc:`here <additional_commands>`.

@@ -1,4 +1,4 @@
-TEST_TARGETS = pytest doc_doctest
+TEST_TARGETS = pytest doctest
 
 
 .PHONY: all doc test $(TEST_TARGETS) pylint images rebuild
@@ -24,11 +24,14 @@ pytest:
 	--cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
 	--ignore=universum_log_collapser --ignore=configs.py
 
-doc_doctest:
+doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
 	python -m pylint --rcfile=pylintrc *.py universum/ tests/
+
+mypy:
+	python -m mypy universum/ --ignore-missing-imports
 
 images:
 	+$(MAKE) -C tests/docker all

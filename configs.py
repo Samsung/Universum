@@ -20,13 +20,12 @@ def pip_install(module_name):
 configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
                       dict(name="Update Pylint", command=[python, "-m", "pip", "install",
                                                           "-U", "--user", "--progress-bar", "off", "pylint"]),
-                      dict(name="Create virtual environment",
-                           command=[python, "-m", "venv", env_name]),
-                      dict(name="Install development", command=run_virtual(pip_install(".[development]"))),
-                      dict(name="Make", artifacts="doc/_build", command=run_virtual("make")),
+                      dict(name="Create virtual environment", command=[python, "-m", "venv", env_name]),
 
-                      dict(name="Install tests", artifacts="junit_results.xml",
+                      dict(name="Install Universum for tests", artifacts="junit_results.xml",
                            command=run_virtual(pip_install(".[test]"))),
+                      dict(name="Make", artifacts="doc/_build",
+                           command=run_virtual("make")),
                       dict(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
 
@@ -36,7 +35,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                                     "--rcfile=pylintrc", "--result-file=${CODE_REPORT_FILE}",
                                     "--files", "*.py", "universum/", "tests/"]),
                       dict(name="Run static type checker", code_report=True,
-                           command=[python, "-m", "mypy", "universum/", "--ignore-missing-imports"]),
+                           command=run_virtual("make mypy")),
 
                       dict(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",
@@ -45,6 +44,7 @@ configs = Variations([dict(name="Update Docker images", command=["make", "images
                            command=["mvn", "-B", "compile", "assembly:single"],
                            artifacts="universum_log_collapser/universum_log_collapser/target/universum_log_collapser.hpi",
                            directory="universum_log_collapser/universum_log_collapser"),
+
                       dict(name="Generate HTML for JavaScript tests",
                            command=[python, "universum_log_collapser/e2e/universum_live_log_to_html.py"]),
                       dict(name="Prepare Jenkins plugin JavaScript tests project",
