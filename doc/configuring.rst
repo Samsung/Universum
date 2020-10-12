@@ -28,6 +28,8 @@ to this module in `config_path` member of its input settings.
 Project configuration
 ---------------------
 
+.. TODO: rename whole article into 'Project configuration' and refactor the contents
+
 Project configuration (also mentioned as `build configuration`) is a simple complete way
 to test the project: e.g., build it for some specific platform, or run some specific test script.
 Basically, `project configuration` is a single launch of some external application or script.

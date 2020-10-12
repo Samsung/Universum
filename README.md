@@ -43,9 +43,19 @@ Additional prerequisites for testing Universum locally:
 2. Manual installation of Docker (`docker-ce`, `docker-ce-cli`) (see [official installation manual](
    https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository) for details)
 
-   * Also add currnt user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+   * Also add current user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+```bash
+python3.7 -m venv virtual-environment-python3.7
+source ./virtual-environment/bin/activate
+git clone https://github.com/Samsung/Universum.git universum-working-dir
+cd universum-working-dir
+git checkout master
+pip install -U .[test]
+make images
+make test
+```
 
-3. Additional Python modules:
+The `[test]` extension will install/update the following additional Python modules:
 
     * `sphinx`
     * `sphinx-argparse` (extension for `Sphinx`)
@@ -58,29 +68,18 @@ Additional prerequisites for testing Universum locally:
 
 Although it is possible to get these modules via `pip3.7 install -U universum[test]`, it might be more convenient
 to checkout the Universum branch you are currently working on, change working directory to project root and
-run a `pip3.7 install -U .[test]` command from there for more flexibility.
+run a `pip3.7 install -U .[test]` command from there for more flexibility. Using virtual environment (via `venv`
+command) allows to separate test environment from system and provides even more control over additional modules.
 
-Docker images, used in tests, can be built via ``make images`` command. Also ``make rebuild`` command can be used
-to update images ignoring cache.
+Uninstalling Universum via `pip uninstall universum` will not uninstall all the dependencies installed along with it.
+Simply deleting the created virtual environment will leave the system completely cleaned of all changes.
 
-This will allow to run Universum tests using ``pytest`` (via ``pytest`` command with any parameters required).
-Commnd ``make test`` will run all the tests (including the doctests) and collect coverage.
+Docker images, used in tests, can be built manually or using the `make images` command.
+Also `make rebuild` command can be used to update images ignoring cache (e.g. to rerun `apt update`).
 
-After installing and tuning Docker, Perforce and Git, use the following commands
-(shown using `venv` as it is recommended):
-```bash
-python3.7 -m venv virtual-environment
-source ./virtual-environment/bin/activate
-git clone https://github.com/Samsung/Universum.git universum-working-dir
-cd universum-working-dir
-git checkout master
-pip install -U .[test]
-make images
-```
-After this run `make tests` and ensure all tests are passing.
+Commnd `make test` runs all the tests (including the doctests) and collects coverage; tests can also be launched
+manually via `pytest` command with any required options (such as `-k` for limited execution or `-s` for output).
 
-Also note that running `pip uninstall universum` will remove Universum itself,
-but all the dependency modules will remain in the system.
 
 ## Project contents
 
