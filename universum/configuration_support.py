@@ -71,7 +71,8 @@ class ProjectConfiguration:
     def __repr__(self) -> str:
         """
         This function simulates dict-like representation for string output. This is useful when printing contents of
-        :class:`.Variations` objects, as internally they wrap a list of :class:`.ProjectConfiguration` objects
+        :class:`Variations` objects, as internally they wrap a list of :class:`ProjectConfiguration` objects
+
         :return: dict-like string
 
         >>> cfg = ProjectConfiguration(name='foo', command=['bar'], my_var='baz')
@@ -88,7 +89,7 @@ class ProjectConfiguration:
         """
         This functions simulates dict-like legacy comparison
 
-        :param other: dict to compare values, or object to check exact equality
+        :param other: dict to compare values, or :class:`ProjectConfiguration` object to check equality
         :return: 'True' if 'other' matches
 
         >>> cfg1 = ProjectConfiguration(name='foo', my_var='bar')
@@ -175,7 +176,7 @@ class ProjectConfiguration:
 
     def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
         """
-        This functions defines operator ``+`` for :class:`.ProjectConfiguration` class objects by
+        This functions defines operator ``+`` for :class:`ProjectConfiguration` class objects by
         concatenating strings and contents of dictionaries. Note that 'critical' attribute is not merged.
 
         :param other: `ProjectConfiguration` object
@@ -357,7 +358,7 @@ class Variations:
     def __eq__(self, other: Any) -> bool:
         """
 
-        :param other:
+        :param other: :class:`Variations` object or list of :class:`ProjectConfiguration` objects
         :return: 'True' if stored configurations match
 
         >>> l = [{'name': 'foo', 'critical': True}, {'name': 'bar', 'myvar': 'baz'}]
@@ -389,9 +390,9 @@ class Variations:
 
     def __bool__(self) -> bool:
         """
-        This function defines truthiness of :class:`.Variations` object
+        This function defines truthiness of :class:`Variations` object
 
-        :return: 'True' if :class:`.Variations` class object is empty
+        :return: 'True' if :class:`Variations` class object is empty
 
         >>> v1 = Variations()
         >>> bool(v1)
@@ -410,7 +411,7 @@ class Variations:
 
     def __add__(self, other: Union['Variations', List[ProjectConfiguration]]) -> 'Variations':
         """
-        This functions defines operator ``+`` for :class:`.Variations` class objects by
+        This functions defines operator ``+`` for :class:`Variations` class objects by
         concatenating lists of dictionaries into one list.
         The order of list members in resulting list is preserved: first all dictionaries from `self`,
         then all dictionaries from `other`.
@@ -423,7 +424,7 @@ class Variations:
 
     def __mul__(self, other: Union['Variations', int]) -> 'Variations':
         """
-        This functions defines operator ``*`` for :class:`.Variations` class objects.
+        This functions defines operator ``*`` for :class:`Variations` class objects.
         The resulting object is created by combining every `configs` list member with
         every `other` list member using :func:`.combine()` function.
 
@@ -447,7 +448,7 @@ class Variations:
         """
         Function for configuration iterating.
 
-        :return: iterable for all dictionary objects in :class:`.Variations` list
+        :return: iterable for all dictionary objects in :class:`Variations` list
         """
         for obj_a in self.configs:
             if obj_a.children:
@@ -458,7 +459,7 @@ class Variations:
 
     def dump(self, produce_string_command: bool = True) -> str:
         """
-        Function for :class:`.Variations` objects pretty printing.
+        Function for :class:`Variations` objects pretty printing.
 
         :param produce_string_command: if set to False, prints "command" as list instead of string
         :return: a user-friendly string representation of all configurations list
