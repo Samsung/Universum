@@ -174,7 +174,7 @@ class ProjectConfiguration:
     def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
         """
         This functions defines operator ``+`` for :class:`.ProjectConfiguration` class objects by
-        concatenating strings and contents of dictionaries
+        concatenating strings and contents of dictionaries. Note that 'critical' attribute is not merged.
 
         :param other: `ProjectConfiguration` object
         :return: new `ProjectConfiguration` object, including all attributes from both `self` and `other` objects
