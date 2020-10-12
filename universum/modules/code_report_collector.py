@@ -25,21 +25,16 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
         self.report_path: str = ""
         self.repo_diff: Optional[List[Tuple[Optional[str], Optional[str], Optional[str]]]]
 
-    def set_code_report_directory(self, project_root: str) -> None:
-        if self.report_path:
-            return
-        self.report_path = os.path.join(project_root, "code_report_results")
-        if not os.path.exists(self.report_path):
-            os.makedirs(self.report_path)
-
     def prepare_environment(self, project_config_variations: Variations) -> Variations:
         afterall_steps: Variations = Variations()
         for item in project_config_variations.configs:
             if not item.code_report:
                 continue
-
-            self.set_code_report_directory(self.settings.project_root)  # why is this in a loop?
-            temp_filename: str = "${CODE_REPORT_FILE}"  # TODO: move to global constant and update docs to use it
+            if not self.report_path:
+                self.report_path = os.path.join(self.settings.project_root, "code_report_results")
+                if not os.path.exists(self.report_path):
+                    os.makedirs(self.report_path)
+            temp_filename: str = "${CODE_REPORT_FILE}"
             name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
             item.replace_string(temp_filename, actual_filename)
