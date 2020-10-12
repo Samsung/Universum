@@ -165,7 +165,8 @@ class ProjectConfiguration:
         'bar'
         """
         if key in self.__dict__ and key != '_extras':
-            warn("Re-defining the value of a read-only ProjectConfiguration field", UserWarning, 3)
+            warn("Re-defining the value of ProjectConfiguration field. Please use var." + key + " to set it instead of "
+                 "using var['" + key + "']")
             self.__dict__[key] = value
         else:
             self._extras[key] = value
