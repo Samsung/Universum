@@ -371,7 +371,7 @@ class Variations:
         True
         >>> v1 == v3
         True
-        >>> v1 == v2 + Variations()
+        >>> v1 == v1 + Variations()
         True
         >>> v1 == v1 * 1
         True
