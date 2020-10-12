@@ -135,7 +135,7 @@ class ProjectConfiguration:
         >>> cfg['test']
         """
         #  _extras are checked first - just in case _extras field is added manually
-        # do note that __setitem__ checks pre_defined fields first, however it's impossible to shadow them by
+        # do note that __setitem__ checks predefined fields first, however it's impossible to shadow them by
         # modifying _extras
         return self._extras.get(item, self.__dict__.get(item, None))
 
