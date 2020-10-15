@@ -80,7 +80,21 @@ Here are the parameters for poller mode:
 Detect changes and submit them automatically
 --------------------------------------------
 
-.. TODO: Add description
+Unlike default mode, Universum in `submit` mode **requires an already prepared local VCS.** For example:
+
+* In case of Git:
+
+    - the repo should be already cloned
+    - the required branch should be already checked out
+
+* In case of P4:
+
+    - the client should be already created
+    - the directory should be already synced
+    - all the required shelves should be applied
+
+After doing that, any additional changes done to source code (made manually or by script execution) will be
+detected by Universum submitter and added to VCS with specified description on behalf of specified user.
 
 Here are the parameters for submitter mode:
 
