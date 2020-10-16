@@ -15,7 +15,6 @@ __all__ = [
 class ProjectConfiguration:
     """
     ProjectConfiguration is a collection of configurable project-specific data needed for Universum operations.
-    Legacy constructor supports dictionary data, but for static type checking please use new explicit constructor.
     """
 
     # pylint: disable-msg=too-many-locals
@@ -37,8 +36,9 @@ class ProjectConfiguration:
                  **kwargs) -> None:
         """
         All params supplied via named attributed shall be  type-checked for safety. Clients may provide custom
-        parameters in kwargs - these parameters will be stored internally in '_extras' dict and can be retrieved by
+        parameters in kwargs - these parameters will be stored internally in `_extras` `dict` and can be retrieved by
         indexing.
+        
         >>> ProjectConfiguration(foo='bar')
         {'foo': 'bar'}
         >>> cfg = ProjectConfiguration(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True})
@@ -70,10 +70,10 @@ class ProjectConfiguration:
 
     def __repr__(self) -> str:
         """
-        This function simulates dict-like representation for string output. This is useful when printing contents of
+        This function simulates `dict`-like representation for string output. This is useful when printing contents of
         :class:`Variations` objects, as internally they wrap a list of :class:`ProjectConfiguration` objects
 
-        :return: dict-like string
+        :return: a `dict`-like string
 
         >>> cfg = ProjectConfiguration(name='foo', command=['bar'], my_var='baz')
         >>> repr(cfg)
@@ -87,10 +87,10 @@ class ProjectConfiguration:
 
     def __eq__(self, other: Any) -> bool:
         """
-        This functions simulates dict-like legacy comparison
+        This functions simulates `dict`-like check for match
 
-        :param other: dict to compare values, or :class:`ProjectConfiguration` object to check equality
-        :return: 'True' if 'other' matches
+        :param other: `dict` to compare values, or :class:`ProjectConfiguration` object to check equality
+        :return: `True` if `other` matches
 
         >>> cfg1 = ProjectConfiguration(name='foo', my_var='bar')
         >>> cfg2 = ProjectConfiguration(name='foo', my_var='bar')
@@ -123,7 +123,7 @@ class ProjectConfiguration:
 
     def __getitem__(self, item: str) -> Optional[str]:
         """
-        This functions simulates dict-like legacy read access
+        This functions simulates `dict`-like legacy read access
 
         :param item: client-defined item
         :return: client-defined value
@@ -142,7 +142,7 @@ class ProjectConfiguration:
 
     def __setitem__(self, key: str, value: Any) -> None:
         """
-        This functions simulates dict-like legacy write access
+        This functions simulates `dict`-like legacy write access
 
         :param key: client-defined key
         :param value: client-defined value
@@ -177,7 +177,7 @@ class ProjectConfiguration:
     def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
         """
         This functions defines operator ``+`` for :class:`ProjectConfiguration` class objects by
-        concatenating strings and contents of dictionaries. Note that 'critical' attribute is not merged.
+        concatenating strings and contents of dictionaries. Note that `critical` attribute is not merged.
 
         :param other: `ProjectConfiguration` object
         :return: new `ProjectConfiguration` object, including all attributes from both `self` and `other` objects
@@ -209,8 +209,8 @@ class ProjectConfiguration:
         """
         Replace instances of a string, used for pseudo-variables
 
-        :param from_string: string to replace, e.g. ${CODE_REPORT_FILE}
-        :param to_string: value to put in place of 'from_string'
+        :param from_string: string to replace, e.g. `${CODE_REPORT_FILE}`
+        :param to_string: value to put in place of `from_string`
 
         >>> cfg = ProjectConfiguration(name='foo test', command=['foo', 'baz', 'foobar'], \
         myvar1='foo', myvar2='bar', myvar3=1)
@@ -235,7 +235,7 @@ class ProjectConfiguration:
         """
         Concatenates components of a command into one element
 
-        :return: 'True', if any of the command components have space inside
+        :return: `True`, if any of the command components have space inside
 
         >>> cfg = ProjectConfiguration(name='stringify test', command=['foo', 'bar', '--baz'])
         >>> cfg.stringify_command()
@@ -357,9 +357,10 @@ class Variations:
 
     def __eq__(self, other: Any) -> bool:
         """
+        This function checks wrapped configurations for match
 
         :param other: :class:`Variations` object or list of :class:`ProjectConfiguration` objects
-        :return: 'True' if stored configurations match
+        :return: `True` if stored configurations match
 
         >>> l = [{'name': 'foo', 'critical': True}, {'name': 'bar', 'myvar': 'baz'}]
         >>> v1 = Variations(l)
@@ -392,7 +393,7 @@ class Variations:
         """
         This function defines truthiness of :class:`Variations` object
 
-        :return: 'True' if :class:`Variations` class object is empty
+        :return: `True` if :class:`Variations` class object is empty
 
         >>> v1 = Variations()
         >>> bool(v1)
