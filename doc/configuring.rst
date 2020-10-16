@@ -144,12 +144,9 @@ See the following example configuration file:
 
     from universum.configuration_support import Configuration, get_project_root
 
-<<<<<<< HEAD
-    configs = Variations([dict(name="Run tests", directory="/home/scripts", command=["./run_tests.sh", "--directory", get_project_root()])])
-=======
+
     configs = Configuration([dict(name="Run tests", directory="/home/scripts",
-                               command=["./run_tests.sh", "--directory", get_project_root()])])
->>>>>>> 6a5de62... refactor: rename classes
+                                  command=["./run_tests.sh", "--directory", get_project_root()])])
 
 In this configuration a hypothetical external script `"run_tests.sh"` requires absolute path
 to project sources as an argument. The :func:`get_project_root` will pass the actual project root,
@@ -435,13 +432,8 @@ where the third will follow the second.
 Combining configurations
 ------------------------
 
-<<<<<<< HEAD
-The Variations class provides a way to generate a full testing scenario by simulating the
-combination of configurations.
-=======
 The :class:`Configuration` class provides a way to generate a full testing scenario by simulating the
 combination of different configurations (as in :class:`Configuration` instances).
->>>>>>> 6a5de62... refactor: rename classes
 
 For this class :class:`Configuration` has built-in ``+`` and ``*`` operators that allow creating
 configuration sets out of several :class:`Configuration` instances.
