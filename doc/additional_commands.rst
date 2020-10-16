@@ -80,7 +80,7 @@ Here are the parameters for poller mode:
 Detect changes and submit them automatically
 --------------------------------------------
 
-Unlike default mode, Universum in `submit` mode **requires an already prepared local VCS.** For example:
+Unlike default mode, Universum in `submit` mode **requires an already prepared local repository.** For example:
 
 * In case of Git:
 
