@@ -30,27 +30,27 @@ def make_command(name: str) -> sh.Command:
         raise CiException(f"No such file or command as '{name}'") from e
 
 
-def check_if_env_set(configuration: configuration_support.ProjectConfiguration) -> bool:  # TODO move to configuration
+def check_if_env_set(configuration: configuration_support.Step) -> bool:  # TODO move to configuration
     """
-    Predicate function for :func:`universum.configuration_support.Variations.filter`,
+    Predicate function for :func:`universum.configuration_support.Configuration.filter`,
     used to decide whether this particular configuration should be executed in this
     particular environment. For more information see :ref:`filtering`
 
-    >>> from universum.configuration_support import Variations
-    >>> c = Variations([dict(if_env_set="MY_VAR != some value")])
+    >>> from universum.configuration_support import Configuration
+    >>> c = Configuration([dict(if_env_set="MY_VAR != some value")])
     >>> check_if_env_set(c[0])
     True
 
-    >>> c = Variations([dict(if_env_set="MY_VAR != some value && OTHER_VAR")])
+    >>> c = Configuration([dict(if_env_set="MY_VAR != some value && OTHER_VAR")])
     >>> check_if_env_set(c[0])
     False
 
-    >>> c = Variations([dict(if_env_set="MY_VAR == some value")])
+    >>> c = Configuration([dict(if_env_set="MY_VAR == some value")])
     >>> os.environ["MY_VAR"] = "some value"
     >>> check_if_env_set(c[0])
     True
 
-    :param configuration: :class:`~universum.configuration_support.ProjectConfiguration` object
+    :param configuration: :class:`~universum.configuration_support.Step` object
     :return: True if environment satisfies described requirements; False otherwise
     """
 
@@ -159,9 +159,9 @@ def get_match_patterns(filters: Union[str, List[str]]) -> Tuple[List[str], List[
     return include, exclude
 
 
-class Step:
+class RunningStep:
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, item: configuration_support.ProjectConfiguration,
+    def __init__(self, item: configuration_support.Step,
                  out: Output,
                  fail_block: Callable[[str], None],
                  send_tag: Callable[[str], Response],
@@ -169,7 +169,7 @@ class Step:
                  working_directory: str,
                  additional_environment: Dict[str, str]) -> None:
         super().__init__()
-        self.configuration: configuration_support.ProjectConfiguration = item
+        self.configuration: configuration_support.Step = item
         self.out: Output = out
         self.fail_block: Callable[[str], None] = fail_block
         self.send_tag = send_tag
@@ -321,8 +321,8 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.source_project_configs: configuration_support.Variations
-        self.project_config_variations: configuration_support.Variations = configuration_support.Variations()
+        self.source_project_configs: configuration_support.Configuration
+        self.project_config: configuration_support.Configuration = configuration_support.Configuration()
 
         self.output: Output = self.settings.output
         if self.output is None:
@@ -343,10 +343,10 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         self.include_patterns, self.exclude_patterns = get_match_patterns(self.settings.step_filter)
 
     @make_block("Processing project configs")
-    def process_project_configs(self) -> configuration_support.Variations:
+    def process_project_configs(self) -> configuration_support.Configuration:
         config_path = utils.parse_path(self.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
-        config_globals: Dict[str, configuration_support.Variations] = {}
+        config_globals: Dict[str, configuration_support.Configuration] = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
@@ -357,8 +357,8 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             dump_file: TextIO = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
             dump_file.write(self.source_project_configs.dump())
             dump_file.close()
-            config_variations = self.source_project_configs.filter(check_if_env_set)
-            self.project_config_variations = config_variations.filter(
+            config = self.source_project_configs.filter(check_if_env_set)
+            self.project_config = config.filter(
                 lambda cfg: check_str_match(cfg.name, self.include_patterns, self.exclude_patterns))
 
         except IOError as e:
@@ -380,9 +380,9 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                    utils.format_traceback(e, ex_traceback) + \
                    "\nTry to execute ``confgs.dump()`` to make sure no exceptions occur in that case."
             raise CriticalCiException(text) from e
-        return self.project_config_variations
+        return self.project_config
 
-    def create_process(self, item: configuration_support.ProjectConfiguration) -> Step:
+    def create_process(self, item: configuration_support.Step) -> RunningStep:
         working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
@@ -398,13 +398,13 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
-        return Step(item, self.out, fail_block, self.server.add_build_tag,
+        return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
                     log_file, working_directory, additional_environment)
 
-    def launch_custom_configs(self, custom_configs: configuration_support.Variations) -> None:
+    def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)
 
     @make_block("Executing build steps")
     def launch_project(self) -> None:
         self.reporter.add_block_to_report(self.structure.get_current_block())
-        self.structure.execute_step_structure(self.project_config_variations, self.create_process)
+        self.structure.execute_step_structure(self.project_config, self.create_process)

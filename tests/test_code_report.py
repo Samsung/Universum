@@ -19,9 +19,9 @@ def fixture_runner_with_pylint(docker_main):
 def get_config(args: List[str]):
     args = [f", '{arg}'" for arg in args]
     return inspect.cleandoc(f"""
-        from universum.configuration_support import Variations
+        from universum.configuration_support import Configuration
 
-        configs = Variations([dict(name="Run static pylint", code_report=True,
+        configs = Configuration([dict(name="Run static pylint", code_report=True,
             command=['{python()}', '-m', 'universum.analyzers.pylint'{''.join(args)}])])
     """)
 
@@ -53,9 +53,9 @@ def test_code_report(runner_with_pylint, args, tested_content, expected_log):
 
 def test_without_code_report_command(runner_with_pylint):
     log = runner_with_pylint.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Run usual command", command=["ls", "-la"])])
+configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
     """)
     pattern = re.compile(f"({log_fail}|{log_success})")
     assert not pattern.findall(log)
@@ -91,9 +91,9 @@ def test_code_report_extended_arg_search(tmpdir, stdout_checker):
     tmpdir.join("source_file.py").write(source_code + '\n')
 
     config = f"""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Run static pylint", code_report=True, artifacts="${{CODE_REPORT_FILE}}", command=[
+configs = Configuration([dict(name="Run static pylint", code_report=True, artifacts="${{CODE_REPORT_FILE}}", command=[
     'bash', '-c', 'cd "{os.getcwd()}" && {python()} -m universum.analyzers.pylint --result-file="${{CODE_REPORT_FILE}}" \
                    --python-version {python_version()} --files {str(tmpdir.join("source_file.py"))}'])])
 """

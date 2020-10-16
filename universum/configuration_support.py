@@ -5,16 +5,17 @@ import os
 
 
 __all__ = [
-    "ProjectConfiguration",
+    "Step",
+    "Configuration",
     "Variations",
     "set_project_root",
     "get_project_root"
 ]
 
 
-class ProjectConfiguration:
+class Step:
     """
-    ProjectConfiguration is a collection of configurable project-specific data needed for Universum operations.
+    Step is a collection of configurable project-specific data needed for Universum operations.
     """
 
     # pylint: disable-msg=too-many-locals
@@ -39,9 +40,9 @@ class ProjectConfiguration:
         parameters in kwargs - these parameters will be stored internally in `_extras` `dict` and can be retrieved by
         indexing.
 
-        >>> ProjectConfiguration(foo='bar')
+        >>> Step(foo='bar')
         {'foo': 'bar'}
-        >>> cfg = ProjectConfiguration(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True})
+        >>> cfg = Step(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True})
         >>> cfg
         {'name': 'foo', 'command': ['1', '2', '3'], '_extras': {'_extras': 'test', 'bool': True}}
         >>> cfg['name']
@@ -63,7 +64,7 @@ class ProjectConfiguration:
         self.pass_tag: str = pass_tag
         self.fail_tag: str = fail_tag
         self.if_env_set: str = if_env_set
-        self.children: Optional['Variations'] = None
+        self.children: Optional['Configuration'] = None
         self._extras: Dict[str, str] = {}
         for key, value in kwargs.items():
             self._extras[key] = value
@@ -71,11 +72,11 @@ class ProjectConfiguration:
     def __repr__(self) -> str:
         """
         This function simulates `dict`-like representation for string output. This is useful when printing contents of
-        :class:`Variations` objects, as internally they wrap a list of :class:`ProjectConfiguration` objects
+        :class:`Configuration` objects, as internally they wrap a list of :class:`Step` objects
 
         :return: a `dict`-like string
 
-        >>> cfg = ProjectConfiguration(name='foo', command=['bar'], my_var='baz')
+        >>> cfg = Step(name='foo', command=['bar'], my_var='baz')
         >>> repr(cfg)
         "{'name': 'foo', 'command': 'bar', 'my_var': 'baz'}"
         """
@@ -89,12 +90,12 @@ class ProjectConfiguration:
         """
         This functions simulates `dict`-like check for match
 
-        :param other: `dict` to compare values, or :class:`ProjectConfiguration` object to check equality
+        :param other: `dict` to compare values, or :class:`Step` object to check equality
         :return: `True` if `other` matches
 
-        >>> cfg1 = ProjectConfiguration(name='foo', my_var='bar')
-        >>> cfg2 = ProjectConfiguration(name='foo', my_var='bar')
-        >>> cfg3 = ProjectConfiguration(name='foo', my_var='bar', critical=True)
+        >>> cfg1 = Step(name='foo', my_var='bar')
+        >>> cfg2 = Step(name='foo', my_var='bar')
+        >>> cfg3 = Step(name='foo', my_var='bar', critical=True)
         >>> cfg1 == cfg1
         True
         >>> cfg1 == cfg2
@@ -112,7 +113,7 @@ class ProjectConfiguration:
         >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ' '}
         False
         """
-        if isinstance(other, ProjectConfiguration):
+        if isinstance(other, Step):
             return self == other.__dict__
         if isinstance(other, dict):
             for key, val in other.items():
@@ -128,7 +129,7 @@ class ProjectConfiguration:
         :param item: client-defined item
         :return: client-defined value
 
-        >>> cfg = ProjectConfiguration(name='foo', my_var='bar')
+        >>> cfg = Step(name='foo', my_var='bar')
         >>> cfg['name']
         'foo'
         >>> cfg['my_var']
@@ -153,7 +154,7 @@ class ProjectConfiguration:
         ...         warnings.simplefilter("always")
         ...         c[k] = v
         ...         return w
-        >>> cfg = ProjectConfiguration(name='foo', my_var='bar')
+        >>> cfg = Step(name='foo', my_var='bar')
         >>> set_cfg_and_get_warnings(cfg, 'name', 'bar')  # doctest: +ELLIPSIS
         [<warnings.WarningMessage object at ...>]
         >>> set_cfg_and_get_warnings(cfg, 'directory', 'foo')  # doctest: +ELLIPSIS
@@ -168,26 +169,26 @@ class ProjectConfiguration:
         'bar'
         """
         if key in self.__dict__ and key != '_extras':
-            warn("Re-defining the value of ProjectConfiguration field. Please use var." + key + " to set it instead of "
+            warn("Re-defining the value of Step field. Please use var." + key + " to set it instead of "
                  "using var['" + key + "']")
             self.__dict__[key] = value
         else:
             self._extras[key] = value
 
-    def __add__(self, other: 'ProjectConfiguration') -> 'ProjectConfiguration':
+    def __add__(self, other: 'Step') -> 'Step':
         """
-        This functions defines operator ``+`` for :class:`ProjectConfiguration` class objects by
+        This functions defines operator ``+`` for :class:`Step` class objects by
         concatenating strings and contents of dictionaries. Note that `critical` attribute is not merged.
 
-        :param other: `ProjectConfiguration` object
-        :return: new `ProjectConfiguration` object, including all attributes from both `self` and `other` objects
+        :param other: `Step` object
+        :return: new `Step` object, including all attributes from both `self` and `other` objects
 
-        >>> cfg1 = ProjectConfiguration(name='foo', command=['foo'], critical=True, my_var1='foo')
-        >>> cfg2 = ProjectConfiguration(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
+        >>> cfg1 = Step(name='foo', command=['foo'], critical=True, my_var1='foo')
+        >>> cfg2 = Step(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
         >>> cfg1 + cfg2
         {'name': 'foobar', 'command': ['foo', 'bar'], 'background': True, 'my_var1': 'foobar', 'my_var2': 'baz'}
         """
-        return ProjectConfiguration(
+        return Step(
             name=self.name + other.name,
             command=self.command + other.command,
             environment=combine(self.environment, other.environment),
@@ -212,13 +213,13 @@ class ProjectConfiguration:
         :param from_string: string to replace, e.g. `${CODE_REPORT_FILE}`
         :param to_string: value to put in place of `from_string`
 
-        >>> cfg = ProjectConfiguration(name='foo test', command=['foo', 'baz', 'foobar'], \
+        >>> cfg = Step(name='foo test', command=['foo', 'baz', 'foobar'], \
         myvar1='foo', myvar2='bar', myvar3=1)
         >>> cfg.replace_string('foo', 'bar')
         >>> cfg
         {'name': 'foo test', 'command': ['bar', 'baz', 'barbar'], 'myvar1': 'bar', 'myvar2': 'bar', 'myvar3': 1}
 
-        >>> cfg = ProjectConfiguration(artifacts='foo', report_artifacts='foo', directory='foo')
+        >>> cfg = Step(artifacts='foo', report_artifacts='foo', directory='foo')
         >>> cfg.replace_string('foo', 'bar')
         >>> cfg
         {'directory': 'bar', 'artifacts': 'bar', 'report_artifacts': 'bar'}
@@ -237,7 +238,7 @@ class ProjectConfiguration:
 
         :return: `True`, if any of the command components have space inside
 
-        >>> cfg = ProjectConfiguration(name='stringify test', command=['foo', 'bar', '--baz'])
+        >>> cfg = Step(name='stringify test', command=['foo', 'bar', '--baz'])
         >>> cfg.stringify_command()
         False
         >>> cfg
@@ -301,12 +302,12 @@ def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
     return result
 
 
-class Variations:
+class Configuration:
     """
-    `Variations` is a class for establishing project configurations.
+    `Configuration` is a class for establishing project configurations.
     This class object is a list of dictionaries:
 
-    >>> v1 = Variations([{"field1": "string"}])
+    >>> v1 = Configuration([{"field1": "string"}])
     >>> v1.configs
     [{'field1': 'string'}]
 
@@ -323,7 +324,7 @@ class Variations:
 
     Adding two objects will extend list of dictionaries:
 
-    >>> v2 = Variations([{"field1": "line"}])
+    >>> v2 = Configuration([{"field1": "line"}])
     >>> for i in (v1 + v2).all(): i
     {'field1': 'string'}
     {'field1': 'line'}
@@ -335,8 +336,8 @@ class Variations:
 
     When a field value is a list itself -
 
-    >>> v3 = Variations([dict(field2=["string"])])
-    >>> v4 = Variations([dict(field2=["line"])])
+    >>> v3 = Configuration([dict(field2=["string"])])
+    >>> v4 = Configuration([dict(field2=["line"])])
 
     multiplying them will extend the inner list:
 
@@ -345,45 +346,45 @@ class Variations:
 
     """
 
-    def __init__(self, lst: Optional[Union[List[Dict[str, Any]], List[ProjectConfiguration]]] = None):
+    def __init__(self, lst: Optional[Union[List[Dict[str, Any]], List[Step]]] = None):
         #  lst can be List[Dict[str, Any]] to support legacy cases - should be removed after project migration
-        self.configs: List[ProjectConfiguration] = []  # aggregation is used instead of inheritance for type safety
+        self.configs: List[Step] = []  # aggregation is used instead of inheritance for type safety
         if lst:
             for item in lst:
-                if isinstance(item, ProjectConfiguration):
+                if isinstance(item, Step):
                     self.configs.append(item)
                 else:
-                    self.configs.append(ProjectConfiguration(**item))
+                    self.configs.append(Step(**item))
 
     def __eq__(self, other: Any) -> bool:
         """
         This function checks wrapped configurations for match
 
-        :param other: :class:`Variations` object or list of :class:`ProjectConfiguration` objects
+        :param other: :class:`Configuration` object or list of :class:`Step` objects
         :return: `True` if stored configurations match
 
         >>> l = [{'name': 'foo', 'critical': True}, {'name': 'bar', 'myvar': 'baz'}]
-        >>> v1 = Variations(l)
-        >>> cfg1 = ProjectConfiguration(name='foo', critical=True)
-        >>> cfg2 = ProjectConfiguration(name='bar', myvar='baz')
-        >>> v2 = Variations([cfg1]) + Variations([cfg2])
-        >>> v3 = Variations() + Variations([l[0]]) + Variations([cfg2])
+        >>> v1 = Configuration(l)
+        >>> cfg1 = Step(name='foo', critical=True)
+        >>> cfg2 = Step(name='bar', myvar='baz')
+        >>> v2 = Configuration([cfg1]) + Configuration([cfg2])
+        >>> v3 = Configuration() + Configuration([l[0]]) + Configuration([cfg2])
         >>> v1 == v1
         True
         >>> v1 == v2
         True
         >>> v1 == v3
         True
-        >>> v1 == v1 + Variations()
+        >>> v1 == v1 + Configuration()
         True
         >>> v1 == v1 * 1
         True
-        >>> v1 == v1 * Variations()
+        >>> v1 == v1 * Configuration()
         True
         >>> v1 == v2 + v3
         False
         """
-        if isinstance(other, Variations):
+        if isinstance(other, Configuration):
             return self.configs == other.configs
         if isinstance(other, list):
             return self.configs == other
@@ -391,50 +392,50 @@ class Variations:
 
     def __bool__(self) -> bool:
         """
-        This function defines truthiness of :class:`Variations` object
+        This function defines truthiness of :class:`Configuration` object
 
-        :return: `True` if :class:`Variations` class object is empty
+        :return: `True` if :class:`Configuration` class object is empty
 
-        >>> v1 = Variations()
+        >>> v1 = Configuration()
         >>> bool(v1)
         False
-        >>> v2 = Variations([])
+        >>> v2 = Configuration([])
         >>> bool(v2)
         False
-        >>> v3 = Variations([{}])
+        >>> v3 = Configuration([{}])
         >>> bool(v3)
         True
         """
         return len(self.configs) != 0
 
-    def __getitem__(self, item: int) -> ProjectConfiguration:
+    def __getitem__(self, item: int) -> Step:
         return self.configs[item]
 
-    def __add__(self, other: Union['Variations', List[ProjectConfiguration]]) -> 'Variations':
+    def __add__(self, other: Union['Configuration', List[Step]]) -> 'Configuration':
         """
-        This functions defines operator ``+`` for :class:`Variations` class objects by
+        This functions defines operator ``+`` for :class:`Configuration` class objects by
         concatenating lists of dictionaries into one list.
         The order of list members in resulting list is preserved: first all dictionaries from `self`,
         then all dictionaries from `other`.
 
-        :param other: `Variations` object OR list of project configurations to be added to `configs`
-        :return: new `Variations` object, including all configurations from both `self` and `other` objects
+        :param other: `Configuration` object OR list of project configurations to be added to `configs`
+        :return: new `Configuration` object, including all configurations from both `self` and `other` objects
         """
-        list_other: List[ProjectConfiguration] = other.configs if isinstance(other, Variations) else other
-        return Variations(list.__add__(self.configs, list_other))
+        list_other: List[Step] = other.configs if isinstance(other, Configuration) else other
+        return Configuration(list.__add__(self.configs, list_other))
 
-    def __mul__(self, other: Union['Variations', int]) -> 'Variations':
+    def __mul__(self, other: Union['Configuration', int]) -> 'Configuration':
         """
-        This functions defines operator ``*`` for :class:`Variations` class objects.
+        This functions defines operator ``*`` for :class:`Configuration` class objects.
         The resulting object is created by combining every `configs` list member with
         every `other` list member using :func:`.combine()` function.
 
-        :param other: `Variations` object  OR an integer value to be multiplied to `self`
-        :return: new `Variations` object, consisting of the list of combined configurations
+        :param other: `Configuration` object  OR an integer value to be multiplied to `self`
+        :return: new `Configuration` object, consisting of the list of combined configurations
         """
         if isinstance(other, int):
-            return Variations(list.__mul__(self.configs, other))
-        config_list: List[ProjectConfiguration] = []
+            return Configuration(list.__mul__(self.configs, other))
+        config_list: List[Step] = []
         for obj_a in self.configs:
             obj_a_copy = copy.deepcopy(obj_a)
             if obj_a.children:
@@ -443,13 +444,13 @@ class Variations:
                 obj_a_copy.children = copy.deepcopy(other)
 
             config_list.append(obj_a_copy)
-        return Variations(config_list)
+        return Configuration(config_list)
 
-    def all(self) -> Iterable[ProjectConfiguration]:
+    def all(self) -> Iterable[Step]:
         """
         Function for configuration iterating.
 
-        :return: iterable for all dictionary objects in :class:`Variations` list
+        :return: iterable for all dictionary objects in :class:`Configuration` list
         """
         for obj_a in self.configs:
             if obj_a.children:
@@ -460,7 +461,7 @@ class Variations:
 
     def dump(self, produce_string_command: bool = True) -> str:
         """
-        Function for :class:`Variations` objects pretty printing.
+        Function for :class:`Configuration` objects pretty printing.
 
         :param produce_string_command: if set to False, prints "command" as list instead of string
         :return: a user-friendly string representation of all configurations list
@@ -483,8 +484,8 @@ class Variations:
             result += "Please make sure you are not trying to pass two or more parameters as one."
         return result
 
-    def filter(self, checker: Callable[[ProjectConfiguration], bool],
-               parent: ProjectConfiguration = None) -> 'Variations':
+    def filter(self, checker: Callable[[Step], bool],
+               parent: Step = None) -> 'Configuration':
         """
         This function is supposed to be called from main script, not configuration file.
         It uses provided `checker` to find all the configurations that pass the check,
@@ -492,16 +493,16 @@ class Variations:
 
         :param checker: a function that returns `True` if configuration passes the filter and `False` otherwise
         :param parent: an inner parameter for recursive usage; should be None when function is called from outside
-        :return: new `Variations` object without configurations not matching `checker` conditions
+        :return: new `Configuration` object without configurations not matching `checker` conditions
         """
 
         if parent is None:
-            parent = ProjectConfiguration()
+            parent = Step()
 
-        filtered_configs: Variations = Variations()
+        filtered_configs: Configuration = Configuration()
 
         for obj_a in self.configs:
-            item: ProjectConfiguration = parent + obj_a
+            item: Step = parent + obj_a
 
             if obj_a.children:
                 active_children_configs = obj_a.children.filter(checker, item).configs
@@ -514,7 +515,7 @@ class Variations:
                             obj_a.critical or active_children_configs[0].critical
                     else:
                         obj_a_copy = copy.deepcopy(obj_a)
-                        obj_a_copy.children = Variations(active_children_configs)
+                        obj_a_copy.children = Configuration(active_children_configs)
                     filtered_configs += [obj_a_copy]
             else:
                 if checker(item):
@@ -524,6 +525,10 @@ class Variations:
 
 
 global_project_root = os.getcwd()
+
+
+#: Variations is preserved as legacy alias for :class:`Configuration`
+Variations = Configuration
 
 
 def set_project_root(project_root: str) -> None:

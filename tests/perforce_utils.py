@@ -42,7 +42,7 @@ def is_p4_container_healthy(container, server_name, polling_start):
             continue
 
         rfc3339_time, text = log.split(" ", 1)
-        if not all(x in text for x in ["Started", server_name, "p4d service."]):
+        if not all(x in text for x in ["Started ", server_name, " p4d service."]):
             continue
 
         # check if "Started <server name> p4d service" is logged after we
