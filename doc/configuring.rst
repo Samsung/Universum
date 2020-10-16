@@ -54,16 +54,6 @@ Below is an example of the configuration file in its most basic form:
 
     configs = Configuration([dict(name="Build", command=["build.sh"])])
 
-<<<<<<< HEAD
-This configuration file uses a :class:`Variations` class
-from the :mod:`universum.configuration_support`
-module and defines one build configuration.
-
-.. note::
-
-    Creating a :class:`Variations` instance takes a list of dictionaries as an argument,
-    where every new list member describes a new `project configuration`_.
-=======
 This configuration file uses a :class:`Configuration` class from the :mod:`universum.configuration_support`
 module and describes exactly one `build step`_.
 
@@ -71,7 +61,6 @@ module and describes exactly one `build step`_.
 
     Creating a :class:`Configuration` instance takes a list of dictionaries as an argument,
     where every new list member describes a new `build step`_.
->>>>>>> 6a5de62... refactor: rename classes
 
 * The :mod:`universum.configuration_support` module provides several functions to be used by project configuration files
 * The `Universum` expects project configuration file to define global variable with
