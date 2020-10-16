@@ -351,8 +351,8 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
         try:
-            with open(config_path) as config:
-                exec(config.read(), config_globals)  # pylint: disable=exec-used
+            with open(config_path) as config_file:
+                exec(config_file.read(), config_globals)  # pylint: disable=exec-used
             self.source_project_configs = config_globals["configs"]
             dump_file: TextIO = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
             dump_file.write(self.source_project_configs.dump())
