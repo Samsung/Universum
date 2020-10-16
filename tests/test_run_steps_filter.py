@@ -1,10 +1,10 @@
 import pytest
 
 config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
 def step(name, cmd=False):
-    return Variations([dict(name=name, command=[] if not cmd else ["bash", "-c", '''echo "run step"'''])])
+    return Configuration([dict(name=name, command=[] if not cmd else ["bash", "-c", '''echo "run step"'''])])
 
 configs = step('parent 1 ') * (step('step 1', True) + step('step 2', True))
 configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))

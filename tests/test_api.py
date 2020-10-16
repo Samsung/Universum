@@ -4,10 +4,10 @@ from os import path
 from .utils import python
 
 config = f"""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Run script", artifacts="output.json",
-                           command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
+configs = Configuration([dict(name="Run script", artifacts="output.json",
+                              command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
 """
 
 

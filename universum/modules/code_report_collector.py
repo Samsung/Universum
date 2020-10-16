@@ -4,7 +4,7 @@ import os
 from copy import deepcopy
 from typing import cast, Dict, List, Optional, TextIO, Tuple
 
-from ..configuration_support import Variations, ProjectConfiguration
+from ..configuration_support import Configuration, Step
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
@@ -25,9 +25,9 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
         self.report_path: str = ""
         self.repo_diff: Optional[List[Tuple[Optional[str], Optional[str], Optional[str]]]]
 
-    def prepare_environment(self, project_config_variations: Variations) -> Variations:
-        afterall_steps: Variations = Variations()
-        for item in project_config_variations.configs:
+    def prepare_environment(self, project_config: Configuration) -> Configuration:
+        afterall_steps: Configuration = Configuration()
+        for item in project_config.configs:
             if not item.code_report:
                 continue
             if not self.report_path:

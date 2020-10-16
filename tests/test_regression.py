@@ -26,9 +26,9 @@ def test_clean_sources_exceptions(tmpdir):
     # Check failure with temp dir deleted by the launched project
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
     env.configs_file.write("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["bash", "-c", "rm -rf {}"])])
+configs = Configuration([dict(name="Test configuration", command=["bash", "-c", "rm -rf {}"])])
 """.format(env.settings.ProjectDirectory.project_root))
 
     __main__.run(env.settings)
@@ -50,9 +50,9 @@ def test_p4_multiple_spaces_in_mappings(perforce_workspace, tmpdir):
 def test_non_utf8_environment(docker_main):
     # POSIX has no 'UTF-8' in it's name, but supports Unicode
     output = docker_main.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="none", environment=['LANG=POSIX', 'LC_ALL=POSIX'])
     assert "\u2514" in output
 
@@ -62,8 +62,8 @@ configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
     docker_main.environment.assert_successful_execution('locale-gen --purge en_US')
     docker_main.environment.assert_successful_execution('update-locale LANG=en_US')
     output = docker_main.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="none", environment=['LANG=en_US', 'LC_ALL=en_US'])
     assert "\u2514" not in output

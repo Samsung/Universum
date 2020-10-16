@@ -4,7 +4,7 @@ import os
 from typing import Optional
 import pytest
 
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 from universum.modules.launcher import check_if_env_set
 
 
@@ -25,7 +25,7 @@ def setup_env_vars(env_vars: Optional[dict]):
 
 def check(if_env_set_key, env_vars: Optional[dict]):
     setup_env_vars(env_vars)
-    if_env_set_var = Variations([dict(if_env_set=if_env_set_key)])[0]
+    if_env_set_var = Configuration([dict(if_env_set=if_env_set_key)])[0]
     return check_if_env_set(if_env_set_var)
 
 
@@ -163,8 +163,8 @@ def test_if_env_set_quotes_and_quotes_in_env_var_value():
 ##########################################################################
 
 def test_if_env_set_not_in_config():
-    var = Variations([dict(code_report=True),
-                      dict(artifacts="htmlcov", command=["echo 123"], pass_tag="PASS")])
+    var = Configuration([dict(code_report=True),
+                         dict(artifacts="htmlcov", command=["echo 123"], pass_tag="PASS")])
     os.environ["VAR_1"] = "False"
     os.environ["VAR_2"] = ""
     for item in var:
@@ -177,8 +177,8 @@ def test_if_env_set_not_in_config():
 
 def assert_equal_multiplication(expected, env_vars: Optional[dict] = None):
     setup_env_vars(env_vars)
-    var1 = Variations([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
-    var2 = Variations([dict(if_env_set=" && VAR_3 == value_3")])
+    var1 = Configuration([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
+    var2 = Configuration([dict(if_env_set=" && VAR_3 == value_3")])
     configs = var1 * var2
     result = list(filter(check_if_env_set, configs.all()))
     assert expected == result

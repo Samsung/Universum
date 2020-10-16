@@ -2,7 +2,7 @@ import copy
 
 from typing import Callable, ClassVar, List, Optional, TypeVar
 from typing_extensions import TypedDict
-from ..configuration_support import ProjectConfiguration, Variations
+from ..configuration_support import Step, Configuration
 from ..lib.ci_exception import SilentAbortException, StepException, CriticalCiException
 from ..lib.gravity import Dependency, Module
 from .output import HasOutput
@@ -132,9 +132,9 @@ class StructureHandler(HasOutput):
             self.close_block()
         return result
 
-    def execute_one_step(self, configuration: ProjectConfiguration,
+    def execute_one_step(self, configuration: Step,
                          step_executor: Callable, is_critical: bool) -> None:
-        # step_executor is [[ProjectConfiguration], Step], but referring to Step creates circular dependency
+        # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
         background = configuration.background
@@ -160,18 +160,18 @@ class StructureHandler(HasOutput):
             self.out.log_stderr("This background step failed")
         return True
 
-    def execute_steps_recursively(self, parent: Optional[ProjectConfiguration], variations: Variations,
+    def execute_steps_recursively(self, parent: Optional[Step], cfg: Configuration,
                                   step_executor: Callable,
                                   skipped: bool = False) -> None:
-        # step_executor is [[ProjectConfiguration], Step], but referring to Step creates circular dependency
+        # step_executor is [[Step], Step], but referring to Step creates circular dependency
         if parent is None:
-            parent = ProjectConfiguration()
+            parent = Step()
 
         step_num_len = len(str(self.configs_total_count))
         child_step_failed = False
-        for obj_a in variations.configs:
+        for obj_a in cfg.configs:
             try:
-                item: ProjectConfiguration = parent + copy.deepcopy(obj_a)
+                item: Step = parent + copy.deepcopy(obj_a)
 
                 if obj_a.children:
                     # Here pass_errors=True, because any exception outside executing build step
@@ -223,7 +223,7 @@ class StructureHandler(HasOutput):
         self.active_background_steps = []
         return result
 
-    def execute_step_structure(self, configs: Variations, step_executor) -> None:
+    def execute_step_structure(self, configs: Configuration, step_executor) -> None:
         self.configs_total_count = sum(1 for _ in configs.all())
 
         try:

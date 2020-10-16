@@ -40,9 +40,9 @@ Config example for ``universum.analyzers.pylint``:
 
 .. testcode::
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    configs = Variations([dict(name="pylint", code_report=True, command=[
+    configs = Configuration([dict(name="pylint", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.pylint", "--python-version", "2.7",
         "--result-file", "${CODE_REPORT_FILE}", "--files", "*.py", "examples/"
     ])])
@@ -77,9 +77,9 @@ Config example for ``universum.analyzers.svace``:
 
 .. testcode::
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    configs = Variations([dict(name="svace", code_report=True, command=[
+    configs = Configuration([dict(name="svace", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.svace", "--build-cmd", "make", "--lang", "CXX",
         "--result-file", "${CODE_REPORT_FILE}"
     ])])
@@ -115,9 +115,9 @@ Config example for ``universum.analyzers.uncrustify``:
 
 .. testcode::
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    configs = Variations([dict(name="uncrustify", code_report=True, command=[
+    configs = Configuration([dict(name="uncrustify", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "project_root_directory",
         "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
         "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"

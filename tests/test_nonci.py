@@ -1,12 +1,12 @@
 config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="artifact check",
-                           command=["bash", "-c", '''cat {}/test_nonci.txt''']),
+configs = Configuration([dict(name="artifact check",
+                              command=["bash", "-c", '''cat {}/test_nonci.txt''']),
 #                                                    ^ this helps to check artifact is deleted before launch 
 
-                      dict(name="test_step", artifacts="test_nonci.txt",
-                           command=["bash", "-c", '''echo "pwd:[$(pwd)]" && echo "test nonci" > test_nonci.txt'''])])
+                         dict(name="test_step", artifacts="test_nonci.txt",
+                              command=["bash", "-c", '''echo "pwd:[$(pwd)]" && echo "test nonci" > test_nonci.txt'''])])
 #                                                    ^ this helps to check the path is not changed
 """
 
@@ -54,10 +54,10 @@ def test_launcher_output(docker_nonci):
 
     # second call of universum must not contain previous step log
     docker_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="test_step",
-                           command=["bash", "-c", '''echo "Separate run"'''])])
+configs = Configuration([dict(name="test_step",
+                              command=["bash", "-c", '''echo "Separate run"'''])])
 """, additional_parameters='-lo file', workdir=cwd)
 
     second_run_step_log = docker_nonci.environment.assert_successful_execution(

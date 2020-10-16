@@ -9,7 +9,7 @@ import zipfile
 
 import glob2
 
-from ..configuration_support import ProjectConfiguration, Variations
+from ..configuration_support import Configuration
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
@@ -155,7 +155,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         return new_artifact_list
 
     @make_block("Preprocessing artifact lists")
-    def set_and_clean_artifacts(self, project_configs: Variations, ignore_existing_artifacts: bool = False) -> None:
+    def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
         artifact_list = []
         report_artifact_list = []
         for configuration in project_configs.all():

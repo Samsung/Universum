@@ -50,18 +50,17 @@ Below is an example of the configuration file in its most basic form:
 
 .. testcode::
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    configs = Variations([dict(name="Build", command=["build.sh"])])
+    configs = Configuration([dict(name="Build", command=["build.sh"])])
 
-This configuration file uses a :class:`Variations` class
-from the :mod:`universum.configuration_support`
-module and defines one build configuration.
+This configuration file uses a :class:`Configuration` class from the :mod:`universum.configuration_support`
+module and describes exactly one build step.
 
 .. note::
 
-    Creating a :class:`Variations` instance takes a list of dictionaries as an argument,
-    where every new list member describes a new `project configuration`_.
+    Creating a :class:`Configuration` instance takes a list of dictionaries as an argument,
+    where every new list member describes a new build step.
 
 * The :mod:`universum.configuration_support` module provides several functions to be used by project configuration files
 * The `Universum` expects project configuration file to define global variable with
@@ -98,9 +97,9 @@ using `directory` keyword:
 
 .. testcode::
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    configs = Variations([dict(name="Make Special Module", directory="specialModule", command=["make"])])
+    configs = Configuration([dict(name="Make Special Module", directory="specialModule", command=["make"])])
 
 To use a `Makefile` located in `"specialModule"` directory without passing "-C specialModule/"
 arguments to ``make`` command, the launch directory is specified.
@@ -132,9 +131,11 @@ See the following example configuration file:
 
 .. testcode::
 
-    from universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Configuration, get_project_root
 
-    configs = Variations([dict(name="Run tests", directory="/home/scripts", command=["./run_tests.sh", "--directory", get_project_root()])])
+
+    configs = Configuration([dict(name="Run tests", directory="/home/scripts",
+                                  command=["./run_tests.sh", "--directory", get_project_root()])])
 
 In this configuration a hypothetical external script `"run_tests.sh"` requires absolute path
 to project sources as an argument. The :func:`get_project_root` will pass the actual project root,
@@ -152,11 +153,11 @@ Below is an example of the configuration file with three different configuration
 
 .. testcode::
 
-    from universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Configuration, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
-    configs = Variations([
+    configs = Configuration([
         dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
         dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
         dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
@@ -176,7 +177,7 @@ The example configuration file declares the following `Universum` run steps:
     :func:`os.path.join` function to avoid any possible errors on path joining.
 
 
-Common `Variations` keys
+Common `Configuration` keys
 ------------------------
 
 Each configuration description is a python dictionary with the following possible keys:
@@ -318,13 +319,13 @@ pass_tag, fail_tag
 
         #!/usr/bin/env {python}
 
-        from universum.configuration_support import Variations
+        from universum.configuration_support import Configuration
 
     .. testcode::
 
-        make = Variations([dict(name="Make ", command=["make"], pass_tag="pass_")])
+        make = Configuration([dict(name="Make ", command=["make"], pass_tag="pass_")])
 
-        target = Variations([
+        target = Configuration([
             dict(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
             dict(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
         ])
@@ -357,10 +358,10 @@ pass_tag, fail_tag
 Dump configurations list
 ------------------------
 
-Class :class:`Variations` have a build-in function :meth:`~Variations.dump`, that processes the passed dictionaries
-and returns the list of all included configurations.
+Class :class:`Configuration` has a build-in function :meth:`~Configuration.dump`, that processes the passed dictionaries
+and returns the list of all included build steps.
 
-Below is an example of the configuration file that uses :meth:`~Variations.dump` function for debugging:
+Below is an example of the configuration file that uses :meth:`~Configuration.dump` function for debugging:
 
 .. testsetup::
 
@@ -374,11 +375,11 @@ Below is an example of the configuration file that uses :meth:`~Variations.dump`
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Variations, get_project_root
+    from universum.configuration_support import Configuration, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
-    configs = Variations([
+    configs = Configuration([
         dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
         dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
         dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
@@ -420,11 +421,11 @@ where the third will follow the second.
 Combining configurations
 ------------------------
 
-The Variations class provides a way to generate a full testing scenario by simulating the
-combination of configurations.
+The :class:`Configuration` class provides a way to generate a full testing scenario by simulating the
+combination of different configurations (as in :class:`Configuration` instances).
 
-For this class :class:`Variations` has built-in ``+`` and ``*`` operators that allow creating
-configuration sets out of several :class:`Variations` instances.
+For this class :class:`Configuration` has built-in ``+`` and ``*`` operators that allow creating
+configuration sets out of several :class:`Configuration` instances.
 
 
 Adding build configurations
@@ -436,10 +437,10 @@ See the following example:
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    one = Variations([dict(name="Make project", command=["make"])])
-    two = Variations([dict(name="Run tests", command=["run_tests.sh"])])
+    one = Configuration([dict(name="Make project", command=["make"])])
+    two = Configuration([dict(name="Run tests", command=["run_tests.sh"])])
 
     configs = one + two
 
@@ -475,7 +476,7 @@ Multiplying configuration by a constant is just an equivalent of multiple additi
 
 .. doctest::
 
-    >>> run = Variations([dict(name="Run tests", command=["run_tests.sh"])])
+    >>> run = Configuration([dict(name="Run tests", command=["run_tests.sh"])])
     >>> print (run * 2 == run + run)
     True
 
@@ -488,11 +489,11 @@ For example, this configuration file:
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    make = Variations([dict(name="Make ", command=["make"], artifacts="out")])
+    make = Configuration([dict(name="Make ", command=["make"], artifacts="out")])
 
-    target = Variations([dict(name="Platform A", command=["--platform", "A"]),
+    target = Configuration([dict(name="Platform A", command=["--platform", "A"]),
                          dict(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target
@@ -536,15 +537,15 @@ can be combined in any required way. For example:
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Variations
+    from universum.configuration_support import Configuration
 
-    make = Variations([dict(name="Make ", command=["make"], artifacts="out")])
-    test = Variations([dict(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
+    make = Configuration([dict(name="Make ", command=["make"], artifacts="out")])
+    test = Configuration([dict(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
 
-    debug = Variations([dict(name=" - Release"),
+    debug = Configuration([dict(name=" - Release"),
                         dict(name=" - Debug", command=["-d"])])
 
-    target = Variations([dict(name="Platform A", command=["--platform", "A"]),
+    target = Configuration([dict(name="Platform A", command=["--platform", "A"]),
                          dict(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target + test * target * debug

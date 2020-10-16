@@ -88,9 +88,9 @@ def create_empty_settings(test_type):
 
 
 simple_test_config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
 
