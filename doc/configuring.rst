@@ -55,7 +55,7 @@ Below is an example of the configuration file in its most basic form:
     configs = Configuration([dict(name="Build", command=["build.sh"])])
 
 This configuration file uses a :class:`Configuration` class from the :mod:`universum.configuration_support`
-module and describes exactly one `build step`_.
+module and describes exactly one build step.
 
 .. note::
 
