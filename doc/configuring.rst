@@ -60,7 +60,7 @@ module and describes exactly one build step.
 .. note::
 
     Creating a :class:`Configuration` instance takes a list of dictionaries as an argument,
-    where every new list member describes a new `build step`_.
+    where every new list member describes a new build step.
 
 * The :mod:`universum.configuration_support` module provides several functions to be used by project configuration files
 * The `Universum` expects project configuration file to define global variable with
