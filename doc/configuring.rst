@@ -34,8 +34,8 @@ build project for some specific platform or run a specific test script. These ac
 
 Here's an example of such actions::
 
-    $ ./build.sh -d --platform MSM8996
-    $ cp ./build/results ./tests
+    $ ./build.sh -d --platform linux_amd64
+    $ cp ./build/results/ ./tests
     $ make tests
     $ ./run_regression_tests.sh
 
@@ -47,7 +47,7 @@ Each build step is defined by two main parameters:
 Both `name` and `command`, however, can be undefined. A build step without a name will still be issued a number;
 a build step without a command will do nothing, but will still appear in log (and have a step number).
 
-Aside from these, `Universum` provides :ref:`a wide list of other helpful step parameters <keys>`.
+Aside from these, `Universum` provides :ref:`a list of other step parameters <keys>`.
 Also the build steps can be :ref:`added, multiplied <combining>` and :ref:`excluded <filtering>`.
 
 
