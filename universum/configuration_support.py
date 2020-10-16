@@ -38,7 +38,7 @@ class ProjectConfiguration:
         All params supplied via named attributed shall be  type-checked for safety. Clients may provide custom
         parameters in kwargs - these parameters will be stored internally in `_extras` `dict` and can be retrieved by
         indexing.
-        
+
         >>> ProjectConfiguration(foo='bar')
         {'foo': 'bar'}
         >>> cfg = ProjectConfiguration(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True})
