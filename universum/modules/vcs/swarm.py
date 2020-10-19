@@ -116,7 +116,7 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
             return
         self.out.log("Review version was not provided; trying to calculate it manually...")
 
-        # current link structure: http://<server.url.com>/reviews/<review_id>/tests/pass/C9B93E26-90B4-43C0-1A44-B076A3F51EE3.v1/ 
+        # link structure: http://<server.url>/reviews/<review_id>/tests/pass/C9B93E26-90B4-43C0-1A44-B076A3F51EE3.v1/
         if self.settings.pass_link:
             self.review_version = self.settings.pass_link.split('.')[-1].strip('v').rstrip('/')
             return
