@@ -36,12 +36,16 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
                             help="Swarm 'success' link; is sent by Swarm triggering link as '{pass}'")
         parser.add_argument("--swarm-fail-link", "-sfl", dest="fail_link", metavar="FAIL",
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
+        parser.add_argument("--swarm-review-versn", "-srv", dest="review_version", metavar="REVIEW_VERSION",
+                            help="Swarm review version; is sent by Swarm triggering link as '{version}'")
 
     def __init__(self, user, password, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
         self.password = password
         self.review_version = None
+        if self.settings.review_version:
+            self.review_version = self.settings.review_version
         self.review_latest_version = None
         self.client_root = ""
         self.mappings_dict = {}
@@ -108,11 +112,21 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
 
         self.review_latest_version = str(len(versions))
 
+        if self.review_version:
+            return
+        self.out.log("Review version was not provided; trying to calculate it manually...")
+
+        if self.settings.pass_link:
+            self.review_version = self.settings.pass_link.split('.')[-1].strip('v').rstrip('/')
+            return
+        if self.settings.fail_link:
+            self.review_version = self.settings.fail_link.split('.')[-1].strip('v').rstrip('/')
+            return
+
         for index, entry in enumerate(versions):
             if int(entry["change"]) == int(self.settings.change):
                 self.review_version = str(index + 1)
                 return
-
         try:
             last_cl = int(versions[int(self.review_latest_version) - 1]["archiveChange"])
             if last_cl == int(self.settings.change):
