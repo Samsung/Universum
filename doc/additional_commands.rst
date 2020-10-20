@@ -51,12 +51,13 @@ Universum in non-CI mode has the following differences from default mode:
 Poll chosen VCS for updates
 ---------------------------
 
-This mode was created for CI systems, not having polling feature at all or exact functionality, listed below.
+This mode was created for CI systems that do not have polling feature at all or that are not able to check
+each change individually.
 
-When launched in poller mode, Universum uses a simple database to remember for every passed VCS source
-(such as Git or P4 branch) latest checked commit. On next launches it consults that database and calculates
+When launched in poller mode, Universum uses a simple database to remember latest checked commit for every
+passed VCS source, such as Git or P4 branch. On next launches it consults that database and calculates
 a list of updates (commits, submits) in that VCS source since last change saved in DB. After that, using an URL
-defined in parameters, it triggers a build in CI system for each of that changes (instead of testing only the
+defined in parameters, it triggers a build in CI system for each of those changes (instead of testing only the
 current VCS state).
 
 This mode allows to locate a source of behaviour changes more precisely.
