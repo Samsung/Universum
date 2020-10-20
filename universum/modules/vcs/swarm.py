@@ -16,6 +16,16 @@ __all__ = [
 ]
 
 
+def get_version_from_link(link):
+    # link structure: http://<server.url>/reviews/<review_id>/tests/pass/C9B93E26-90B4-43C0-1A44-B076A3F51EE3.v1/
+    try:
+        version = link.split('.')[-1].strip('v').rstrip('/')
+        int(version)
+        return version
+    except ValueError:
+        return None
+
+
 class Swarm(ReportObserver, HasOutput, HasErrorState):
     """
     This class contains CI functions for interaction with Swarm via 'swarm_cli.py'
@@ -114,15 +124,18 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
 
         if self.review_version:
             return
-        self.out.log("Review version was not provided; trying to calculate it manually...")
+        self.out.log("Review version was not provided; trying to calculate it from PASS/FAIL links...")
 
-        # link structure: http://<server.url>/reviews/<review_id>/tests/pass/C9B93E26-90B4-43C0-1A44-B076A3F51EE3.v1/
         if self.settings.pass_link:
-            self.review_version = self.settings.pass_link.split('.')[-1].strip('v').rstrip('/')
-            return
+            self.review_version = get_version_from_link(self.settings.pass_link)
+            if self.review_version:
+                return
         if self.settings.fail_link:
-            self.review_version = self.settings.fail_link.split('.')[-1].strip('v').rstrip('/')
-            return
+            self.review_version = get_version_from_link(self.settings.pass_link)
+            if self.review_version:
+                return
+        self.out.log("PASS/FAIL links either missing or have unexpected format; "
+                     "try to calculate version from shelve number...")
 
         for index, entry in enumerate(versions):
             if int(entry["change"]) == int(self.settings.change):
