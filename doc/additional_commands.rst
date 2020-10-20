@@ -51,7 +51,21 @@ Universum in non-CI mode has the following differences from default mode:
 Poll chosen VCS for updates
 ---------------------------
 
-.. TODO: Add description
+This mode was created for CI systems that do not have polling feature at all or that are not able to check
+each change individually.
+
+When launched in poller mode, Universum uses a simple database to remember latest checked commit for every
+passed VCS source, such as Git or P4 branch. On next launches it consults that database and calculates
+a list of updates (commits, submits) in that VCS source since last change saved in DB. After that, using an URL
+defined in parameters, it triggers a build in CI system for each of those changes (instead of testing only the
+current VCS state).
+
+This mode allows to locate a source of behaviour changes more precisely.
+
+.. note::
+
+    Even being a poller, Universum in this mode does not launch automatically. Please use some outer means
+    (such as `cron` or any other time-based auto-launcher) for periodical checks.
 
 Here are the parameters for poller mode:
 
@@ -67,7 +81,21 @@ Here are the parameters for poller mode:
 Detect changes and submit them automatically
 --------------------------------------------
 
-.. TODO: Add description
+Unlike default mode, Universum in `submit` mode **requires an already prepared local repository.** For example:
+
+* In case of Git:
+
+    - the repo should be already cloned
+    - the required branch should be already checked out
+
+* In case of P4:
+
+    - the client should be already created
+    - the directory should be already synced
+    - all the required shelves should be applied
+
+After doing that, any additional changes done to source code (made manually or by script execution) will be
+detected by Universum submitter and added to VCS with specified description on behalf of specified user.
 
 Here are the parameters for submitter mode:
 
