@@ -154,7 +154,7 @@ Configuration with several steps
 --------------------------------
 
 The `Universum` gets the list of build steps from the `configs` global variable.
-In the basic form this variable contains a flat list of items, and each item represents one`build step`_.
+In the basic form this variable contains a flat list of items, and each item represents one `build step`_.
 
 Below is an example of the configuration file with three different steps:
 
@@ -207,7 +207,7 @@ command
     Lists like ``["ls -a"]`` will not be processed correctly and therefore should be splat into ``["ls", "-a"]``.
     Lists like ``["build.sh", "--platform A"]`` will not be processed correctly and thus should be plat into
     ``["build.sh", "--platform", "A"]``. A build step can have an empty list as a command.
-    Such step won't do anything except informing the user about having nothing to do.
+    Such step won't do anything except showing up the step name in Universum execution logs.
 
 .. note::
 
