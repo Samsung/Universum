@@ -16,6 +16,8 @@ github = (git, 'cryptography', 'pygithub')
 
 vcs = p4 + github
 
+docs = ('sphinx', 'sphinx-argparse', 'sphinx_rtd_theme')  # This extra is required for RTD to generate documentation
+
 setup(
     name=universum.__title__,
     version=universum.__version__,
@@ -38,11 +40,10 @@ setup(
         'p4': [p4],
         'git': [git],
         'github': [github],
+        'docs': [docs],
         'test': [
             vcs,
-            'sphinx',
-            'sphinx-argparse',
-            'sphinx_rtd_theme',
+            docs,
             'docker',
             'httpretty',
             'mock',

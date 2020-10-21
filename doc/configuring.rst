@@ -1,5 +1,5 @@
-Configuring the project
-=======================
+Project configuration
+=====================
 
 .. currentmodule:: universum.configuration_support
 
@@ -18,29 +18,37 @@ to this module in `config_path` member of its input settings.
 
     Generally there should be no need to implement complex logic in the configuration file,
     however the `Universum` doesn't limit what project uses its configuration file for. Also,
-    there are no restriction on using of external python modules, libraries or on the
+    there are no restriction on using of the external python modules, libraries or on the
     structure of the configuration file itself.
 
-    The project is free to use whatever it needs in the configuration file; just remember,
+    The project is free to use whatever it needs in the configuration file; just remember that
     all the calculations are done on config processing, not step execution.
 
 
-Project configuration
----------------------
+Build step
+----------
 
-.. TODO: rename whole article into 'Project configuration' and refactor the contents
+Project configuration is a list of actions to be performed to test a project: e.g., prepare environment,
+build project for some specific platform or run a specific test script. These actions are mostly referred as
+"build steps". A project configuration, being a list of build steps, is sometimes referred as a build configuration.
 
-Project configuration (also mentioned as `build configuration`) is a simple complete way
-to test the project: e.g., build it for some specific platform, or run some specific test script.
-Basically, `project configuration` is a single launch of some external application or script.
+Here's an example of such actions::
 
-For example::
-
-    $ ./build.sh -d --platform MSM8996
+    $ ./build.sh -d --platform linux_amd64
+    $ cp -r ./build/results/ ./tests
     $ make tests
     $ ./run_regression_tests.sh
 
-— are three different possible project configurations.
+Each build step is defined by two main parameters:
+
+* a `name` to refer to
+* a `command` to execute
+
+Both `name` and `command`, however, can be undefined. A build step without a name will still be issued a number;
+a build step without a command will do nothing, but will still appear in log (and have a step number).
+
+Aside from these, `Universum` provides :ref:`a list of other step parameters <keys>`.
+Also the build steps can be :ref:`added, multiplied <combining>` and :ref:`excluded <filtering>`.
 
 
 Minimal project configuration file
@@ -55,31 +63,28 @@ Below is an example of the configuration file in its most basic form:
     configs = Configuration([dict(name="Build", command=["build.sh"])])
 
 This configuration file uses a :class:`Configuration` class from the :mod:`universum.configuration_support`
-module and describes exactly one build step.
+module and describes exactly one `build step`_.
 
 .. note::
 
     Creating a :class:`Configuration` instance takes a list of dictionaries as an argument,
-    where every new list member describes a new build step.
+    where every new list member describes a new `build step`_.
 
-* The :mod:`universum.configuration_support` module provides several functions to be used by project configuration files
-* The `Universum` expects project configuration file to define global variable with
-  name `configs`. This variable defines all project configurations to be used in a build.
+* The :mod:`universum.configuration_support` module provides several helpful functions to be used
+  by project configuration files.
+* The `Universum` expects project configuration file to define global variable with name `configs`.
+  This variable defines all build steps to be performed during a single `Universum` run.
 
-The minimal project configuration file example defines just one project configuration with
-the following parameters:
+This exact configuration file defines a project configuration that consists of one step with the following parameters:
 
 #. **name** is a string `"Build"`
 #. **command** is a list with a string item `"build.sh"`
-
-Both `name` and `command`, however, can be missing. A build configuration without a name will still have a step number;
-a build configuration without issued command will do nothing, but will still appear in log and have a step number.
 
 .. note::
 
     Command line is a list with (so far) one string item, not just a string.
     Command name and all the following arguments must be passed as a list of separate strings.
-    See `List of configurations`_ for more details.
+    See `command` key :ref:`detailed description <keys>` for more details.
 
 
 Execution directory
@@ -91,9 +96,8 @@ work differently when launching them via ``./scripts/run.sh`` and via ``cd scrip
 Also, some console applications, such as ``make`` and ``ant``, support setting working directory
 using special argument. Some other applications lack this support.
 
-That is why it is sometimes necessary, and sometimes just convenient to launch
-the configuration `command` in a directory other then project root. This can be easily done
-using `directory` keyword:
+That is why it is sometimes necessary, and sometimes just convenient to launch the stated `command`
+in a directory other then project root. This can be easily done using `directory` keyword:
 
 .. testcode::
 
@@ -117,8 +121,8 @@ recommended to use :func:`get_project_root` function from :mod:`universum.config
 
 .. note::
 
-    The `Universum` launches in its own working directory that may be changed for every run
-    and therefore cannot be hardcoded in `configs.py` file. Also, if not stated otherwise,
+    The `Universum` launches build steps in its own working directory that may be changed for every run
+    and therefore cannot be hardcoded in Universum configuration file. Also, if not stated otherwise,
     project sources are copied to a temporary directory that will be deleted after a run.
     This directory may be created in different places depending on various `Universum` settings
     (not only the `working directory`, mentioned above), so the path to this directory
@@ -133,7 +137,6 @@ See the following example configuration file:
 
     from universum.configuration_support import Configuration, get_project_root
 
-
     configs = Configuration([dict(name="Run tests", directory="/home/scripts",
                                   command=["./run_tests.sh", "--directory", get_project_root()])])
 
@@ -141,15 +144,19 @@ In this configuration a hypothetical external script `"run_tests.sh"` requires a
 to project sources as an argument. The :func:`get_project_root` will pass the actual project root,
 no matter where the sources are located on this run.
 
+.. note::
 
-List of configurations
-----------------------
+    Concatenating :func:`get_project_root` results with any other paths is recommended using
+    :func:`os.path.join` function to avoid any possible errors on path joining.
 
-The `Universum` gets the list of project configurations from the `configs` global variable.
-In the basic form this variable contains a flat list of items, and each item represents one
-`project configuration`_.
 
-Below is an example of the configuration file with three different configurations:
+Configuration with several steps
+--------------------------------
+
+The `Universum` gets the list of build steps from the `configs` global variable.
+In the basic form this variable contains a flat list of items, and each item represents one `build step`_.
+
+Below is an example of the configuration file with three different steps:
 
 .. testcode::
 
@@ -163,7 +170,7 @@ Below is an example of the configuration file with three different configuration
         dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
     ])
 
-The example configuration file declares the following `Universum` run steps:
+The example configuration file declares the following `Universum` steps:
 
 1. `Make` a module, located in `"specialModule"` directory
 2. Run a `"run_tests.sh"` script, located in `"scripts"` directory
@@ -171,11 +178,8 @@ The example configuration file declares the following `Universum` run steps:
    and pass an absolute path to a directory `"out/tests"` inside project location
 4. Copy resulting directory `"out"` to the artifact directory
 
-.. note::
 
-    Concatenating :func:`get_project_root` results with any other paths is recommended using
-    :func:`os.path.join` function to avoid any possible errors on path joining.
-
+.. _keys:
 
 Common `Configuration` keys
 ------------------------
@@ -185,26 +189,25 @@ Each configuration description is a python dictionary with the following possibl
 ..
 
 name
-    Specifies the name of the configuration. The name is used as the title of the build log
-    block corresponding to the build of this configuration. It is also used to generate
+    Specifies the name of a `build step`_. The name is used as the title of the build log
+    block corresponding to the execution of this step. It is also used to generate
     name of the log file if the option for storing to log files is selected.
-    A project configuration can have no name, but it is not recommended for aesthetic reasons.
-    If several project configurations have the same names, and logs are stored to files
+    A build step can have no name, but it is not recommended for aesthetic reasons.
+    If several build steps have the same names, and logs are stored to files
     (see ``--out`` / ``-o``  `command-line parameter <args.html#Output>`__ for details),
-    all logs for such configurations will be stored to one file in order of their appearances.
+    all logs for such steps will be stored to one file in order of their appearances.
 
 ..
 
 command
-    The list with command line for the configuration launch. For every project configuration
-    first list item should be a console command (e.g. script name, or any other command like ``ls``),
-    and other list items should be the arguments, added to the command (e.g. ``--debug`` or ``-la``).
-    Every command line element, separated with space character, should be passed as a separate
-    string argument. Lists like ``["ls -a"]`` will not be processed correctly and thus
-    should be splat into ``["ls", "-a"]``. Lists like ``["build.sh", "--platform A"]``
-    will not be processed correctly and thus should be plat into ``["build.sh", "--platform", "A"]``.
-    A project configuration can have an empty list as a command. Such configuration
-    won't do anything except informing user about missing it.
+    The list with command line for the build step launch. For every step the first list item should be
+    a console command (e.g. script name, or any other command like ``ls``), and other list items should be
+    the arguments, added to the command (e.g. ``--debug`` or ``-la``).
+    Every command line element, separated with space character, should be passed as a separate string argument.
+    Lists like ``["ls -a"]`` will not be processed correctly and therefore should be splat into ``["ls", "-a"]``.
+    Lists like ``["build.sh", "--platform A"]`` will not be processed correctly and thus should be plat into
+    ``["build.sh", "--platform", "A"]``. A build step can have an empty list as a command.
+    Such step won't do anything except showing up the step name in Universum execution logs.
 
 .. note::
 
@@ -232,7 +235,7 @@ artifacts
     execution will not proceed.
     If no required artifacts were found in the end of the `Universum` run, it is also considered a failure.
     In case of shell-style patterns build is failed if no files or directories matching pattern are found.
-    Any project configuration may or may not have any artifacts.
+    Any `build step`_ may or may not have any artifacts.
 
 .. _report_artifacts:
 
@@ -249,7 +252,7 @@ report_artifacts
 .. _clean_artifacts:
 
 artifact_prebuild_clean
-    Basic usage is adding ``artifact_prebuild_clean=True`` to configuration description.
+    Basic usage is adding ``artifact_prebuild_clean=True`` to a `build step`_ description.
     By default artifacts are not stored in VCS, and artifact presence before build most likely
     means that working directory is not cleaned after previous build and therefore might influence
     build results. But sometimes deliverables have to be stored in VCS, and in this case
@@ -268,18 +271,20 @@ directory
 .. _critical_step:
 
 critical
-    Basic usage is adding ``critical=True`` to configuration description.
+    Basic usage is adding ``critical=True`` to `build step`_ description.
     This parameter is used in case of a linear step execution, when the result of some step is
-    critical for the subsequent step execution. If some configuration has `critical` key set to `True`
-    and executing this step fails, no more configurations will be executed during this run.
+    critical for the subsequent step execution. If some step has `critical` key set to `True`
+    and executing this step fails, no more steps will be executed during this run.
     However, all already started :ref:`background <background_step>` steps will be finished
     regardless critical step results.
+
+.. Add proper description of nested steps `critical` functioning somewhere somehow
 
 .. _background_step:
 
 background
-    Basic usage is adding ``background=True`` to configuration description.
-    This parameter means that configuration should be executed independently in parallel with
+    Basic usage is adding ``background=True`` to `build step`_ description.
+    This parameter means that this build step should be executed independently in parallel with
     all other steps. All logs from such steps are written to file, and the results of execution
     are collected in the end of `Universum` run. Next step execution begins immediately after
     starting a background step, not waiting for it to be completed. Several background steps
@@ -288,15 +293,15 @@ background
 .. _finish_background:
 
 finish_background
-    Basic usage is adding ``finish_background=True`` to configuration description.
+    Basic usage is adding ``finish_background=True`` to `build step`_ description.
     This parameter means that before executing this particular step all ongoing background steps
     (if any) should be finished first.
 
 ..
 
 code_report
-    Basic usage is adding ``code_report=True`` to configuration description and ``--result-file="${CODE_REPORT_FILE}"``
-    to 'command' arguments.
+    Basic usage is adding ``code_report=True`` to `build step`_ description and
+    ``--result-file="${CODE_REPORT_FILE}"`` to 'command' arguments.
     Specifies step that performs static or syntax analysis of code.
     Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
     (see `code_report parameters <code_report.html>`__ for details).
@@ -304,7 +309,7 @@ code_report
 .. _tc_tags:
 
 pass_tag, fail_tag
-    Basic usage is adding ``pass_tag="PASS", fail_tag="FAIL"`` to the configuration description.
+    Basic usage is adding ``pass_tag="PASS", fail_tag="FAIL"`` to the `build step`_ description.
     These keys are currently implemented only for TeamCity build. You can specify one, both or neither of them
     per step. Defining ``pass_tag="PASS"`` means that current build on TeamCity will be tagged with label ``PASS``
     if this particular step succeeds. Defining ``fail_tag="FAIL"`` means that current build on TeamCity will be
@@ -313,7 +318,7 @@ pass_tag, fail_tag
     a tag with spaces in TeamCity's web-interface. Every tag is added (if matching condition) after executing
     build step it is set in, not in the end of all run.
     ``pass_tag`` and ``fail_tag`` can also be used when
-    `multiplying build configuration <configuring.html#multiplying-build-configurations>`__, like this:
+    `multiplying build steps <configuring.html#multiplying-build-steps>`__, like this:
 
     .. testsetup::
 
@@ -332,17 +337,17 @@ pass_tag, fail_tag
 
         configs = make * target
 
-    This code will produce this list of configurations:
+    This code will produce this list of build steps:
 
     .. testcode::
         :hide:
 
-        print("$ ./configs.py")
+        print("$ ./.univesrum.py")
         print(configs.dump())
 
     .. testoutput::
 
-        $ ./configs.py
+        $ ./.univesrum.py
         [{'name': 'Make Linux', 'command': 'make --platform Linux', 'pass_tag': 'pass_Linux'},
         {'name': 'Make Windows', 'command': 'make --platform Windows', 'pass_tag': 'pass_Windows'}]
 
@@ -355,11 +360,13 @@ pass_tag, fail_tag
     absolute or relative. All relative paths start from the project root (see :ref:`get_project_root`).
 
 
-Dump configurations list
-------------------------
+.. _dump:
 
-Class :class:`Configuration` has a build-in function :meth:`~Configuration.dump`, that processes the passed dictionaries
-and returns the list of all included build steps.
+Dump a list of build steps
+--------------------------
+
+Class :class:`Configuration` has a build-in function :meth:`~Configuration.dump`, that processes the passed
+dictionaries and returns the list of all included build steps.
 
 Below is an example of the configuration file that uses :meth:`~Configuration.dump` function for debugging:
 
@@ -389,34 +396,35 @@ Below is an example of the configuration file that uses :meth:`~Configuration.du
         print(configs.dump())
 
 The combination of ``#!/usr/bin/env {python}`` and ``if __name__ == '__main__':`` allows launching
-the `configs.py` script from shell.
+the `Universum` configuration files as a script from shell.
 
-For ``from universum.configuration_support import`` to work correctly, `configs.py` should be copied to
-`Universum` root directory and launched there.
+If `Universum` is not installed locally, for ``from universum.configuration_support import`` to work correctly
+the configuration file should be copied to local `Universum` root directory and launched there.
 
 When launched from shell instead of being used by `Universum` system, :ref:`get_project_root` function
 returns current directory instead of actual project root.
 
-The only thing this script will do is create `configs` variable and print all project configurations
-it includes. For example, running the script, given above, will result in the following:
+The only thing this script will do is create `configs` variable and print all build steps it includes.
+For example, running the script, given above, will result in the following:
 
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
     {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
     {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
 
-As second and third build configurations have the same names, if log files are created,
-only two logs will be created: one for the first build step, another for both second and third,
-where the third will follow the second.
+As second and third steps have the same names, if log files are created, only two logs will be created:
+one for the first build step, another for both second and third, where the third will follow the second.
 
+
+.. _combining:
 
 Combining configurations
 ------------------------
@@ -428,8 +436,8 @@ For this class :class:`Configuration` has built-in ``+`` and ``*`` operators tha
 configuration sets out of several :class:`Configuration` instances.
 
 
-Adding build configurations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding configurations
+~~~~~~~~~~~~~~~~~~~~~
 
 See the following example:
 
@@ -447,25 +455,24 @@ See the following example:
     if __name__ == '__main__':
         print(configs.dump())
 
-The addition operator will just concatenate two lists into one, so
-the `result <Dump configurations list_>`_ of such configuration file will be
-the following list of configurations:
+The addition operator will just concatenate two lists into one, so the :ref:`result <dump>`
+of such configuration file will be the following list of build steps:
 
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make project', 'command': 'make'},
     {'name': 'Run tests', 'command': 'run_tests.sh'}]
 
 
-Multiplying build configurations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Multiplying configurations
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Multiplication operator can be used in configuration file two ways:
 
@@ -480,10 +487,7 @@ Multiplying configuration by a constant is just an equivalent of multiple additi
     >>> print (run * 2 == run + run)
     True
 
-Though the application area of multiplication by a constant is unclear at the moment.
-
-Multiplying configuration by a configuration combines their properties.
-For example, this configuration file:
+Multiplying configuration by a configuration combines their properties. For example, this configuration file:
 
 .. testcode::
 
@@ -501,17 +505,17 @@ For example, this configuration file:
     if __name__ == '__main__':
         print(configs.dump())
 
-will `produce <Dump configurations list_>`_ this list of configurations:
+will :ref:`produce <dump>` this list of build steps:
 
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
     {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
 
@@ -521,7 +525,7 @@ will `produce <Dump configurations list_>`_ this list of configurations:
 .. note::
 
     Note the extra space character at the end of the configuration name `"Make "`.
-    As multiplying process uses simple adding of all corresponding configuration settings,
+    As multiplying process uses simple adding of all corresponding step settings,
     string variables are just concatenated, so without extra spaces resulting name
     would look like "MakePlatform A". If we add space character, the resulting name
     becomes "Make Platform A".
@@ -553,17 +557,17 @@ can be combined in any required way. For example:
     if __name__ == '__main__':
         print(configs.dump())
 
-This file `will get us <Dump configurations list_>`_ the following list of configurations:
+This file :ref:`will get us <dump>` the following list of build steps:
 
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
     {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
     {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
@@ -581,21 +585,20 @@ order, use parentheses:
 
 .. _filtering:
 
-Excluding configurations
-------------------------
+Excluding build steps
+---------------------
 
 At the moment there is no support for ``-`` operator.
-There is no easy way to exclude one of configurations, generated by adding/multiplying.
-But there is a conditional including implemented. To include/exclude configuration depending on
-environment variable, use `if_env_set` key. When script comes to executing a configuration with
-such key, if there's no environment variable with stated name set to either "true", "yes" or "y",
-configuration is not executed. If any other value should be set, use
-``if_env_set="VARIABLE_NAME == variable_value"`` comparison. Please pay special attention on
-the absence of any quotation marks around `variable_value`: if added, `$VARIABLE_NAME` will be
-compared with `"variable_value"` string and thus fail. Also, please note, that all spaces before and after
-`variable_value` will be automatically removed, so ``if_env_set="VARIABLE_NAME == variable_value "`` will
-be equal to ``os.environ["VARIABLE_NAME"] = "variable_value"`` but not
-``os.environ["VARIABLE_NAME"] = "variable_value "``.
+There is no easy way to exclude one of build steps, generated by adding/multiplying.
+But there is a conditional including implemented. To include/exclude a `build step` depending on
+environment variable, use `if_env_set` key. When script comes to executing a step with such key,
+if there's no environment variable with stated name set to either "true", "yes" or "y",the step is not executed.
+If any other value should be set, use ``if_env_set="VARIABLE_NAME == variable_value"`` comparison.
+Please pay special attention on the absence of any quotation marks around `variable_value`:
+if added, `$VARIABLE_NAME` will be compared with `"variable_value"` string and thus fail. Also, please note,
+that all spaces before and after `variable_value` will be automatically removed, so
+``if_env_set="VARIABLE_NAME == variable_value "`` will be equal to ``os.environ["VARIABLE_NAME"] = "variable_value"``
+but not ``os.environ["VARIABLE_NAME"] = "variable_value "``.
 
 `$VARIABLE_NAME` consist solely of letters, digits, and the '_' (underscore) and not begin with a digit.
 
@@ -603,9 +606,7 @@ If such environment variable should not be set to specific value, please use
 ``if_env_set="VARIABLE_NAME != variable_value"`` (especially ``!= True`` for variables
 to not be set at all).
 
-If executing the configuration depends on more than one environment variable,
-use ``&&`` inside `if_env_set` value. For example,
-``if_env_set="SPECIAL_TOOL_PATH && ADDITIONAL_SOURCES_ROOT"`` configuration will be executed only
-in case of both `$SPECIAL_TOOL_PATH` and `$ADDITIONAL_SOURCES_ROOT` environment variables set
-to some values. If any of them is missing or not set in current environment,
-the configuration will be excluded from current run.
+If executing the build step depends on more than one environment variable, use ``&&`` inside `if_env_set` value.
+For example, ``if_env_set="SPECIAL_TOOL_PATH && ADDITIONAL_SOURCES_ROOT"`` step will be executed only
+in case of both `$SPECIAL_TOOL_PATH` and `$ADDITIONAL_SOURCES_ROOT` environment variables set to some values.
+If any of them is missing or not set in current environment, the step will be excluded from current run.
