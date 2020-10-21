@@ -121,8 +121,8 @@ recommended to use :func:`get_project_root` function from :mod:`universum.config
 
 .. note::
 
-    The `Universum` launches in its own working directory that may be changed for every run
-    and therefore cannot be hardcoded in `configs.py` file. Also, if not stated otherwise,
+    The `Universum` launches build steps in its own working directory that may be changed for every run
+    and therefore cannot be hardcoded in Universum configuration file. Also, if not stated otherwise,
     project sources are copied to a temporary directory that will be deleted after a run.
     This directory may be created in different places depending on various `Universum` settings
     (not only the `working directory`, mentioned above), so the path to this directory
@@ -342,12 +342,12 @@ pass_tag, fail_tag
     .. testcode::
         :hide:
 
-        print("$ ./configs.py")
+        print("$ ./.univesrum.py")
         print(configs.dump())
 
     .. testoutput::
 
-        $ ./configs.py
+        $ ./.univesrum.py
         [{'name': 'Make Linux', 'command': 'make --platform Linux', 'pass_tag': 'pass_Linux'},
         {'name': 'Make Windows', 'command': 'make --platform Windows', 'pass_tag': 'pass_Windows'}]
 
@@ -396,10 +396,10 @@ Below is an example of the configuration file that uses :meth:`~Configuration.du
         print(configs.dump())
 
 The combination of ``#!/usr/bin/env {python}`` and ``if __name__ == '__main__':`` allows launching
-the `configs.py` script from shell.
+the `Universum` configuration files as a script from shell.
 
-For ``from universum.configuration_support import`` to work correctly, `configs.py` should be copied to
-`Universum` root directory and launched there.
+If `Universum` is not installed locally, for ``from universum.configuration_support import`` to work correctly
+the configuration file should be copied to local `Universum` root directory and launched there.
 
 When launched from shell instead of being used by `Universum` system, :ref:`get_project_root` function
 returns current directory instead of actual project root.
@@ -410,12 +410,12 @@ For example, running the script, given above, will result in the following:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
     {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
     {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
@@ -461,12 +461,12 @@ of such configuration file will be the following list of build steps:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make project', 'command': 'make'},
     {'name': 'Run tests', 'command': 'run_tests.sh'}]
 
@@ -486,8 +486,6 @@ Multiplying configuration by a constant is just an equivalent of multiple additi
     >>> run = Configuration([dict(name="Run tests", command=["run_tests.sh"])])
     >>> print (run * 2 == run + run)
     True
-
-Though the application area of multiplication by a constant is unclear at the moment.
 
 Multiplying configuration by a configuration combines their properties. For example, this configuration file:
 
@@ -512,12 +510,12 @@ will :ref:`produce <dump>` this list of build steps:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
     {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
 
@@ -564,12 +562,12 @@ This file :ref:`will get us <dump>` the following list of build steps:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.univesrum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.univesrum.py
     [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
     {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
     {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
