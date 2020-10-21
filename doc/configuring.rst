@@ -35,7 +35,7 @@ build project for some specific platform or run a specific test script. These ac
 Here's an example of such actions::
 
     $ ./build.sh -d --platform linux_amd64
-    $ cp ./build/results/ ./tests
+    $ cp -r ./build/results/ ./tests
     $ make tests
     $ ./run_regression_tests.sh
 
