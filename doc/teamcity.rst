@@ -49,10 +49,9 @@ tracking changes becomes more difficult the more times they are copied.
 Install Universum on build agents
 ---------------------------------
 
-0. Download Universum sources to the build server
-#. Install Universum on build server by running ``sudo pip install .`` in Universum sources root directory
 #. Install and configure TeamCity server
-#. Install build agents on build server, add them to the project pool
+#. Install build agents on build server(s), add them to the project pool
+#. Install Universum on corresponding build server(s) by running ``sudo {pip} install universum``
 
 Please refer to
 `TeamCity official manuals <https://www.jetbrains.com/teamcity/documentation/>`_ for details.
@@ -150,8 +149,8 @@ Configure project using Perforce
 
 0. Create a sub-project to a created earlier top-level project
 #. Go to `Parameters` in `Project Settings`
-#. Add ``env.CONFIG_PATH``: a relative path to project :doc:`configuration file <configuring>`,
-   starting from project root
+#. If not using the default (``.universum.py``), add ``env.CONFIG_PATH``: a relative path to project
+   :doc:`configuration file <configuring>`, starting from project root
 #. Also add all required project-wide Perforce parameters:
 
         :env.P4USER: Perforce user ID
@@ -159,6 +158,11 @@ Configure project using Perforce
         :env.P4PORT: Perforce server URL (including port if needed)
         :env.P4_MAPPINGS: Perforce mappings in :doc:`special format <args>`.
             Also can be replaced with legacy ``env.P4_PATH`` (but not both at a time)
+
+.. note::
+
+    If using Perforce, install P4 CLI on build agent(s), and use ``{pip} install -U universum[p4]``
+    to make sure all VCS-dependant modules are installed.
 
 
 Create basic postcommit configuration
@@ -197,7 +201,8 @@ Integrate with Swarm
 0. Go to `Build Configuration Settings` (or to `Project Settings`, if you plan on having
    more than one Swarm-related configuration)
 #. Create ``env.REVIEW``, ``env.PASS`` and ``env.FAIL`` parameters and leave them empty
-#. In `Build Configuration Settings` --> `Parameters` and add ``--report-to-review`` option in ``env.CONFIGURATION_PARAMETERS``
+#. In `Build Configuration Settings` --> `Parameters` and add ``--report-to-review`` option in
+   ``env.CONFIGURATION_PARAMETERS``
 #. If needed, add other :doc:`Swarm options <args>`, such as ``--report-build-start``
    and ``--report-build-success``
 #. Go to Swarm project settings, check in `Automated tests` check-box and follow `this instruction
@@ -206,7 +211,7 @@ Integrate with Swarm
 The resulting URL you should insert in text field. The URL should look like:
 
     \http://<user>:<password>@<TeamCity URL>/httpAuth/action.html?add2Queue=<configuration>
-    &name=env.SHELVE_CHANGELIST&value={change}&name=env.PASS&value={pass}&name=env.FAIL&value={fail}
+    &name=env.SWARM_CHANGELIST&value={change}&name=env.PASS&value={pass}&name=env.FAIL&value={fail}
     &name=env.REVIEW&value={review}
 
 where
@@ -224,6 +229,7 @@ or, if your TeamCity supports anonymous build triggering, `user & password` can 
     \name=STATUS&value={status}
 
 or, any other parameter. This is a workaround for TeamCity requirement for using POST method to trigger builds.
+
 
 Configure project and configurations using Git
 ----------------------------------------------
@@ -244,3 +250,8 @@ Configure project and configurations using Git
         tag, etc. (see `official manual <https://git-scm.com/docs/git-checkout>`__ for details)
     :env.GIT_CHERRYPICK_ID: one or several coma-separated commit IDs to cherry-pick
         (see `official manual <https://git-scm.com/docs/git-cherry-pick>`__ for details)
+
+.. note::
+
+    If using Git, install Git on build agent(s), and use ``{pip} install -U universum[git]``
+    to make sure all VCS-dependant modules are installed.

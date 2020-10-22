@@ -47,8 +47,9 @@ Each build step is defined by two main parameters:
 Both `name` and `command`, however, can be undefined. A build step without a name will still be issued a number;
 a build step without a command will do nothing, but will still appear in log (and have a step number).
 
-Aside from these, `Universum` provides :ref:`a list of other step parameters <keys>`.
-Also the build steps can be :ref:`added, multiplied <combining>` and :ref:`excluded <filtering>`.
+For storing such parameters :mod:`universum.configuration_support` provides a class :class:`Step`, that has
+:ref:`a list of various step parameters <keys>`. Build steps can be :ref:`added, multiplied <combining>` and
+:ref:`excluded <filtering>`.
 
 
 Minimal project configuration file
@@ -58,9 +59,9 @@ Below is an example of the configuration file in its most basic form:
 
 .. testcode::
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    configs = Configuration([dict(name="Build", command=["build.sh"])])
+    configs = Configuration([Step(name="Build", command=["build.sh"])])
 
 This configuration file uses a :class:`Configuration` class from the :mod:`universum.configuration_support`
 module and describes exactly one `build step`_.
@@ -101,9 +102,9 @@ in a directory other then project root. This can be easily done using `directory
 
 .. testcode::
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    configs = Configuration([dict(name="Make Special Module", directory="specialModule", command=["make"])])
+    configs = Configuration([Step(name="Make Special Module", directory="specialModule", command=["make"])])
 
 To use a `Makefile` located in `"specialModule"` directory without passing "-C specialModule/"
 arguments to ``make`` command, the launch directory is specified.
@@ -135,9 +136,9 @@ See the following example configuration file:
 
 .. testcode::
 
-    from universum.configuration_support import Configuration, get_project_root
+    from universum.configuration_support import Configuration, Step, get_project_root
 
-    configs = Configuration([dict(name="Run tests", directory="/home/scripts",
+    configs = Configuration([Step(name="Run tests", directory="/home/scripts",
                                   command=["./run_tests.sh", "--directory", get_project_root()])])
 
 In this configuration a hypothetical external script `"run_tests.sh"` requires absolute path
@@ -160,14 +161,14 @@ Below is an example of the configuration file with three different steps:
 
 .. testcode::
 
-    from universum.configuration_support import Configuration, get_project_root
+    from universum.configuration_support import Configuration, Step, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
     configs = Configuration([
-        dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
-        dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
-        dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
+        Step(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
+        Step(name="Run internal tests", command=["scripts/run_tests.sh"]),
+        Step(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
     ])
 
 The example configuration file declares the following `Universum` steps:
@@ -324,15 +325,15 @@ pass_tag, fail_tag
 
         #!/usr/bin/env {python}
 
-        from universum.configuration_support import Configuration
+        from universum.configuration_support import Configuration, Step
 
     .. testcode::
 
-        make = Configuration([dict(name="Make ", command=["make"], pass_tag="pass_")])
+        make = Configuration([Step(name="Make ", command=["make"], pass_tag="pass_")])
 
         target = Configuration([
-            dict(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
-            dict(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
+            Step(name="Linux", command=["--platform", "Linux"], pass_tag="Linux"),
+            Step(name="Windows", command=["--platform", "Windows"], pass_tag="Windows")
         ])
 
         configs = make * target
@@ -382,14 +383,14 @@ Below is an example of the configuration file that uses :meth:`~Configuration.du
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Configuration, get_project_root
+    from universum.configuration_support import Configuration, Step, get_project_root
     import os.path
 
     test_path = os.path.join(get_project_root(), "out/tests")
     configs = Configuration([
-        dict(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
-        dict(name="Run internal tests", command=["scripts/run_tests.sh"]),
-        dict(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
+        Step(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
+        Step(name="Run internal tests", command=["scripts/run_tests.sh"]),
+        Step(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
     ])
 
     if __name__ == '__main__':
@@ -445,10 +446,10 @@ See the following example:
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    one = Configuration([dict(name="Make project", command=["make"])])
-    two = Configuration([dict(name="Run tests", command=["run_tests.sh"])])
+    one = Configuration([Step(name="Make project", command=["make"])])
+    two = Configuration([Step(name="Run tests", command=["run_tests.sh"])])
 
     configs = one + two
 
@@ -483,7 +484,7 @@ Multiplying configuration by a constant is just an equivalent of multiple additi
 
 .. doctest::
 
-    >>> run = Configuration([dict(name="Run tests", command=["run_tests.sh"])])
+    >>> run = Configuration([Step(name="Run tests", command=["run_tests.sh"])])
     >>> print (run * 2 == run + run)
     True
 
@@ -493,12 +494,12 @@ Multiplying configuration by a configuration combines their properties. For exam
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    make = Configuration([dict(name="Make ", command=["make"], artifacts="out")])
+    make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
 
-    target = Configuration([dict(name="Platform A", command=["--platform", "A"]),
-                         dict(name="Platform B", command=["--platform", "B"])])
+    target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
+                            Step(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target
 
@@ -541,16 +542,16 @@ can be combined in any required way. For example:
 
     #!/usr/bin/env {python}
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    make = Configuration([dict(name="Make ", command=["make"], artifacts="out")])
-    test = Configuration([dict(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
+    make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
+    test = Configuration([Step(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
 
-    debug = Configuration([dict(name=" - Release"),
-                        dict(name=" - Debug", command=["-d"])])
+    debug = Configuration([Step(name=" - Release"),
+                           Step(name=" - Debug", command=["-d"])])
 
-    target = Configuration([dict(name="Platform A", command=["--platform", "A"]),
-                         dict(name="Platform B", command=["--platform", "B"])])
+    target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
+                            Step(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target + test * target * debug
 

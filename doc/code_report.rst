@@ -40,9 +40,9 @@ Config example for ``universum.analyzers.pylint``:
 
 .. testcode::
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    configs = Configuration([dict(name="pylint", code_report=True, command=[
+    configs = Configuration([Step(name="pylint", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.pylint", "--python-version", "2.7",
         "--result-file", "${CODE_REPORT_FILE}", "--files", "*.py", "examples/"
     ])])
@@ -55,12 +55,12 @@ This file will get us the following list of configurations:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.universum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.universum.py
     [{'name': 'pylint', 'code_report': True, 'command': '{python} -m universum.analyzers.pylint --python-version 2.7 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
 
 
@@ -77,9 +77,9 @@ Config example for ``universum.analyzers.svace``:
 
 .. testcode::
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    configs = Configuration([dict(name="svace", code_report=True, command=[
+    configs = Configuration([Step(name="svace", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.svace", "--build-cmd", "make", "--lang", "CXX",
         "--result-file", "${CODE_REPORT_FILE}"
     ])])
@@ -92,12 +92,12 @@ will produce this list of configurations:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.universum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.universum.py
     [{'name': 'svace', 'code_report': True, 'command': '{python} -m universum.analyzers.svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}'}]
 
 
@@ -115,9 +115,9 @@ Config example for ``universum.analyzers.uncrustify``:
 
 .. testcode::
 
-    from universum.configuration_support import Configuration
+    from universum.configuration_support import Configuration, Step
 
-    configs = Configuration([dict(name="uncrustify", code_report=True, command=[
+    configs = Configuration([Step(name="uncrustify", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "project_root_directory",
         "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
         "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
@@ -131,10 +131,10 @@ will produce this list of configurations:
 .. testcode::
     :hide:
 
-    print("$ ./configs.py")
+    print("$ ./.universum.py")
     print(configs.dump())
 
 .. testoutput::
 
-    $ ./configs.py
+    $ ./.universum.py
     [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files project_root_directory --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
