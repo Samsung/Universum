@@ -499,7 +499,7 @@ Multiplying configuration by a configuration combines their properties. For exam
     make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
 
     target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
-                         Step(name="Platform B", command=["--platform", "B"])])
+                            Step(name="Platform B", command=["--platform", "B"])])
 
     configs = make * target
 
