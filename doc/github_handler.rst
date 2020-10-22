@@ -166,7 +166,7 @@ And here's DSL script for the job it triggers::
         stringParam("GIT_CHECKOUT_ID", "", "")
         stringParam("GITHUB_INSTALLATION_ID", "", "")
         stringParam("GITHUB_CHECK_ID", "", "")
-        stringParam("CONFIG_PATH", "configs.py", "")
+        stringParam("CONFIG_PATH", ".universum.py", "")
       }
       definition {
         cps {
