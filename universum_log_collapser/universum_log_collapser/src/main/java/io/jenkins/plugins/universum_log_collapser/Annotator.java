@@ -32,8 +32,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
     private String patternOptional = "(\\[[\\w-:\\.]+\\] )?";
     private Pattern sectionStartPattern = Pattern.compile("^" + patternOptional + "([|\\s]*)(\\d+)\\..*");
-    private Pattern sectionEndPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[[a-zA-Z]+].*");
-    private Pattern sectionFailPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[Failed].*");
+    private Pattern sectionEndPattern = Pattern.compile("^" + patternOptional + "[|\\s]*[└|].*\\[[a-zA-Z]+].*");
+    private Pattern sectionFailPattern = Pattern.compile("^" + patternOptional + "[|\\s]*[└|].*\\[Failed].*");
     /*
         "Reporting build result" section is showing summarized results of all
         build steps. Each line of this section is treated as section start, but
