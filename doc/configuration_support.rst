@@ -1,5 +1,5 @@
-'configuration_support' module
-==============================
+Project configuration structures
+================================
 
 .. testsetup::
 
@@ -15,4 +15,3 @@
 
     :mod:`universum.configuration_support`
     ---------------------------------------
-
