@@ -23,69 +23,87 @@ class Step:
     provide custom parameters in kwargs - these parameters will be stored internally in `dict` and can be retrieved
     by indexing.
 
-    :ivar name: The human-readable name of a build step. The name is used as the title of the build log block
-            corresponding to the execution of this step. It is also used to generate name of the log file if the option
-            for storing to log files is selected. If several build steps have the same names, and logs are stored to
-            files (see ``--out`` / ``-o``  `command-line parameter <args.html#Output>`__ for details), all logs for such
-            steps will be stored to one file in order of their appearances.
-    :ivar command: The command line for the build step launch. For every step the first list
-            item should be a console command (e.g. script name, or any other command like ``ls``), and other list items
-            should be the arguments, added to the command (e.g. ``--debug`` or ``-la``). Every command line element,
-            separated with space character, should be passed as a separate string argument. Lists like ``["ls -a"]``
-            will not be processed correctly and therefore should be splat into ``["ls", "-a"]``. Lists like
-            ``["build.sh", "--platform A"]`` will not be processed correctly and thus should be plat into
-            ``["build.sh", "--platform", "A"]``. A build step can have an empty list as a command - such step won't do
-            anything except showing up the step name in Universum execution logs. Some common actions, such as ``echo``
-            or ``cp``, are bash features and not actual programs to run. These features should be called as
-            ``["bash", "-c", "echo -e 'Some line goes here'"]``. Note that in this case the string to be passed to bash
-            is one argument containing white spaces and therefore not splat by commas.
-    :ivar environment: Required environment variables,
-            e.g. ``environment={"VAR1": "String", "VAR2": "123"}`` Can be set at any step level, but re-declaring
-            variables is not supported, so please make sure to mention every variable only one time at most.
-    :ivar artifacts: Path to the file or directory to be copied to the working directory as an execution
-            result. Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
-            (e.g. `"out/**/index.html"`). If not stated otherwise (see ``--no-archive``
-            `command-line parameter <args.html#Artifact\\ collection>`__ for details), artifact directories are copied
-            as archives. If :ref:`'artifact_prebuild_clean' key <clean_artifacts>` is either absent or set to `False`
-            and stated artifacts are present in downloaded sources, it is considered a failure and configuration
-            execution will not proceed. If no required artifacts were found in the end of the `Universum` run, it is
-            also considered a failure. In case of shell-style patterns build is failed if no files or directories
-            matching pattern are found.
-    :ivar report_artifacts: Path to the special artifacts for reporting (e.g. to Swarm). Unlike
-            :ref:`artifacts <build_artifacts>`, `report_artifacts` are not obligatory and their absence is not
-            considered a build failure. A directory cannot be stored as a separate artifact, so when using
-            ``--no-archive`` option, do not claim directories as `report_artifacts`. Please note that any file can be
-            put as `artifact`, `report_artifact`, or both. A file that is both in `artifacts` and `report_artifacts`,
-            will be mentioned in a report and will cause build failure when missing.
-    :ivar artifact_prebuild_clean: A flag to signal that directory should be clean prior to execution. By default,
-            artifacts are not stored in VCS, and artifact presence before build most likely means that working directory
-            is not cleaned after previous build and therefore might influence build results. But sometimes deliverables
-            have to be stored in VCS, and in this case instead of stopping the build they should be simply cleaned
-            before it. This is where ``artifact_prebuild_clean=True`` key is supposed to be used. This flag is ignored,
-            if both `artifacts` and `report_artifacts` are not set.
-    :ivar directory: Path to a current working directory for launched process. Please see the
-            `execution directory section <configuring.html#execution-directory>`__ for details. Absent `directory` has
-            equal meaning to empty string passed as a `directory` value and means that `command` will be launched from
-            the project root directory.
-    :ivar critical: A flag used in case of a linear step execution, when the result of some step is critical
-            for the subsequent step execution. If some step has `critical` key set to `True` and executing this step
-            fails, no more steps will be executed during this run. However, all already started
-            :ref:`background <background_step>` steps will be finished regardless of critical step results.
-    :ivar background: A flag used to signal that the current step should be executed independently in parallel with
-            all other steps. All logs from such steps are written to file, and the results of execution are collected
-            in the end of `Universum` run. Next step execution begins immediately after starting a background step,
-            not waiting for it to be completed. Several background steps can be executed simultaneously.
-    :ivar finish_background: A flag used to signal that the current step should be executed only after ongoing
-            background steps (if any) are finished.
-    :ivar code_report: A flag used to signal that the current step performs static or syntax analysis of the code.
-            Usually set in conjunction with adding ``--result-file="${CODE_REPORT_FILE}"`` to 'command' arguments.
-            Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
-            (see `code_report parameters <code_report.html>`__ for details).
-    :ivar pass_tag: A tag used to mark successful TemCity builds. This tag can be set independenty
-            of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
-            TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
-            not in the end of all run.
-    :ivar fail_tag: A tag used to mark failed TemCity builds. See `pass_tag` for details.
+    .. Step keys
+
+    The following list enumerates all the keys supported by Universum.
+
+    name
+        The human-readable name of a build step. The name is used as the title of the build log block
+        corresponding to the execution of this step. It is also used to generate name of the log file if the option
+        for storing to log files is selected. If several build steps have the same names, and logs are stored to
+        files (see ``--out`` / ``-o``  `command-line parameter <args.html#Output>`__ for details), all logs for such
+        steps will be stored to one file in order of their appearances.
+    command
+        The command line for the build step launch. For every step the first list
+        item should be a console command (e.g. script name, or any other command like ``ls``), and other list items
+        should be the arguments, added to the command (e.g. ``--debug`` or ``-la``). Every command line element,
+        separated with space character, should be passed as a separate string argument. Lists like ``["ls -a"]``
+        will not be processed correctly and therefore should be splat into ``["ls", "-a"]``. Lists like
+        ``["build.sh", "--platform A"]`` will not be processed correctly and thus should be plat into
+        ``["build.sh", "--platform", "A"]``. A build step can have an empty list as a command - such step won't do
+        anything except showing up the step name in Universum execution logs. Some common actions, such as ``echo``
+        or ``cp``, are bash features and not actual programs to run. These features should be called as
+        ``["bash", "-c", "echo -e 'Some line goes here'"]``. Note that in this case the string to be passed to bash
+        is one argument containing white spaces and therefore not splat by commas.
+    environment
+        Required environment variables, e.g. ``environment={"VAR1": "String", "VAR2": "123"}`` Can be set at any
+        step level, but re-declaring variables is not supported, so please make sure to mention every variable only
+        one time at most.
+    artifacts
+        Path to the file or directory to be copied to the working directory as an execution
+        result. Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
+        (e.g. `"out/**/index.html"`). If not stated otherwise (see ``--no-archive``
+        `command-line parameter <args.html#Artifact\\ collection>`__ for details), artifact directories are copied
+        as archives. If :ref:`'artifact_prebuild_clean' key <clean_artifacts>` is either absent or set to `False`
+        and stated artifacts are present in downloaded sources, it is considered a failure and configuration
+        execution will not proceed. If no required artifacts were found in the end of the `Universum` run, it is
+        also considered a failure. In case of shell-style patterns build is failed if no files or directories
+        matching pattern are found.
+    report_artifacts
+        Path to the special artifacts for reporting (e.g. to Swarm). Unlike
+        :ref:`artifacts <build_artifacts>`, `report_artifacts` are not obligatory and their absence is not
+        considered a build failure. A directory cannot be stored as a separate artifact, so when using
+        ``--no-archive`` option, do not claim directories as `report_artifacts`. Please note that any file can be
+        put as `artifact`, `report_artifact`, or both. A file that is both in `artifacts` and `report_artifacts`,
+        will be mentioned in a report and will cause build failure when missing.
+    artifact_prebuild_clean
+        A flag to signal that directory should be clean prior to execution. By default,
+        artifacts are not stored in VCS, and artifact presence before build most likely means that working directory
+        is not cleaned after previous build and therefore might influence build results. But sometimes deliverables
+        have to be stored in VCS, and in this case instead of stopping the build they should be simply cleaned
+        before it. This is where ``artifact_prebuild_clean=True`` key is supposed to be used. This flag is ignored,
+        if both `artifacts` and `report_artifacts` are not set.
+    directory
+        Path to a current working directory for launched process. Please see the
+        `execution directory section <configuring.html#execution-directory>`__ for details. Absent `directory` has
+        equal meaning to empty string passed as a `directory` value and means that `command` will be launched from
+        the project root directory.
+    critical
+        A flag used in case of a linear step execution, when the result of some step is critical
+        for the subsequent step execution. If some step has `critical` key set to `True` and executing this step
+        fails, no more steps will be executed during this run. However, all already started
+        :ref:`background <background_step>` steps will be finished regardless of critical step results.
+    background
+        A flag used to signal that the current step should be executed independently in parallel with
+        all other steps. All logs from such steps are written to file, and the results of execution are collected
+        in the end of `Universum` run. Next step execution begins immediately after starting a background step,
+        not waiting for it to be completed. Several background steps can be executed simultaneously.
+    finish_background
+        A flag used to signal that the current step should be executed only after ongoing
+        background steps (if any) are finished.
+    code_report
+        A flag used to signal that the current step performs static or syntax analysis of the code.
+        Usually set in conjunction with adding ``--result-file="${CODE_REPORT_FILE}"`` to 'command' arguments.
+        Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
+        (see `code_report parameters <code_report.html>`__ for details).
+    pass_tag
+        A tag used to mark successful TemCity builds. This tag can be set independenty
+        of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
+        TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
+        not in the end of all run.
+    fail_tag
+        A tag used to mark failed TemCity builds. See `pass_tag` for details.
+
     Each parameter is optional, and is substituted with a falsy value, if omitted.
 
     :Example of a simple Step construction:
@@ -352,7 +370,7 @@ def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
 
     :param dictionary_a: may have any keys and values
     :param dictionary_b: may have any keys, but the values of keys, matching `dictionary_a`,
-        should be the compatible, so that 'dictionary_a'[key] + 'dictionary_b'[key] is a valid expression
+        should be the compatible, so that `dictionary_a[key] + dictionary_b[key]` is a valid expression
     :return: new dictionary containing all keys from both `dictionary_a` and `dictionary_b`;
         for each matching key the value in resulting dictionary is a sum of two corresponding values
 
