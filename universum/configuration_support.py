@@ -296,8 +296,7 @@ class Step:
         :param from_string: string to replace, e.g. `${CODE_REPORT_FILE}`
         :param to_string: value to put in place of `from_string`
 
-        >>> cfg = Step(name='foo test', command=['foo', 'baz', 'foobar'], \
-        myvar1='foo', myvar2='bar', myvar3=1)
+        >>> cfg = Step(name='foo test', command=['foo', 'baz', 'foobar'], myvar1='foo', myvar2='bar', myvar3=1)
         >>> cfg.replace_string('foo', 'bar')
         >>> cfg
         {'name': 'foo test', 'command': ['bar', 'baz', 'barbar'], 'myvar1': 'bar', 'myvar2': 'bar', 'myvar3': 1}
