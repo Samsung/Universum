@@ -388,10 +388,8 @@ def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
 
 class Configuration:
     """
-    Configuration is a class for establishing project configurations. Each class object wraps a list of build
-    steps, built either from pre-constructed :class:`Step` objects, or from the supplied `dict` data.
-
-    :ivar lst: list of :class:`Step` or `dict` objects containing the build step data
+    Configuration is a class for establishing project configurations. Each Configuration object wraps a list of build
+    steps either from a pre-constructed :class:`Step` objects, or from the supplied `dict` data.
 
     >>> v1 = Configuration([{"field1": "string"}])
     >>> v1.configs
