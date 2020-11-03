@@ -8,6 +8,7 @@ __all__ = [
     "Step",
     "Configuration",
     "Variations",
+    "combine",
     "set_project_root",
     "get_project_root"
 ]
