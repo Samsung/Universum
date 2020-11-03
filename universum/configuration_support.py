@@ -21,12 +21,11 @@ class Step:
     build steps are collected in a :class:`Configuration` object, which supports arithmetic operations for
     combination and chaining.
 
-    Step keys
-    ---------
+    *Step keys*
 
-    The following list enumerates all the keys supported by Universum. Parameters supplied via named attributes during
-    construction are annotated and can be type-checked for safety. Clients may also provide custom parameters in
-    kwargs - these parameters will be stored internally in `dict` and can be retrieved by indexing.
+    Parameters supplied via named attributes during construction are annotated and can be type-checked for safety.
+    Clients may also provide custom parameters in kwargs - these parameters will be stored internally in `dict` and can
+    be retrieved by indexing. The following list enumerates all the keys supported and used by Universum:
 
     name
         The human-readable name of a build step. The name is used as the title of the build log block
