@@ -21,7 +21,7 @@ class Step:
     build steps are collected in a :class:`Configuration` object, which supports arithmetic operations for
     combination and chaining.
 
-    *Step keys*
+    **Step keys**
 
     Parameters supplied via named attributes during construction are annotated and can be type-checked for safety.
     Clients may also provide custom parameters in kwargs - these parameters will be stored internally in `dict` and can
