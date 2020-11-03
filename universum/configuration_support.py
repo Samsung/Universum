@@ -19,8 +19,8 @@ class Step:
     Step is a collection of configurable project-specific data entries needed for Universum functionality. Individual
     build steps are collected in a :class:`Configuration` object, which supports arithmetic operations for
     combination and chaining. All params supplied via named attributes may be type-checked for safety. Clients may
-    provide custom parameters in kwargs - these parameters will be stored internally in `_extras` `dict` and can be
-    retrieved by indexing.
+    provide custom parameters in kwargs - these parameters will be stored internally in `dict` and can be retrieved
+    by indexing.
 
     :ivar name: The human-readable name of a build step. The name is used as the title of the build log block
             corresponding to the execution of this step. It is also used to generate name of the log file if the option
@@ -91,13 +91,15 @@ class Step:
 
     >>> Step(foo='bar')
     {'foo': 'bar'}
-    >>> cfg = Step(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True})
+    >>> cfg = Step(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True}, myvar=1)
     >>> cfg
-    {'name': 'foo', 'command': ['1', '2', '3'], '_extras': {'_extras': 'test', 'bool': True}}
+    {'name': 'foo', 'command': ['1', '2', '3'], '_extras': {'_extras': 'test', 'bool': True}, 'myvar': 1}
     >>> cfg['name']
     'foo'
     >>> cfg['_extras']
     {'_extras': 'test', 'bool': True}
+    >>> cfg['myvar']
+    1
 
     :Example of using Configuration objects to wrap individual build steps:
 
@@ -388,7 +390,7 @@ class Configuration:
     """
     Configuration is a class for establishing project configurations. Each class object wraps a list of build
     steps, built either from pre-constructed :class:`Step` objects, or from the supplied `dict` data.
-    
+
     :ivar lst: list of :class:`Step` or `dict` objects containing the build step data
 
     >>> v1 = Configuration([{"field1": "string"}])
