@@ -396,12 +396,12 @@ class Configuration:
     >>> v1.configs
     [{'field1': 'string'}]
 
-    Build-in method :func:`.all()` generates iterable for all configuration dictionaries for further usage:
+    Build-in method :meth:`.all()` generates iterable for all configuration dictionaries for further usage:
 
     >>> for i in v1.all(): i
     {'field1': 'string'}
 
-    Built-in method :func:`.dump()` will generate a printable string representation of the object.
+    Built-in method :meth:`.dump()` will generate a printable string representation of the object.
     This string will be printed into console output
 
     >>> v1.dump()
