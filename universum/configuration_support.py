@@ -105,6 +105,8 @@ class Step:
             not in the end of all run.
         :param fail_tag: A tag used to mark failed TemCity builds. See `pass_tag` for details.
 
+        Each parameter is optional, and is substituted with a falsy value, if omitted.
+
         :Example of a simple Step construction:
 
         >>> Step(foo='bar')
