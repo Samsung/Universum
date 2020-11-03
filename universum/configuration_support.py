@@ -396,12 +396,12 @@ class Configuration:
     >>> v1.configs
     [{'field1': 'string'}]
 
-    Build-in method all() generates iterable for all configuration dictionaries for further usage:
+    Build-in method :func:`.all()` generates iterable for all configuration dictionaries for further usage:
 
     >>> for i in v1.all(): i
     {'field1': 'string'}
 
-    Built-in method dump() will generate a printable string representation of the object.
+    Built-in method :func:`.dump()` will generate a printable string representation of the object.
     This string will be printed into console output
 
     >>> v1.dump()
@@ -503,7 +503,7 @@ class Configuration:
         The order of list members in resulting list is preserved: first all dictionaries from `self`,
         then all dictionaries from `other`.
 
-        :param other: `Configuration` object OR list of project configurations to be added to `configs`
+        :param other: `Configuration` object OR list of project configurations to be added to `self`
         :return: new `Configuration` object, including all configurations from both `self` and `other` objects
         """
         list_other: List[Step] = other.configs if isinstance(other, Configuration) else other
@@ -512,7 +512,7 @@ class Configuration:
     def __mul__(self, other: Union['Configuration', int]) -> 'Configuration':
         """
         This functions defines operator ``*`` for :class:`Configuration` class objects.
-        The resulting object is created by combining every `configs` list member with
+        The resulting object is created by combining every `self` list member with
         every `other` list member using :func:`.combine()` function.
 
         :param other: `Configuration` object  OR an integer value to be multiplied to `self`
