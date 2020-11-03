@@ -18,10 +18,9 @@ class Step:
     """
     Step is a collection of configurable project-specific data entries needed for Universum functionality. Individual
     build steps are collected in a :class:`Configuration` object, which supports arithmetic operations for
-    combination and chaining.
-
-    All params supplied via named attributes may be type-checked for safety. Clients may provide custom parameters
-    in kwargs - these parameters will be stored internally in `_extras` `dict` and can be retrieved by indexing.
+    combination and chaining. All params supplied via named attributes may be type-checked for safety. Clients may
+    provide custom parameters in kwargs - these parameters will be stored internally in `_extras` `dict` and can be
+    retrieved by indexing.
 
     :ivar name: The human-readable name of a build step. The name is used as the title of the build log block
             corresponding to the execution of this step. It is also used to generate name of the log file if the option
@@ -86,7 +85,6 @@ class Step:
             TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
             not in the end of all run.
     :ivar fail_tag: A tag used to mark failed TemCity builds. See `pass_tag` for details.
-
     Each parameter is optional, and is substituted with a falsy value, if omitted.
 
     :Example of a simple Step construction:
@@ -389,8 +387,9 @@ def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
 
 class Configuration:
     """
-    `Configuration` is a class for establishing project configurations.
-    This class object is a list of dictionaries:
+    :class:`Configuration` is a class for establishing project configurations. Each class object wraps a list of build
+    steps, built either from pre-constructed :class:`Step` objects, or from the supplied `dict` data.
+    :ivar lst: list of :class:`Step` or `dict` objects containing the build step data
 
     >>> v1 = Configuration([{"field1": "string"}])
     >>> v1.configs
@@ -432,11 +431,6 @@ class Configuration:
     """
 
     def __init__(self, lst: Optional[Union[List[Dict[str, Any]], List[Step]]] = None):
-        """
-        This function constructs :class:`Configuration` object based on a list of build steps
-
-        :param lst: list of :class:`Step` or `dict` objects containing the build step data
-        """
         #  lst can be List[Dict[str, Any]] to support legacy cases - should be removed after project migration
         self.configs: List[Step] = []  # aggregation is used instead of inheritance for type safety
         if lst:
