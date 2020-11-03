@@ -11,7 +11,7 @@ Project configuration structures
 .. automodule:: universum.configuration_support
     :members:
     :special-members:
-    :exclude-members: __weakref__
+    :exclude-members: __weakref__, __init__
 
     :mod:`universum.configuration_support`
     ---------------------------------------
