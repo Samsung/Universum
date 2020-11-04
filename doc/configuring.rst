@@ -48,7 +48,7 @@ Both `name` and `command`, however, can be undefined. A build step without a nam
 a build step without a command will do nothing, but will still appear in log (and have a step number).
 
 For storing such parameters :mod:`universum.configuration_support` provides a class :class:`Step`, that has
-:ref:`a list of various step parameters <keys>`. Build steps can be :ref:`added, multiplied <combining>` and
+a list of various step parameters. Build steps can be :ref:`added, multiplied <combining>` and
 :ref:`excluded <filtering>`.
 
 
@@ -85,7 +85,7 @@ This exact configuration file defines a project configuration that consists of o
 
     Command line is a list with (so far) one string item, not just a string.
     Command name and all the following arguments must be passed as a list of separate strings.
-    See `command` key :ref:`detailed description <keys>` for more details.
+    See also detailed description of `command` attribute of :class:`Step` class.
 
 
 Execution directory

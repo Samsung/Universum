@@ -17,15 +17,15 @@ __all__ = [
 # pylint: disable-msg=line-too-long
 class Step:
     """
-    Step is a collection of configurable project-specific data entries needed for Universum functionality. Individual
-    build steps are collected in a :class:`Configuration` object, which supports arithmetic operations for
-    combination and chaining.
+    Step is a collection of configurable project-specific data entries needed for Universum functionality and passed to
+    a single Universum launch. Individual build steps are collected in a :class:`Configuration` object, which supports
+    operations for combination and chaining.
 
     **Step keys**
 
     Parameters supplied via named attributes during construction are annotated and can be type-checked for safety.
-    Clients may also provide custom parameters in kwargs - these parameters will be stored internally in `dict` and can
-    be retrieved by indexing. The following list enumerates all the keys supported and used by Universum:
+    Users may also define custom parameters in `kwargs` - these parameters will be stored internally in `dict` fields
+    and can be retrieved by indexing. The following list enumerates all the keys used by Universum:
 
     name
         The human-readable name of a build step. The name is used as the title of the build log block
