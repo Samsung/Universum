@@ -1,3 +1,4 @@
+# pylint: disable-msg=line-too-long
 from typing import Any, Callable, Dict, Iterable, List, Optional, TypeVar, Union
 from warnings import warn
 import copy
@@ -12,7 +13,6 @@ __all__ = [
 ]
 
 
-# pylint: disable-msg=line-too-long
 class Step:
     """
     Step is a collection of configurable project-specific data entries needed for Universum functionality and passed to
