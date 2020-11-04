@@ -7,8 +7,6 @@ import os
 __all__ = [
     "Step",
     "Configuration",
-    "Variations",
-    "combine",
     "set_project_root",
     "get_project_root"
 ]
@@ -67,12 +65,12 @@ class Step:
         put as `artifact`, `report_artifact`, or both. A file that is both in `artifacts` and `report_artifacts`,
         will be mentioned in a report and will cause build failure when missing.
     artifact_prebuild_clean
-        A flag to signal that directory should be clean prior to execution. By default,
-        artifacts are not stored in VCS, and artifact presence before build most likely means that working directory
-        is not cleaned after previous build and therefore might influence build results. But sometimes deliverables
-        have to be stored in VCS, and in this case instead of stopping the build they should be simply cleaned
-        before it. This is where ``artifact_prebuild_clean=True`` key is supposed to be used. This flag is ignored,
-        if both `artifacts` and `report_artifacts` are not set.
+        A flag to signal that directory must be cleaned before the build. This could be a single file, several files,
+        shell-style pattern or directory. By default, artifacts are not stored in VCS, and artifact presence before
+        build most likely means that working directory is not cleaned after previous build and therefore might influence
+        build results. But sometimes deliverables have to be stored in VCS, and in this case instead of stopping the
+        build they should be simply cleaned before it. This is where ``artifact_prebuild_clean=True`` key is supposed
+        to be used. This flag is ignored, if both `artifacts` and `report_artifacts` are not set.
     directory
         Path to a current working directory for launched process. Please see the
         `execution directory section <configuring.html#execution-directory>`__ for details. Absent `directory` has
