@@ -52,18 +52,17 @@ class Step:
         result. Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
         (e.g. `"out/**/index.html"`). If not stated otherwise (see ``--no-archive``
         `command-line parameter <args.html#Artifact\\ collection>`__ for details), artifact directories are copied
-        as archives. If :ref:`'artifact_prebuild_clean' key <clean_artifacts>` is either absent or set to `False`
+        as archives. If `artifact_prebuild_clean` key is either absent or set to `False`
         and stated artifacts are present in downloaded sources, it is considered a failure and configuration
         execution will not proceed. If no required artifacts were found in the end of the `Universum` run, it is
         also considered a failure. In case of shell-style patterns build is failed if no files or directories
         matching pattern are found.
     report_artifacts
-        Path to the special artifacts for reporting (e.g. to Swarm). Unlike
-        :ref:`artifacts <build_artifacts>`, `report_artifacts` are not obligatory and their absence is not
-        considered a build failure. A directory cannot be stored as a separate artifact, so when using
-        ``--no-archive`` option, do not claim directories as `report_artifacts`. Please note that any file can be
-        put as `artifact`, `report_artifact`, or both. A file that is both in `artifacts` and `report_artifacts`,
-        will be mentioned in a report and will cause build failure when missing.
+        Path to the special artifacts for reporting (e.g. to Swarm). Unlike `artifacts` key, `report_artifacts`
+        are not obligatory and their absence is not considered a build failure. A directory cannot be stored
+        as a separate artifact, so when using ``--no-archive`` option, do not claim directories as `report_artifacts`.
+        Please note that any file can be put as `artifact`, `report_artifact`, or both. A file that is both
+        in `artifacts` and `report_artifacts`, will be mentioned in a report and will cause build failure when missing.
     artifact_prebuild_clean
         A flag to signal that artifacts must be cleaned before the build. Cleaning of single files, directories and
         sets of files defined by shell-style patterns is supported. By default, artifacts are not stored in VCS, and
@@ -80,8 +79,8 @@ class Step:
     critical
         A flag used in case of a linear step execution, when the result of some step is critical
         for the subsequent step execution. If some step has `critical` key set to `True` and executing this step
-        fails, no more steps will be executed during this run. However, all already started
-        :ref:`background <background_step>` steps will be finished regardless of critical step results.
+        fails, no more steps will be executed during this run. However, all background steps, which have already
+        started will be finished regardless of critical step results.
     background
         A flag used to signal that the current step should be executed independently in parallel with
         all other steps. All logs from such steps are written to file, and the results of execution are collected
