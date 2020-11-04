@@ -65,12 +65,13 @@ class Step:
         put as `artifact`, `report_artifact`, or both. A file that is both in `artifacts` and `report_artifacts`,
         will be mentioned in a report and will cause build failure when missing.
     artifact_prebuild_clean
-        A flag to signal that directory must be cleaned before the build. This could be a single file, several files,
-        shell-style pattern or directory. By default, artifacts are not stored in VCS, and artifact presence before
-        build most likely means that working directory is not cleaned after previous build and therefore might influence
-        build results. But sometimes deliverables have to be stored in VCS, and in this case instead of stopping the
-        build they should be simply cleaned before it. This is where ``artifact_prebuild_clean=True`` key is supposed
-        to be used. This flag is ignored, if both `artifacts` and `report_artifacts` are not set.
+        A flag to signal that artifacts must be cleaned before the build. Cleaning of single files, directories and
+        sets of files defined by shell-style patterns is supported. By default, artifacts are not stored in VCS, and
+        artifact presence before build most likely means that working directory is not cleaned after previous build and
+        therefore might influence build results. But sometimes deliverables have to be stored in VCS, and in this case
+        instead of stopping the build they should be simply cleaned before it. This is where
+        ``artifact_prebuild_clean=True`` key is supposed to be used. This flag is ignored, if both `artifacts` and
+        `report_artifacts` are not set.
     directory
         Path to a current working directory for launched process. Please see the
         `execution directory section <configuring.html#execution-directory>`__ for details. Absent `directory` has
@@ -95,7 +96,7 @@ class Step:
         Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
         (see `code_report parameters <code_report.html>`__ for details).
     pass_tag
-        A tag used to mark successful TemCity builds. This tag can be set independenty
+        A tag used to mark successful TeamCity builds. This tag can be set independenty
         of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
         TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
         not in the end of all run.
