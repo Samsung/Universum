@@ -37,7 +37,7 @@ Universum in non-CI mode has the following differences from default mode:
 * It does not require most of :doc:`build parameters <args>` - especially the VCS-related ones.
 * It does not :doc:`report build results <code_report>` to any code review system.
 * It works with sources 'in place', without copying.
-* It automatically :ref:`cleans the artifact folder <clean_artifacts>` before the build.
+* It automatically cleans the artifact folder before the build.
 
 .. argparse::
     :module: universum.__main__

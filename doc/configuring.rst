@@ -11,7 +11,7 @@ To create one automatically, execute ``{python} -m universum init`` in the proje
 file name or file path, use ``--config`` / ``-cfg`` `command-line parameter <args.html#Configuration\ execution>`__
 or `CONFIG_PATH` environment variable.
 
-Internally the config file is processed by the :mod:`universum.launcher` module. The path is passed
+Internally the config file is processed by the :mod:`universum.modules.launcher` module. The path is passed
 to this module in `config_path` member of its input settings. Config file uses structures defined in
 :mod:`universum.configuration_support` module.
 

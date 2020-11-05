@@ -166,7 +166,7 @@ Bug fixes
 
 * **incorrect checks of parameters**
 * **argument error message for subcommands**
-* **docs:** reference to :ref:`artifact_prebuild_clean <clean_artifacts>`
+* **docs:** reference to artifact_prebuild_clean
 * **submit:** git module returns error if there are no files
 * **p4:** no error on sync if depot is empty
 * **git:** bug with unicode on newer GitPython
@@ -193,7 +193,7 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* **configs:** add support of :ref:`setting the environment variables <build_environment>` for build steps
+* **configs:** add support of setting the environment variables for build steps
 * **code_report:** add parameter '--output-directory' for Uncrustify fixed files
 * **code_report:** read HtmlDiff argument value from Uncrustify config
 * **api:** add initial API support and 'file-diff' as example usage
@@ -279,7 +279,7 @@ BREAKING CHANGES
 New features
 ~~~~~~~~~~~~
 
-* **launcher:** add :ref:`'finish_background' <finish_background>` key to Variations
+* **launcher:** add finish_background key to Variations
 
 Bug fixes
 ~~~~~~~~~
@@ -424,7 +424,7 @@ BREAKING CHANGES
 New features
 ~~~~~~~~~~~~
 
-* **report:** add support of :ref:`tagging <tc_tags>` TeamCity builds
+* **report:** add support of tagging TeamCity builds
 * **swarm:** ``PASS`` and ``FAIL`` parameters are no longer mandatory
 * **submit:** new files are now added to VCS by submitter with '+w' modifier
 * **report:** add link to build log to successful reports
@@ -436,7 +436,7 @@ Bug fixes
 * **p4:** fix unhandled 'no file(s) to reconcile' P4Exception
 * **out:** fix bug with decoding non-ascii strings
 * **docs:** documentation fixed and updated; please pay special attention to
-  :ref:`prebuild artifact cleaning <clean_artifacts>` `Variations` key
+  `clean_artifacts` `Variations` key
 
 
 0.13.4 (2018-04-13)
@@ -617,7 +617,7 @@ New features
 ~~~~~~~~~~~~
 
 * **launcher:** add support for critical steps - now steps can be marked with
-  :ref:`"critical" attribute <critical_step>` to fail entire build in case of step failure.
+  "critical" attribute to fail entire build in case of step failure.
   By default the build continues even if some steps have failed
 
 Bug fixes
@@ -874,7 +874,7 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* **report:** add :ref:`direct links to build artifacts <report_artifacts>` into reports
+* **report:** add direct links to build artifacts into reports
 
 
 0.6.1 (2017-07-05)

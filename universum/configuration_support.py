@@ -15,9 +15,9 @@ __all__ = [
 
 class Step:
     """
-    Step is a collection of configurable project-specific data entries needed for Universum functionality and passed to
-    a single Universum launch. Individual build steps are collected in a :class:`Configuration` object, which supports
-    operations for combination and chaining.
+    An instance of this class defines a single launch of an external command by Universum. It determines execution
+    parameters and result handling. Individual build steps are collected in a :class:`Configuration` object, that
+    allows to create linear and nested step structures. See <configuring.html#build-step>`__ for details.
 
     **Step keys**
 
