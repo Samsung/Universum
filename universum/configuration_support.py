@@ -17,7 +17,7 @@ class Step:
     """
     An instance of this class defines a single launch of an external command by Universum. It determines execution
     parameters and result handling. Individual build steps are collected in a :class:`Configuration` object, that
-    allows to create linear and nested step structures. See <configuring.html#build-step>`__ for details.
+    allows to create linear and nested step structures. See `<configuring.html#build-step>`__ for details.
 
     **Step keys**
 
