@@ -49,7 +49,7 @@ Both `name` and `command`, however, can be undefined. A build step without a nam
 a build step without a command will do nothing, but will still appear in log (and have a step number).
 
 For storing such parameters :mod:`universum.configuration_support` provides a class :class:`Step`, that has
-a list of various step parameters. Build steps can be :ref:`added, multiplied <combining>` and
+a list of various :doc:`step parameters <configuration_support>`. Build steps can be :ref:`added, multiplied <combining>` and
 :ref:`excluded <filtering>`.
 
 
