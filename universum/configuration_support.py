@@ -17,7 +17,8 @@ class Step:
     """
     An instance of this class defines a single launch of an external command by Universum. It determines execution
     parameters and result handling. Individual build steps are collected in a :class:`Configuration` object, that
-    allows to create linear and nested step structures. See `Project configuration <configuring.html#build-step>`__ for details.
+    allows to create linear and nested step structures.
+    See https://universum.readthedocs.io/en/latest/configuring.html#build-step for details.
 
     **Step keys**
 
@@ -29,7 +30,7 @@ class Step:
         The human-readable name of a build step. The name is used as the title of the build log block
         corresponding to the execution of this step. It is also used to generate name of the log file if the option
         for storing to log files is selected. If several build steps have the same names, and logs are stored to
-        files (see ``--out`` / ``-o``  `command-line parameter <args.html#Output>`__ for details), all logs for such
+        files (see ``--out`` / ``-o``  command-line parameter for details), all logs for such
         steps will be stored to one file in order of their appearances.
     command
         The command line for the build step launch. For every step the first list
@@ -51,7 +52,7 @@ class Step:
         Path to the file or directory to be copied to the working directory as an execution
         result. Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
         (e.g. `"out/**/index.html"`). If not stated otherwise (see ``--no-archive``
-        `command-line parameter <args.html#Artifact\\ collection>`__ for details), artifact directories are copied
+        command-line parameter for details), artifact directories are copied
         as archives. If `artifact_prebuild_clean` key is either absent or set to `False`
         and stated artifacts are present in downloaded sources, it is considered a failure and configuration
         execution will not proceed. If no required artifacts were found in the end of the `Universum` run, it is
@@ -73,9 +74,9 @@ class Step:
         `report_artifacts` are not set.
     directory
         Path to a current working directory for launched process. Please see the
-        `execution directory section <configuring.html#execution-directory>`__ for details. Absent `directory` has
-        equal meaning to empty string passed as a `directory` value and means that `command` will be launched from
-        the project root directory.
+        https://universum.readthedocs.io/en/latest/configuring.html#execution-directory for details. Absent
+        `directory` has equal meaning to empty string passed as a `directory` value and means that `command`
+        will be launched from the project root directory.
     critical
         A flag used in case of a linear step execution, when the result of some step is critical
         for the subsequent step execution. If some step has `critical` key set to `True` and executing this step
@@ -93,7 +94,7 @@ class Step:
         A flag used to signal that the current step performs static or syntax analysis of the code.
         Usually set in conjunction with adding ``--result-file="${CODE_REPORT_FILE}"`` to 'command' arguments.
         Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
-        (see `code_report parameters <code_report.html>`__ for details).
+        (see https://universum.readthedocs.io/en/latest/code_report.html for details).
     pass_tag
         A tag used to mark successful TeamCity builds. This tag can be set independenty
         of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
