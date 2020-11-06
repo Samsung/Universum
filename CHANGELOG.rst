@@ -12,8 +12,8 @@ New features
 * **config:** ``-cfg``/``--config`` :doc:`command line argument <args>` is no longer mandatory; if not specified,
   the default value (``.univerum.py`` in project root) is used
 * **config:** add ``universum init`` :doc:`command <additional_commands>` for automatic configuration file creation
-* **add ``universum run`` :doc:`command <additional_commands>` to launch Universum in Non-CI mode**
-* **if more than one command line argument caused an error, all of error messages are now shown** (not only the first one)
+* add ``universum run`` :doc:`command <additional_commands>` to launch Universum in Non-CI mode
+* if more than one command line argument caused an error, all of error messages are now shown, not only the first one
 
 Bug fixes
 ~~~~~~~~~
@@ -21,7 +21,7 @@ Bug fixes
 * **swarm:** fix detecting latest review version
 * **out:** do not print Unicode characters in non-Unicode locales
 * **jenkins_plugin:** return missing 'Failed' line with timestamps plugin
-* **any Python version higher than 3.7 can now be used to run Universum**
+* any Python version higher than 3.7 can now be used to run Universum
 
 
 0.19.0 (2020-09-04)
