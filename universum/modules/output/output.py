@@ -1,12 +1,17 @@
-from typing import ClassVar, Union
+import sys
+from types import TracebackType
+from typing import ClassVar, Optional
 
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
+from .base_output import BaseOutput
 from .terminal_based_output import TerminalBasedOutput
 from .teamcity_output import TeamcityOutput
 
 __all__ = [
-    "HasOutput"
+    "HasOutput",
+    "MinimalOut",
+    "Output"
 ]
 
 
@@ -19,11 +24,12 @@ class Output(Module):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
         parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins"],
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
-                                 "TeamCity and Jenkins environments are detected automatically when launched on build agent.")
+                                 "TeamCity and Jenkins environments are detected automatically when launched on build "
+                                 "agent.")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.driver: Union[TeamcityOutput, TerminalBasedOutput] = \
+        self.driver: BaseOutput = \
             utils.create_driver(local_factory=self.terminal_driver_factory,
                                 teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.terminal_driver_factory,
@@ -70,3 +76,21 @@ class HasOutput(Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.out: Output = self.out_factory()
+
+
+class MinimalOut:
+    def __init__(self, silent=False):
+        self.silent = silent
+
+    def log(self, line: str) -> None:
+        if not self.silent:
+            print(line)
+
+    @staticmethod
+    def report_build_problem(problem: str) -> None:
+        pass
+
+    @staticmethod
+    def log_exception(exc: Exception) -> None:
+        ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
+        sys.stderr.write("Unexpected error.\n" + utils.format_traceback(exc, ex_traceback))

@@ -16,40 +16,81 @@ Independent analyzers are executed with their module name, e.g. `python3.7 -m un
 Other Universum modes, such as poller or submitter, are called via command line, e.g.
 `python3.7 -m universum poll`
 
-## Installation from GitHub
+## Installation
 
-### Latest release
-
-Minimum prerequisites ([see documentation for details](
-https://universum.readthedocs.io/en/latest/prerequisites.html)):
+Minimum prerequisites ([see documentation for details](https://universum.readthedocs.io/en/latest/install.html)):
 1. OS Linux
-2. Python 3.7
-3. Pip for python3.7
-4. Git client
+2. Python version 3.7 or greater
+3. Pip version 9.0 or greater
 ```bash
-sudo python3.7 -m pip install -U git+https://github.com/Samsung/Universum/@release
+sudo pip3.7 install -U universum
 ```
-
-### Latest development + tests
-
-Additional prerequisites ([see documentation for details](
-https://universum.readthedocs.io/en/latest/prerequisites.html#optional-used-for-internal-tests)):
-1. Perforce CLI, P4Python (['helix-cli' and 'perforce-p4python'](
-https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.install.html))
-2. Docker (['docker-ce', 'docker-ce-cli'](
-https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce))
-3. Current user added to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+or
 ```bash
+pip3.7 install --user -U universum
+```
+Can also be installed with [extras for using VCS](
+https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),  but they also require
+installing respective command-line tools, such as git or p4.
+
+## Development
+
+In order to prepare the development environment for the Universum, please fulfill the prerequisites,
+and then use the commands listed below. Please note we use `venv` to properly select
+python interpreter version and to isolate development environment from the system.
+
+Prerequisites:
+1. Install all of the VCS extras as described in the [Universum installation manual](
+   https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
+   (including installation of Git and P4 CLI)
+2. Install Docker (`docker-ce`, `docker-ce-cli`) as described in the [official installation manual](
+   https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
+
+   * Also add current user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+
+Further commands:
+```bash
+python3.7 -m venv virtual-environment-python3.7
+source ./virtual-environment/bin/activate
 git clone https://github.com/Samsung/Universum.git universum-working-dir
 cd universum-working-dir
 git checkout master
-pip install .[test] -U
+pip install -U .[test]
 make images
 ```
-After this run `make tests` and ensure all tests are passing.
+And after this the `pytest` or `make test` commands can be executed (see below).
 
-Also note that running `pip uninstall universum` will remove Universum itself,
-but all the dependency modules will remain in the system.
+The `[test]` extra will install/update the following additional Python modules:
+
+    * `sphinx`
+    * `sphinx-argparse` (extension for `Sphinx`)
+    * `sphinx_rtd_theme` (extension for `Sphinx`)
+    * `docker`
+    * `httpretty`
+    * `mock`
+    * `pytest`
+    * `pylint`
+    * `pytest-pylint`
+    * `teamcity-messages` (is not actually used in manual testing, but is there for CI)
+    * `pytest-cov`
+    * `coverage`
+    * `mypy`
+
+Although it is possible to get these modules via `pip3.7 install -U universum[test]`, it might be more convenient
+to checkout the Universum branch you are currently working on, change working directory to project root and
+run a `pip3.7 install -U .[test]` command from there for more flexibility. Using virtual environment (via `venv`
+command) allows to separate test environment from system and provides even more control over additional modules.
+
+Uninstalling Universum via `pip uninstall universum` will not uninstall all the dependencies installed along with it.
+Simply deleting the directory with virtual environment will leave the system completely cleaned of all changes.
+
+Docker images used in tests can be built manually or using the `make images` command.
+Also `make rebuild` command can be used to update images ignoring cache (e.g. to rerun `apt update`).
+
+The `make test` command runs all the tests (including the doctests) and collects coverage. Tests can also be launched
+manually via `pytest` command with any required options (such as `-k` for running tests based on keywords
+or `-s` for showing the suppressed output).
+
 
 ## Project contents
 
@@ -64,20 +105,23 @@ https://universum.readthedocs.io/en/latest/configuring.html)
 https://universum.readthedocs.io/en/latest/code_report.html) compatible with Universum
 for implementing static (and other types of) analysis support.
 * `lib` - utility functions libraries
+
   * `ci_exception` - internal exceptions
   * `module_arguments` - handles [command line](
-  https://universum.readthedocs.io/en/latest/args.html) and other parameters
+    https://universum.readthedocs.io/en/latest/args.html) and other parameters
   * `gravity` - inter-module communication
   * `utils` - miscellaneous
+  
 * `modules` - independent packages
+
   * `api_support` - 'main' mode module to answer API requests
   * `automation_server` - drivers for CI systems (e.g. Jenkins)
   * `artifact_collector` - implements [build artifacts](
-  https://universum.readthedocs.io/en/latest/configuring.html#common-variations-keys)
+    https://universum.readthedocs.io/en/latest/configuring.html#common-variations-keys)
   * `code_report_collector` - support for [external 'code report' modules](
-  https://universum.readthedocs.io/en/latest/code_report.html)
+    https://universum.readthedocs.io/en/latest/code_report.html)
   * `launcher` - executes build scenario, described in [project configuration file](
-  https://universum.readthedocs.io/en/latest/configuring.html)
+    https://universum.readthedocs.io/en/latest/configuring.html)
   * `output` - drivers for environment-based logs
   * `project_directory` - interaction with host file system
   * `reporter` - interaction with code review systems
@@ -107,13 +151,15 @@ The plugin implements coloring of failed steps and provides collapsing/expansion
 ## Quick architecture overview
 
 1. Project only entry point (except ['analyzers'](https://universum.readthedocs.io/en/latest/code_report.html))
-is `universum.py`. Based on chosen execution mode (default, submitting, polling, etc.)
-it calls one of 'main' modules, passing them all parameters
+   is `universum.py`. Based on chosen execution mode (default, submitting, polling, etc.)
+   it calls one of 'main' modules, passing them all parameters
 2. Universum is a set of separate modules, each implementing its own piece of functionality.
    They are connected using special `gravity` library
 3. All classes, inherited from `Module` (defined in `gravity`), automatically can:
+
    * use `Dependency` mechanism to use other modules
    * describe any module parameters in `define_arguments()` and receive them parsed via `self.settings`
+
 4. `configuration_support` is, in fact, an 'external' module, used not only by Universum,
    but by [user configuration file](https://universum.readthedocs.io/en/latest/configuring.html)
    for generating project configuration

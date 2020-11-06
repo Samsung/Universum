@@ -1,14 +1,37 @@
 Change log
 ==========
 
-0.19.0 (2020-08-??)
+0.19.1 (2020-11-06)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **config:** add :class:`~universum.configuration_support.Step` and :class:`~universum.configuration_support.Configuration`
+  classes to :doc:`configuration support <configuration_support>` for type checking and increased usability
+* **config:** ``-cfg``/``--config`` :doc:`command line argument <args>` is no longer mandatory; if not specified,
+  the default value (``.univerum.py`` in project root) is used
+* **config:** add ``universum init`` :doc:`command <additional_commands>` for automatic configuration file creation
+* add ``universum run`` :doc:`command <additional_commands>` to launch Universum in Non-CI mode
+* if more than one command line argument caused an error, all of error messages are now shown, not only the first one
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** fix detecting latest review version
+* **out:** do not print Unicode characters in non-Unicode locales
+* **jenkins_plugin:** return missing 'Failed' line with timestamps plugin
+* any Python version higher than 3.7 can now be used to run Universum
+
+
+0.19.0 (2020-09-04)
 -------------------
 
 BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
 * **migrate to Python 3.7** due to Python 2 is no longer supported
-   Python3.7 is now :doc:`required <prerequisites>` for Universum to work; please switch ``print ""`` into
+   Python3.7 is now :doc:`required <install>` for Universum to work; please switch ``print ""`` into
    ``print("")`` in config files if needed
 * **disable entry points** (calling ``universum`` from command line) and switch to ``python3.7 -m universum`` calls
    to avoid possible situations where wrong version of Universum is executed, especially when using
@@ -96,7 +119,7 @@ New features
    * old options `--launcher-config-path` and `--launcher-output` are still supported
      but not recommended to use any more
 * **launcher:**  add '--filter' option filtering steps to be executed
-* **nonci:** add :doc:`nonci <args_nonci>` mode of running Universum
+* **nonci:** add :ref:`nonci <additional_commandst#run>` mode of running Universum
 * **jenkins_plugin:** expand failed steps by default
 * **test:** add Java & JS tests for Jenkins plugin
 
@@ -166,7 +189,7 @@ Bug fixes
 
 * **incorrect checks of parameters**
 * **argument error message for subcommands**
-* **docs:** reference to :ref:`artifact_prebuild_clean <clean_artifacts>`
+* **docs:** reference to artifact_prebuild_clean
 * **submit:** git module returns error if there are no files
 * **p4:** no error on sync if depot is empty
 * **git:** bug with unicode on newer GitPython
@@ -193,7 +216,7 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* **configs:** add support of :ref:`setting the environment variables <build_environment>` for build steps
+* **configs:** add support of setting the environment variables for build steps
 * **code_report:** add parameter '--output-directory' for Uncrustify fixed files
 * **code_report:** read HtmlDiff argument value from Uncrustify config
 * **api:** add initial API support and 'file-diff' as example usage
@@ -279,7 +302,7 @@ BREAKING CHANGES
 New features
 ~~~~~~~~~~~~
 
-* **launcher:** add :ref:`'finish_background' <finish_background>` key to Variations
+* **launcher:** add finish_background key to Variations
 
 Bug fixes
 ~~~~~~~~~
@@ -424,7 +447,7 @@ BREAKING CHANGES
 New features
 ~~~~~~~~~~~~
 
-* **report:** add support of :ref:`tagging <tc_tags>` TeamCity builds
+* **report:** add support of tagging TeamCity builds
 * **swarm:** ``PASS`` and ``FAIL`` parameters are no longer mandatory
 * **submit:** new files are now added to VCS by submitter with '+w' modifier
 * **report:** add link to build log to successful reports
@@ -436,7 +459,7 @@ Bug fixes
 * **p4:** fix unhandled 'no file(s) to reconcile' P4Exception
 * **out:** fix bug with decoding non-ascii strings
 * **docs:** documentation fixed and updated; please pay special attention to
-  :ref:`prebuild artifact cleaning <clean_artifacts>` `Variations` key
+  `clean_artifacts` `Variations` key
 
 
 0.13.4 (2018-04-13)
@@ -617,7 +640,7 @@ New features
 ~~~~~~~~~~~~
 
 * **launcher:** add support for critical steps - now steps can be marked with
-  :ref:`"critical" attribute <critical_step>` to fail entire build in case of step failure.
+  "critical" attribute to fail entire build in case of step failure.
   By default the build continues even if some steps have failed
 
 Bug fixes
@@ -845,7 +868,7 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* **docs:** add :doc:`system prerequisites page <prerequisites>` to user manual
+* **docs:** add :doc:`system prerequisites page <install>` to user manual
 * **docs:** add documentation for :mod:`universum.configuration_support` module
 * **launcher:** add support for more than one environment variable to
   :ref:`filter configurations <filtering>`
@@ -874,7 +897,7 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* **report:** add :ref:`direct links to build artifacts <report_artifacts>` into reports
+* **report:** add direct links to build artifacts into reports
 
 
 0.6.1 (2017-07-05)

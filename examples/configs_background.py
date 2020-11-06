@@ -1,14 +1,14 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python
 
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration, Step
 
-background = Variations([dict(name="Background", background=True)])
-sleep = Variations([dict(name=' long step', command=["sleep", "1"])])
-multiply = Variations([dict(name="_1"), dict(name="_2"), dict(name="_3")])
-wait = Variations([dict(name='Step requiring background results',
-                        command=["run.sh", "pass"], finish_background=True)])
+background = Configuration([Step(name="Background", background=True)])
+sleep = Configuration([Step(name=' long step', command=["sleep", "1"])])
+multiply = Configuration([Step(name="_1"), Step(name="_2"), Step(name="_3")])
+wait = Configuration([Step(name='Step requiring background results',
+                           command=["run.sh", "pass"], finish_background=True)])
 
-script = Variations([dict(name=" unsuccessful step", command=["run.sh", "fail"])])
+script = Configuration([Step(name=" unsuccessful step", command=["run.sh", "fail"])])
 
 configs = background * (script + sleep * multiply) + wait + background * (sleep + script)
 

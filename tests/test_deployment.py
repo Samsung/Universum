@@ -1,13 +1,15 @@
-config = """
-from universum.configuration_support import Variations
+from .utils import python
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
 
 def test_minimal_install(clean_docker_main):
     # Run without parameters
-    log = clean_docker_main.environment.assert_unsuccessful_execution("python3.7 -m universum")
+    log = clean_docker_main.environment.assert_unsuccessful_execution(f"{python()} -m universum")
     assert "No module named universum" not in log
 
     # Run locally

@@ -235,12 +235,25 @@ public class SectionsTest extends TestSuite {
         public static Iterable<String> testData() {
             return Arrays.asList(
                     "└ [result]",
+                    "| [result]",
+
                     "  || └ [result]",
+                    "  || | [result]",
+
                     "└ [ResULT]",
+                    "| [ResULT]",
+
                     "└ [r]",
+                    "| [r]",
+
                     "└ [result] some random text  ",
+                    "| [result] some random text  ",
+
                     "└ some random text [result]",
-                    timestampCorrect + " └ [result]"
+                    "| some random text [result]",
+
+                    timestampCorrect + " └ [result]",
+                    timestampCorrect + " | [result]"
             );
         }
 
@@ -306,9 +319,16 @@ public class SectionsTest extends TestSuite {
         public static Iterable<String> testData() {
             return Arrays.asList(
                     "└ [Failed]",
+                    "| [Failed]",
+
                     "  || └ [Failed]",
+                    "  || | [Failed]",
+
                     "└ [Failed] some random text  ",
-                    timestampCorrect + " └ [Failed]"
+                    "| [Failed] some random text  ",
+
+                    timestampCorrect + " └ [Failed]",
+                    timestampCorrect + " | [Failed]"
             );
         }
 
@@ -323,7 +343,7 @@ public class SectionsTest extends TestSuite {
             String failedResultClose = "</span>";
             String[] out = new String[] {
                     replaceWithHtmlEntities(logStartLine),
-                    failedResultOpen + line + failedResultClose + sectionEndClose,
+                    line + failedResultOpen + failedResultClose + sectionEndClose,
             };
             checkAnnotation(in, out);
         }

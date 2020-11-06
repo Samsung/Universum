@@ -16,10 +16,10 @@ def test_p4_forbidden_local_revert(perforce_environment, stdout_checker):
     p4_file = perforce_environment.repo_file
 
     config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Restrict changes", command=["chmod", "-R", "555", "."]),
-                      dict(name="Check", command=["ls", "-la"])])
+configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "555", "."]),
+                         dict(name="Check", command=["ls", "-la"])])
 """
     p4.run_edit(perforce_environment.depot)
     p4_file.write(config)

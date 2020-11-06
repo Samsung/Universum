@@ -1,15 +1,15 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python
 
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration, Step
 
-not_script = Variations([dict(name='Not script', command=["not_run.sh"], critical=True)])
+not_script = Configuration([Step(name='Not script', command=["not_run.sh"], critical=True)])
 
-script = Variations([dict(command=["run.sh"])])
+script = Configuration([Step(command=["run.sh"])])
 
-step = Variations([dict(name='Step 1', critical=True), dict(name='Step 2')])
+step = Configuration([Step(name='Step 1', critical=True), Step(name='Step 2')])
 
-substep = Variations([dict(name=', failed substep', command=["fail"]),
-                      dict(name=', successful substep', command=["pass"])])
+substep = Configuration([Step(name=', failed substep', command=["fail"]),
+                         Step(name=', successful substep', command=["pass"])])
 
 configs = script * step * substep + not_script + script
 

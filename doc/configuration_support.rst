@@ -1,18 +1,14 @@
-'configuration_support' module
-==============================
+Project configuration structures
+================================
 
 .. testsetup::
 
     from universum.configuration_support import *
 
 .. seealso::
-    Please see :doc:`configuring` for more examples and detailed explanation
+    Please refer to :doc:`configuring` for examples and explanation of how these structures are used in Universum
 
 .. automodule:: universum.configuration_support
     :members:
     :special-members:
-    :exclude-members: __weakref__
-
-    :mod:`universum.configuration_support`
-    ---------------------------------------
-
+    :exclude-members: __weakref__, __init__

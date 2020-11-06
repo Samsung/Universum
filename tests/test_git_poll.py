@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name
 
 import pytest
-from six.moves import range
 
 from universum import __main__
 from .git_utils import GitEnvironment

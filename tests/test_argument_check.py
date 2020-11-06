@@ -40,9 +40,6 @@ def create_settings(test_type, vcs_type):
     elif test_type == "submit":
         settings.Submit.commit_message = "Test CL"
     elif test_type == "main":
-        settings.Launcher.config_path = "../configs.py"
-        settings.ArtifactCollector.artifact_dir = "artifacts"
-
         settings.AutomationServer.type = "tc"
         settings.TeamcityServer.server_url = "https://teamcity"
         settings.TeamcityServer.build_id = "BuildId_167"
@@ -128,7 +125,6 @@ def param(test_type: str, module: str, field: str,
     missing_params.append(pytest.param(test_type, module, field, vcs_type, error_match, id=test_id))
 
 
-param("main",           "Launcher",                     "config_path")
 param("submit",         "Submit",                       "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
 param("submit",         "PerforceSubmitVcs",            "client",          vcs_type="p4")
 param("main",           "PerforceMainVcs",              "client",          vcs_type="p4")
@@ -173,7 +169,7 @@ def test_missing_params(unset, test_type, module, field, vcs_type, error_match):
     settings = create_settings(test_type, vcs_type)
     unset(settings, module, field)
 
-    assert_incorrect_parameter(settings, "(?i)" + error_match)
+    assert_incorrect_parameter(settings, error_match)
 
 
 @pytest.mark.parametrize("test_type, module, field, vcs_type, error_match", missing_params)
@@ -190,10 +186,10 @@ def test_missing_params_correct_error(test_type, module, field, vcs_type, error_
     # However, this doesn't work if the chosen setting is equal to the one passed in parameters. In that case we use
     # some other setting.
     if test_type == "main":
-        if module == "Launcher" and field == "config_path":
-            settings.Vcs.type = ""
+        if module == "TeamcityServer" and field == "build_id":
+            settings.TeamcityServer.configuration_id = ""
         else:
-            settings.Launcher.config_path = ""
+            settings.TeamcityServer.build_id = ""
     elif test_type == "submit":
         if module == "Submit" and field == "commit_message":
             settings.Vcs.type = ""
@@ -308,32 +304,73 @@ def test_swarm_changelist_incorrect_format():
     assert_incorrect_parameter(settings, "changelist for unshelving is incorrect")
 
 
-def test_vcs_type_and_config_path():
+def test_multiple_errors_main_vcs_type_and_build_id():
     settings = create_settings("main", "p4")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.Vcs.type = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repository type")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "repository type")
 
 
-def test_source_dir_and_config_path():
+def test_multiple_errors_main_none_source_dir_and_build_id():
     settings = create_settings("main", "none")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.LocalMainVcs.source_dir = None
+    settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "SOURCE_DIR")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "SOURCE_DIR", "no code review system")
 
 
-def test_multiple_errors_main_p4_params_and_config_path():
+def test_multiple_errors_main_p4_params():
     settings = create_settings("main", "p4")
-    settings.Launcher.config_path = None
+
     settings.PerforceVcs.port = None
     settings.PerforceVcs.user = None
     settings.PerforceVcs.password = None
     settings.PerforceMainVcs.client = None
     settings.PerforceWithMappings.project_depot_path = None
+    settings.Swarm.review_id = None
+    settings.Swarm.change = None
+    settings.Swarm.server_url = None
+    settings.TeamcityServer.server_url = None
+    settings.TeamcityServer.build_id = None
+    settings.TeamcityServer.configuration_id = None
+    settings.TeamcityServer.user_id = None
+    settings.TeamcityServer.passwd = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "port", "user name", "password", "mappings", "workspace")
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "workspace",
+                               "URL of the Swarm", "Swarm review number",
+                               "Swarm changelist for unshelving is not specified", "URL of the TeamCity",
+                               "id of the build on TeamCity", "id of the configuration on TeamCity",
+                               "id of the TeamCity user", "password of the TeamCity user")
+
+    settings = create_settings("main", "p4")
+
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceMainVcs.client = None
+    settings.PerforceWithMappings.project_depot_path = None
+    settings.Swarm.review_id = None
+    settings.Swarm.change = "123,456"
+    settings.Swarm.server_url = None
+
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "workspace",
+                               "URL of the Swarm", "Swarm review number",
+                               "Swarm changelist for unshelving is incorrect")
+
+    settings = create_settings("main", "p4")
+
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceMainVcs.client = None
+    settings.PerforceWithMappings.project_depot_path = None
+    settings.AutomationServer.type = "jenkins"
+    settings.JenkinsServerForHostingBuild.build_url = None
+
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "workspace",
+                               "Jenkins url of the ongoing build")
 
 
 def test_multiple_errors_submit_p4_params_and_commit_message():
@@ -347,12 +384,13 @@ def test_multiple_errors_submit_p4_params_and_commit_message():
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "port", "user name", "password", "P4CLIENT")
 
 
-def test_multiple_errors_main_git_params_and_config_path():
+def test_multiple_errors_main_git_params_and_build_id():
     settings = create_settings("main", "git")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = None
+    settings.MainVcs.report_to_review = True
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "repo", "no code review system")
 
 
 def test_multiple_errors_submit_git_params_commit_message():
@@ -365,37 +403,77 @@ def test_multiple_errors_submit_git_params_commit_message():
     assert_incorrect_parameter(settings, "COMMIT_MESSAGE", "repo", "git user name", "git user email")
 
 
-def test_multiple_errors_main_gerrit_repo_and_config_path():
+def test_multiple_errors_main_gerrit_repo_and_build_id():
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = None
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "repo")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "repo")
 
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = "http://"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "ssh protocol")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "ssh protocol")
 
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = "ssh://127.0.0.1"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "user name for accessing gerrit")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "user name for accessing gerrit")
 
 
-def test_multiple_errors_main_gerrit_refspec_and_config_path():
+def test_multiple_errors_main_gerrit_refspec_and_build_id():
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.refspec = None
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "Git refspec for gerrit", "git checkout ID")
 
     settings = create_settings("main", "gerrit")
-    settings.Launcher.config_path = None
+    settings.TeamcityServer.build_id = None
     settings.GitVcs.refspec = "ABCDEF"
     settings.GitMainVcs.checkout_id = "HEAD"
 
-    assert_incorrect_parameter(settings, "CONFIG_PATH", "Git refspec for gerrit", "git checkout ID")
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "Git refspec for gerrit", "git checkout ID")
+
+
+def test_multiple_errors_main_github_and_build_id():
+    settings = create_settings("main", "github")
+    settings.TeamcityServer.build_id = None
+    settings.GitVcs.repo = None
+    settings.GitMainVcs.checkout_id = None
+    settings.GithubToken.integration_id = None
+    settings.GithubToken.key = None
+    settings.GithubTokenWithInstallation.installation_id = None
+    settings.GithubMainVcs.check_id = None
+
+    assert_incorrect_parameter(settings, "id of the build on TeamCity", "git repo", "checkout id for github",
+                               "GitHub App ID", "GitHub App private key", "GitHub App installation ID",
+                               "GitHub Check Run ID")
+
+
+def test_multiple_errors_githubhandler():
+    settings = create_settings("github-handler", "github")
+
+    settings.GithubHandler.event = None
+    settings.GithubHandler.payload = None
+    settings.GithubHandler.trigger_url = None
+    settings.GithubToken.integration_id = None
+    settings.GithubToken.key = None
+
+    assert_incorrect_parameter(settings, "GitHub web-hook event", "build trigger URL", "GitHub web-hook payload",
+                               "GitHub App ID", "GitHub App private key")
+
+
+def test_multiple_errors_poll_p4_params_and_jenkins():
+    settings = create_settings("poll", "p4")
+    settings.PerforceVcs.port = None
+    settings.PerforceVcs.user = None
+    settings.PerforceVcs.password = None
+    settings.PerforceWithMappings.project_depot_path = None
+    settings.AutomationServer.type = "jenkins"
+    settings.JenkinsServerForTrigger.trigger_url = None
+
+    assert_incorrect_parameter(settings, "port", "user name", "password", "mappings", "Jenkins url for triggering")

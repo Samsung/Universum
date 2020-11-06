@@ -92,8 +92,10 @@ On this picture numbers depict the following events:
     GitHub also sends web-hook payloads on other events (such as *'check run completed'*), that are
     currently ignored by GitHub Handler
 
-The list of GitHub Handler parameters can be found :doc:`here <args_github_handler>`.
+The list of GitHub Handler parameters can be found :ref:`here <additional_commandst#github-handler>`.
 
+
+.. _github_handler#jenkins:
 
 Jenkins jobs example
 --------------------
@@ -141,7 +143,7 @@ Here's DSL script for GitHub Handler::
                 stage ('Run GitHub Handler') {
                   steps {
                     ansiColor('xterm') {
-                      sh("python3.7 -m universum github-handler -e \^${x_github_event}")
+                      sh("{python} -m universum github-handler -e \^${x_github_event}")
                     }
                   }
                 }
@@ -164,7 +166,7 @@ And here's DSL script for the job it triggers::
         stringParam("GIT_CHECKOUT_ID", "", "")
         stringParam("GITHUB_INSTALLATION_ID", "", "")
         stringParam("GITHUB_CHECK_ID", "", "")
-        stringParam("CONFIG_PATH", "configs.py", "")
+        stringParam("CONFIG_PATH", ".universum.py", "")
       }
       definition {
         cps {
@@ -180,7 +182,7 @@ And here's DSL script for the job it triggers::
                   steps {
                     cleanWs()
                     ansiColor('xterm') {
-                      sh "python3.7 -m universum --no-diff -vt github --report-to-review -rst -rsu -rof"
+                      sh "{python} -m universum --no-diff -vt github --report-to-review -rst -rsu -rof"
                     }
                     junit '**/junit_results.xml'
                     junit '**/TEST*.xml'

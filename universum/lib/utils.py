@@ -9,8 +9,7 @@ import requests
 from requests.models import Response
 
 from .ci_exception import CiException, CriticalCiException, SilentAbortException
-from .module_arguments import IncorrectParameterError
-from .gravity import Module, HasModulesMapping
+from .gravity import Module
 
 __all__ = [
     "strip_path_start",
@@ -19,8 +18,6 @@ __all__ = [
     "detect_environment",
     "create_driver",
     "format_traceback",
-    "check_required_option",
-    "read_and_check_multiline_option",
     "catch_exception",
     "trim_and_convert_to_unicode",
     "convert_to_str",
@@ -98,34 +95,6 @@ def format_traceback(exc: Exception, trace: Optional[TracebackType]) -> str:
     tb_lines: List[str] = traceback.format_exception(exc.__class__, exc, trace)
     tb_text: str = ''.join(tb_lines)
     return tb_text
-
-
-def check_required_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> None:
-    if not getattr(settings, setting_name, None):
-        raise IncorrectParameterError(inspect.cleandoc(error_message))
-
-
-def read_and_check_multiline_option(settings: HasModulesMapping, setting_name: str, error_message: str) -> str:
-    try:
-        value: str = getattr(settings, setting_name, None)
-        if value.startswith('@'):
-            try:
-                with open(value.lstrip('@')) as file_name:
-                    result = file_name.read()
-            except FileNotFoundError as e:
-                raise IncorrectParameterError(f"Error reading argument {setting_name} from file {e.filename}: no such "
-                                              f"file") from e
-        elif value == '-':
-            result = "".join(sys.stdin.readlines())
-        else:
-            result = value
-    except AttributeError as e:
-        raise IncorrectParameterError(inspect.cleandoc(error_message)) from e
-
-    if not result:
-        raise IncorrectParameterError(inspect.cleandoc(error_message))
-
-    return result
 
 
 def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:

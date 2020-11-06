@@ -3,7 +3,6 @@
 from argparse import ArgumentError
 from unittest import mock
 import pytest
-import six
 
 from universum.lib.gravity import construct_component, define_arguments_recursive, Dependency
 from universum.lib.gravity import get_dependencies
@@ -219,7 +218,7 @@ def make_settings(name, value):
     child_settings = universum.lib.module_arguments.ModuleNamespace()
     child_settings.option = value
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(name, str):
         name = name.__name__
     setattr(settings, name, child_settings)
     return settings

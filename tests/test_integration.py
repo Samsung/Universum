@@ -5,6 +5,8 @@ import time
 
 import pytest
 
+from .utils import python
+
 
 def get_line_with_text(text, log):
     for line in log.splitlines():
@@ -15,29 +17,29 @@ def get_line_with_text(text, log):
 
 def test_minimal_execution(docker_main_and_nonci):
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """)
     assert docker_main_and_nonci.local.repo_file.basename in log
 
 
 def test_artifacts(docker_main):
     config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-mkdir = Variations([dict(name="Create directory", command=["mkdir", "-p"])])
-mkfile = Variations([dict(name="Create file", command=["touch"])])
-dirs1 = Variations([dict(name=" one/two{}/three".format(str(x)),
+mkdir = Configuration([dict(name="Create directory", command=["mkdir", "-p"])])
+mkfile = Configuration([dict(name="Create file", command=["touch"])])
+dirs1 = Configuration([dict(name=" one/two{}/three".format(str(x)),
                          command=["one/two{}/three".format(str(x))]) for x in range(0, 6)])
-files1 = Variations([dict(name=" one/two{}/three/file{}.txt".format(str(x), str(x)),
+files1 = Configuration([dict(name=" one/two{}/three/file{}.txt".format(str(x), str(x)),
                           command=["one/two{}/three/file{}.txt".format(str(x), str(x))])
                      for x in range(0, 6)])
 
-dirs2 = Variations([dict(name=" one/three", command=["one/three"])])
-files2 = Variations([dict(name=" one/three/file.sh", command=["one/three/file.sh"])])
+dirs2 = Configuration([dict(name=" one/three", command=["one/three"])])
+files2 = Configuration([dict(name=" one/three/file.sh", command=["one/three/file.sh"])])
 
-artifacts = Variations([dict(name="Existing artifacts", artifacts="one/**/file*", report_artifacts="one/*"),
+artifacts = Configuration([dict(name="Existing artifacts", artifacts="one/**/file*", report_artifacts="one/*"),
                         dict(name="Missing artifacts", artifacts="something", report_artifacts="something_else")])
 
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
@@ -54,15 +56,15 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
 
 def test_background_steps(docker_main_and_nonci):
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-background = Variations([dict(name="Background", background=True)])
-sleep = Variations([dict(name=' long step', command=["sleep", "1"])])
-multiply = Variations([dict(name="_1"), dict(name="_2"), dict(name="_3")])
-wait = Variations([dict(name='Step requiring background results',
-                        command=["echo", "test passed"], finish_background=True)])
+background = Configuration([dict(name="Background", background=True)])
+sleep = Configuration([dict(name=' long step', command=["sleep", "1"])])
+multiply = Configuration([dict(name="_1"), dict(name="_2"), dict(name="_3")])
+wait = Configuration([dict(name='Step requiring background results',
+                      command=["echo", "test passed"], finish_background=True)])
 
-script = Variations([dict(name=" unsuccessful step", command=["ls", "non-existent-file"])])
+script = Configuration([dict(name=" unsuccessful step", command=["ls", "non-existent-file"])])
 
 configs = background * (script + sleep * multiply) + wait + background * (sleep + script)
 """)
@@ -72,35 +74,31 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
     # Test background after failed foreground (regression)
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Bad step", command=["ls", "not_a_file"]),
-                      dict(name="Good bg step", command=["touch", "file"],
-                      background=True, artifacts="file")])
+configs = Configuration([dict(name="Bad step", command=["ls", "not_a_file"]),
+                         dict(name="Good bg step", command=["touch", "file"],
+                         background=True, artifacts="file")])
 """)
     assert "All ongoing background steps completed" in log
-    artifacts_must_collect = not docker_main_and_nonci.nonci
-    assert artifacts_must_collect == os.path.exists(
-        os.path.join(docker_main_and_nonci.artifact_dir, "file"))
+    assert os.path.exists(os.path.join(docker_main_and_nonci.artifact_dir, "file"))
 
     # Test TC step failing
-    if artifacts_must_collect:
-        docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
+configs = Configuration([dict(name="Bad bg step", command=["ls", "not_a_file"], background=True)])
 """, additional_parameters=" -ot tc")
     assert "##teamcity[buildProblem description" in log
 
     # Test multiple failing background steps
-    if artifacts_must_collect:
-        docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
-                      dict(name="Bad step 2", command=["ls", "not_a_file"], background=True)])
+configs = Configuration([dict(name="Bad step 1", command=["ls", "not_a_file"], background=True),
+                         dict(name="Bad step 2", command=["ls", "not_a_file"], background=True)])
 """)
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
@@ -108,11 +106,11 @@ configs = Variations([dict(name="Bad step 1", command=["ls", "not_a_file"], back
 def test_critical_steps(docker_main_and_nonci):
     # Test linear
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Good step", command=["echo", "step succeeded"]),
-                      dict(name="Bad step", command=["ls", "not_a_file"], critical=True),
-                      dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
+configs = Configuration([dict(name="Good step", command=["echo", "step succeeded"]),
+                         dict(name="Bad step", command=["ls", "not_a_file"], critical=True),
+                         dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
 """)
     assert "Extra step skipped because of critical step failure" in log
     assert "This shouldn't be in log." not in log
@@ -120,15 +118,15 @@ configs = Variations([dict(name="Good step", command=["echo", "step succeeded"])
     # Test embedded: critical step, critical substep
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-upper = Variations([dict(name="Group 1"),
-                    dict(name="Group 2", critical=True),
-                    dict(name="Group 3")])
+upper = Configuration([dict(name="Group 1"),
+                       dict(name="Group 2", critical=True),
+                       dict(name="Group 3")])
 
-lower = Variations([dict(name=", step 1", command=["echo", "step succeeded"]),
-                    dict(name=", step 2", command=["ls", "not_a_file"], critical=True),
-                    dict(name=", step 3", command=["echo", "This shouldn't be in log."])])
+lower = Configuration([dict(name=", step 1", command=["echo", "step succeeded"]),
+                       dict(name=", step 2", command=["ls", "not_a_file"], critical=True),
+                       dict(name=", step 3", command=["echo", "This shouldn't be in log."])])
 
 configs = upper * lower
 """)
@@ -138,14 +136,14 @@ configs = upper * lower
     # Test embedded: critical step, non-critical substep
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-upper = Variations([dict(name="Group 1", critical=True),
-                    dict(name="Group 2")])
+upper = Configuration([dict(name="Group 1", critical=True),
+                       dict(name="Group 2")])
 
-lower = Variations([dict(name=", step 1", command=["echo", "step succeeded"]),
-                    dict(name=", step 2", command=["ls", "not_a_file"]),
-                    dict(name=", step 3", command=["echo", "This should be in log."])])
+lower = Configuration([dict(name=", step 1", command=["echo", "step succeeded"]),
+                       dict(name=", step 2", command=["ls", "not_a_file"]),
+                       dict(name=", step 3", command=["echo", "This should be in log."])])
 
 configs = upper * lower
 """)
@@ -155,40 +153,40 @@ configs = upper * lower
     # Test critical non-commands
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Group 1")])
+configs = Configuration([dict(name="Group 1")])
 
-configs *= Variations([dict(name=", step 1", command=["echo", "step succeeded"]),
-                       dict(name=", step 2", command=["this-is-not-a-command"], critical=True),
-                       dict(name=", step 3", command=["echo", "This shouldn't be in log."])])
+configs *= Configuration([dict(name=", step 1", command=["echo", "step succeeded"]),
+                          dict(name=", step 2", command=["this-is-not-a-command"], critical=True),
+                          dict(name=", step 3", command=["echo", "This shouldn't be in log."])])
 
-configs += Variations([dict(name="Linear non-command", command=["this-is-not-a-command"], critical=True),
-                       dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
+configs += Configuration([dict(name="Linear non-command", command=["this-is-not-a-command"], critical=True),
+                          dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
 """)
     assert "This shouldn't be in log." not in log
 
     # Test background
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-group = Variations([dict(name="Group")])
+group = Configuration([dict(name="Group")])
 
-subgroup1 = Variations([dict(name=" 1, step 1", command=["ls", "not_a_file"], background=True),
-                        dict(name=" 1, step 2", command=["echo", "This should be in log - 1"],
+subgroup1 = Configuration([dict(name=" 1, step 1", command=["ls", "not_a_file"], background=True),
+                           dict(name=" 1, step 2", command=["echo", "This should be in log - 1"],
                              finish_background=True)])
 
-subgroup2 = Variations([dict(name=" 2, step 1", command=["ls", "not_a_file"], critical=True,
-                             background=True),
-                        dict(name=" 2, step 2", command=["echo", "This should be in log - 2"])])
+subgroup2 = Configuration([dict(name=" 2, step 1", command=["ls", "not_a_file"], critical=True,
+                                background=True),
+                           dict(name=" 2, step 2", command=["echo", "This should be in log - 2"])])
 
-subgroup3 = Variations([dict(name=" 3, step 1", command=["echo", "This shouldn't be in log."],
-                             finish_background=True),
-                        dict(name=" 3, step 2", command=["echo", "This shouldn't be in log."])])
+subgroup3 = Configuration([dict(name=" 3, step 1", command=["echo", "This shouldn't be in log."],
+                                finish_background=True),
+                           dict(name=" 3, step 2", command=["echo", "This shouldn't be in log."])])
 
 configs = group * subgroup1 + group * subgroup2 + group * subgroup3
-configs += Variations([dict(name="Additional step", command=["echo", "This should be in log - 3"])])
+configs += Configuration([dict(name="Additional step", command=["echo", "This should be in log - 3"])])
 """)
     assert "This shouldn't be in log." not in log
     assert "This should be in log - 1" in log
@@ -198,18 +196,18 @@ configs += Variations([dict(name="Additional step", command=["echo", "This shoul
 
 def test_minimal_git(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="git")
     assert docker_main_with_vcs.git.repo_file.basename in log
 
 
 def test_minimal_p4(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="p4")
     assert docker_main_with_vcs.perforce.repo_file.basename in log
 
@@ -218,9 +216,9 @@ def test_p4_params(docker_main_with_vcs):
     p4 = docker_main_with_vcs.perforce.p4
     p4_file = docker_main_with_vcs.perforce.repo_file
     config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["cat", "{}"])])
+configs = Configuration([dict(name="Test configuration", command=["cat", "{}"])])
 """.format(p4_file.basename)
 
     # Prepare SYNC_CHANGELIST
@@ -279,9 +277,9 @@ def empty_required_params_ids(param):
 def test_empty_required_params(docker_main_with_vcs, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
     config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """
 
     log = docker_main_with_vcs.run(config, vcs_type="p4", expected_to_fail=True,
@@ -300,21 +298,21 @@ echo ${SPECIAL_TESTING_VARIABLE}
     script.chmod(0o777)
 
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Test configuration", command=["script.sh"],
-                           environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
+configs = Configuration([dict(name="Test configuration", command=["script.sh"],
+                              environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
 """)
     assert "This string should be in log" in log
 
     docker_main_and_nonci.clean_artifacts()
     log = docker_main_and_nonci.run("""
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-upper = Variations([dict(name="Test configuration",
-                         environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
-lower = Variations([dict(name=" 1", command=["script.sh"], environment={"OTHER_VARIABLE": "Something"}),
-                    dict(name=" 2", command=["ls", "-la"])])
+upper = Configuration([dict(name="Test configuration",
+                            environment={"SPECIAL_TESTING_VARIABLE": "This string should be in log"})])
+lower = Configuration([dict(name=" 1", command=["script.sh"], environment={"OTHER_VARIABLE": "Something"}),
+                       dict(name=" 2", command=["ls", "-la"])])
 configs = upper * lower
 """)
     assert "This string should be in log" in log
@@ -323,14 +321,14 @@ configs = upper * lower
 @pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
 def test_abort(local_sources, tmpdir, terminate_type):
     config = """
-from universum.configuration_support import Variations
+from universum.configuration_support import Configuration
 
-configs = Variations([dict(name="Long step", command=["sleep", "10"])]) * 5
+configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
     config_file = tmpdir.join("configs.py")
     config_file.write(config)
 
-    process = subprocess.Popen(["python3.7", "-m", "universum",
+    process = subprocess.Popen([python(), "-m", "universum",
                                 "-o", "console", "-vt", "none",
                                 "-pr", str(tmpdir.join("project_root")),
                                 "-ad", str(tmpdir.join("artifacts")),

@@ -1,15 +1,16 @@
 import json
 import urllib.parse
 
-from .modules.vcs.github_vcs import GithubToken
-from .modules.output import HasOutput
-from .modules.structure_handler import HasStructure
+from .lib import utils
 from .lib.ci_exception import CriticalCiException
 from .lib.utils import make_block
-from .lib import utils
+from .modules.error_state import HasErrorState
+from .modules.output import HasOutput
+from .modules.structure_handler import HasStructure
+from .modules.vcs.github_vcs import GithubToken
 
 
-class GithubHandler(GithubToken, HasOutput, HasStructure):
+class GithubHandler(GithubToken, HasOutput, HasStructure, HasErrorState):
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -21,7 +22,7 @@ class GithubHandler(GithubToken, HasOutput, HasStructure):
         argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
                                      help='URL for GET request to trigger the CI build and pass all parameters '
                                           'parsed from payload; if any constant parameters (like token) are '
-                                          'requiered, include them in this string as well, e.g.: '
+                                          'required, include them in this string as well, e.g.: '
                                           '"http://jenkins.com/job/JobName/build?token=MYTOKEN"')
         argument_parser.add_argument('--suite-name', '-sn', dest='suite_name', metavar="SUITE_NAME", default="CI tests",
                                      help='GitHub check suite name, default is "CI tests"')
@@ -33,30 +34,32 @@ class GithubHandler(GithubToken, HasOutput, HasStructure):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        utils.check_required_option(self.settings, "event", """
-                    GitHub web-hook event is not specified.
+        self.check_required_option("event", """
+            GitHub web-hook event is not specified.
 
-                    Please pass 'X-GitHub-Event' header contents of incoming web-hook request via command line
-                    parameter '--event' ('-e') or GITHUB_EVENT environment variable.
-                """)
-        utils.check_required_option(self.settings, "trigger_url", """
-                    CI build trigger URL is not specified.
+            Please pass 'X-GitHub-Event' header contents of incoming web-hook request via
+            command line parameter '--event' ('-e') or GITHUB_EVENT environment variable.
+            """)
+        self.check_required_option("trigger_url", """
+            CI build trigger URL is not specified.
 
-                    Trigger URL is a string to be extended by parsed build parameters and used in a GET request
-                    to start a CI build that can report a GitHub build check.
-                    For example, 'http://jenkins.com/job/JobName/build?token=MYTOKEN'
-                    
-                    Please specify this parameter by using '--trigger-url' ('-tu')
-                    command line parameter or by setting TRIGGER_URL environment variable.
-                """)
-        self.payload = utils.read_and_check_multiline_option(self.settings, "payload", """
-                    GitHub web-hook payload JSON is not specified.
+            Trigger URL is a string to be extended by parsed build parameters and used in a
+            GET request to start a CI build that can report a GitHub build check. For
+            example, 'http://jenkins.com/job/JobName/build?token=MYTOKEN'
 
-                    Please pass incoming web-hook request payload to this parameter directly via '--payload' ('-pl')
-                    command line parameter or by setting GITHUB_PAYLOAD environment variable, or by passing file path
-                    as the argument value (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json'
-                    for relative path starting at current directory), or via stdin (leave '-' valuer for redirection).
-                """)
+            Please specify this parameter by using '--trigger-url' ('-tu') command line
+            parameter or by setting TRIGGER_URL environment variable.
+            """)
+        self.payload = self.read_and_check_multiline_option("payload", """
+            GitHub web-hook payload JSON is not specified.
+
+            Please pass incoming web-hook request payload to this parameter directly via
+            '--payload' ('-pl') command line parameter or by setting GITHUB_PAYLOAD
+            environment variable, or by passing file path as the argument value (start
+            filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json' for
+            relative path starting at current directory), or via stdin (leave '-' valuer for
+            redirection).
+            """)
 
     @make_block("Analysing trigger payload")
     def execute(self):

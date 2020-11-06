@@ -1,4 +1,4 @@
-TEST_TARGETS = pytest doc_doctest
+TEST_TARGETS = pytest doctest
 
 
 .PHONY: all doc test $(TEST_TARGETS) pylint images rebuild
@@ -20,15 +20,18 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	python3.7 -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
+	python -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
 	--cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
 	--ignore=universum_log_collapser --ignore=configs.py
 
-doc_doctest:
+doctest:
 	+$(MAKE) -C doc doctest
 
 pylint:
-	python3.7 -m pylint --rcfile=pylintrc *.py universum/ tests/
+	python -m pylint --rcfile=pylintrc *.py universum/ tests/
+
+mypy:
+	python -m mypy universum/ --ignore-missing-imports
 
 images:
 	+$(MAKE) -C tests/docker all

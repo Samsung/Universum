@@ -2,7 +2,8 @@ import os
 import re
 import sys
 from inspect import cleandoc
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Optional, TextIO, Tuple, Union
+from requests import Response
 import sh
 
 from .error_state import HasErrorState
@@ -12,7 +13,7 @@ from ..lib.ci_exception import CiException, CriticalCiException, StepException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
-from .output import HasOutput
+from .output import HasOutput, Output
 from .project_directory import ProjectDirectory
 from .structure_handler import HasStructure
 
@@ -22,40 +23,39 @@ __all__ = [
 ]
 
 
-def make_command(name):
+def make_command(name: str) -> sh.Command:
     try:
         return sh.Command(name)
-    except sh.CommandNotFound as e :
+    except sh.CommandNotFound as e:
         raise CiException(f"No such file or command as '{name}'") from e
 
 
-def check_if_env_set(configuration):
+def check_if_env_set(configuration: configuration_support.Step) -> bool:  # TODO move to configuration
     """
-    Predicate function for :func:`universum.configuration_support.Variations.filter`,
+    Predicate function for :func:`universum.configuration_support.Configuration.filter`,
     used to decide whether this particular configuration should be executed in this
     particular environment. For more information see :ref:`filtering`
 
-    >>> from universum.configuration_support import Variations
-    >>> c = Variations([dict(if_env_set="MY_VAR != some value")])
+    >>> from universum.configuration_support import Configuration
+    >>> c = Configuration([dict(if_env_set="MY_VAR != some value")])
     >>> check_if_env_set(c[0])
     True
 
-    >>> c = Variations([dict(if_env_set="MY_VAR != some value && OTHER_VAR")])
+    >>> c = Configuration([dict(if_env_set="MY_VAR != some value && OTHER_VAR")])
     >>> check_if_env_set(c[0])
     False
 
-    >>> c = Variations([dict(if_env_set="MY_VAR == some value")])
+    >>> c = Configuration([dict(if_env_set="MY_VAR == some value")])
     >>> os.environ["MY_VAR"] = "some value"
     >>> check_if_env_set(c[0])
     True
 
-    :param configuration: :class:`~universum.configuration_support.Variations`
-           object containing one leaf configuration
+    :param configuration: :class:`~universum.configuration_support.Step` object
     :return: True if environment satisfies described requirements; False otherwise
     """
 
-    if "if_env_set" in configuration:
-        variables = configuration["if_env_set"].split("&&")
+    if configuration.if_env_set:
+        variables = configuration.if_env_set.split("&&")
         for var in variables:
             if var.strip():
                 match = re.match(r"\s*([A-Za-z_]\w*)\s*(!=|==)\s*(.*?)\s*$", var)
@@ -84,7 +84,7 @@ def check_if_env_set(configuration):
     return True
 
 
-def check_str_match(string, include_substrings, exclude_substrings):
+def check_str_match(string: str, include_substrings: List[str], exclude_substrings: List[str]) -> bool:
     """The function to check whether specified string contains 'include' and
     does NOT contain 'exclude' substrings.
 
@@ -118,7 +118,7 @@ def check_str_match(string, include_substrings, exclude_substrings):
     return result
 
 
-def get_match_patterns(filters):
+def get_match_patterns(filters: Union[str, List[str]]) -> Tuple[List[str], List[str]]:
     """The function to parse 'filters' defined as a single string into the lists
     of 'include' and 'exclude' patterns.
 
@@ -146,8 +146,8 @@ def get_match_patterns(filters):
     if not isinstance(filters, str):
         filters = ":".join(filters) if filters else ""
 
-    include = []
-    exclude = []
+    include: List[str] = []
+    exclude: List[str] = []
 
     filters = filters.split(':')
     for f in filters:
@@ -159,43 +159,41 @@ def get_match_patterns(filters):
     return include, exclude
 
 
-class Step:
+class RunningStep:
     # TODO: change to non-singleton module and get all dependencies by ourselves
-    def __init__(self, item, out, fail_block, send_tag, log_file, working_directory, additional_environment) -> None:
+    def __init__(self, item: configuration_support.Step,
+                 out: Output,
+                 fail_block: Callable[[str], None],
+                 send_tag: Callable[[str], Response],
+                 log_file: Optional[TextIO],
+                 working_directory: str,
+                 additional_environment: Dict[str, str]) -> None:
         super().__init__()
-        self.configuration = item
-        self.out = out
-        self.fail_block = fail_block
+        self.configuration: configuration_support.Step = item
+        self.out: Output = out
+        self.fail_block: Callable[[str], None] = fail_block
         self.send_tag = send_tag
-        self.file = log_file
-        self.working_directory = working_directory
+        self.file: Optional[TextIO] = log_file
+        self.working_directory: str = working_directory
 
-        self.environment = os.environ.copy()
-        user_environment = item.get("environment", {})
-        self.environment.update(user_environment)
+        self.environment: Dict[str, str] = os.environ.copy()
+        self.environment.update(item.environment)
         self.environment.update(additional_environment)
 
-        self.cmd: sh.Command = None
-        self.process: sh.RunningCommand = None
+        self.cmd: sh.Command
+        self.process: sh.RunningCommand
         self._is_background: bool = False
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
 
-    def prepare_command(self): #FIXME: refactor
-        try: #TODO: move try-catch block in a separate method
-            command_name = utils.strip_path_start(self.configuration["command"][0])
-
-        except KeyError as e:
-            if str(e) != "command":
-                raise
-
+    def prepare_command(self) -> bool:  # FIXME: refactor
+        if not self.configuration.command:
             self.out.log("No 'command' found. Nothing to execute")
             return False
+        command_name: str = utils.strip_path_start(self.configuration.command[0])
         try:
             try:
                 self.cmd = make_command(command_name)
             except CiException:
-                if self.working_directory is None:
-                    raise
                 command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
                 self.cmd = make_command(command_name)
         except CiException as ex:
@@ -203,13 +201,13 @@ class Step:
             raise StepException() from ex
         return True
 
-    def start(self, is_background) -> None:
+    def start(self, is_background: bool) -> None:
         if not self.prepare_command():
             return
 
         self._is_background = is_background
         self._postponed_out = []
-        self.process = self.cmd(*self.configuration["command"][1:],
+        self.process = self.cmd(*self.configuration.command[1:],
                                 _iter=True,
                                 _bg_exc=False,
                                 _cwd=self.working_directory,
@@ -223,7 +221,7 @@ class Step:
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
 
-    def handle_stdout(self, line=u""):
+    def handle_stdout(self, line: str = u"") -> None:
         line = utils.trim_and_convert_to_unicode(line)
 
         if self.file:
@@ -233,7 +231,7 @@ class Step:
         else:
             self.out.log_shell_output(line)
 
-    def handle_stderr(self, line):
+    def handle_stderr(self, line: str) -> None:
         line = utils.trim_and_convert_to_unicode(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
@@ -242,17 +240,17 @@ class Step:
         else:
             self.out.log_stderr(line)
 
-    def add_tag(self, tag):
+    def add_tag(self, tag: str) -> None:
         if not tag:
             return
 
-        request = self.send_tag(tag)
+        request: Response = self.send_tag(tag)
         if request.status_code != 200:
             self.out.log_stderr(request.text)
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
-    def finalize(self):
+    def finalize(self) -> None:
         try:
             text = ""
             try:
@@ -271,17 +269,17 @@ class Step:
                 if self.file:
                     self.file.write(text + "\n")
                 self.fail_block(text)
-                self.add_tag(self.configuration.get("fail_tag", False))
+                self.add_tag(self.configuration.fail_tag)
                 raise StepException()
 
-            self.add_tag(self.configuration.get("pass_tag", False))
+            self.add_tag(self.configuration.pass_tag)
         finally:
             self.handle_stdout()
             if self.file:
                 self.file.close()
             self._is_background = False
 
-    def _handle_postponed_out(self):
+    def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:
             item[0](item[1])
         self._postponed_out = []
@@ -292,7 +290,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     api_support_factory = Dependency(api_support.ApiSupport)
     reporter_factory = Dependency(reporter.Reporter)
     server_factory = Dependency(automation_server.AutomationServerForHostingBuild)
-    code_report_collector = Dependency(code_report_collector.CodeReportCollector)
+    code_report_collector_factory = Dependency(code_report_collector.CodeReportCollector)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -307,118 +305,106 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                                                      "External command launching and reporting parameters")
 
         parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
-                            help="Path to project config file (example: -cfg=my/prject/my_conf.py). "
-                                 "Mandatory parameter.")
+                            help="Path to project configuration file (example: -cfg=my/prject/my_conf.py). "
+                                 "Default is ``.universum.py``")
 
-        parser.add_argument("--filter", "-f", dest="step_filter", action='append',
+        parser.add_argument("--filter", "-f", dest="step_filter", action='append', metavar="STEP_FILTER",
                             help="Filter steps to execute. A single filter or a set of filters separated by ':'. "
-                                 "Exlude using '!' symbol before filter. "
+                                 "Exclude using '!' symbol before filter. "
                                  "Example: -f='str1:!not str2' OR -f='str1' -f='!not str2'. "
-                                 "See online docs for more details.")
+                                 "See online documentation for more details")
 
         parser.add_hidden_argument("--launcher-output", "-lo", dest="output", choices=["console", "file"],
-                                   help="Deprecated option. Please use '--out' instead.", is_hidden=True)
+                                   help="Deprecated option. Please use '--out' instead", is_hidden=True)
         parser.add_hidden_argument("--launcher-config-path", "-lcp", dest="config_path", is_hidden=True,
-                                   help="Deprecated option. Please use '--steps-config' instead.")
+                                   help="Deprecated option. Please use '--steps-config' instead")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.source_project_configs = None
-        self.project_configs = None
+        self.source_project_configs: configuration_support.Configuration
+        self.project_config: configuration_support.Configuration = configuration_support.Configuration()
 
-        self.output = self.settings.output
+        self.output: Output = self.settings.output
         if self.output is None:
             if utils.detect_environment() == "terminal":
                 self.output = "file"
             else:
                 self.output = "console"
 
-        if not getattr(self.settings, "config_path", None):
-            self.error("""
-                The path to the config file is not specified.
-
-                The config defines all steps performed by Universum for your project. The status
-                of each step can be reported to the code review system. The config file for a
-                project can be created and debugged locally. There are examples of config files
-                in the documentation.
-
-                Please specify the path to project config file by using '--launcher-config-path'
-                ('-lcp') command-line option or CONFIG_PATH environment variable
-                """)
+        self.config_path = self.settings.config_path
+        if not self.config_path:
+            self.config_path = ".universum.py"
 
         self.artifacts = self.artifacts_factory()
         self.api_support = self.api_support_factory()
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
-        self.code_report_collector = self.code_report_collector()
+        self.code_report_collector = self.code_report_collector_factory()
         self.include_patterns, self.exclude_patterns = get_match_patterns(self.settings.step_filter)
 
     @make_block("Processing project configs")
-    def process_project_configs(self):
-        config_path = utils.parse_path(self.settings.config_path, self.settings.project_root)
+    def process_project_configs(self) -> configuration_support.Configuration:
+        config_path = utils.parse_path(self.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
-        config_globals = {}
+        config_globals: Dict[str, configuration_support.Configuration] = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
         try:
-            with open(config_path) as config:
-                exec(config.read(), config_globals)  # pylint: disable=exec-used
-
+            with open(config_path) as config_file:
+                exec(config_file.read(), config_globals)  # pylint: disable=exec-used
             self.source_project_configs = config_globals["configs"]
-            dump_file = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
+            dump_file: TextIO = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
             dump_file.write(self.source_project_configs.dump())
             dump_file.close()
-
-            configs = self.source_project_configs.filter(check_if_env_set)
-            self.project_configs = configs.filter(lambda config: check_str_match(config['name'],
-                                                                                 self.include_patterns,
-                                                                                 self.exclude_patterns))
+            config = self.source_project_configs.filter(check_if_env_set)
+            self.project_config = config.filter(
+                lambda cfg: check_str_match(cfg.name, self.include_patterns, self.exclude_patterns))
 
         except IOError as e:
             text = f"""{e}\n
                 Possible reasons of this error:\n
-                * There is no file named 'configs.py' in project repository\n
-                * Config path, passed to the script ('{self.settings.config_path}'), does not lead to
-                 actual 'configs.py' location\n
+                * There is no Universum configuration file in project repository\n
+                * Config path, passed to the script ('{self.config_path}'),
+                  does not lead to actual Universum configuration file location\n
                 * Some problems occurred while downloading or copying the repository
                 """
             raise CriticalCiException(cleandoc(text)) from e
         except KeyError as e:
             text = "KeyError: " + str(e) + '\n'
-            text += "Possible reason of this error: variable 'configs' is not defined in 'configs.py'"
+            text += "Possible reason of this error: variable 'configs' is not defined in Universum configuration file"
             raise CriticalCiException(text) from e
         except Exception as e:
             ex_traceback = sys.exc_info()[2]
-            text = "Exception while processing 'configs.py'\n" + utils.format_traceback(e, ex_traceback) + \
-                   "\nPlease copy 'configs.py' script to the CI scripts folder and run it " + \
-                   "to make sure no exceptions occur in that case."
+            text = "Exception while processing Universum configuration file:\n" + \
+                   utils.format_traceback(e, ex_traceback) + \
+                   "\nTry to execute ``confgs.dump()`` to make sure no exceptions occur in that case."
             raise CriticalCiException(text) from e
-        return self.project_configs
+        return self.project_config
 
-    def create_process(self, item):
-        working_directory = utils.parse_path(utils.strip_path_start(item.get("directory", "").rstrip("/")),
+    def create_process(self, item: configuration_support.Step) -> RunningStep:
+        working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
         # get_current_block() should be called while inside the required block, not afterwards
         block = self.structure.get_current_block()
 
-        def fail_block(line=None):
+        def fail_block(line: str = "") -> None:
             self.structure.fail_block(block, line)
 
-        log_file = None
+        log_file: Optional[TextIO] = None
         if self.output == "file":
-            log_file = self.artifacts.create_text_file(item.get("name", "") + "_log.txt")
+            log_file = self.artifacts.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
-        return Step(item, self.out, fail_block, self.server.add_build_tag,
+        return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
                     log_file, working_directory, additional_environment)
 
-    def launch_custom_configs(self, custom_configs):
+    def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)
 
     @make_block("Executing build steps")
-    def launch_project(self):
+    def launch_project(self) -> None:
         self.reporter.add_block_to_report(self.structure.get_current_block())
-        self.structure.execute_step_structure(self.project_configs, self.create_process)
+        self.structure.execute_step_structure(self.project_config, self.create_process)

@@ -1,22 +1,32 @@
 import os
+
 import urllib3
 
-from ...lib.ci_exception import CiException
-from ...lib.gravity import Module, Dependency
-from ...lib.module_arguments import IncorrectParameterError
-from ...lib import utils
-from ..reporter import ReportObserver, Reporter
+from ..error_state import HasErrorState
 from ..output import HasOutput
+from ..reporter import ReportObserver, Reporter
+from ...lib import utils
+from ...lib.ci_exception import CiException
+from ...lib.gravity import Dependency
 
 urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
-
 
 __all__ = [
     "Swarm"
 ]
 
 
-class Swarm(ReportObserver, HasOutput):
+def get_version_from_link(link):
+    # link structure: http://<server.url>/reviews/<review_id>/tests/pass/C9B93E26-90B4-43C0-1A44-B076A3F51EE3.v1/
+    try:
+        version = link.split('.')[-1].strip('v').rstrip('/')
+        int(version)
+        return version
+    except ValueError:
+        return None
+
+
+class Swarm(ReportObserver, HasOutput, HasErrorState):
     """
     This class contains CI functions for interaction with Swarm via 'swarm_cli.py'
     """
@@ -36,53 +46,59 @@ class Swarm(ReportObserver, HasOutput):
                             help="Swarm 'success' link; is sent by Swarm triggering link as '{pass}'")
         parser.add_argument("--swarm-fail-link", "-sfl", dest="fail_link", metavar="FAIL",
                             help="Swarm 'fail' link; is sent by Swarm triggering link as '{fail}'")
+        parser.add_argument("--swarm-review-versn", "-srv", dest="review_version", metavar="REVIEW_VERSION",
+                            help="Swarm review version; is sent by Swarm triggering link as '{version}'")
 
     def __init__(self, user, password, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
         self.password = password
         self.review_version = None
+        if self.settings.review_version:
+            self.review_version = self.settings.review_version
         self.review_latest_version = None
         self.client_root = ""
         self.mappings_dict = {}
 
-        utils.check_required_option(self.settings, "server_url", """
-            the URL of the Swarm server is not specified.
+        self.check_required_option("server_url", """
+            The URL of the Swarm server is not specified.
 
-            The URL is needed for communicating with swarm code review system:
-            getting review revision, posting comments, voting. Please specify
-            the server URL by using '--swarm-server-url' ('-ssu') command
-            line parameter or by setting SWARM_SERVER environment variable.""")
-        utils.check_required_option(self.settings, "review_id", """
-            the Swarm review number is not specified.
+            The URL is needed for communicating with swarm code review system: getting
+            review revision, posting comments, voting. Please specify the server URL by
+            using '--swarm-server-url' ('-ssu') command line parameter or by setting
+            SWARM_SERVER environment variable.
+            """)
+        self.check_required_option("review_id", """
+            The Swarm review number is not specified.
 
             The review number is needed for communicating with swarm code review system:
-            getting review revision, posting comments, voting. Please specify the number
-            by using '--swarm-review-id' ('-sre') command line parameter or by setting
-            REVIEW environment variable.
+            getting review revision, posting comments, voting. Please specify the number by
+            using '--swarm-review-id' ('-sre') command line parameter or by setting REVIEW
+            environment variable.
 
-            In order to setup sending of the review number for pre-commit in Swarm,
-            please use the '{review}' argument in Automated Tests field of the Project
-            Settings.
+            In order to setup sending of the review number for pre-commit in Swarm, please
+            use the '{review}' argument in Automated Tests field of the Project Settings.
             """)
-        utils.check_required_option(self.settings, "change", """
-            the Swarm changelist for unshelving is not specified.
+        self.check_required_option("change", """
+            The Swarm changelist for unshelving is not specified.
 
-            The changelist is used for unshelving change before build and for
-            determining review revision. Please specify the changelist by using
-            '--swarm-change' ('-sch') command line parameter or by setting
-            SWARM_CHANGELIST environment variable.
+            The changelist is used for unshelving change before build and for determining
+            review revision. Please specify the changelist by using '--swarm-change'
+            ('-sch') command line parameter or by setting SWARM_CHANGELIST environment
+            variable.
 
-            In order to setup sending of the review number for pre-commit in Swarm,
-            please use the '{change}' argument in Automated Tests field of the Project
-            Settings.
+            In order to setup sending of the review number for pre-commit in Swarm, please
+            use the '{change}' argument in Automated Tests field of the Project Settings.
             """)
 
-        if " " in self.settings.change or "," in self.settings.change:
-            raise IncorrectParameterError("the Swarm changelist for unshelving is incorrect.\n\n"
-                                          "The changelist parameter must only contain one number. Please specify the\n"
-                                          "changelist by using '--swarm-change' ('-sch') command line parameter or by\n"
-                                          "setting SWARM_CHANGELIST environment variable.")
+        if getattr(self.settings, "change", None) and (" " in self.settings.change or "," in self.settings.change):
+            self.error("""
+                The Swarm changelist for unshelving is incorrect.
+                
+                The changelist parameter must only contain one number. Please specify the
+                changelist by using '--swarm-change' ('-sch') command line parameter or by
+                setting SWARM_CHANGELIST environment variable.
+                """)
 
         self.reporter = self.reporter_factory()
         self.reporter.subscribe(self)
@@ -95,7 +111,8 @@ class Swarm(ReportObserver, HasOutput):
             return
 
         result = utils.make_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
-                                    critical=False, data={"id": self.settings.review_id}, auth=(self.user, self.password))
+                                    critical=False, data={"id": self.settings.review_id},
+                                    auth=(self.user, self.password))
         try:
             versions = result.json()["review"]["versions"]
         except (KeyError, ValueError) as e:
@@ -105,11 +122,25 @@ class Swarm(ReportObserver, HasOutput):
 
         self.review_latest_version = str(len(versions))
 
+        if self.review_version:
+            return
+        self.out.log("Review version was not provided; trying to calculate it from PASS/FAIL links...")
+
+        if self.settings.pass_link:
+            self.review_version = get_version_from_link(self.settings.pass_link)
+            if self.review_version:
+                return
+        if self.settings.fail_link:
+            self.review_version = get_version_from_link(self.settings.pass_link)
+            if self.review_version:
+                return
+        self.out.log("PASS/FAIL links either missing or have unexpected format; "
+                     "try to calculate version from shelve number...")
+
         for index, entry in enumerate(versions):
             if int(entry["change"]) == int(self.settings.change):
                 self.review_version = str(index + 1)
                 return
-
         try:
             last_cl = int(versions[int(self.review_latest_version) - 1]["archiveChange"])
             if last_cl == int(self.settings.change):

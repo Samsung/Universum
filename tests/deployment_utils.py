@@ -4,12 +4,14 @@ import getpass
 import os
 from pwd import getpwnam
 
+from typing import Generator
 import docker
 import py
 import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
+from .utils import python
 
 
 class ExecutionEnvironment:
@@ -113,7 +115,7 @@ class ExecutionEnvironment:
         try:
             user_id = getpwnam(getpass.getuser()).pw_uid
             for path in self._volumes:
-                self._container.exec_run("chown -R {} {}".format(user_id, path))
+                self._container.exec_run(f"chown -R {user_id} {path}")
             if utils.is_pycharm() and not self._force_clean:
                 self.request.config.cache.set("ci_test/" + self._image_name, self._container_id)
             else:
@@ -128,7 +130,7 @@ class ExecutionEnvironment:
 
 
 @pytest.fixture()
-def execution_environment(request) -> ExecutionEnvironment:
+def execution_environment(request) -> Generator[ExecutionEnvironment, None, None]:
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd())
@@ -152,7 +154,13 @@ def clean_execution_environment(request):
 @pytest.fixture()
 def local_sources(tmpdir):
     if utils.is_pycharm():
-        source_dir = py.path.local(".work").ensure(dir=True)
+        source_dir = py.path.local(".work")
+        try:
+            source_dir.remove(rec=1, ignore_errors=True)
+        except OSError:
+            pass
+        source_dir.ensure(dir=True)
+
     else:
         source_dir = tmpdir.mkdir("project_sources")
     local_file = source_dir.join("readme.txt")
@@ -191,21 +199,18 @@ class UniversumRunner:
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
-    def _basic_args(self):
-        return " -lo console -ad '{}'".format(self.artifact_dir)
-
     def _mandatory_args(self, config_file):
-        result = f" -lcp '{config_file}'"
+        result = f" -lcp '{config_file}' -ad '{self.artifact_dir}'"
         if self.project_root:
             result += f" -pr '{self.project_root}'"
         return result
 
     def _vcs_args(self, vcs_type):
         if vcs_type == "none":
-            return " -vt none -fsd '{}'".format(str(self.local.root_directory))
+            return f" -vt none -fsd '{self.local.root_directory}'"
 
         if vcs_type == "git":
-            return " -vt git -gr '{}' -grs '{}'".format(self.git.server.url, self.git.server.target_branch)
+            return f" -vt git -gr '{self.git.server.url}' -grs '{self.git.server.target_branch}'"
 
         return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
             .format(self.perforce.p4.port,
@@ -224,23 +229,23 @@ class UniversumRunner:
             additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
         """
         `force_installed` launches python with '-I' option, that ensures the non-installed universum sources
-        will not be used instead of those installed into system. Without '-I' option `python3.7 -m` will first
+        will not be used instead of those installed into system. Without '-I' option `python -m` will first
         try to launch universum from sources in `workdir` if there are any. That is why, if `workdir` is not
         default and there are no universum sources in specified `workdir`, the preinstalled universum will
         be ran as in case of `force_installed`.
         """
 
         if force_installed:
-            cmd = "python3.7 -I -m universum"
+            cmd = f"{python()} -I -m universum"
         elif utils.is_pycharm() or workdir:
-            cmd = "python3.7 -m universum"
+            cmd = f"{python()} -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
         if self.nonci:
             cmd += ' nonci'
         else:
-            cmd += self._basic_args() + self._vcs_args(vcs_type)
+            cmd += " -lo console" + self._vcs_args(vcs_type)
 
         config_file = self._create_temp_config(config)
         cmd += self._mandatory_args(config_file) + ' ' + additional_parameters
@@ -254,11 +259,11 @@ class UniversumRunner:
         return result
 
     def clean_artifacts(self):
-        self.environment.assert_successful_execution("rm -rf '{}'".format(self.artifact_dir))
+        self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
 
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources) -> UniversumRunner:
+def runner_without_environment(perforce_workspace, git_client, local_sources) -> Generator[UniversumRunner, None, None]:
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
     runner.clean_artifacts()

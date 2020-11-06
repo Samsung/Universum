@@ -32,8 +32,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
     private String patternOptional = "(\\[[\\w-:\\.]+\\] )?";
     private Pattern sectionStartPattern = Pattern.compile("^" + patternOptional + "([|\\s]*)(\\d+)\\..*");
-    private Pattern sectionEndPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[[a-zA-Z]+].*");
-    private Pattern sectionFailPattern = Pattern.compile("^" + patternOptional + "[|\\s]*└.*\\[Failed].*");
+    private Pattern sectionEndPattern = Pattern.compile("^" + patternOptional + "[|\\s]*[└|].*\\[[a-zA-Z]+].*");
+    private Pattern sectionFailPattern = Pattern.compile("^" + patternOptional + "[|\\s]*[└|].*\\[Failed].*");
     /*
         "Reporting build result" section is showing summarized results of all
         build steps. Each line of this section is treated as section start, but
@@ -107,9 +107,8 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
         for (PaddingItem p : paddings) {
             if (!healthyLogPattern.matcher(textStr).find()) {
-                logger.info("Log is broken, indentation expected");
-                universumLogActive = false;
-                return this;
+                logger.warning("Non-indented log found");
+                continue;
             }
             text.addMarkup(p.position, "<span style=\"display: inline-block; " +
                 " width: " + (p.spacesNumber + 2) + "ch;\"></span>");
@@ -173,7 +172,7 @@ public class Annotator extends ConsoleAnnotator<Object> {
 
         if (sectionFailMatcher.find()) {
             logger.info("Failed section found");
-            text.addMarkup(0, "<span class=\"failed_result\">");
+            text.addMarkup(sectionFailMatcher.end(0), "<span class=\"failed_result\">");
             text.addMarkup(text.length(), "</span>");
         }
         text.addMarkup(text.length(), "</div><span class=\"nl\"></span>");

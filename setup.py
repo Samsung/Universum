@@ -8,44 +8,42 @@ def readme():
         return f.read()
 
 
-docs = (
-    'sphinx',
-    'sphinx-argparse',
-    'sphinx_rtd_theme'
-)
+p4 = ('pip>=19', 'p4python>=2019.1')
 
-vcs = (
-    'gitpython>=3.0.5',
-    'p4python>=2019.1',
-    'pygithub',
-    'cryptography'
-)
+git = 'gitpython>=3.0.5'
+
+github = (git, 'cryptography', 'pygithub')
+
+vcs = p4 + github
+
+docs = ('sphinx', 'sphinx-argparse', 'sphinx_rtd_theme')  # This extra is required for RTD to generate documentation
 
 setup(
     name=universum.__title__,
     version=universum.__version__,
     description='Unifier of Continuous Integration',
     long_description=readme(),
+    long_description_content_type='text/markdown',
     author='Ivan Keliukh <i.keliukh@samsung.com>, Kateryna Dovgan <k.dovgan@samsung.com>',
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum'],
     python_requires='>=3.7',
-    setup_requires=['setuptools'],
     install_requires=[
         'glob2',
         'requests',
         'sh',
         'lxml',
-        'six',
         'typing-extensions'
     ],
     extras_require={
+        'p4': [p4],
+        'git': [git],
+        'github': [github],
         'docs': [docs],
-        'development': [docs, vcs],
         'test': [
-            docs,
             vcs,
+            docs,
             'docker',
             'httpretty',
             'mock',
@@ -54,7 +52,8 @@ setup(
             'pytest-pylint',
             'teamcity-messages',
             'pytest-cov',
-            'coverage'
+            'coverage',
+            'mypy'
         ]
     }
 )

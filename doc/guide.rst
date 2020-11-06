@@ -1,18 +1,17 @@
 Getting started
----------------
+===============
 
-Before installing or launching the `Universum`, please make sure your system meets the following
-:doc:`prerequisites`.
+1. Step one: :doc:`install Universum <install>`. Use ``{python} -m universum --help`` to make sure the installation
+   was successful, and also to get the list of available :doc:`parameters <args>`.
 
-The main module (`universum`) is used for performing all CI-related actions.
-If using raw sources, launch Universum from project root via running main module with :doc:`parameters <args>`::
+2. Step two: :ref:`initialize Universum <additional_commandst#init>` by creating a default :doc:`configuration
+   file <configuring>` and modifying it according to the project needs.
 
-    $ python3.7 -m universum --help
+3. Step three: use ``{python} -m universum run`` to :ref:`check the provided configuration
+   locally <additional_commandst#run>`.
 
-If using an installed module (e.g, via PyPi), use the same command from any suitable directory.
+4. Step four: submit a working configuration file to a VCS and pass required :doc:`parameters <args>` to `Universum`
+   to work with it.
 
-In order to use the CI system with a project, a special ``configs.py`` file must be created.
-The contents of such file are described on :doc:`configuring` page.
-
-We recommend to place configuration file somewhere inside the project tree.
-Its location `may also be specified <args.html#Configuration\ execution>`__ by the `CONFIG_PATH` environment variable.
+5. Configure CI, using `Universum`, on a CI server. See the following guides for :doc:`TeamCity <teamcity>` or
+   :ref:`GitHub <github_handler#jenkins>`.

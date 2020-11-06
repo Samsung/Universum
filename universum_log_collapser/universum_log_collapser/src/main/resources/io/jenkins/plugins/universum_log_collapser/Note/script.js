@@ -22,7 +22,15 @@ function colorFailedSections() {
     fetchNext = myFetchNext;
 
     var results = document.getElementsByClassName("failed_result");
-    for (var i = 0; i < results.length; i++) {
+    /*
+    `i` should not be incremented, because array itself becomes smaller when `failed_result` class changed to 
+    `failed_result_handled`.
+    https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementsByClassName
+    Warning: This is a live array. Changes in the DOM will reflect in the array as the changes occur. 
+    If an element selected by this array no longer qualifies for the selector, it will automatically be removed. 
+    Be aware of this for iteration purposes.
+    */
+    for (var i = 0; i < results.length; /*intentionally nothing*/) {
         var element = results[i];
         colorLblsAscendant(element.parentNode.previousSibling);
         element.className = "failed_result_handled";

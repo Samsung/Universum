@@ -185,3 +185,26 @@ release = universum.__version__
 
 autodoc_member_order = 'bysource'
 add_module_names = False
+
+
+# Add replacement for Python version
+# Solution from https://stackoverflow.com/a/56328457
+import sys
+
+
+def ultimateReplace(app, docname, source):
+    result = source[0]
+    for key in app.config.ultimate_replacements:
+        result = result.replace(key, app.config.ultimate_replacements[key])
+    source[0] = result
+
+
+ultimate_replacements = {
+    "{pip}": f"pip{sys.version_info.major}.{sys.version_info.minor}",
+    "{python}": f"python{sys.version_info.major}.{sys.version_info.minor}"
+}
+
+
+def setup(app):
+    app.add_config_value('ultimate_replacements', {}, True)
+    app.connect('source-read', ultimateReplace)
