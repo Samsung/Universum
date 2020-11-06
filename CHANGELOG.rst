@@ -1,6 +1,30 @@
 Change log
 ==========
 
+0.19.1 (2020-11-06)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **config:** add classes :class:`~universum.configuration_support.Step` and
+   :class:`~universum.configuration_support.Configuration` to :doc:`configuration support <configuration_support>`
+   for type checking and increased usability
+* **config:** default config name ``.universum.py`` is :doc:`now supported <configuring>` along with
+   ``-cfg``/``--config`` :doc:`command line argument <args>`
+* **config:** add ``universum init`` :doc:`command <additional_commands>` for automatic configuration file creation
+* **add ``universum run`` :doc:`command <additional_commands>` to launch Universum in Non-CI mode**
+* **add printing multiple command line argument errors**
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** fix detecting latest review version
+* **out:** do not print Unicode characters in non-Unicode locales
+* **jenkins_plugin:** return missing 'Failed' line with timestamps plugin
+* **use launched Python version instead of hardcoded**
+
+
 0.19.0 (2020-09-04)
 -------------------
 
