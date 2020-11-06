@@ -73,10 +73,10 @@ class Step:
         ``artifact_prebuild_clean=True`` key is supposed to be used. This flag is ignored, if both `artifacts` and
         `report_artifacts` are not set.
     directory
-        Path to a current working directory for launched process. Please see the
-        https://universum.readthedocs.io/en/latest/configuring.html#execution-directory for details. Absent
+        Path to a current working directory for launched process. Absent
         `directory` has equal meaning to empty string passed as a `directory` value and means that `command`
-        will be launched from the project root directory.
+        will be launched from the project root directory. See
+        https://universum.readthedocs.io/en/latest/configuring.html#execution-directory for details.
     critical
         A flag used in case of a linear step execution, when the result of some step is critical
         for the subsequent step execution. If some step has `critical` key set to `True` and executing this step
@@ -93,8 +93,8 @@ class Step:
     code_report
         A flag used to signal that the current step performs static or syntax analysis of the code.
         Usually set in conjunction with adding ``--result-file="${CODE_REPORT_FILE}"`` to 'command' arguments.
-        Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``
-        (see https://universum.readthedocs.io/en/latest/code_report.html for details).
+        Analyzers currently provided by Universum are: ``pylint``, ``svace`` and ``uncrustify``.
+        See https://universum.readthedocs.io/en/latest/code_report.html for details.
     pass_tag
         A tag used to mark successful TeamCity builds. This tag can be set independenty
         of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
