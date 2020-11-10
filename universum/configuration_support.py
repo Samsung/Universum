@@ -278,6 +278,24 @@ class Step:
         else:
             self._extras[key] = value
 
+    def get(self, key: str, default: Any = None):
+        """
+        This functions simulates `dict`-like legacy read access
+
+        :param key: client-defined item
+        :param default: value to return if `key` is absent in `dict`
+        :return: client-defined value
+        
+        >>> cfg = Step(name='foo', my_var='bar')
+        >>> cfg.get('my_var')
+        'bar'
+        >>> cfg.get('my_var_2', 'test')
+        'test'
+        """
+        warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
+        val = self.__getitem__(key)
+        return val if val else default
+
     def __add__(self, other: 'Step') -> 'Step':
         """
         This functions defines operator ``+`` for :class:`Step` class objects by
