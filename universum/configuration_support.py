@@ -285,7 +285,7 @@ class Step:
         :param key: client-defined item
         :param default: value to return if `key` is absent in `dict`
         :return: client-defined value
-        
+
         >>> cfg = Step(name='foo', my_var='bar')
         >>> cfg.get('my_var')
         'bar'
