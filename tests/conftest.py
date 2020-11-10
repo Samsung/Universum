@@ -96,8 +96,7 @@ class HttpChecker:
             elif target == "body field":
                 check_target = request.parsed_body
             else:
-                assert False, f"This t" \
-                              f"ype of check ('{target}') is not implemented"
+                assert False, f"This type of check ('{target}') is not implemented"
 
             if key in check_target:
                 if (target == "query param") and (value in check_target[key]):
