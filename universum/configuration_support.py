@@ -278,7 +278,7 @@ class Step:
         else:
             self._extras[key] = value
 
-    def get(self, key: str, default: Any = None):
+    def get(self, item: str, default: Any = None):
         """
         This functions simulates `dict`-like legacy read access
 
@@ -287,14 +287,23 @@ class Step:
         :return: client-defined value
 
         >>> cfg = Step(name='foo', my_var='bar')
-        >>> cfg.get('my_var')
+        >>> cfg.get('name', 'test')
+        'foo'
+        >>> cfg.get('my_var', 'test')
         'bar'
         >>> cfg.get('my_var_2', 'test')
         'test'
+        >>> cfg.get('command', 'test')
+        'test'
         """
-        warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
-        val = self.__getitem__(key)
-        return val if val else default
+        result = self._extras.get(item)
+        if result:
+            return result
+        result = self.__dict__.get(item)
+        if result:
+            warn("Using legacy API to access configuration values. Please use var." + item + " instead.")
+            return result
+        return default
 
     def __add__(self, other: 'Step') -> 'Step':
         """
