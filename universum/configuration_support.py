@@ -287,7 +287,9 @@ class Step:
         :return: client-defined value
 
         >>> cfg = Step(name='foo', my_var='bar')
-        >>> cfg.get('my_var')
+        >>> cfg.get('name', 'test')
+        'foo'
+        >>> cfg.get('my_var', 'test')
         'bar'
         >>> cfg.get('my_var_2', 'test')
         'test'
