@@ -21,6 +21,7 @@ from . import base_vcs
 from .swarm import Swarm
 
 __all__ = [
+
     "PerforceMainVcs",
     "PerforcePollVcs",
     "PerforceSubmitVcs",
@@ -440,7 +441,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
-                raise SilentAbortException(application_exit_code=0) from e
+                raise SilentAbortException(application_exit_code=0) from e  # This scenario does not fail build
             raise
         return result
 

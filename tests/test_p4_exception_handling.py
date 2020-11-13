@@ -104,6 +104,7 @@ def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
     settings.PerforceMainVcs.shelve_cls = [cl]
     result = __main__.run(settings)
 
+    # This is not the 'already commited' case of Swarm review, so it actually should fail
     assert result == 1
     stdout_checker.assert_has_calls_with_param(
         "Errors during command execution( \"p4 unshelve -s {} -f\" )".format(cl))
