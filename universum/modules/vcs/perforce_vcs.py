@@ -343,17 +343,16 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             for depot in self.depots:
                 depot["cl"] = None
 
-            try:
-                for entry in self.sync_cls:
-                    splat_entry = entry.split("@")
-                    # Remove identical depot entries, mostly for aesthetic reasons
-                    for index, depot in enumerate(self.depots):
-                        if splat_entry[0] == depot["path"]:
-                            self.depots.pop(index)
-                    self.depots.append({"path": splat_entry[0], "cl": splat_entry[1]})
-            except IndexError:
-                text = f"Something went wrong when processing sync CL parameter ('{self.settings.sync_cls}')"
-                raise CriticalCiException(text)
+            for entry in self.sync_cls:
+                splat_entry = entry.split("@")
+                if len(splat_entry) != 2 or not all(splat_entry):
+                    text = f"Something went wrong when processing sync CL parameter ('{self.settings.sync_cls}')"
+                    raise CriticalCiException(text)
+                # Remove identical depot entries, mostly for aesthetic reasons
+                for index, depot in enumerate(self.depots):
+                    if splat_entry[0] == depot["path"]:
+                        self.depots.pop(index)
+                self.depots.append({"path": splat_entry[0], "cl": splat_entry[1]})
 
         # Retrieve list of shelved CLs from Swarm and "classic" environment variables
         cls = []

@@ -87,14 +87,17 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
     stdout_checker.assert_has_calls_with_param("[Errno 2] No such file or directory")
 
 
-def test_p4_print_exception_in_sync(perforce_environment, stdout_checker):
+@pytest.mark.parametrize('cl_list', [["132,456"], ["@123,@456"], ["//depot/...@,//depot2/...@"],
+                                     ["//depot/...,//depot2/..."], ["132", "456"], ["@123", "4@456"],
+                                     ["//depot/...@", "//depot2/...@"], ["//depot/...", "//depot2/..."]])
+def test_p4_print_exception_in_sync(perforce_environment, stdout_checker, cl_list):
     settings = perforce_environment.settings
-    settings.PerforceMainVcs.sync_cls = "123,456"
+    settings.PerforceMainVcs.sync_cls = cl_list
     result = __main__.run(settings)
 
     assert result == 1
-    stdout_checker.assert_has_calls_with_param("Something went wrong")
-    stdout_checker.assert_has_calls_with_param("123,456")
+    text = f"Something went wrong when processing sync CL parameter ('{str(cl_list)}')"
+    stdout_checker.assert_has_calls_with_param(text)
 
 
 def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
@@ -104,7 +107,7 @@ def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
     settings.PerforceMainVcs.shelve_cls = [cl]
     result = __main__.run(settings)
 
-    # This is not the 'already commited' case of Swarm review, so it actually should fail
+    # This is not the 'already committed' case of Swarm review, so it actually should fail
     assert result == 1
     stdout_checker.assert_has_calls_with_param(
         "Errors during command execution( \"p4 unshelve -s {} -f\" )".format(cl))
