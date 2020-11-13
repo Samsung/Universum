@@ -28,7 +28,7 @@ setup(
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
     py_modules=['universum'],
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     install_requires=[
         'glob2',
         'requests',
