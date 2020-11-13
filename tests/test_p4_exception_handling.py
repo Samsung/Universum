@@ -85,3 +85,26 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
     stdout_checker.assert_has_calls_with_param(
         "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
     stdout_checker.assert_has_calls_with_param("[Errno 2] No such file or directory")
+
+
+def test_p4_print_exception_in_sync(perforce_environment, stdout_checker):
+    settings = perforce_environment.settings
+    settings.PerforceMainVcs.sync_cls = "123,456"
+    result = __main__.run(settings)
+
+    assert result == 1
+    stdout_checker.assert_has_calls_with_param("Something went wrong")
+    stdout_checker.assert_has_calls_with_param("123,456")
+
+
+def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
+    cl = perforce_environment.make_a_change()
+
+    settings = perforce_environment.settings
+    settings.PerforceMainVcs.shelve_cls = [cl]
+    result = __main__.run(settings)
+
+    assert result == 1
+    stdout_checker.assert_has_calls_with_param(
+        "Errors during command execution( \"p4 unshelve -s {} -f\" )".format(cl))
+    stdout_checker.assert_has_calls_with_param(f"[Error]: 'Change {cl} is already committed.'")

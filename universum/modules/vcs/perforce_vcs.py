@@ -342,13 +342,17 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             for depot in self.depots:
                 depot["cl"] = None
 
-            for entry in self.sync_cls:
-                splat_entry = entry.split("@")
-                # Remove identical depot entries, mostly for aesthetic reasons
-                for index, depot in enumerate(self.depots):
-                    if splat_entry[0] == depot["path"]:
-                        self.depots.pop(index)
-                self.depots.append({"path": splat_entry[0], "cl": splat_entry[1]})
+            try:
+                for entry in self.sync_cls:
+                    splat_entry = entry.split("@")
+                    # Remove identical depot entries, mostly for aesthetic reasons
+                    for index, depot in enumerate(self.depots):
+                        if splat_entry[0] == depot["path"]:
+                            self.depots.pop(index)
+                    self.depots.append({"path": splat_entry[0], "cl": splat_entry[1]})
+            except IndexError:
+                text = f"Something went wrong when processing sync CL parameter ('{self.settings.sync_cls}')"
+                raise CriticalCiException(text)
 
         # Retrieve list of shelved CLs from Swarm and "classic" environment variables
         cls = []
@@ -437,7 +441,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
                 raise SilentAbortException(application_exit_code=0) from e
-            raise P4Exception from e
+            raise
         return result
 
     @make_block("Unshelving")
