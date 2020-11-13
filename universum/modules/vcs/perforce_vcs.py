@@ -21,7 +21,6 @@ from . import base_vcs
 from .swarm import Swarm
 
 __all__ = [
-
     "PerforceMainVcs",
     "PerforcePollVcs",
     "PerforceSubmitVcs",
