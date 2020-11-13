@@ -344,6 +344,9 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
             for entry in self.sync_cls:
                 splat_entry = entry.split("@")
+                if len(splat_entry) != 2 or not all(splat_entry):
+                    text = f"Something went wrong when processing sync CL parameter ('{self.settings.sync_cls}')"
+                    raise CriticalCiException(text)
                 # Remove identical depot entries, mostly for aesthetic reasons
                 for index, depot in enumerate(self.depots):
                     if splat_entry[0] == depot["path"]:
@@ -436,8 +439,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.out.log("CL already committed")
                 self.out.report_build_status("CL already committed")
                 self.swarm = None
-                raise SilentAbortException(application_exit_code=0) from e
-            raise P4Exception from e
+                raise SilentAbortException(application_exit_code=0) from e  # This scenario does not fail build
+            raise
         return result
 
     @make_block("Unshelving")
