@@ -1,6 +1,17 @@
 Change log
 ==========
 
+0.19.3 (2020-11-16)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **config:** simulate referencing :class:`~universum.configuration_support.Step` fields through ``.get()``
+  (and add warnings as it is legacy API and not recommended for usage any more)
+* **p4:** fix exception display (e.g. for wrong sync CLs syntax or unshelving submitted CLs)
+
+
 0.19.2 (2020-11-06)
 -------------------
 
