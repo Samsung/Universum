@@ -36,5 +36,5 @@ mypy:
 images:
 	+$(MAKE) -C tests/docker all
 
-rebuild:
+rebuild: 3.6 3.7 3.8
 	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" all

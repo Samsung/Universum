@@ -5,6 +5,6 @@ ARG PYTHON_VERSION=3.7
 RUN apt update && apt install -y wget
 
 # Install latest python & pip
-RUN apt install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-distutils
+RUN apt install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-distutils gnupg2
 RUN wget --no-check-certificate -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'
 RUN python${PYTHON_VERSION} get-pip.py
