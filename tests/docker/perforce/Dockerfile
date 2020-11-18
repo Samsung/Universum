@@ -1,4 +1,4 @@
-FROM ubuntu:precise
+FROM ubuntu:bionic
 
 ENV DEBIAN_FRONTEND noninteractive
 
