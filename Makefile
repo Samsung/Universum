@@ -1,8 +1,18 @@
+PYTHON_VERSION :=
+
+ifeq ($(PYTHON_VERSION),)
+long_version = $(shell python --version)
+ifneq ($(long_version),)
+version_list = $(subst ., ,$(long_version))
+PYTHON_VERSION :=  $(word 2,${version_list}).$(word 3,$(version_list))
+else
+PYTHON_VERSION := 3.7
+endif
+endif
+
 TEST_TARGETS = pytest doctest
 
-IMAGE_REBUILD_TARGETS = rebuild_python3.6 rebuild_python3.7 rebuild_python3.8
-
-.PHONY: all clean doc doc_clean test $(TEST_TARGETS) pylint mypy images $(IMAGE_REBUILD_TARGETS)
+.PHONY: all clean doc doc_clean test $(TEST_TARGETS) pylint mypy images rebuild
 
 all: doc
 
@@ -38,11 +48,5 @@ mypy:
 images:
 	+$(MAKE) -C tests/docker all
 
-rebuild_python3.6:
-	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION=3.6 --no-cache" all
-
-rebuild_python3.7:
-	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION=3.7 --no-cache" all
-
-rebuild_python3.8:
-	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION=3.8 --no-cache" all
+rebuild:
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION="$(PYTHON_VERSION)" --no-cache" all
