@@ -1,7 +1,8 @@
 TEST_TARGETS = pytest doctest
 
+IMAGE_REBUILD_TARGETS = rebuild_python3.6 rebuild_python3.7 rebuild_python3.8
 
-.PHONY: all doc test $(TEST_TARGETS) pylint images rebuild
+.PHONY: all clean doc doc_clean test $(TEST_TARGETS) pylint mypy images $(IMAGE_REBUILD_TARGETS)
 
 all: doc
 
@@ -12,7 +13,6 @@ doc:
 
 doc_clean:
 	+$(MAKE) -C doc clean
-
 
 
 
@@ -33,8 +33,16 @@ pylint:
 mypy:
 	python -m mypy universum/ --ignore-missing-imports
 
+
+
 images:
 	+$(MAKE) -C tests/docker all
 
-rebuild: 3.6 3.7 3.8
-	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" all
+rebuild_python3.6:
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION=3.6 --no-cache" all
+
+rebuild_python3.7:
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION=3.7 --no-cache" all
+
+rebuild_python3.8:
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION=3.8 --no-cache" all
