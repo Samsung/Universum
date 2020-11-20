@@ -1,6 +1,5 @@
 FROM ubuntu:bionic
-ARG PYTHON_VERSION=3.7
-ARG PYTHON=python${PYTHON_VERSION}
+ARG PYTHON=python3.7
 
 # Update package list and install wget
 RUN apt update && apt install -y wget

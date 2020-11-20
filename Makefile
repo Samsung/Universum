@@ -1,8 +1,7 @@
-PYTHON_VERSION ?= $(shell python -c 'import sys; print("%d.%d"% sys.version_info[0:2])' )
-ifeq ($(PYTHON_VERSION),)
-PYTHON_VERSION := 3.7
+PYTHON ?= $(shell python -c 'import sys; print("python%d.%d"% sys.version_info[0:2])' )
+ifeq ($(PYTHON),)
+PYTHON := python3.7
 endif
-
 
 TEST_TARGETS = pytest doctest
 
@@ -43,4 +42,4 @@ images:
 	+$(MAKE) -C tests/docker all
 
 rebuild:
-	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON_VERSION="$(PYTHON_VERSION)" --no-cache" all
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON="$(PYTHON)" --no-cache" all
