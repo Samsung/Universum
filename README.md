@@ -91,6 +91,15 @@ The `make test` command runs all the tests (including the doctests) and collects
 manually via `pytest` command with any required options (such as `-k` for running tests based on keywords
 or `-s` for showing the suppressed output).
 
+To test Univesrum for all supported Python versions, please run:
+```
+pip install -U nox
+cd universum-working-dir
+nox
+```
+This will launch the testing scenario, described in `noxfile.py`. This scenario includes rebuilding docker images
+for every supported Python version and running all the tests for corresponding Python.
+
 
 ## Project contents
 
