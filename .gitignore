@@ -3,8 +3,10 @@
 *.pyc
 *.pyo
 doc/_build
+dist
 .coverage
 .coverage.docker
+.nox
 __pycache__
 .pytest_cache
 htmlcov
