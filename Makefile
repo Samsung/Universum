@@ -1,14 +1,8 @@
-PYTHON_VERSION :=
-
+PYTHON_VERSION ?= $(shell python -c 'import sys; print("%d.%d"% sys.version_info[0:2])' )
 ifeq ($(PYTHON_VERSION),)
-long_version = $(shell python --version)
-ifneq ($(long_version),)
-version_list = $(subst ., ,$(long_version))
-PYTHON_VERSION :=  $(word 2,${version_list}).$(word 3,$(version_list))
-else
 PYTHON_VERSION := 3.7
 endif
-endif
+
 
 TEST_TARGETS = pytest doctest
 

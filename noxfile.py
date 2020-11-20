@@ -1,4 +1,4 @@
-import nox  # pylint: disable = import-error
+import nox
 
 
 @nox.session(python=["3.6", "3.7", "3.8"])
