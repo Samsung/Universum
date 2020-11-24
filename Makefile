@@ -39,7 +39,7 @@ mypy:
 
 
 images:
-	+$(MAKE) -C tests/docker all
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON="$(PYTHON) all
 
 rebuild:
 	+$(MAKE) -C tests/docker DOCKER_ARGS="--build-arg PYTHON="$(PYTHON)" --no-cache" all
