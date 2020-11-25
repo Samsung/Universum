@@ -1,8 +1,3 @@
-PYTHON ?= $(shell python -c 'import sys; print("python%d.%d"% sys.version_info[0:2])' )
-ifeq ($(PYTHON),)
-PYTHON := python3.7
-endif
-
 TEST_TARGETS = pytest doctest
 
 .PHONY: all clean doc doc_clean test $(TEST_TARGETS) pylint mypy images rebuild
@@ -39,7 +34,7 @@ mypy:
 
 
 images:
-	+$(MAKE) -C tests/docker PYTHON=$(PYTHON) all
+	+$(MAKE) -C tests/docker all
 
 rebuild:
-	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" PYTHON=$(PYTHON) all
+	+$(MAKE) -C tests/docker DOCKER_ARGS="--no-cache" all
