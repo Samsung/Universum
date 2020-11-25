@@ -17,10 +17,10 @@ def pip_install(module_name):
     return "python -m pip --default-timeout=1200 install --progress-bar off -U " + module_name
 
 
-configs = Variations([dict(name="Update Docker images", command=["make", "images"]),
-                      dict(name="Update Pylint", command=[python, "-m", "pip", "install",
+configs = Variations([dict(name="Update Pylint", command=[python, "-m", "pip", "install",
                                                           "-U", "--user", "--progress-bar", "off", "pylint"]),
                       dict(name="Create virtual environment", command=[python, "-m", "venv", env_name]),
+                      dict(name="Update Docker images", command=run_virtual("make images")),
 
                       dict(name="Install Universum for tests", artifacts="junit_results.xml",
                            command=run_virtual(pip_install(".[test]"))),

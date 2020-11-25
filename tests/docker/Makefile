@@ -1,11 +1,18 @@
-DOCKER_TARGETS=$(filter-out Makefile, $(wildcard *))
+DOCKER_TARGETS=$(filter-out Makefile perforce, $(wildcard *))
 DOCKER_ARGS :=
+PYTHON ?= $(shell python -c 'import sys; print("python%d.%d"% sys.version_info[0:2])' )
+ifeq ($(PYTHON),)
+PYTHON := python3.7
+endif
 
 .PHONY: all $(DOCKER_TARGETS) run_perforce
 
 all: $(DOCKER_TARGETS)
 
 $(DOCKER_TARGETS):
+	docker build --build-arg PYTHON=$(PYTHON) $(DOCKER_ARGS) $@ -t $@_$(PYTHON)
+
+perforce:
 	docker build $(DOCKER_ARGS) $@ -t $@
 
 run_perforce:
