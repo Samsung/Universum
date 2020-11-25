@@ -11,4 +11,5 @@ def test(session):
 
 @nox.session()
 def clean(session):
+    session.run("docker", "container", "prune", "-f", external=True)
     session.run("docker", "image", "prune", "-f", external=True)
