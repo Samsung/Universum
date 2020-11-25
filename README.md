@@ -87,11 +87,12 @@ Simply deleting the directory with virtual environment will leave the system com
 Docker images used in tests can be built manually or using the `make images` command.
 Also `make rebuild` command can be used to update images ignoring cache (e.g. to rerun `apt update`).
 Commands `make images` and `make rebuild` use Python version set in execution environment; to build images
-for another supported Python version, please use environment variable `PYTHON`, e.g.:
+for another supported Python version, please use environment variable `$PYTHON`, e.g.:
 ```
 PYTHON=python3.8 make images
 ```
-Currently supported `$PYTHON` values are 'python3.6', 'python3.7' and 'python3.8'.
+Currently the following values of the `$PYTHON` environment variable are supported:
+'python3.6', 'python3.7' and 'python3.8'.
 
 The `make test` command runs all the tests (including the doctests) and collects coverage. Tests can also be launched
 manually via `pytest` command with any required options (such as `-k` for running tests based on keywords
