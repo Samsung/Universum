@@ -22,10 +22,10 @@ class ConfigCreator(Module):
         config = Path(config_name)
         config.write_text("""#!/usr/bin/env {}
 
-from universum.configuration_support import Configuration
+from universum.configuration_support import Configuration, Step
 
-configs = Configuration([dict(name='Show directory contents', command=['ls', '-la']),
-                      dict(name='Print a line', command=['bash', '-c', 'echo Hello world'])])
+configs = Configuration([Step(name='Show directory contents', command=['ls', '-la']),
+                         Step(name='Print a line', command=['bash', '-c', 'echo Hello world'])])
 
 if __name__ == '__main__':
     print(configs.dump())
