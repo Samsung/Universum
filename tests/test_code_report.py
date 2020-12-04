@@ -11,9 +11,9 @@ from .utils import python, python_version
 
 
 @pytest.fixture(name='runner_with_pylint')
-def fixture_runner_with_pylint(docker_main):
-    docker_main.environment.install_python_module("pylint")
-    yield docker_main
+def fixture_runner_with_pylint(docker_main_and_nonci):
+    docker_main_and_nonci.environment.install_python_module("pylint")
+    yield docker_main_and_nonci
 
 
 def get_config(args: List[str]):
