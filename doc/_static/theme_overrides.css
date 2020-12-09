@@ -20,5 +20,42 @@
     .option {
         width: 1px !important;
     }
+
+
+    .sectionLbl {
+        color: black;
+    }
+    .sectionLbl span {
+        color: black !important;
+    }
+
+    .hide {
+        display: none;
+    }
+    .hide + label ~ div {
+        display: none;
+    }
+    .hide + label {
+        color: black;
+        cursor: pointer;
+        display: inline-block;
+    }
+    .hide:checked + label + div {
+        display: block;
+    }
+
+    .hide + label + div + .nl {
+        display: block;
+    }
+    .hide:checked + label + div + .nl::after {
+        display: none;
+    }
+
+    .hide + label .sectionLbl::before {
+        content: "[+] ";
+    }
+    .hide:checked + label .sectionLbl::before {
+        content: "[-] ";
+    }
 }
 

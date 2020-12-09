@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-#
+import os
+import sys
+
+
 # This file is execfile()d with the current directory set to its
 # containing dir.
 #
@@ -26,13 +29,15 @@
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
+sys.path.append(os.path.abspath("./_ext"))
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'sphinx.ext.doctest',
               'sphinx.ext.napoleon',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
-              'sphinxarg.ext']
+              'sphinxarg.ext',
+              'collapsible']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -166,9 +171,6 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-import sys
-import os
-
 sys.path.append(os.path.dirname(__file__)+'/..')
 
 import universum
@@ -189,7 +191,6 @@ add_module_names = False
 
 # Add replacement for Python version
 # Solution from https://stackoverflow.com/a/56328457
-import sys
 
 
 def ultimateReplace(app, docname, source):
