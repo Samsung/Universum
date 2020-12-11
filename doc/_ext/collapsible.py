@@ -1,9 +1,8 @@
-import random
-import string
-
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import unchanged
+
+collapsible_id_counter = 0
 
 
 class CollapsibleNode(nodes.General, nodes.Element):
@@ -14,7 +13,7 @@ def visit_collapsible_node(self, node):
     self.body.append(f"""
 <input type="checkbox" id="{node["id"]}" class="hide">
 <label for="{node["id"]}">
-    <span class="sectionLbl"><b>{node["header"]}</b></span>
+    <span class="collapsible"><b>{node["header"]}</b></span>
 </label>
 <div>
 """)
@@ -23,13 +22,15 @@ def visit_collapsible_node(self, node):
 def depart_collapsible_node(self, node):
     self.body.append("""
 </div>
-<span class="nl">
-</span>
 """)
 
 
-def randomize_name(name):
-    return name + "-" + "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+def visit_container(self, node):  # Not displaying headers, unfortunately
+    self.visit_container(node)
+
+
+def depart_container(self, node):
+    self.depart_container(node)
 
 
 class CollapsibleDirective(Directive):
@@ -37,16 +38,21 @@ class CollapsibleDirective(Directive):
     option_spec = {'header': unchanged}
 
     def run(self):
+        global collapsible_id_counter
         collapsible_node = CollapsibleNode('\n'.join(self.content),
-                                           id=randomize_name("collapsible"),
+                                           id="collapsible-" + str(collapsible_id_counter),
                                            header=self.options.get("header", "Click here to show/hide"))
+        collapsible_id_counter += 1
         self.state.nested_parse(self.content, self.content_offset, collapsible_node)
 
         return [collapsible_node]
 
 
 def setup(app):
-    app.add_node(CollapsibleNode, html=(visit_collapsible_node, depart_collapsible_node))
+    app.add_node(CollapsibleNode,
+                 html=(visit_collapsible_node, depart_collapsible_node),
+                 latex=(visit_container, depart_container),
+                 text=(visit_container, depart_container))
     app.add_directive('collapsible', CollapsibleDirective)
 
     return {
