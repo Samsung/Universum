@@ -3,7 +3,7 @@
 import pytest
 
 from universum import __main__
-from tests.perforce_utils import P4Environment
+from .perforce_utils import P4Environment
 
 
 @pytest.fixture()

@@ -7,7 +7,7 @@ import sys
 
 from universum import submit, poll, main, github_handler
 from universum.lib import gravity
-from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
+from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
 __all__ = [
