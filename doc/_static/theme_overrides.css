@@ -34,11 +34,11 @@
     .hide:checked + label + div {
         display: block;
     }
-    .hide + label::before {
-        content: "[+] ";
+    .hide + label::after {
+        content: " ▶";
     }
-    .hide:checked + label::before {
-        content: "[-] ";
+    .hide:checked + label::after {
+        content: " ▼";
     }
 }
 
