@@ -1,3 +1,5 @@
+# pylint: disable = redefined-outer-name
+
 import pytest
 
 from universum import __main__
