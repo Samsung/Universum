@@ -1,6 +1,5 @@
 from typing import Any, Callable, List, Optional, TypeVar, Union
 from types import TracebackType
-import inspect
 import os
 import sys
 import traceback

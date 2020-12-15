@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 
 from universum import __main__
 from . import utils
