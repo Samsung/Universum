@@ -82,7 +82,7 @@ def test_p4_repository_difference_format(perforce_environment, tmpdir):
     config = """
 from universum.configuration_support import Configuration
 
-configs = Configuration([dict(name="Check", command=["ls", "-la"])])
+configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
 """
     p4.run_edit(perforce_environment.depot)
     p4_file.write(config)
@@ -98,5 +98,6 @@ configs = Configuration([dict(name="Check", command=["ls", "-la"])])
     result = __main__.run(settings)
 
     assert result == 0
-    print(tmpdir.join('artifacts', 'REPOSITORY_DIFFERENCE.txt').read())
-    assert "b'" not in tmpdir.join('artifacts', 'REPOSITORY_DIFFERENCE.txt').read()
+    diff = tmpdir.join('artifacts', 'REPOSITORY_DIFFERENCE.txt').read()
+    assert "This is a changed step name" in diff
+    assert "b'" not in diff
