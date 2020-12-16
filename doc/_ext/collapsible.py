@@ -12,9 +12,7 @@ class CollapsibleNode(nodes.General, nodes.Element):
 def visit_collapsible_node(self, node):
     self.body.append(f"""
 <input type="checkbox" id="{node["id"]}" class="hide">
-<label for="{node["id"]}">
-    <span class="collapsible"><b>{node["header"]}</b></span>
-</label>
+<label for="{node["id"]}">{node["header"]}</label>
 <div>
 """)
 
