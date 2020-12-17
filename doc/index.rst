@@ -44,8 +44,8 @@ See more about :doc:`installing Universum <install>`, :doc:`creating a configura
         And this too.
 
 
-.. collapsible::
+    .. collapsible::
 
-    This is totally different text
+        This is totally different text
 
 .. Some actual landing page content should be added here.

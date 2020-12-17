@@ -33,16 +33,23 @@
         font-size: 1em;
         font-weight: bold;
         padding: 0.5em 1.5em;
-        text-shadow: 2px 2px lightgrey;
     }
     .hide:checked + label + div {
         display: block;
     }
-    .hide + label::after {
-        content: " ▶";
+
+    .hide + label .collapser {
+        position: absolute;
+        padding: 0.3em 0.5em;
+        font-size: 0.6em;
+        transition: transform 0.1s;
     }
-    .hide:checked + label::after {
-        content: " ▼";
+    .hide:checked + label .collapser {
+        position: absolute;
+        padding: 0.5em 1em;
+        font-size: 0.6em;
+        transform: rotate(90deg);
+        transition: transform 0.1s;
     }
 }
 
