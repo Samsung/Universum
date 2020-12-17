@@ -31,8 +31,9 @@
     .hide + label {
         display: block;
         font-size: 1em;
-        font-weight: bold;
         padding: 0.5em 1.5em;
+        background: #eaeaea;
+        text-decoration: underline dashed;
     }
     .hide:checked + label + div {
         display: block;
@@ -40,15 +41,16 @@
 
     .hide + label .collapser {
         position: absolute;
-        padding: 0.3em 0.5em;
-        font-size: 0.6em;
+        padding: 0.3em 1em;
+        font-size: 0.7em;
+        transform: rotate(90deg);
         transition: transform 0.1s;
     }
     .hide:checked + label .collapser {
         position: absolute;
-        padding: 0.5em 1em;
-        font-size: 0.6em;
-        transform: rotate(90deg);
+        padding: 0.3em 1em;
+        font-size: 0.7em;
+        transform: rotate(270deg);
         transition: transform 0.1s;
     }
 }
