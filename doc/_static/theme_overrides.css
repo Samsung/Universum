@@ -43,12 +43,14 @@
         padding: 0.3em 0.3em 0.3em 0.3em;
         font-size: 0.7em;
         transform: rotate(90deg);
+        transition: transform 0.1s;
     }
     .hide:checked + label .collapser {
         position: absolute;
         padding: 0.3em 0.3em 0.3em 0.3em;
         font-size: 0.7em;
-        transform: rotate(270deg);
+        transform: rotate(90deg) scaleX(-1);
+        transition: transform 0.1s;
     }
 }
 
