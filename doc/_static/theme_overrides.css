@@ -31,7 +31,7 @@
     .hide + label {
         display: block;
         font-size: 1em;
-        padding: 0.5em 1.5em;
+        padding: 0.5em 0.5em;
         background: #eaeaea;
     }
     .hide:checked + label + div {
@@ -40,15 +40,17 @@
 
     .hide + label .collapser {
         position: absolute;
-        padding: 0.3em 1em;
+        padding: 0.3em 0.3em 0.3em 0.3em;
         font-size: 0.7em;
-        transform: rotate(270deg);
+        transform: rotate(90deg);
+        transition: transform 0.1s;
     }
     .hide:checked + label .collapser {
         position: absolute;
-        padding: 0.3em 1em;
+        padding: 0.3em 0.3em 0.3em 0.3em;
         font-size: 0.7em;
-        transform: rotate(90deg);
+        transform: rotate(270deg);
+        transition: transform 0.1s;
     }
 }
 
