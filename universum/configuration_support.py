@@ -42,15 +42,17 @@ class Step:
         ``["build.sh", "--platform", "A"]``. A build step can have an empty list as a command - such step won't do
         anything except showing up the step name in Universum execution logs. Some common actions, such as ``echo``,
         are bash features and not actual programs to run. These features should be called as
-        ``["bash", "-c", "echo -e 'Some line goes here'"]`` (or any other shell). Note that in this case
-        the string to be passed to bash is one argument containing white spaces and therefore not splat by commas.
+        ``["bash", "-c", "echo -e 'Some line goes here'"]``. Any other shell can also be used instead of bash.
+        Note that in this case the string to be passed to bash is one argument containing white spaces
+        and therefore not splat by commas.
 
         .. note::
 
-            Python command line launching module is not entirely identical to usual shell. Arguments including
-            special characters (e.g. ``*.txt``) are treated as usual strings. To make the lack of flename expansion
-            (globbing) more obvious, these arguments are printed withing quotes in log. To use bash
-            for globbing, please also use ``bash -c``.
+            Direct process launching is not entirely identical to using shell. Arguments including
+            special characters (e.g. ``*.txt``) are treated as usual strings. To make the lack of filename expansion
+            (globbing) more obvious and to make the relaunch of executed command by copy-pasting more convenient,
+            these arguments are printed within quotes in log. To use bash for globbing, please also use ``bash -c``
+            as explained above.
 
     environment
         Required environment variables, e.g. ``environment={"VAR1": "String", "VAR2": "123"}`` Can be set at any
