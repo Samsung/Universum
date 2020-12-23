@@ -48,8 +48,8 @@ class Step:
 
         .. note::
 
-            When a process is launched with shell, that shell also parses the arguments, which does not happen
-            with arguments of a process launched directly. In case of direct process launch the arguments including
+            When a process is launched via shell, that shell also parses the arguments, which does not happen
+            with arguments of a direct process launch. In case of direct process launch the arguments including
             special characters (e.g. ``*.txt``) are treated as usual strings. To make the lack of filename expansion
             (globbing) more obvious and to make the relaunch of executed command by copy-pasting more convenient,
             these arguments are printed within quotes in log. To use bash for globbing, please also use ``bash -c``
