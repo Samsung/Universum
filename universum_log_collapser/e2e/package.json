@@ -7,7 +7,7 @@
     "preset": "jest-puppeteer"
   },
   "dependencies": {
-    "jest": "^25.5.4",
+    "jest": "^26.6.3",
     "jest-cli": "^26.6.3",
     "jest-puppeteer": "^4.4.0",
     "puppeteer": "^2.1.1"
