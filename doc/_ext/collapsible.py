@@ -1,3 +1,5 @@
+import os
+
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import unchanged
@@ -42,6 +44,8 @@ class CollapsibleDirective(Directive):
                                            header=self.options.get("header", "Click here to show/hide"))
         collapsible_id_counter += 1
         self.state.nested_parse(self.content, self.content_offset, collapsible_node)
+
+        self.state.document.settings.env.config.html_static_path.append(os.path.dirname(__file__))
 
         return [collapsible_node]
 
