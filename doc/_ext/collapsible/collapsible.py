@@ -45,7 +45,9 @@ class CollapsibleDirective(Directive):
         collapsible_id_counter += 1
         self.state.nested_parse(self.content, self.content_offset, collapsible_node)
 
-        self.state.document.settings.env.config.html_static_path.append(os.path.dirname(__file__))
+        directory = os.path.dirname(__file__)
+        if not directory in self.state.document.settings.env.config.html_static_path:
+            self.state.document.settings.env.config.html_static_path.append(directory)
 
         return [collapsible_node]
 
