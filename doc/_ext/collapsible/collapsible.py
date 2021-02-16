@@ -58,6 +58,7 @@ def setup(app):
                  latex=(visit_container, depart_container),
                  text=(visit_container, depart_container))
     app.add_directive('collapsible', CollapsibleDirective)
+    app.add_css_file('collapsible_overrides.css')
 
     return {
         'version': '0.1',

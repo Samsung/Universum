@@ -1,5 +1,8 @@
 /* overrides for collapsibles */
 @media screen {
+    .label {
+    }
+
     .hide {
         display: none;
     }
@@ -11,6 +14,7 @@
         font-size: 1em;
         padding: 0.5em 0.5em;
         background: #eaeaea;
+        user-select: none;
     }
     .hide:checked + label + div {
         display: block;
