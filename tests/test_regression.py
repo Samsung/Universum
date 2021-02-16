@@ -1,7 +1,10 @@
+# pylint: disable = redefined-outer-name
+
 import pytest
 
 from universum import __main__
 from . import utils
+from .perforce_utils import P4Environment
 
 
 @pytest.fixture(name='print_text_on_teardown')
@@ -67,3 +70,36 @@ from universum.configuration_support import Configuration
 configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
 """, vcs_type="none", environment=['LANG=en_US', 'LC_ALL=en_US'])
     assert "\u2514" not in output
+
+
+@pytest.fixture()
+def perforce_environment(perforce_workspace, tmpdir):
+    yield P4Environment(perforce_workspace, tmpdir, test_type="main")
+
+
+def test_p4_repository_difference_format(perforce_environment, tmpdir):
+    p4 = perforce_environment.p4
+    p4_file = perforce_environment.repo_file
+
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
+"""
+    p4.run_edit(perforce_environment.depot)
+    p4_file.write(config)
+    change = p4.fetch_change()
+    change["Description"] = "CL for shelving"
+    shelve_cl = p4.save_change(change)[0].split()[1]
+    p4.run_shelve("-fc", shelve_cl)
+
+    settings = perforce_environment.settings
+    settings.PerforceMainVcs.shelve_cls = [shelve_cl]
+    settings.Launcher.config_path = p4_file.basename
+
+    result = __main__.run(settings)
+
+    assert result == 0
+    diff = tmpdir.join('artifacts', 'REPOSITORY_DIFFERENCE.txt').read()
+    assert "This is a changed step name" in diff
+    assert "b'" not in diff

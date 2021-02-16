@@ -9,11 +9,11 @@
     </parent>
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>universum_log_collapser</artifactId>
-    <version>1.10</version>
+    <version>1.11</version>
     <packaging>hpi</packaging>
     <properties>
         <jenkins.version>2.7.3</jenkins.version>
-        <java.level>7</java.level>
+        <java.level>8</java.level>
     </properties>
     <name>Universum Log Collapser</name>
     <description>Collapsing universum-specific logs in Jenkins build console</description>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
-            <version>1.9.15</version>
+            <version>1.10.9</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
