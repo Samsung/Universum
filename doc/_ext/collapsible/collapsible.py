@@ -45,6 +45,7 @@ class CollapsibleDirective(Directive):
         collapsible_id_counter += 1
         self.state.nested_parse(self.content, self.content_offset, collapsible_node)
 
+        # append a 'html_static_path' global variable declared in conf.py
         directory = os.path.join(os.path.dirname(__file__), 'css')
         if directory not in self.state.document.settings.env.config.html_static_path:
             self.state.document.settings.env.config.html_static_path.append(directory)
@@ -58,10 +59,6 @@ def setup(app):
                  latex=(visit_container, depart_container),
                  text=(visit_container, depart_container))
     app.add_directive('collapsible', CollapsibleDirective)
-
-    # directory = os.path.join(os.path.dirname(__file__), 'css')
-    # if directory not in app.config.html_static_path:
-    #     app.config.html_static_path.append(directory)
     app.add_css_file('collapsible_overrides.css')
 
     return {

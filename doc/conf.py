@@ -87,6 +87,11 @@ html_logo = '_static/logo-with-text.svg'
 # pixels large.
 html_favicon = '_static/favicon.png'
 
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ['_static']
+
 html_scaled_image_link = False
 
 
@@ -166,7 +171,4 @@ ultimate_replacements = {
 def setup(app):
     app.add_config_value('ultimate_replacements', {}, True)
     app.connect('source-read', ultimateReplace)
-
-    if '_static' not in app.config.html_static_path:
-        app.config.html_static_path.append('_static')
     app.add_css_file('theme_overrides.css')
