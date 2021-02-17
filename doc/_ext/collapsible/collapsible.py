@@ -3,6 +3,7 @@ import os
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import unchanged
+from sphinx.util.fileutil import copy_asset
 
 collapsible_id_counter = 0
 
@@ -45,10 +46,8 @@ class CollapsibleDirective(Directive):
         collapsible_id_counter += 1
         self.state.nested_parse(self.content, self.content_offset, collapsible_node)
 
-        # append a 'html_static_path' global variable declared in conf.py
-        directory = os.path.join(os.path.dirname(__file__), 'css')
-        if directory not in self.state.document.settings.env.config.html_static_path:
-            self.state.document.settings.env.config.html_static_path.append(directory)
+        copy_asset(os.path.join(os.path.dirname(__file__), 'css'),
+                   os.path.join(self.state.document.settings.env.app.builder.outdir, '_static'))
 
         return [collapsible_node]
 
