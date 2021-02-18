@@ -46,10 +46,12 @@ class CollapsibleDirective(Directive):
         collapsible_id_counter += 1
         self.state.nested_parse(self.content, self.content_offset, collapsible_node)
 
-        copy_asset(os.path.join(os.path.dirname(__file__), 'css'),
-                   os.path.join(self.state.document.settings.env.app.builder.outdir, '_static'))
-
         return [collapsible_node]
+
+
+def add_css_overrides(app):
+    copy_asset(os.path.join(os.path.dirname(__file__), 'css'),
+               os.path.join(app.builder.outdir, '_static'))
 
 
 def setup(app):
@@ -58,6 +60,7 @@ def setup(app):
                  latex=(visit_container, depart_container),
                  text=(visit_container, depart_container))
     app.add_directive('collapsible', CollapsibleDirective)
+    app.connect('builder-inited', add_css_overrides)
     app.add_css_file('collapsible_overrides.css')
 
     return {
