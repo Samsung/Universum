@@ -34,18 +34,4 @@ See more about :doc:`installing Universum <install>`, :doc:`creating a configura
 :doc:`parametrizing Universum execution <args>`, or read the :doc:`step-by-step instruction on getting started <guide>`.
 
 
-
-.. collapsible::
-    :header: This is header
-
-    .. code-block::
-
-        This is text.
-        And this too.
-
-
-    .. collapsible::
-
-        This is totally different text
-
 .. Some actual landing page content should be added here.
