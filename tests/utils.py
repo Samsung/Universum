@@ -46,7 +46,7 @@ def is_pycharm():
 
 
 def randomize_name(name):
-    return name + "-".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    return name + "-" + "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
 
 def get_open_port():
