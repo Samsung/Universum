@@ -33,12 +33,15 @@ Project configuration is a list of actions to be performed to test a project: e.
 build project for some specific platform or run a specific test script. These actions are mostly referred as
 "build steps". A project configuration, being a list of build steps, is sometimes referred as a build configuration.
 
-Here's an example of such actions::
+.. collapsible::
+    :header: Here's an example of such actions
 
-    $ ./build.sh -d --platform linux_amd64
-    $ cp -r ./build/results/ ./tests
-    $ make tests
-    $ ./run_regression_tests.sh
+    .. code-block::
+
+        $ ./build.sh -d --platform linux_amd64
+        $ cp -r ./build/results/ ./tests
+        $ make tests
+        $ ./run_regression_tests.sh
 
 Each build step is defined by two main parameters:
 
@@ -133,14 +136,16 @@ recommended to use :func:`get_project_root` function from :mod:`universum.config
 The :mod:`universum.configuration_support` module processes current `Universum` run settings and returns
 actual project root to the config processing module.
 
-See the following example configuration file:
 
-.. testcode::
+.. collapsible::
+    :header: See the following example configuration file
 
-    from universum.configuration_support import Configuration, Step, get_project_root
+    .. testcode::
 
-    configs = Configuration([Step(name="Run tests", directory="/home/scripts",
-                                  command=["./run_tests.sh", "--directory", get_project_root()])])
+        from universum.configuration_support import Configuration, Step, get_project_root
+
+        configs = Configuration([Step(name="Run tests", directory="/home/scripts",
+                                      command=["./run_tests.sh", "--directory", get_project_root()])])
 
 In this configuration a hypothetical external script `"run_tests.sh"` requires absolute path
 to project sources as an argument. The :func:`get_project_root` will pass the actual project root,
@@ -158,19 +163,21 @@ Configuration with several steps
 The `Universum` gets the list of build steps from the `configs` global variable.
 In the basic form this variable contains a flat list of items, and each item represents one `build step`_.
 
-Below is an example of the configuration file with three different steps:
 
-.. testcode::
+.. collapsible::
+    :header: See an example of the configuration file with three different steps
 
-    from universum.configuration_support import Configuration, Step, get_project_root
-    import os.path
+    .. testcode::
 
-    test_path = os.path.join(get_project_root(), "out/tests")
-    configs = Configuration([
-        Step(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
-        Step(name="Run internal tests", command=["scripts/run_tests.sh"]),
-        Step(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
-    ])
+        from universum.configuration_support import Configuration, Step, get_project_root
+        import os.path
+
+        test_path = os.path.join(get_project_root(), "out/tests")
+        configs = Configuration([
+            Step(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
+            Step(name="Run internal tests", command=["scripts/run_tests.sh"]),
+            Step(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
+        ])
 
 The example configuration file declares the following `Universum` steps:
 
@@ -191,30 +198,32 @@ dictionaries and returns the list of all included build steps.
 
 Below is an example of the configuration file that uses :meth:`~Configuration.dump` function for debugging:
 
-.. testsetup::
+.. collapsible::
 
-    def mock_project_root():
-        return "/home/Project"
+    .. testsetup::
 
-    import universum.configuration_support
-    universum.configuration_support.get_project_root = mock_project_root
+        def mock_project_root():
+            return "/home/Project"
 
-.. testcode::
+        import universum.configuration_support
+        universum.configuration_support.get_project_root = mock_project_root
 
-    #!/usr/bin/env {python}
+    .. testcode::
 
-    from universum.configuration_support import Configuration, Step, get_project_root
-    import os.path
+        #!/usr/bin/env {python}
 
-    test_path = os.path.join(get_project_root(), "out/tests")
-    configs = Configuration([
-        Step(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
-        Step(name="Run internal tests", command=["scripts/run_tests.sh"]),
-        Step(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
-    ])
+        from universum.configuration_support import Configuration, Step, get_project_root
+        import os.path
 
-    if __name__ == '__main__':
-        print(configs.dump())
+        test_path = os.path.join(get_project_root(), "out/tests")
+        configs = Configuration([
+            Step(name="Make Special Module", command=["make", "-C", "SpecialModule/"], artifacts="out"),
+            Step(name="Run internal tests", command=["scripts/run_tests.sh"]),
+            Step(name="Run external tests", directory="/home/scripts", command=["run_tests.sh", "-d", test_path])
+        ])
+
+        if __name__ == '__main__':
+            print(configs.dump())
 
 The combination of ``#!/usr/bin/env {python}`` and ``if __name__ == '__main__':`` allows launching
 the `Universum` configuration files as a script from shell.
@@ -228,18 +237,20 @@ returns current directory instead of actual project root.
 The only thing this script will do is create `configs` variable and print all build steps it includes.
 For example, running the script, given above, will result in the following:
 
-.. testcode::
-    :hide:
+.. collapsible::
 
-    print("$ ./.univesrum.py")
-    print(configs.dump())
+    .. testcode::
+        :hide:
 
-.. testoutput::
+        print("$ ./.univesrum.py")
+        print(configs.dump())
 
-    $ ./.univesrum.py
-    [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
-    {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
-    {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
+    .. testoutput::
+
+        $ ./.univesrum.py
+        [{'name': 'Make Special Module', 'command': 'make -C SpecialModule/', 'artifacts': 'out'},
+        {'name': 'Run internal tests', 'command': 'scripts/run_tests.sh'},
+        {'name': 'Run external tests', 'directory': '/home/scripts', 'command': 'run_tests.sh -d /home/Project/out/tests'}]
 
 As second and third steps have the same names, if log files are created, only two logs will be created:
 one for the first build step, another for both second and third, where the third will follow the second.
@@ -260,36 +271,39 @@ configuration sets out of several :class:`Configuration` instances.
 Adding configurations
 ~~~~~~~~~~~~~~~~~~~~~
 
-See the following example:
+.. collapsible::
+    :header: See the following example
 
-.. testcode::
+    .. testcode::
 
-    #!/usr/bin/env {python}
+        #!/usr/bin/env {python}
 
-    from universum.configuration_support import Configuration, Step
+        from universum.configuration_support import Configuration, Step
 
-    one = Configuration([Step(name="Make project", command=["make"])])
-    two = Configuration([Step(name="Run tests", command=["run_tests.sh"])])
+        one = Configuration([Step(name="Make project", command=["make"])])
+        two = Configuration([Step(name="Run tests", command=["run_tests.sh"])])
 
-    configs = one + two
+        configs = one + two
 
-    if __name__ == '__main__':
-        print(configs.dump())
+        if __name__ == '__main__':
+            print(configs.dump())
 
 The addition operator will just concatenate two lists into one, so the :ref:`result <dump>`
 of such configuration file will be the following list of build steps:
 
-.. testcode::
-    :hide:
+.. collapsible::
 
-    print("$ ./.univesrum.py")
-    print(configs.dump())
+    .. testcode::
+        :hide:
 
-.. testoutput::
+        print("$ ./.univesrum.py")
+        print(configs.dump())
 
-    $ ./.univesrum.py
-    [{'name': 'Make project', 'command': 'make'},
-    {'name': 'Run tests', 'command': 'run_tests.sh'}]
+    .. testoutput::
+
+        $ ./.univesrum.py
+        [{'name': 'Make project', 'command': 'make'},
+        {'name': 'Run tests', 'command': 'run_tests.sh'}]
 
 
 Multiplying configurations
@@ -310,35 +324,39 @@ Multiplying configuration by a constant is just an equivalent of multiple additi
 
 Multiplying configuration by a configuration combines their properties. For example, this configuration file:
 
-.. testcode::
+.. collapsible::
 
-    #!/usr/bin/env {python}
+    .. testcode::
 
-    from universum.configuration_support import Configuration, Step
+        #!/usr/bin/env {python}
 
-    make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
+        from universum.configuration_support import Configuration, Step
 
-    target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
-                            Step(name="Platform B", command=["--platform", "B"])])
+        make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
 
-    configs = make * target
+        target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
+                                Step(name="Platform B", command=["--platform", "B"])])
 
-    if __name__ == '__main__':
-        print(configs.dump())
+        configs = make * target
+
+        if __name__ == '__main__':
+            print(configs.dump())
 
 will :ref:`produce <dump>` this list of build steps:
 
-.. testcode::
-    :hide:
+.. collapsible::
 
-    print("$ ./.univesrum.py")
-    print(configs.dump())
+    .. testcode::
+        :hide:
 
-.. testoutput::
+        print("$ ./.univesrum.py")
+        print(configs.dump())
 
-    $ ./.univesrum.py
-    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
-    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
+    .. testoutput::
+
+        $ ./.univesrum.py
+        [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+        {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'}]
 
 * `command` and `name` values are produced of `command` and `name` values of each of two configurations
 * `artifacts` value, united with no corresponding value in second configuration, remains unchanged
@@ -356,45 +374,50 @@ Combination of addition and multiplication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When creating a project configuration file, the two available operators, ``+`` and ``*``,
-can be combined in any required way. For example:
+can be combined in any required way.
 
-.. testcode::
+.. collapsible::
+    :header: For example
 
-    #!/usr/bin/env {python}
+    .. testcode::
 
-    from universum.configuration_support import Configuration, Step
+        #!/usr/bin/env {python}
 
-    make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
-    test = Configuration([Step(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
+        from universum.configuration_support import Configuration, Step
 
-    debug = Configuration([Step(name=" - Release"),
-                           Step(name=" - Debug", command=["-d"])])
+        make = Configuration([Step(name="Make ", command=["make"], artifacts="out")])
+        test = Configuration([Step(name="Run tests for ", directory="/home/scripts", command=["run_tests.sh", "--all"])])
 
-    target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
-                            Step(name="Platform B", command=["--platform", "B"])])
+        debug = Configuration([Step(name=" - Release"),
+                               Step(name=" - Debug", command=["-d"])])
 
-    configs = make * target + test * target * debug
+        target = Configuration([Step(name="Platform A", command=["--platform", "A"]),
+                                Step(name="Platform B", command=["--platform", "B"])])
 
-    if __name__ == '__main__':
-        print(configs.dump())
+        configs = make * target + test * target * debug
+
+        if __name__ == '__main__':
+            print(configs.dump())
 
 This file :ref:`will get us <dump>` the following list of build steps:
 
-.. testcode::
-    :hide:
+.. collapsible::
 
-    print("$ ./.univesrum.py")
-    print(configs.dump())
+    .. testcode::
+        :hide:
 
-.. testoutput::
+        print("$ ./.univesrum.py")
+        print(configs.dump())
 
-    $ ./.univesrum.py
-    [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
-    {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
-    {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
-    {'name': 'Run tests for Platform A - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d'},
-    {'name': 'Run tests for Platform B - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B'},
-    {'name': 'Run tests for Platform B - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d'}]
+    .. testoutput::
+
+        $ ./.univesrum.py
+        [{'name': 'Make Platform A', 'command': 'make --platform A', 'artifacts': 'out'},
+        {'name': 'Make Platform B', 'command': 'make --platform B', 'artifacts': 'out'},
+        {'name': 'Run tests for Platform A - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A'},
+        {'name': 'Run tests for Platform A - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform A -d'},
+        {'name': 'Run tests for Platform B - Release', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B'},
+        {'name': 'Run tests for Platform B - Debug', 'directory': '/home/scripts', 'command': 'run_tests.sh --all --platform B -d'}]
 
 As in common arithmetic, multiplication is done before addition. To change the operations
 order, use parentheses:
