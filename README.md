@@ -183,6 +183,11 @@ The plugin implements coloring of failed steps and provides collapsing/expansion
    the structure of inherited classes and ensuring they have all required functions
    that will be called by modules using them
 
+## Project review slides
+
+Some additional details on how project is developed can be found in
+[project review slides](doc/Universum_ProjectReview_2021-03.pdf)
+
 ## Contributing
 
 Further versions of this README file should include:
