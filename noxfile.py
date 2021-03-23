@@ -16,9 +16,9 @@ def test(session):
         session.run("make", "rebuild", silent=True, external=True)
         session.install("universum[test]")
         session.run("make", "test", external=True)
-        report(f"Regression testing for Python {session.python} succeeded")
+        report(u"\U00002b50" + f" Regression testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
-        report(f"Regression testing for Python {session.python} failed")
+        report(u"\U0000274c" + f" Regression testing for Python {session.python} failed")
     session.run("mv", "junit_results.xml", f"junit_results_{session.python}.xml", external=True)
 
 
