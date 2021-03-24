@@ -21,25 +21,20 @@ def send_report():
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9"])
 def test(session):
-    pass
-    # try:
-    #     session.run("make", "rebuild", silent=True, external=True)
-    #     session.install("universum[test]")
-    #     session.run("make", "test", external=True)
-    #     add_report_line(f"\U00002b50 testing for Python {session.python} succeeded")
-    # except nox.command.CommandFailed:
-    #     add_report_line(f"\U0000274c testing for Python {session.python} failed")
-    # session.run("mv", "junit_results.xml", f"junit_results_{session.python}.xml", external=True)
+    try:
+        session.run("make", "rebuild", silent=True, external=True)
+        session.install("universum[test]")
+        session.run("make", "test", external=True)
+        add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
+    except nox.command.CommandFailed:
+        add_report_line(f"\U00002601 testing for Python {session.python} failed")
+    session.run("mv", "junit_results.xml", f"junit_results_{session.python}.xml", external=True)
 
 
 @nox.session()
 def clean(session):
-    add_report_line("\U00002600 is good")
-    add_report_line("\U00002601 is bad")
-    add_report_line("\U0001F4A8 is very bad")
-    send_report()
     try:
         session.run("docker", "image", "prune", "-f", external=True)
     except nox.command.CommandFailed:
-        add_report_line("\U00002716 final cleaning failed!")
+        add_report_line("\U0000274c final cleaning failed!")
     send_report()
