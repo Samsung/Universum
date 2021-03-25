@@ -139,7 +139,7 @@ New features
    * old options `--launcher-config-path` and `--launcher-output` are still supported
      but not recommended to use any more
 * **launcher:**  add '--filter' option filtering steps to be executed
-* **nonci:** add :ref:`nonci <additional_commandst#run>` mode of running Universum
+* **nonci:** add :ref:`nonci <additional_commands#run>` mode of running Universum
 * **jenkins_plugin:** expand failed steps by default
 * **test:** add Java & JS tests for Jenkins plugin
 
