@@ -39,11 +39,14 @@ Universum in non-CI mode has the following differences from default mode:
 * It works with sources 'in place', without copying.
 * It automatically cleans the artifact folder before the build.
 
-.. argparse::
-    :module: universum.__main__
-    :func: define_arguments
-    :prog: {python} -m universum
-    :path: run
+.. collapsible::
+    :header: Command line arguments for this mode
+
+    .. argparse::
+        :module: universum.__main__
+        :func: define_arguments
+        :prog: {python} -m universum
+        :path: run
 
 
 .. _additional_commandst#poll:
@@ -67,13 +70,14 @@ This mode allows to locate a source of behaviour changes more precisely.
     Even being a poller, Universum in this mode does not launch automatically. Please use some outer means
     (such as `cron` or any other time-based auto-launcher) for periodical checks.
 
-Here are the parameters for poller mode:
+.. collapsible::
+    :header: Command line arguments for this mode
 
-.. argparse::
-    :module: universum.__main__
-    :func: define_arguments
-    :prog: {python} -m universum
-    :path: poll
+    .. argparse::
+        :module: universum.__main__
+        :func: define_arguments
+        :prog: {python} -m universum
+        :path: poll
 
 
 .. _additional_commandst#submit:
@@ -97,13 +101,14 @@ Unlike default mode, Universum in `submit` mode **requires an already prepared l
 After doing that, any additional changes done to source code (made manually or by script execution) will be
 detected by Universum submitter and added to VCS with specified description on behalf of specified user.
 
-Here are the parameters for submitter mode:
+.. collapsible::
+    :header: Command line arguments for this mode
 
-.. argparse::
-    :module: universum.__main__
-    :func: define_arguments
-    :prog: {python} -m universum
-    :path: submit
+    .. argparse::
+        :module: universum.__main__
+        :func: define_arguments
+        :prog: {python} -m universum
+        :path: submit
 
 
 .. _additional_commandst#github-handler:
@@ -124,10 +129,11 @@ For GitHub Handler to work, these parameters are mandatory:
 * ``--github-app-id``
 * ``--github-private-key``
 
-These and other parameters are described below.
+.. collapsible::
+    :header: Full description for these and other parameters
 
-.. argparse::
-    :module: universum.__main__
-    :func: define_arguments
-    :prog: {python} -m universum
-    :path: github-handler
+    .. argparse::
+        :module: universum.__main__
+        :func: define_arguments
+        :prog: {python} -m universum
+        :path: github-handler

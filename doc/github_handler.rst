@@ -100,107 +100,113 @@ The list of GitHub Handler parameters can be found :ref:`here <additional_comman
 Jenkins jobs example
 --------------------
 
-Here's DSL script for GitHub Handler::
+.. collapsible::
+    :header: Here's DSL script for GitHub Handler
 
-    pipelineJob('GitHub Webhook handler') {
-      triggers {
-        genericTrigger {
-          genericVariables {
-            genericVariable {
-              key("GITHUB_PAYLOAD")
-              value("\$")
-            }
-          }
-          genericHeaderVariables {
-            genericHeaderVariable {
-              key("x-github-event")
-              regexpFilter("")
-            }
-          }
-          causeString('Event "\^${x_github_event}", action "\^${GITHUB_PAYLOAD_action}"')
-          token('UniversumGitHub')
-          printContributedVariables(false)
-          printPostContent(false)
-          silentResponse(false)
-          regexpFilterText("")
-          regexpFilterExpression("")
-        }
-      }
-      parameters {
-        stringParam("GITHUB_APP_ID", "1234", "")
-        stringParam("TRIGGER_URL", "https://my.jenkins-server.com/buildByToken/buildWithParameters?job=Check%20commit&token=GITHUB", "")
-      }
-      definition {
-        cps {
-          script("""\
-            pipeline {
-              agent any
-              environment {
-                KEY_FILE = credentials('github-private-key')
-                GITHUB_PRIVATE_KEY = "@\^${KEY_FILE}"
+    .. code-block::
+
+        pipelineJob('GitHub Webhook handler') {
+          triggers {
+            genericTrigger {
+              genericVariables {
+                genericVariable {
+                  key("GITHUB_PAYLOAD")
+                  value("\$")
+                }
               }
-              stages {
-                stage ('Run GitHub Handler') {
-                  steps {
-                    ansiColor('xterm') {
-                      sh("{python} -m universum github-handler -e \^${x_github_event}")
+              genericHeaderVariables {
+                genericHeaderVariable {
+                  key("x-github-event")
+                  regexpFilter("")
+                }
+              }
+              causeString('Event "\^${x_github_event}", action "\^${GITHUB_PAYLOAD_action}"')
+              token('UniversumGitHub')
+              printContributedVariables(false)
+              printPostContent(false)
+              silentResponse(false)
+              regexpFilterText("")
+              regexpFilterExpression("")
+            }
+          }
+          parameters {
+            stringParam("GITHUB_APP_ID", "1234", "")
+            stringParam("TRIGGER_URL", "https://my.jenkins-server.com/buildByToken/buildWithParameters?job=Check%20commit&token=GITHUB", "")
+          }
+          definition {
+            cps {
+              script("""\
+                pipeline {
+                  agent any
+                  environment {
+                    KEY_FILE = credentials('github-private-key')
+                    GITHUB_PRIVATE_KEY = "@\^${KEY_FILE}"
+                  }
+                  stages {
+                    stage ('Run GitHub Handler') {
+                      steps {
+                        ansiColor('xterm') {
+                          sh("{python} -m universum github-handler -e \^${x_github_event}")
+                        }
+                      }
                     }
                   }
                 }
-              }
+              """.stripIndent())
+              sandbox()
             }
-          """.stripIndent())
-          sandbox()
+          }
         }
-      }
-    }
 
-And here's DSL script for the job it triggers::
+.. collapsible::
+    :header: And here's DSL script for the job it triggers
 
-    pipelineJob('Check commit') {
-      authenticationToken("GITHUB")
-      parameters {
-        stringParam("GIT_REPO", "", "")
-        stringParam("GITHUB_APP_ID", "1234", "")
-        stringParam("GIT_REFSPEC", "", "")
-        stringParam("GIT_CHECKOUT_ID", "", "")
-        stringParam("GITHUB_INSTALLATION_ID", "", "")
-        stringParam("GITHUB_CHECK_ID", "", "")
-        stringParam("CONFIG_PATH", ".universum.py", "")
-      }
-      definition {
-        cps {
-          script("""\
-            pipeline {
-              agent any
-              environment {
-                KEY_FILE = credentials('github-private-key')
-                GITHUB_PRIVATE_KEY = "@\^${KEY_FILE}"
-              }
-              stages {
-                stage ('test') {
-                  steps {
-                    cleanWs()
-                    ansiColor('xterm') {
-                      sh "{python} -m universum --no-diff -vt github --report-to-review -rst -rsu -rof"
+    .. code-block::
+
+        pipelineJob('Check commit') {
+          authenticationToken("GITHUB")
+          parameters {
+            stringParam("GIT_REPO", "", "")
+            stringParam("GITHUB_APP_ID", "1234", "")
+            stringParam("GIT_REFSPEC", "", "")
+            stringParam("GIT_CHECKOUT_ID", "", "")
+            stringParam("GITHUB_INSTALLATION_ID", "", "")
+            stringParam("GITHUB_CHECK_ID", "", "")
+            stringParam("CONFIG_PATH", ".universum.py", "")
+          }
+          definition {
+            cps {
+              script("""\
+                pipeline {
+                  agent any
+                  environment {
+                    KEY_FILE = credentials('github-private-key')
+                    GITHUB_PRIVATE_KEY = "@\^${KEY_FILE}"
+                  }
+                  stages {
+                    stage ('test') {
+                      steps {
+                        cleanWs()
+                        ansiColor('xterm') {
+                          sh "{python} -m universum --no-diff -vt github --report-to-review -rst -rsu -rof"
+                        }
+                        junit '**/junit_results.xml'
+                        junit '**/TEST*.xml'
+                      }
                     }
-                    junit '**/junit_results.xml'
-                    junit '**/TEST*.xml'
+                  }
+                  post {
+                    always {
+                      archiveArtifacts 'artifacts/*'
+                      cleanWs()
+                   }
                   }
                 }
-              }
-              post {
-                always {
-                  archiveArtifacts 'artifacts/*'
-                  cleanWs()
-               }
-              }
+              """.stripIndent())
+              sandbox()
             }
-          """.stripIndent())
-          sandbox()
+          }
         }
-      }
-    }
 
 .. note::
 

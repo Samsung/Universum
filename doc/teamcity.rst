@@ -75,65 +75,69 @@ parameters to their settings.
 Create a common meta-runner
 ---------------------------
 
-0. Create an .xml file with the following content::
+0. Create an .xml file with the following content:
 
-    <?xml version="1.0" encoding="UTF-8"?>
-    <meta-runner name="Run build using CI system">
-      <description>Basic project configuration</description>
-      <settings>
-        <build-runners>
-          <runner name="Download and run" type="simpleRunner">
-            <parameters>
-              <param name="script.content"><![CDATA[
-    #!/bin/bash
+.. collapsible::
 
-    EXITCODE=0
+    .. code-block::
 
-    HOST=`hostame | sed -e "s/_/-/"`
-    USER=`whoami | sed -e "s/_/-/"`
-    P4CLIENT="Disposable_workspace_"$HOST"-"$USER
+        <?xml version="1.0" encoding="UTF-8"?>
+        <meta-runner name="Run build using CI system">
+          <description>Basic project configuration</description>
+          <settings>
+            <build-runners>
+              <runner name="Download and run" type="simpleRunner">
+                <parameters>
+                  <param name="script.content"><![CDATA[
+        #!/bin/bash
 
-    cmd="{python} -u -m universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS%"
-    echo "==> Run: ${cmd}"
-    ${cmd} || EXITCODE=1
+        EXITCODE=0
 
-    echo "##teamcity[setParameter name='STOPPED_BY_USER' value='false']"
+        HOST=`hostame | sed -e "s/_/-/"`
+        USER=`whoami | sed -e "s/_/-/"`
+        P4CLIENT="Disposable_workspace_"$HOST"-"$USER
 
-    exit $EXITCODE]]></param>
-              <param name="teamcity.step.mode" value="default" />
-              <param name="use.custom.script" value="true" />
-            </parameters>
-          </runner>
-          <runner name="Clean" type="simpleRunner">
-            <parameters>
-              <param name="script.content"><![CDATA[
-    #!/bin/bash
+        cmd="{python} -u -m universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS%"
+        echo "==> Run: ${cmd}"
+        ${cmd} || EXITCODE=1
 
-    if [ %STOPPED_BY_USER% == true ]
-    then
-    echo "==> User interrupted, force cleaning"
+        echo "##teamcity[setParameter name='STOPPED_BY_USER' value='false']"
 
-    EXITCODE=0
+        exit $EXITCODE]]></param>
+                  <param name="teamcity.step.mode" value="default" />
+                  <param name="use.custom.script" value="true" />
+                </parameters>
+              </runner>
+              <runner name="Clean" type="simpleRunner">
+                <parameters>
+                  <param name="script.content"><![CDATA[
+        #!/bin/bash
 
-    HOST=`hostame | sed -e "s/_/-/"`
-    USER=`whoami | sed -e "s/_/-/"`
-    P4CLIENT="Disposable_workspace_"$HOST"-"$USER
+        if [ %STOPPED_BY_USER% == true ]
+        then
+        echo "==> User interrupted, force cleaning"
 
-    cmd="{python} -u -m universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS% --finalize-only --artifact-dir finalization_artifacts"
-    echo "==> Run: ${cmd}"
-    ${cmd}
+        EXITCODE=0
 
-    else
-    echo "==> Additional cleaning not needed, skipping"
-    fi
-              ]]></param>
-              <param name="teamcity.step.mode" value="execute_always" />
-              <param name="use.custom.script" value="true" />
-            </parameters>
-          </runner>
-        </build-runners>
-      </settings>
-    </meta-runner>
+        HOST=`hostame | sed -e "s/_/-/"`
+        USER=`whoami | sed -e "s/_/-/"`
+        P4CLIENT="Disposable_workspace_"$HOST"-"$USER
+
+        cmd="{python} -u -m universum --p4-client ${P4CLIENT} --p4-force-clean %env.CONFIGURATION_PARAMETERS% --finalize-only --artifact-dir finalization_artifacts"
+        echo "==> Run: ${cmd}"
+        ${cmd}
+
+        else
+        echo "==> Additional cleaning not needed, skipping"
+        fi
+                  ]]></param>
+                  <param name="teamcity.step.mode" value="execute_always" />
+                  <param name="use.custom.script" value="true" />
+                </parameters>
+              </runner>
+            </build-runners>
+          </settings>
+        </meta-runner>
 
 .. note::
     Universum default VCS type is Perforce, so this meta-runner is oriented to be used with P4.

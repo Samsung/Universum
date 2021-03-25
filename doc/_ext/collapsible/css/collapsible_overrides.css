@@ -15,9 +15,13 @@
         padding: 0.5em 0.5em;
         background: #eaeaea;
         user-select: none;
+        margin-bottom: 1em;
     }
     .hide:checked + label + div {
         display: block;
+    }
+    .hide:checked + label {
+        margin-bottom: 0;
     }
 
     .hide + label .collapser {
