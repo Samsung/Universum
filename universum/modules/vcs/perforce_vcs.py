@@ -585,10 +585,15 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             if "Client '{}' unknown".format(self.client_name) not in e.value \
                     and "file(s) not opened on this client" not in e.value:
                 self.structure.fail_current_block(e.value)
+            else:
+                self.out.log("No files to clean")
         try:
             self.p4.delete_client(self.client_name)
+            self.out.log(f"Client '{self.client_name}' deleted")
         except P4Exception as e:
-            if "Client '{}' doesn't exist".format(self.client_name) not in e.value:
+            if "Client '{}' doesn't exist".format(self.client_name) in e.value:
+                self.out.log("No client to delete")
+            else:
                 self.structure.fail_current_block(e.value)
 
     def finalize(self):
