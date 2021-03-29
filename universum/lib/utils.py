@@ -1,6 +1,5 @@
 from typing import Any, Callable, List, Optional, TypeVar, Union
 from types import TracebackType
-import inspect
 import os
 import sys
 import traceback
@@ -116,7 +115,9 @@ def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
 
 
 def trim_and_convert_to_unicode(line: Union[bytes, str]) -> str:
-    if not isinstance(line, str):
+    if isinstance(line, bytes):
+        line = line.decode("utf-8")
+    elif not isinstance(line, str):
         line = str(line)
 
     if line.endswith("\n"):

@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.19.4 (2021-03-29)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **docs:** add project review slides
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** add logs on client deleted/not deleted while cleaning
+* **p4:** wrong decoding of a byte string (command output starting with ``b'``)
+
+
 0.19.3 (2020-11-16)
 -------------------
 
@@ -139,7 +154,7 @@ New features
    * old options `--launcher-config-path` and `--launcher-output` are still supported
      but not recommended to use any more
 * **launcher:**  add '--filter' option filtering steps to be executed
-* **nonci:** add :ref:`nonci <additional_commandst#run>` mode of running Universum
+* **nonci:** add :ref:`nonci <additional_commands#run>` mode of running Universum
 * **jenkins_plugin:** expand failed steps by default
 * **test:** add Java & JS tests for Jenkins plugin
 

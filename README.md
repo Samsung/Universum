@@ -86,10 +86,26 @@ Simply deleting the directory with virtual environment will leave the system com
 
 Docker images used in tests can be built manually or using the `make images` command.
 Also `make rebuild` command can be used to update images ignoring cache (e.g. to rerun `apt update`).
+Commands `make images` and `make rebuild` use Python version set in execution environment; to build images
+for another supported Python version, please use environment variable `PYTHON`, e.g.:
+```
+PYTHON=python3.8 make images
+```
+Currently the following values of the `PYTHON` environment variable are supported:
+'python3.6', 'python3.7' and 'python3.8'.
 
 The `make test` command runs all the tests (including the doctests) and collects coverage. Tests can also be launched
 manually via `pytest` command with any required options (such as `-k` for running tests based on keywords
 or `-s` for showing the suppressed output).
+
+To test Univesrum for all supported Python versions, please run:
+```
+pip install -U nox
+cd universum-working-dir
+nox
+```
+This will launch the testing scenario, described in `noxfile.py`. This scenario includes rebuilding docker images
+for every supported Python version and running all the tests for corresponding Python.
 
 
 ## Project contents
@@ -166,6 +182,11 @@ The plugin implements coloring of failed steps and provides collapsing/expansion
 5. 'Base' classes are virtual, not implementing any actual functionality, but describing
    the structure of inherited classes and ensuring they have all required functions
    that will be called by modules using them
+
+## Project review slides
+
+Some additional details on how project is developed could be found in
+[project review slides](doc/Universum_ProjectReview_2021-03.pdf)
 
 ## Contributing
 

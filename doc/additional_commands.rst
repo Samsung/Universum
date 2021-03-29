@@ -3,14 +3,14 @@ Universum modes
 
 Along with default mode Universum provides the following useful additional commands:
 
-* `init <additional_commandst#init>`_
-* `run <additional_commandst#run>`_
-* `poll <additional_commandst#poll>`_
-* `submit <additional_commandst#submit>`_
-* `github-handler <additional_commandst#github-handler>`_
+* :ref:`init <additional_commands#init>`
+* :ref:`run <additional_commands#run>`
+* :ref:`poll <additional_commands#poll>`
+* :ref:`submit <additional_commands#submit>`
+* :ref:`github-handler <additional_commands#github-handler>`
 
 
-.. _additional_commandst#init:
+.. _additional_commands#init:
 
 Initialize Universum
 --------------------
@@ -23,7 +23,7 @@ Running this command will not only create a configuration file, but will also pr
 execute it with Universum.
 
 
-.. _additional_commandst#run:
+.. _additional_commands#run:
 
 Run Universum locally (Non-CI mode)
 -----------------------------------
@@ -46,7 +46,7 @@ Universum in non-CI mode has the following differences from default mode:
     :path: run
 
 
-.. _additional_commandst#poll:
+.. _additional_commands#poll:
 
 Poll chosen VCS for updates
 ---------------------------
@@ -76,7 +76,7 @@ Here are the parameters for poller mode:
     :path: poll
 
 
-.. _additional_commandst#submit:
+.. _additional_commands#submit:
 
 Detect changes and submit them automatically
 --------------------------------------------
@@ -106,7 +106,7 @@ Here are the parameters for submitter mode:
     :path: submit
 
 
-.. _additional_commandst#github-handler:
+.. _additional_commands#github-handler:
 
 GitHub Handler
 --------------

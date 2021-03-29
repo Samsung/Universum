@@ -7,7 +7,7 @@ import sys
 
 from universum import submit, poll, main, github_handler
 from universum.lib import gravity
-from tests.thirdparty.pyfeed.rfc3339 import tf_from_timestamp
+from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
 __all__ = [
@@ -46,7 +46,7 @@ def is_pycharm():
 
 
 def randomize_name(name):
-    return name + "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    return name + "-" + "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
 
 def get_open_port():

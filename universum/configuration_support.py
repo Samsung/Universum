@@ -40,10 +40,21 @@ class Step:
         will not be processed correctly and therefore should be splat into ``["ls", "-a"]``. Lists like
         ``["build.sh", "--platform A"]`` will not be processed correctly and thus should be plat into
         ``["build.sh", "--platform", "A"]``. A build step can have an empty list as a command - such step won't do
-        anything except showing up the step name in Universum execution logs. Some common actions, such as ``echo``
-        or ``cp``, are bash features and not actual programs to run. These features should be called as
-        ``["bash", "-c", "echo -e 'Some line goes here'"]``. Note that in this case the string to be passed to bash
-        is one argument containing white spaces and therefore not splat by commas.
+        anything except showing up the step name in Universum execution logs. Some common actions, such as ``echo``,
+        are bash features and not actual programs to run. These features should be called as
+        ``["bash", "-c", "echo -e 'Some line goes here'"]``. Any other shell can also be used instead of bash.
+        Note that in this case the string to be passed to bash is one argument containing white spaces
+        and therefore not splat by commas.
+
+        .. note::
+
+            When a process is launched via shell, that shell also parses the arguments, which does not happen
+            with arguments of a direct process launch. In case of direct process launch the arguments including
+            special characters (e.g. ``*.txt``) are treated as usual strings. To make the lack of filename expansion
+            (globbing) more obvious and to make the relaunch of executed command by copy-pasting more convenient,
+            these arguments are printed within quotes in log. To use bash for globbing, please also use ``bash -c``
+            as explained above.
+
     environment
         Required environment variables, e.g. ``environment={"VAR1": "String", "VAR2": "123"}`` Can be set at any
         step level, but re-declaring variables is not supported, so please make sure to mention every variable only
