@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.19.4 (2021-03-29)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **docs:** add project review slides
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** add logs on client deleted/not deleted while cleaning
+* **p4:** wrong decoding of a byte string (command output starting with ``b'``)
+
+
 0.19.3 (2020-11-16)
 -------------------
 
