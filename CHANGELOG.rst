@@ -7,13 +7,13 @@ Change log
 New features
 ~~~~~~~~~~~~
 
-* **docs:** update documentation, add project review slides
+* **docs:** add project review slides
 
 Bug fixes
 ~~~~~~~~~
 
-* **p4:** add more logs on workspace cleaning
-* **p4:** wrong decoding of a byte string
+* **p4:** add logs on client deleted/not deleted while cleaning
+* **p4:** wrong decoding of a byte string (command output starting with ``b'``)
 
 
 0.19.3 (2020-11-16)
