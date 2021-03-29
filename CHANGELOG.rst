@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.19.4 (2021-03-29)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **docs:** update documentation, add project review slides
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** add more logs on workspace cleaning
+* **p4:** wrong decoding of a byte string
+
+
 0.19.3 (2020-11-16)
 -------------------
 
