@@ -10,7 +10,7 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && 
     echo 'deb http://package.perforce.com/apt/ubuntu bionic release' > /etc/apt/sources.list.d/perforce.sources.list && \
     apt-get update
 
-RUN apt-get install -y curl helix-p4d helix-swarm-triggers
+RUN apt-get install -y curl helix-p4d
 
 # Volumes for server roots and triggers
 #VOLUME /opt/perforce/servers
