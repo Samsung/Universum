@@ -5,9 +5,9 @@ ifeq ($(PYTHON),)
 PYTHON := python3.7
 endif
 
-.PHONY: all $(DOCKER_TARGETS) run_perforce
+.PHONY: all $(DOCKER_TARGETS) run_perforce perforce
 
-all: $(DOCKER_TARGETS)
+all: $(DOCKER_TARGETS) perforce
 
 $(DOCKER_TARGETS):
 	docker build --build-arg PYTHON=$(PYTHON) $(DOCKER_ARGS) $@ -t $@_$(PYTHON)
