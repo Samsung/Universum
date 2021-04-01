@@ -1,15 +1,15 @@
-DOCKER_TARGETS=$(filter-out Makefile perforce, $(wildcard *))
+UNIVERSUM_ENVIRONMENT=$(filter-out Makefile perforce, $(wildcard *))
 DOCKER_ARGS :=
 PYTHON ?= $(shell python -c 'import sys; print("python%d.%d"% sys.version_info[0:2])' )
 ifeq ($(PYTHON),)
 PYTHON := python3.7
 endif
 
-.PHONY: all $(DOCKER_TARGETS) run_perforce
+.PHONY: all $(UNIVERSUM_ENVIRONMENT) run_perforce perforce
 
-all: $(DOCKER_TARGETS)
+all: $(UNIVERSUM_ENVIRONMENT) perforce
 
-$(DOCKER_TARGETS):
+$(UNIVERSUM_ENVIRONMENT):
 	docker build --build-arg PYTHON=$(PYTHON) $(DOCKER_ARGS) $@ -t $@_$(PYTHON)
 
 perforce:
