@@ -1,3 +1,5 @@
+# pylint: disable = import-error
+
 import os
 import nox
 import requests
