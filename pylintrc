@@ -28,6 +28,7 @@ variable-rgx = [a-z_][a-z0-9_]{0,30}$
 const-rgx = (([a-z_][a-z0-9_]*)|([A-Z_][A-Z0-9_]*)|(__.*__))$
 attr-rgx = [a-z_][a-z0-9_]{1,30}$
 function-rgx = [a-z_][a-z0-9_]*$
+class-const-rgx = (([a-z_][a-z0-9_]*)|([A-Z_][A-Z0-9_]*)|(__.*__))$
 good-names = P4Exception
 max-parents = 10
 
