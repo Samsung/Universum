@@ -30,10 +30,9 @@ configs = Variations([dict(name="Update Pylint", command=[python, "-m", "pip", "
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
 
                       dict(name="Run static pylint", code_report=True,
-                           command=[python, "-m", "universum.analyzers.pylint",
-                                    f"--python-version={python_version}",
-                                    "--rcfile=pylintrc", "--result-file=${CODE_REPORT_FILE}",
-                                    "--files", "*.py", "universum/", "tests/"]),
+                           command=run_virtual(f"{python} -m universum.analyzers.pylint"
+                                               f" --python-version={python_version} --rcfile=pylintrc"
+                                               " --result-file=${CODE_REPORT_FILE} --files *.py universum/ tests/")),
                       dict(name="Run static type checker", code_report=True,
                            command=run_virtual("make mypy")),
 
