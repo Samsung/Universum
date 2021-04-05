@@ -3,14 +3,14 @@ Universum modes
 
 Along with default mode Universum provides the following useful additional commands:
 
-* `init <additional_commandst#init>`_
-* `run <additional_commandst#run>`_
-* `poll <additional_commandst#poll>`_
-* `submit <additional_commandst#submit>`_
-* `github-handler <additional_commandst#github-handler>`_
+* :ref:`init <additional_commands#init>`
+* :ref:`run <additional_commands#run>`
+* :ref:`poll <additional_commands#poll>`
+* :ref:`submit <additional_commands#submit>`
+* :ref:`github-handler <additional_commands#github-handler>`
 
 
-.. _additional_commandst#init:
+.. _additional_commands#init:
 
 Initialize Universum
 --------------------
@@ -23,7 +23,7 @@ Running this command will not only create a configuration file, but will also pr
 execute it with Universum.
 
 
-.. _additional_commandst#run:
+.. _additional_commands#run:
 
 Run Universum locally (Non-CI mode)
 -----------------------------------
@@ -39,17 +39,14 @@ Universum in non-CI mode has the following differences from default mode:
 * It works with sources 'in place', without copying.
 * It automatically cleans the artifact folder before the build.
 
-.. collapsible::
-    :header: Command line arguments for this mode
-
-    .. argparse::
-        :module: universum.__main__
-        :func: define_arguments
-        :prog: {python} -m universum
-        :path: run
+.. argparse::
+    :module: universum.__main__
+    :func: define_arguments
+    :prog: {python} -m universum
+    :path: run
 
 
-.. _additional_commandst#poll:
+.. _additional_commands#poll:
 
 Poll chosen VCS for updates
 ---------------------------
@@ -70,17 +67,16 @@ This mode allows to locate a source of behaviour changes more precisely.
     Even being a poller, Universum in this mode does not launch automatically. Please use some outer means
     (such as `cron` or any other time-based auto-launcher) for periodical checks.
 
-.. collapsible::
-    :header: Command line arguments for this mode
+Here are the parameters for poller mode:
 
-    .. argparse::
-        :module: universum.__main__
-        :func: define_arguments
-        :prog: {python} -m universum
-        :path: poll
+.. argparse::
+    :module: universum.__main__
+    :func: define_arguments
+    :prog: {python} -m universum
+    :path: poll
 
 
-.. _additional_commandst#submit:
+.. _additional_commands#submit:
 
 Detect changes and submit them automatically
 --------------------------------------------
@@ -101,17 +97,16 @@ Unlike default mode, Universum in `submit` mode **requires an already prepared l
 After doing that, any additional changes done to source code (made manually or by script execution) will be
 detected by Universum submitter and added to VCS with specified description on behalf of specified user.
 
-.. collapsible::
-    :header: Command line arguments for this mode
+Here are the parameters for submitter mode:
 
-    .. argparse::
-        :module: universum.__main__
-        :func: define_arguments
-        :prog: {python} -m universum
-        :path: submit
+.. argparse::
+    :module: universum.__main__
+    :func: define_arguments
+    :prog: {python} -m universum
+    :path: submit
 
 
-.. _additional_commandst#github-handler:
+.. _additional_commands#github-handler:
 
 GitHub Handler
 --------------
@@ -129,11 +124,10 @@ For GitHub Handler to work, these parameters are mandatory:
 * ``--github-app-id``
 * ``--github-private-key``
 
-.. collapsible::
-    :header: Full description for these and other parameters
+These and other parameters are described below.
 
-    .. argparse::
-        :module: universum.__main__
-        :func: define_arguments
-        :prog: {python} -m universum
-        :path: github-handler
+.. argparse::
+    :module: universum.__main__
+    :func: define_arguments
+    :prog: {python} -m universum
+    :path: github-handler
