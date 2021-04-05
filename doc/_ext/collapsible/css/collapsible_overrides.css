@@ -7,7 +7,9 @@
         display: none;
     }
     .hide + label ~ div {
-        display: none;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 1s cubic-bezier(0,1,0,1)
     }
     .hide + label {
         display: block;
@@ -18,7 +20,8 @@
         margin-bottom: 1em;
     }
     .hide:checked + label + div {
-        display: block;
+        transition-timing-function: ease-in-out;
+        max-height: 99999px;
     }
     .hide:checked + label {
         margin-bottom: 0;
