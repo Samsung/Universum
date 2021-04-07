@@ -99,7 +99,7 @@ getting an output like this:
 
 .. collapsible::
 
-     ..code-block::
+     .. code-block::
 
          ==> Universum 1.0.0 started execution
          ==> Cleaning artifacts...
@@ -170,7 +170,7 @@ After this change, running ``{python} -m universum run`` should result in the fo
 
 .. collapsible::
 
-     ..code-block::
+     .. code-block::
 
         ==> Universum 1.0.0 started execution
         ==> Cleaning artifacts...
@@ -247,7 +247,7 @@ Running Universum with this config will produce the following output:
 
 .. collapsible::
 
-     ..code-block::
+     .. code-block::
 
         ==> Universum 1.0.0 started execution
         ==> Cleaning artifacts...
@@ -321,7 +321,7 @@ a ``{python} -m universum run -f Pylint`` command, we will get the following out
 
 .. collapsible::
 
-     ..code-block::
+     .. code-block::
 
         ==> Universum 1.0.0 started execution
         ==> Cleaning artifacts...
