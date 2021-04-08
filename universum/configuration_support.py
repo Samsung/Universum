@@ -143,7 +143,9 @@ class Step:
 
     This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
 
-    .. note:: All the paths, specified in `command`, `artifacts` and `directory` parameters, can be absolute or
+    .. note::
+
+        All the paths, specified in `command`, `artifacts` and `directory` parameters, can be absolute or
         relative. All relative paths start from the project root (see :ref:`get_project_root`).
     """
 
@@ -240,7 +242,9 @@ class Step:
         """
         This functions simulates `dict`-like legacy read access
 
-        .. note:: It is recommended to use field-like access to non user-defined attributes of Step
+        .. note::
+
+            It is recommended to use field-like access to non user-defined attributes of Step
             This preserves data type information for mypy static analysis
 
         :param key: client-defined item
@@ -265,7 +269,9 @@ class Step:
         """
         This functions simulates `dict`-like legacy write access
 
-        .. note:: It is recommended to use field-like access to non user-defined attributes of Step
+        .. note::
+
+            It is recommended to use field-like access to non user-defined attributes of Step
             This allows static analysis to catch possible type mismatch
 
         :param key: client-defined key
@@ -312,7 +318,9 @@ class Step:
         """
         This functions simulates `dict`-like legacy read access
 
-        .. note:: It is recommended to use field-like access to non user-defined attributes of Step
+        .. note::
+
+            It is recommended to use field-like access to non user-defined attributes of Step
             This preserves data type information for mypy static analysis
 
         :param key: client-defined item
