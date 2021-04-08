@@ -120,14 +120,14 @@ class Step:
 
     >>> Step(foo='bar')
     {'foo': 'bar'}
-    >>> cfg = Step(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True}, myvar=1)
-    >>> cfg
+    >>> step = Step(name='foo', command=['1', '2', '3'], _extras={'_extras': 'test', 'bool': True}, myvar=1)
+    >>> step
     {'name': 'foo', 'command': ['1', '2', '3'], '_extras': {'_extras': 'test', 'bool': True}, 'myvar': 1}
-    >>> cfg['name']
+    >>> step['name']
     'foo'
-    >>> cfg['_extras']
+    >>> step['_extras']
     {'_extras': 'test', 'bool': True}
-    >>> cfg['myvar']
+    >>> step['myvar']
     1
 
     :Example of using Configuration objects to wrap individual build steps:
@@ -143,7 +143,9 @@ class Step:
 
     This means that tags "pass_Linux" and "pass_Windows" will be sent to TeamCity's build.
 
-    .. note:: All the paths, specified in `command`, `artifacts` and `directory` parameters, can be absolute or
+    .. note::
+
+        All the paths, specified in `command`, `artifacts` and `directory` parameters, can be absolute or
         relative. All relative paths start from the project root (see :ref:`get_project_root`).
     """
 
@@ -190,8 +192,8 @@ class Step:
 
         :return: a `dict`-like string
 
-        >>> cfg = Step(name='foo', command=['bar'], my_var='baz')
-        >>> repr(cfg)
+        >>> step = Step(name='foo', command=['bar'], my_var='baz')
+        >>> repr(step)
         "{'name': 'foo', 'command': 'bar', 'my_var': 'baz'}"
         """
         res = {k: v for k, v in self.__dict__.items() if v and k != '_extras'}
@@ -207,24 +209,24 @@ class Step:
         :param other: `dict` to compare values, or :class:`Step` object to check equality
         :return: `True` if `other` matches
 
-        >>> cfg1 = Step(name='foo', my_var='bar')
-        >>> cfg2 = Step(name='foo', my_var='bar')
-        >>> cfg3 = Step(name='foo', my_var='bar', critical=True)
-        >>> cfg1 == cfg1
+        >>> step1 = Step(name='foo', my_var='bar')
+        >>> step2 = Step(name='foo', my_var='bar')
+        >>> step3 = Step(name='foo', my_var='bar', critical=True)
+        >>> step1 == step1
         True
-        >>> cfg1 == cfg2
+        >>> step1 == step2
         True
-        >>> cfg1 == cfg3
+        >>> step1 == step3
         False
-        >>> cfg1 == {'name': 'foo', 'my_var': 'bar'}
+        >>> step1 == {'name': 'foo', 'my_var': 'bar'}
         True
-        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'critical': False}
+        >>> step1 == {'name': 'foo', 'my_var': 'bar', 'critical': False}
         True
-        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': None}
+        >>> step1 == {'name': 'foo', 'my_var': 'bar', 'test': None}
         True
-        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ''}
+        >>> step1 == {'name': 'foo', 'my_var': 'bar', 'test': ''}
         True
-        >>> cfg1 == {'name': 'foo', 'my_var': 'bar', 'test': ' '}
+        >>> step1 == {'name': 'foo', 'my_var': 'bar', 'test': ' '}
         False
         """
         if isinstance(other, Step):
@@ -236,51 +238,74 @@ class Step:
             return True
         return super().__eq__(other)
 
-    def __getitem__(self, item: str) -> Optional[str]:
+    def __getitem__(self, key: str) -> Any:
         """
         This functions simulates `dict`-like legacy read access
 
-        :param item: client-defined item
+        .. note::
+
+            It is recommended to use field-like access to non user-defined attributes of Step.
+            This preserves data type information for mypy static analysis.
+
+        :param key: client-defined item
         :return: client-defined value
 
-        >>> cfg = Step(name='foo', my_var='bar')
-        >>> cfg['name']
-        'foo'
-        >>> cfg['my_var']
+        >>> step = Step(name='foo', my_var='bar')
+        >>> step['name'] == step.name == 'foo'
+        True
+
+        Note that step['name'] has type 'Any', but step.name has type 'str'
+
+        >>> step['my_var']
         'bar'
-        >>> cfg['test']
+        >>> step['test']
         """
         #  _extras are checked first - just in case _extras field is added manually
         # do note that __setitem__ checks predefined fields first, however it's impossible to shadow them by
         # modifying _extras
-        return self._extras.get(item, self.__dict__.get(item, None))
+        return self._extras.get(key, self.__dict__.get(key, None))
 
     def __setitem__(self, key: str, value: Any) -> None:
         """
         This functions simulates `dict`-like legacy write access
 
+        .. note::
+
+            It is recommended to use field-like access to non user-defined attributes of Step.
+            This allows static analysis to catch possible type mismatch.
+
         :param key: client-defined key
         :param value: client-defined value
 
         >>> import warnings
-        >>> def set_cfg_and_get_warnings(c, k, v):
+        >>> def do_and_get_warnings(f):
         ...     with warnings.catch_warnings(record=True) as w:
         ...         warnings.simplefilter("always")
-        ...         c[k] = v
+        ...         f()
         ...         return w
-        >>> cfg = Step(name='foo', my_var='bar')
-        >>> set_cfg_and_get_warnings(cfg, 'name', 'bar')  # doctest: +ELLIPSIS
+        >>> def assign_legacy(o, k, v):
+        ...     o[k] = v
+        >>> def assign_name_legacy(o, v):
+        ...     o['name'] = v
+        >>> def assign_name_new(o, v):
+        ...     o.name = v
+        >>> step = Step(name='foo', my_var='bar')
+        >>> do_and_get_warnings(lambda : assign_legacy(step, 'name', 'bar'))  # doctest: +ELLIPSIS
         [<warnings.WarningMessage object at ...>]
-        >>> set_cfg_and_get_warnings(cfg, 'directory', 'foo')  # doctest: +ELLIPSIS
-        [<warnings.WarningMessage object at ...>]
-        >>> set_cfg_and_get_warnings(cfg, 'test', 42)
-        []
-        >>> set_cfg_and_get_warnings(cfg, '_extras', {'name': 'baz'})
-        []
-        >>> cfg
-        {'name': 'bar', 'directory': 'foo', 'my_var': 'bar', 'test': 42, '_extras': {'name': 'baz'}}
-        >>> cfg['name']
+        >>> step['name']
         'bar'
+        >>> do_and_get_warnings(lambda : assign_name_new(step, 'baz'))  # doctest: +ELLIPSIS
+        []
+        >>> step['name']
+        'baz'
+        >>> do_and_get_warnings(lambda : assign_legacy(step, 'directory', 'foo'))  # doctest: +ELLIPSIS
+        [<warnings.WarningMessage object at ...>]
+        >>> do_and_get_warnings(lambda : assign_legacy(step, 'test', 42))
+        []
+        >>> do_and_get_warnings(lambda : assign_legacy(step, '_extras', {'name': 'baz'}))
+        []
+        >>> step
+        {'name': 'baz', 'directory': 'foo', 'my_var': 'bar', 'test': 42, '_extras': {'name': 'baz'}}
         """
         if key in self.__dict__ and key != '_extras':
             warn("Re-defining the value of Step field. Please use var." + key + " to set it instead of "
@@ -289,30 +314,44 @@ class Step:
         else:
             self._extras[key] = value
 
-    def get(self, item: str, default: Any = None):
+    def get(self, key: str, default: Any = None) -> Any:
         """
         This functions simulates `dict`-like legacy read access
+
+        .. note::
+
+            It is recommended to use field-like access to non user-defined attributes of Step.
+            This preserves data type information for mypy static analysis.
 
         :param key: client-defined item
         :param default: value to return if `key` is absent in `dict`
         :return: client-defined value
 
-        >>> cfg = Step(name='foo', my_var='bar')
-        >>> cfg.get('name', 'test')
-        'foo'
-        >>> cfg.get('my_var', 'test')
+        >>> import warnings
+        >>> def do_and_get_warnings(f):
+        ...     with warnings.catch_warnings(record=True) as w:
+        ...         warnings.simplefilter("always")
+        ...         f()
+        ...         return w
+        >>> step = Step(name='foo', my_var='bar')
+        >>> do_and_get_warnings(lambda : step.get('name', 'test'))  # doctest: +ELLIPSIS
+        [<warnings.WarningMessage object at ...>]
+
+        Note that step.get('name') has type 'Any', but step.name has type 'str'
+
+        >>> step.get('my_var', 'test')
         'bar'
-        >>> cfg.get('my_var_2', 'test')
+        >>> step.get('my_var_2', 'test')
         'test'
-        >>> cfg.get('command', 'test')
+        >>> step.get('command', 'test')
         'test'
         """
-        result = self._extras.get(item)
+        result = self._extras.get(key)
         if result:
             return result
-        result = self.__dict__.get(item)
+        result = self.__dict__.get(key)
         if result:
-            warn("Using legacy API to access configuration values. Please use var." + item + " instead.")
+            warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
             return result
         return default
 
@@ -324,9 +363,9 @@ class Step:
         :param other: `Step` object
         :return: new `Step` object, including all attributes from both `self` and `other` objects
 
-        >>> cfg1 = Step(name='foo', command=['foo'], critical=True, my_var1='foo')
-        >>> cfg2 = Step(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
-        >>> cfg1 + cfg2
+        >>> step1 = Step(name='foo', command=['foo'], critical=True, my_var1='foo')
+        >>> step2 = Step(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
+        >>> step1 + step2
         {'name': 'foobar', 'command': ['foo', 'bar'], 'background': True, 'my_var1': 'foobar', 'my_var2': 'baz'}
         """
         return Step(
@@ -354,14 +393,14 @@ class Step:
         :param from_string: string to replace, e.g. `${CODE_REPORT_FILE}`
         :param to_string: value to put in place of `from_string`
 
-        >>> cfg = Step(name='foo test', command=['foo', 'baz', 'foobar'], myvar1='foo', myvar2='bar', myvar3=1)
-        >>> cfg.replace_string('foo', 'bar')
-        >>> cfg
+        >>> step = Step(name='foo test', command=['foo', 'baz', 'foobar'], myvar1='foo', myvar2='bar', myvar3=1)
+        >>> step.replace_string('foo', 'bar')
+        >>> step
         {'name': 'foo test', 'command': ['bar', 'baz', 'barbar'], 'myvar1': 'bar', 'myvar2': 'bar', 'myvar3': 1}
 
-        >>> cfg = Step(artifacts='foo', report_artifacts='foo', directory='foo')
-        >>> cfg.replace_string('foo', 'bar')
-        >>> cfg
+        >>> step = Step(artifacts='foo', report_artifacts='foo', directory='foo')
+        >>> step.replace_string('foo', 'bar')
+        >>> step
         {'directory': 'bar', 'artifacts': 'bar', 'report_artifacts': 'bar'}
         """
         self.command = [word.replace(from_string, to_string) for word in self.command]
@@ -378,12 +417,12 @@ class Step:
 
         :return: `True`, if any of the command components have space inside
 
-        >>> cfg = Step(name='stringify test', command=['foo', 'bar', '--baz'])
-        >>> cfg.stringify_command()
+        >>> step = Step(name='stringify test', command=['foo', 'bar', '--baz'])
+        >>> step.stringify_command()
         False
-        >>> cfg
+        >>> step
         {'name': 'stringify test', 'command': 'foo bar --baz'}
-        >>> cfg.stringify_command()
+        >>> step.stringify_command()
         True
         """
         result = False
@@ -447,41 +486,41 @@ class Configuration:
     Configuration is a class for establishing project configurations. Each Configuration object wraps a list of build
     steps either from a pre-constructed :class:`Step` objects, or from the supplied `dict` data.
 
-    >>> v1 = Configuration([{"field1": "string"}])
-    >>> v1.configs
+    >>> cfg1 = Configuration([{"field1": "string"}])
+    >>> cfg1.configs
     [{'field1': 'string'}]
 
     Build-in method :meth:`.all()` generates iterable for all configuration dictionaries for further usage:
 
-    >>> for i in v1.all(): i
+    >>> for i in cfg1.all(): i
     {'field1': 'string'}
 
     Built-in method :meth:`.dump()` will generate a printable string representation of the object.
     This string will be printed into console output
 
-    >>> v1.dump()
+    >>> cfg1.dump()
     "[{'field1': 'string'}]"
 
     Adding two objects will extend list of dictionaries:
 
-    >>> v2 = Configuration([{"field1": "line"}])
-    >>> for i in (v1 + v2).all(): i
+    >>> cfg2 = Configuration([{"field1": "line"}])
+    >>> for i in (cfg1 + cfg2).all(): i
     {'field1': 'string'}
     {'field1': 'line'}
 
     While multiplying them will combine same fields of dictionaries:
 
-    >>> for i in (v1 * v2).all(): i
+    >>> for i in (cfg1 * cfg2).all(): i
     {'field1': 'stringline'}
 
     When a field value is a list itself -
 
-    >>> v3 = Configuration([dict(field2=["string"])])
-    >>> v4 = Configuration([dict(field2=["line"])])
+    >>> cfg3 = Configuration([dict(field2=["string"])])
+    >>> cfg4 = Configuration([dict(field2=["line"])])
 
     multiplying them will extend the inner list:
 
-    >>> for i in (v3 * v4).all(): i
+    >>> for i in (cfg3 * cfg4).all(): i
     {'field2': ['string', 'line']}
 
     """
@@ -505,10 +544,10 @@ class Configuration:
 
         >>> l = [{'name': 'foo', 'critical': True}, {'name': 'bar', 'myvar': 'baz'}]
         >>> v1 = Configuration(l)
-        >>> cfg1 = Step(name='foo', critical=True)
-        >>> cfg2 = Step(name='bar', myvar='baz')
-        >>> v2 = Configuration([cfg1]) + Configuration([cfg2])
-        >>> v3 = Configuration() + Configuration([l[0]]) + Configuration([cfg2])
+        >>> step1 = Step(name='foo', critical=True)
+        >>> step2 = Step(name='bar', myvar='baz')
+        >>> v2 = Configuration([step1]) + Configuration([step2])
+        >>> v3 = Configuration() + Configuration([l[0]]) + Configuration([step2])
         >>> v1 == v1
         True
         >>> v1 == v2
@@ -536,14 +575,14 @@ class Configuration:
 
         :return: `True` if :class:`Configuration` class object is empty
 
-        >>> v1 = Configuration()
-        >>> bool(v1)
+        >>> cfg1 = Configuration()
+        >>> bool(cfg1)
         False
-        >>> v2 = Configuration([])
-        >>> bool(v2)
+        >>> cfg2 = Configuration([])
+        >>> bool(cfg2)
         False
-        >>> v3 = Configuration([{}])
-        >>> bool(v3)
+        >>> cfg3 = Configuration([{}])
+        >>> bool(cfg3)
         True
         """
         return len(self.configs) != 0
