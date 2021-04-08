@@ -14,6 +14,7 @@ GitHub application and Pylint analyzer. These are the steps to take:
 8. :ref:`Run Universum in default mode <guide#launch>`
 9. :ref:`Set up Jenkins server <guide#jenkins>`
 10. :ref:`Create a Jenkins job <guide#job>`
+11. :ref:`Set up CI using Universum <guide#set-up-ci>`
 
 
 .. _guide#install:
@@ -565,25 +566,30 @@ Detailed instruction with explanation of the steps can be found `in official Jen
 
 .. _guide#job:
 
-Create a Jenkins job
---------------------
+Create a simple Jenkins job
+---------------------------
 
 First let's create a simple post-commit check. On Jenkins main page click ``Create a job``, or simply go to
 http://localhost:8080/newJob. There enter a job name (for example we will use ``universum_postcommit``), select
 a job type (for example we will use ``Pipeline``) and proceed to project configuration.
 
 On configuration page find ``Build Triggers`` and check the ``GitHub hook trigger for GITScm polling`` checkbox.
+
+.. note::
+
+    For Git SCM to work automatically, PUSH notifications should be set up in your repository settings.
+    Please refer to the following `official guide <https://plugins.jenkins.io/git/#push-notification-from-repository>`__
+    on managing such triggers.
+
 After that, go to ``Pipeline``, select ``Pipeline script`` and enter the following script::
 
-     pipeline {
+    pipeline {
       agent any
       stages {
         stage ('Universum check') {
           steps {
-            git 'https://github.com/YOUR-USERNAME/universum-test-project.git'
-            ansiColor('xterm') {
-              sh("{python} -m universum --no-diff --vcs-type none --file-source-dir universum-test-project")
-            }
+            git branch: 'main', 'https://github.com/YOUR-USERNAME/universum-test-project.git'
+            sh("{python} -m universum run")
           }
         }
       }
@@ -594,22 +600,103 @@ But, actually running this job will fail for now with the following error::
     /usr/bin/{python}: No module named universum
 
 Which is expected, because we have not installed neither Universum, nor Git to the Jenkins node.
-For now, let's do the following changes to pipeline::
+Also, our config uses Pylint, so let's do the following changes to pipeline::
 
-     pipeline {
+    pipeline {
       agent any
       stages {
         stage ('Universum check') {
           steps {
-            sh("{pip} install -U universum")
-            git 'https://github.com/YOUR-USERNAME/universum-test-project.git'
-            ansiColor('xterm') {
-              sh("{python} -m universum --no-diff --vcs-type none --file-source-dir universum-test-project")
-            }
+            sh("{pip} install -U universum pylint")
+            git branch: 'main', 'https://github.com/YOUR-USERNAME/universum-test-project.git'
+            sh("{python} -m universum run")
           }
         }
       }
     }
 
+Keeping Universum updated is generally a good idea, as critical bugs may be fixed in new releases.
+
+Though, now Univesrum does not look very pretty due to color codes. We recommend installing
+`AnsiColor <https://plugins.jenkins.io/ansicolor/>`__ Jenkins plugin for prettier output.
+See `Jenkins official guide on plugin installation <https://www.jenkins.io/doc/book/managing/plugins/>`__.
+After installing the plugin and rebooting change pipeline to this::
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Universum check') {
+          steps {
+            sh("{pip} install -U universum pylint")
+            git branch: 'main', 'https://github.com/YOUR-USERNAME/universum-test-project.git'
+            sh("{python} -m universum run")
+          }
+        }
+      }
+    }
+
+.. collapsible::
+    :header: And the stage output should look like this
+
+    .. code-block::
+
+        [Pipeline] { (Universum check)
+        [Pipeline] sh
+        + pip3.7 install -U universum
+
+        Defaulting to user installation because normal site-packages is not writeable
+        Requirement already satisfied: universum <and it's dependencies>
+        [Pipeline] git
+        The recommended git tool is: NONE
+        No credentials specified
+         > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
+
+        Fetching changes from the remote Git repository
+        <logs of getting sources from Git>
+        [Pipeline] sh
+        + python3.7 -m universum run
+
+        ==> Universum 0.19.4 started execution
+        ==> Cleaning artifacts...
+        1. Processing project configs
+         |   ==> Adding file http://localhost:8080/job/universum_postcommit/3/artifact/artifacts/CONFIGS_DUMP.txt to artifacts...
+         └ [Success]
+
+        2. Preprocessing artifact lists
+         └ [Success]
+
+        3. Executing build steps
+         |   3.1.  [ 1/2 ] Run script
+         |      |   $ /usr/bin/python3.7 run.py pass
+         |      └ [Success]
+         |
+         |   3.2.  [ 2/2 ] Pylint check
+         |      |   $ /usr/bin/python3.7 -m universum.analyzers.pylint --python-version 3.7 --result-file /var/jenkins_home/workspace/universum_postcommit/code_report_results/Pylint_check.json --files '*.py'
+         |      └ [Success]
+         |
+         └ [Success]
+
+        4. Reporting build result
+         |   ==> Here is the summarized build result:
+         |   ==> 3. Executing build steps
+         |   ==>   3.1.  [ 1/2 ] Run script - Success
+         |   ==>   3.2.  [ 2/2 ] Pylint check - Success
+         |   ==> Nowhere to report. Skipping...
+         └ [Success]
+
+        5. Collecting artifacts
+         └ [Success]
+
+        ==> Universum 0.19.4 finished execution
+        [Pipeline] }
+
+
+.. _guide#set-up-ci:
+
+Set up CI using Universum
+-------------------------
 
 .. TBD
