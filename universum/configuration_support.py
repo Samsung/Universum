@@ -240,8 +240,8 @@ class Step:
         """
         This functions simulates `dict`-like legacy read access
 
-        Note: it is recommended to use field-like access to non user-defined attributes of Step
-        This preserves data type information for mypy static analysis
+        .. note:: It is recommended to use field-like access to non user-defined attributes of Step
+            This preserves data type information for mypy static analysis
 
         :param key: client-defined item
         :return: client-defined value
@@ -265,8 +265,8 @@ class Step:
         """
         This functions simulates `dict`-like legacy write access
 
-        Note: it is recommended to use field-like access to non user-defined attributes of Step
-        This allows static analysis to catch possible type mismatch
+        .. note:: It is recommended to use field-like access to non user-defined attributes of Step
+            This allows static analysis to catch possible type mismatch
 
         :param key: client-defined key
         :param value: client-defined value
@@ -312,8 +312,8 @@ class Step:
         """
         This functions simulates `dict`-like legacy read access
 
-        Note: it is recommended to use field-like access to non user-defined attributes of Step
-        This preserves data type information for mypy static analysis
+        .. note:: It is recommended to use field-like access to non user-defined attributes of Step
+            This preserves data type information for mypy static analysis
 
         :param key: client-defined item
         :param default: value to return if `key` is absent in `dict`
