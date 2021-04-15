@@ -2,6 +2,8 @@ import argparse
 import os
 import sys
 
+from typing import List
+
 import sh
 from lxml import etree
 
@@ -17,7 +19,7 @@ class SvaceAnalyzer:
                             help="Relative path to build script or command itself")
         parser.add_argument("--lang", dest="lang", choices=["JAVA", "CXX"], help="Language to analyze")
         parser.add_argument("--project-name", dest="project_name", help="Svace project name defined on server")
-        utils.add_common_arguments(parser)
+        utils.add_result_file_argument(parser)
         return parser
 
     def __init__(self, settings):
@@ -50,15 +52,16 @@ class SvaceAnalyzer:
             root = etree.parse(svres_full)
 
             warn_info = root.xpath('//WarnInfo')
-            issues_loads = []
+            issues_loads: List[utils.ReportData] = []
             for info in warn_info:
-                issue = dict()
-                issue["symbol"] = info.attrib["warnClass"]
-                issue["message"] = "\nWarning message: " + info.attrib["msg"]
-                issue["path"] = info.attrib["file"]
-                issue["line"] = info.attrib["line"]
+                issue = utils.ReportData(
+                    symbol=info.attrib["warnClass"],
+                    message="\nWarning message: " + info.attrib["msg"],
+                    path=info.attrib["file"],
+                    line=int(info.attrib["line"])
+                )
                 issues_loads.append(issue)
-            utils.analyzers_output(self.json_file, issues_loads)
+            utils.output_issues_to_file(issues_loads, self.json_file)
             if issues_loads:
                 return 1
         except etree.XMLSyntaxError as e:
