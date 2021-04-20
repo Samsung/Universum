@@ -482,7 +482,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             try:
                 opened_files = self.p4.run_opened()
                 break
-            except P4Exception as e:
+            # TODO: add proper P4Exception type handling
+            except P4Exception as e:  # type: ignore
                 if f"Client '{self.client_name}' unknown" not in e.value:
                     raise
                 self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
