@@ -475,7 +475,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result
 
-    def calculate_file_diff(self) -> Union[List[Dict[str, str]], bool]:
+    def calculate_file_diff(self) -> Union[List[Dict[str, str]], None]:
         action_list: Dict[str, str] = {}
         for timeout in [0, 5, 10, 20, 40, 80]:
             time.sleep(timeout)
@@ -488,7 +488,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
         else:
             self.structure.fail_current_block()
-            return False
+            return None
 
         for entry in opened_files:
             action_list[entry["depotFile"]] = entry["action"]

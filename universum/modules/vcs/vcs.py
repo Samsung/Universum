@@ -182,10 +182,9 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
     @make_block("Registering file diff for API")
     def calculate_diff_for_api(self) -> None:
         file_diff = self.driver.calculate_file_diff()
-        if file_diff is False:
-            self.api_support.register_file_diff_failure()
-        else:
-            self.api_support.add_file_diff(json.dumps(file_diff, indent=4))
+        if file_diff is not None:
+            file_diff = json.dumps(file_diff, indent=4)
+        self.api_support.add_file_diff(file_diff)
 
     def clean_sources_silently(self):
         try:

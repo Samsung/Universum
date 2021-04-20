@@ -43,11 +43,11 @@ class ApiSupport(Module):
         self.data_file.flush()
         return {"UNIVERSUM_DATA_FILE": self.data_file.name}
 
-    def add_file_diff(self, entry: str) -> None:
-        self._set_entry("DIFF", entry)
-
-    def register_file_diff_failure(self) -> None:
-        self._set_entry("DIFF_FAILED", True)
+    def add_file_diff(self, entry: Union[str, None]) -> None:
+        if entry is None:
+            self._set_entry("DIFF_FAILED", True)
+        else:
+            self._set_entry("DIFF", entry)
 
     def get_file_diff(self) -> str:
         if self._get_entry("DIFF_FAILED") is True:
