@@ -1,10 +1,11 @@
-from typing import Dict
+from typing import Dict, Union
 import inspect
 import os
 import pickle
 import tempfile
 
 from ..lib.gravity import Module
+from ..lib.ci_exception import CiException
 
 __all__ = [
     "ApiSupport"
@@ -31,7 +32,7 @@ class ApiSupport(Module):
             self.data_file = tempfile.NamedTemporaryFile(mode="wb+")
             self.data = {}
 
-    def _set_entry(self, name: str, entry: str) -> None:
+    def _set_entry(self, name: str, entry: Union[str, bool]) -> None:
         self.data[name] = entry
 
     def _get_entry(self, name: str) -> str:
@@ -45,5 +46,10 @@ class ApiSupport(Module):
     def add_file_diff(self, entry: str) -> None:
         self._set_entry("DIFF", entry)
 
+    def register_file_diff_failure(self) -> None:
+        self._set_entry("DIFF_FAILED", True)
+
     def get_file_diff(self) -> str:
+        if self._get_entry("DIFF_FAILED") is True:
+            raise CiException("Getting file diff failed due to Perforce server internal error")
         return self._get_entry("DIFF")

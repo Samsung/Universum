@@ -103,11 +103,10 @@ configs = Configuration([dict(name="This is a changed step name", command=["ls",
 @pytest.fixture()
 def mock_opened(monkeypatch):
     def mocking_function(*args, **kwargs):
-        raise P4.P4Exception("This is text")
+        raise P4.P4Exception("Client 'p4_disposable_workspace' unknown - use 'client' command to create it.")
 
     monkeypatch.setattr(P4.P4, 'run_opened', mocking_function, raising=False)
 
 
 def test_p4_failed_opened(perforce_environment, mock_opened):
-
     assert not __main__.run(perforce_environment.settings)

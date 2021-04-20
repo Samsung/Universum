@@ -177,9 +177,15 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
         status_file.write("\nFile list:\n\n")
         status_file.write(utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root)) + "\n")
         status_file.close()
+        self.calculate_diff_for_api()
 
+    @make_block("Registering file diff for API")
+    def calculate_diff_for_api(self) -> None:
         file_diff = self.driver.calculate_file_diff()
-        self.api_support.add_file_diff(json.dumps(file_diff, indent=4))
+        if file_diff is False:
+            self.api_support.register_file_diff_failure()
+        else:
+            self.api_support.add_file_diff(json.dumps(file_diff, indent=4))
 
     def clean_sources_silently(self):
         try:
