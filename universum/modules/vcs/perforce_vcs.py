@@ -476,7 +476,12 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
     def calculate_file_diff(self) -> List[Dict[str, str]]:
         action_list: Dict[str, str] = {}
-        for entry in self.p4.run_opened():
+        try:
+            opened_files = self.p4.run_opened()
+        except P4Exception:
+            return [{'failure': "Getting diff failed due to server error!"}]
+
+        for entry in opened_files:
             action_list[entry["depotFile"]] = entry["action"]
         if not action_list:
             return [{}]
