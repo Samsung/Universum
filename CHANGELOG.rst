@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.19.5 (2021-04-20)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** HOTFIX for newly introduced bug of Perforce server unexpectedly failing the ``p4 opened`` command
+
+
 0.19.4 (2021-03-29)
 -------------------
 
