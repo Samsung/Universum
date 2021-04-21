@@ -1,9 +1,11 @@
 # pylint: disable = redefined-outer-name
 
 import pytest
+import P4
 
 from universum import __main__
 from . import utils
+from .utils import python
 from .perforce_utils import P4Environment
 
 
@@ -38,18 +40,6 @@ configs = Configuration([dict(name="Test configuration", command=["bash", "-c", 
     # the log output is automatically checked by the 'detect_fails' fixture
 
 
-def test_p4_multiple_spaces_in_mappings(perforce_workspace, tmpdir):
-    environment = utils.TestEnvironment(tmpdir, "main")
-    environment.settings.Vcs.type = "p4"
-    environment.settings.PerforceVcs.port = perforce_workspace.p4.port
-    environment.settings.PerforceVcs.user = perforce_workspace.p4.user
-    environment.settings.PerforceVcs.password = perforce_workspace.p4.password
-    environment.settings.PerforceMainVcs.client = "regression_disposable_workspace"
-    environment.settings.PerforceMainVcs.force_clean = True
-    environment.settings.PerforceWithMappings.mappings = [f"{perforce_workspace.depot}   /..."]
-    assert not __main__.run(environment.settings)
-
-
 def test_non_utf8_environment(docker_main):
     # POSIX has no 'UTF-8' in it's name, but supports Unicode
     output = docker_main.run("""
@@ -77,29 +67,66 @@ def perforce_environment(perforce_workspace, tmpdir):
     yield P4Environment(perforce_workspace, tmpdir, test_type="main")
 
 
-def test_p4_repository_difference_format(perforce_environment, tmpdir):
+def test_p4_multiple_spaces_in_mappings(perforce_environment):
+    perforce_environment.settings.PerforceWithMappings.project_depot_path = None
+    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.depot}   /..."]
+    assert not __main__.run(perforce_environment.settings)
+
+
+def shelve_config(config, perforce_environment):
     p4 = perforce_environment.p4
     p4_file = perforce_environment.repo_file
-
-    config = """
-from universum.configuration_support import Configuration
-
-configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
-"""
     p4.run_edit(perforce_environment.depot)
     p4_file.write(config)
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
-
     settings = perforce_environment.settings
     settings.PerforceMainVcs.shelve_cls = [shelve_cl]
     settings.Launcher.config_path = p4_file.basename
+    return settings
 
+
+def test_p4_repository_difference_format(perforce_environment):
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
+"""
+    settings = shelve_config(config, perforce_environment)
     result = __main__.run(settings)
 
     assert result == 0
-    diff = tmpdir.join('artifacts', 'REPOSITORY_DIFFERENCE.txt').read()
+    diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
+
+
+@pytest.fixture()
+def mock_opened(monkeypatch):
+    def mocking_function(*args, **kwargs):
+        raise P4.P4Exception("Client 'p4_disposable_workspace' unknown - use 'client' command to create it.")
+
+    monkeypatch.setattr(P4.P4, 'run_opened', mocking_function, raising=False)
+
+
+def test_p4_failed_opened(perforce_environment, mock_opened):
+    assert not __main__.run(perforce_environment.settings)
+
+
+# TODO: move this test to 'test_api.py' after test refactoring and Docker use reduction
+def test_p4_api_failed_opened(perforce_environment, mock_opened):
+    step_name = "API"
+    config = f"""
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="{step_name}", artifacts="output.json",
+                              command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
+    """
+    settings = shelve_config(config, perforce_environment)
+
+    assert not __main__.run(settings)
+    log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
+    assert "Module sh got exit code 1" in log
+    assert "Getting file diff failed due to Perforce server internal error" in log

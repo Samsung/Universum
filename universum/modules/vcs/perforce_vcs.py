@@ -1,9 +1,10 @@
-from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple
+from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple, Type
 from types import ModuleType
 
 import importlib
 import os
 import shutil
+import time
 import warnings
 
 import sh
@@ -27,12 +28,18 @@ __all__ = [
     "catch_p4exception"
 ]
 
-P4Exception = None
+
+class P4ExceptionStub(BaseException):
+    warnings: List[str]
+    value: str
 
 
 class P4stub(ModuleType):  # replace with proper stubs
-    P4Exception: Exception
+    P4Exception: Type[P4ExceptionStub]
     P4: Callable
+
+
+P4Exception = P4ExceptionStub
 
 
 def catch_p4exception(ignore_if=None):
@@ -474,9 +481,22 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result
 
-    def calculate_file_diff(self) -> List[Dict[str, str]]:
+    def calculate_file_diff(self) -> Optional[List[Dict[str, str]]]:
         action_list: Dict[str, str] = {}
-        for entry in self.p4.run_opened():
+        for timeout in [0, 5, 10, 20, 40, 80]:
+            time.sleep(timeout)
+            try:
+                opened_files = self.p4.run_opened()
+                break
+            except P4Exception as e:
+                if f"Client '{self.client_name}' unknown" not in e.value:
+                    raise
+                self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
+        else:
+            self.structure.fail_current_block()
+            return None
+
+        for entry in opened_files:
             action_list[entry["depotFile"]] = entry["action"]
         if not action_list:
             return [{}]

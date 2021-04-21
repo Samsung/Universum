@@ -20,5 +20,9 @@
     .option {
         width: 1px !important;
     }
+
+    .class dt {
+        padding-left: 0.3em;
+    }
 }
 
