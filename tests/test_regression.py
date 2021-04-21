@@ -5,6 +5,7 @@ import P4
 
 from universum import __main__
 from . import utils
+from .utils import python
 from .perforce_utils import P4Environment
 
 
@@ -72,26 +73,28 @@ def test_p4_multiple_spaces_in_mappings(perforce_environment):
     assert not __main__.run(perforce_environment.settings)
 
 
-def test_p4_repository_difference_format(perforce_environment):
+def shelve_config(config, perforce_environment):
     p4 = perforce_environment.p4
     p4_file = perforce_environment.repo_file
-
-    config = """
-from universum.configuration_support import Configuration
-
-configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
-"""
     p4.run_edit(perforce_environment.depot)
     p4_file.write(config)
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
-
     settings = perforce_environment.settings
     settings.PerforceMainVcs.shelve_cls = [shelve_cl]
     settings.Launcher.config_path = p4_file.basename
+    return settings
 
+
+def test_p4_repository_difference_format(perforce_environment):
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
+"""
+    settings = shelve_config(config, perforce_environment)
     result = __main__.run(settings)
 
     assert result == 0
@@ -110,3 +113,20 @@ def mock_opened(monkeypatch):
 
 def test_p4_failed_opened(perforce_environment, mock_opened):
     assert not __main__.run(perforce_environment.settings)
+
+
+# TODO: find a way to mock 'p4 opened' in Docker and move this test to 'test_api.py'
+def test_p4_api_failed_opened(perforce_environment, mock_opened):
+    step_name = "API"
+    config = f"""
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="{step_name}", artifacts="output.json",
+                              command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
+    """
+    settings = shelve_config(config, perforce_environment)
+
+    assert not __main__.run(settings)
+    log = perforce_environment.temp_dir.join('artifacts', f'{step_name}_log.txt').read()
+    assert "Module sh got exit code 1" in log
+    assert "Getting file diff failed due to Perforce server internal error" in log

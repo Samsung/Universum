@@ -1,11 +1,12 @@
 from typing import Dict, Union
 import inspect
 import os
+import sys
 import pickle
 import tempfile
 
 from ..lib.gravity import Module
-from ..lib.ci_exception import CiException
+from ..lib.ci_exception import SilentAbortException
 
 __all__ = [
     "ApiSupport"
@@ -51,5 +52,6 @@ class ApiSupport(Module):
 
     def get_file_diff(self) -> str:
         if self._get_entry("DIFF_FAILED") is True:
-            raise CiException("Getting file diff failed due to Perforce server internal error")
+            sys.stderr.write("Getting file diff failed due to Perforce server internal error")
+            raise SilentAbortException(application_exit_code=1)
         return self._get_entry("DIFF")
