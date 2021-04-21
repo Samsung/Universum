@@ -1,10 +1,12 @@
-from typing import Dict
+from typing import Dict, Union
 import inspect
 import os
+import sys
 import pickle
 import tempfile
 
 from ..lib.gravity import Module
+from ..lib.ci_exception import SilentAbortException
 
 __all__ = [
     "ApiSupport"
@@ -31,7 +33,7 @@ class ApiSupport(Module):
             self.data_file = tempfile.NamedTemporaryFile(mode="wb+")
             self.data = {}
 
-    def _set_entry(self, name: str, entry: str) -> None:
+    def _set_entry(self, name: str, entry: Union[str, bool]) -> None:
         self.data[name] = entry
 
     def _get_entry(self, name: str) -> str:
@@ -42,8 +44,14 @@ class ApiSupport(Module):
         self.data_file.flush()
         return {"UNIVERSUM_DATA_FILE": self.data_file.name}
 
-    def add_file_diff(self, entry: str) -> None:
-        self._set_entry("DIFF", entry)
+    def add_file_diff(self, entry: Union[str, None]) -> None:
+        if entry is None:
+            self._set_entry("DIFF_FAILED", True)
+        else:
+            self._set_entry("DIFF", entry)
 
     def get_file_diff(self) -> str:
+        if self._get_entry("DIFF_FAILED") is True:
+            sys.stderr.write("Getting file diff failed due to Perforce server internal error")
+            raise SilentAbortException(application_exit_code=1)
         return self._get_entry("DIFF")
