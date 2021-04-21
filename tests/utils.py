@@ -112,7 +112,8 @@ class TestEnvironment:
             self.configs_file = self.temp_dir.join("configs.py")
             self.configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
-            self.settings.ArtifactCollector.artifact_dir = str(self.temp_dir.mkdir("artifacts"))
+            self.artifact_dir = self.temp_dir.mkdir("artifacts")
+            self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
 

@@ -98,7 +98,7 @@ configs = Configuration([dict(name="This is a changed step name", command=["ls",
     result = __main__.run(settings)
 
     assert result == 0
-    diff = perforce_environment.temp_dir.join('artifacts', 'REPOSITORY_DIFFERENCE.txt').read()
+    diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
 
@@ -115,7 +115,7 @@ def test_p4_failed_opened(perforce_environment, mock_opened):
     assert not __main__.run(perforce_environment.settings)
 
 
-# TODO: find a way to mock 'p4 opened' in Docker and move this test to 'test_api.py'
+# TODO: move this test to 'test_api.py' after test refactoring and Docker use reduction
 def test_p4_api_failed_opened(perforce_environment, mock_opened):
     step_name = "API"
     config = f"""
@@ -127,6 +127,6 @@ configs = Configuration([dict(name="{step_name}", artifacts="output.json",
     settings = shelve_config(config, perforce_environment)
 
     assert not __main__.run(settings)
-    log = perforce_environment.temp_dir.join('artifacts', f'{step_name}_log.txt').read()
+    log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
