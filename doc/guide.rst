@@ -699,4 +699,16 @@ After installing the plugin and rebooting change pipeline to this::
 Set up CI using Universum
 -------------------------
 
+Universum offers a lot of additional functionality, but to use it, we first have to let it know
+about VCS we're using. First, let's change Jenkins GitHub plugin to
+`Generic Webhook Trigger <https://plugins.jenkins.io/generic-webhook-trigger/>`__, so that it doesn't
+download sources automatically before Universum even started.
+
+.. note::
+
+    This also can be, for example, used later, to cherry-pick some files, including Universum config itself,
+    from a different commit (e.g. in another branch).
+
+
+
 .. TBD
