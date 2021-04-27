@@ -125,6 +125,7 @@ configs = Configuration([dict(name="{step_name}", artifacts="output.json",
                               command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
     """
     settings = shelve_config(config, perforce_environment)
+    settings.Launcher.output = "file"
 
     assert not __main__.run(settings)
     log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()

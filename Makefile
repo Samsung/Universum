@@ -18,7 +18,7 @@ test:
 	for t in $(TEST_TARGETS); do $(MAKE) $$t || error=1; done; exit $$error
 
 pytest:
-	python -m pytest --doctest-modules -vv --junitxml=junit_results.xml --cov-report=html \
+	python -m pytest --doctest-modules -vvs --junitxml=junit_results.xml --cov-report=html \
 	--cov=universum --cov=analyzers --cov=code_report --cov=tests --cov-branch \
 	--ignore=universum_log_collapser --ignore=.universum.py --ignore=noxfile.py
 
