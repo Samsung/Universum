@@ -250,6 +250,9 @@ class UniversumRunner:
         config_file = self._create_temp_config(config)
         cmd += self._mandatory_args(config_file) + ' ' + additional_parameters
 
+        if not workdir:
+            workdir = self.working_dir
+
         if expected_to_fail:
             result = self.environment.assert_unsuccessful_execution(cmd, environment=environment, workdir=workdir)
         else:
