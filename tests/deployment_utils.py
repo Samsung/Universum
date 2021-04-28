@@ -107,7 +107,7 @@ class ExecutionEnvironment:
             module_name = name
         if not utils.is_pycharm() or self._force_clean:
             self.assert_unsuccessful_execution("pip show " + module_name)
-        cmd = "pip --default-timeout=1200 install " + name
+        cmd = "pip --default-timeout=1200 install -U " + name
         self.assert_successful_execution(cmd)
         self.assert_successful_execution("pip show " + module_name)
 
