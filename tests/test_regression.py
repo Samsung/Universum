@@ -131,3 +131,12 @@ configs = Configuration([dict(name="{step_name}", artifacts="output.json",
     log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
+
+
+def test_which_universum_is_tested(docker_main):
+    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
+    docker_main.run("""
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
+""", vcs_type="none")
