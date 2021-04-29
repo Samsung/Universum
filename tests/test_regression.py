@@ -1,5 +1,6 @@
 # pylint: disable = redefined-outer-name
 
+from pathlib import Path
 import pytest
 import P4
 
@@ -134,15 +135,22 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
 
 
 def test_which_universum_is_tested(docker_main):
-    cmd = f"{python()} -c 'import universum; print(universum.__file__)'"
-    output = docker_main.environment.assert_successful_execution(cmd, workdir=docker_main.working_dir)
-    assert f"/lib/{python()}/" not in output
-
     config = """
 from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
 """
+    # THIS TEST PATCHES ACTUAL SOURCES!! BE CAREFUL
+    init_file = Path(docker_main.environment.get_working_directory()).joinpath("universum", "__init__.py")
+    backup = init_file.read_bytes()
+    test_line = "THIS IS A TESTING VERSION"
+    init_file.write_text(f"""__title__ = "Universum"
+__version__ = "{test_line}"
+""")
+    output = docker_main.run(config, vcs_type="none")
+    init_file.write_bytes(backup)
+    assert test_line in output
+
     docker_main.environment.assert_successful_execution("pip uninstall -y universum")
     docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
