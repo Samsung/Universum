@@ -119,9 +119,9 @@ def test_p4_failed_opened(perforce_environment, mock_opened):
 def test_p4_api_failed_opened(perforce_environment, mock_opened):
     step_name = "API"
     config = f"""
-from universum.configuration_support import Configuration
+from universum.configuration_support import Step, Configuration
 
-configs = Configuration([dict(name="{step_name}", artifacts="output.json",
+configs = Configuration([Step(name="{step_name}", artifacts="output.json",
                               command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
     """
     settings = shelve_config(config, perforce_environment)
@@ -134,9 +134,18 @@ configs = Configuration([dict(name="{step_name}", artifacts="output.json",
 
 
 def test_which_universum_is_tested(docker_main):
-    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
-    docker_main.run("""
-from universum.configuration_support import Configuration
+    cmd = f"{python()} -c 'import universum; print(universum.__file__)'"
+    output = docker_main.environment.assert_successful_execution(cmd, workdir=docker_main.working_dir)
+    assert f"/lib/{python()}/" not in output
 
-configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
-""", vcs_type="none")
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
+"""
+    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
+    docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
+    docker_main.clean_artifacts()
+    docker_main.run(config, vcs_type="none")  # not expected to fail
+    if utils.is_pycharm():
+        docker_main.environment.install_python_module(docker_main.working_dir)

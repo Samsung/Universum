@@ -289,8 +289,8 @@ def docker_fixture_template(request, execution_environment, local_sources):
     runner.clean_artifacts()
 
 
-docker_main = pytest.fixture(params=[False])(docker_fixture_template)
-docker_nonci = pytest.fixture(params=[True])(docker_fixture_template)
+docker_main = pytest.fixture(params=[False], ids=["main"])(docker_fixture_template)
+docker_nonci = pytest.fixture(params=[True], ids=["nonci"])(docker_fixture_template)
 docker_main_and_nonci = pytest.fixture(params=[False, True], ids=["main", "nonci"])(docker_fixture_template)
 
 
