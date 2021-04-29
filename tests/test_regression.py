@@ -138,7 +138,7 @@ def test_which_universum_is_tested(docker_main):
     output = docker_main.environment.assert_successful_execution(cmd, workdir=docker_main.working_dir)
     assert f"/lib/{python()}/" not in output
 
-    config = f"""
+    config = """
 from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
