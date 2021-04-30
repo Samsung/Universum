@@ -140,7 +140,7 @@ from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
 """
-    # THIS TEST PATCHES ACTUAL SOURCES!! BE CAREFUL
+    # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
     init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
     backup = init_file.read_bytes()
     test_line = utils.randomize_name("THIS IS A TESTING VERSION")
