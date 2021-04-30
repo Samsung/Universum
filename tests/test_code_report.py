@@ -113,12 +113,14 @@ def test_pylint_analyzer_wrong_common_params(runner_with_analyzers, analyzer, co
 
 
 @pytest.mark.parametrize('analyzer, arg_set, expected_log', [
-    ['pylint', ["--python-version", python_version(), "--files", "source_file.py",
+    ['pylint', ["--python-version", python_version(), "--files", "source_file",
                 "--result-file", "${CODE_REPORT_FILE}", '--rcfile'],
-     'rcfile: expected one argument'],
+     "rcfile: expected one argument"],
+    ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
+     "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
 ])
 def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
-    source_file = runner_with_analyzers.local.root_directory.join("source_file.py")
+    source_file = runner_with_analyzers.local.root_directory.join("source_file")
     source_file.write(source_code_python)
 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
