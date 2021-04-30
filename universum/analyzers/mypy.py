@@ -46,5 +46,4 @@ def _mypy_output_parser(output: str) -> List[utils.ReportData]:
 
 
 if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)
+    sys.exit(main())
