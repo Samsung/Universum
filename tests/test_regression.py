@@ -134,16 +134,16 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     assert "Getting file diff failed due to Perforce server internal error" in log
 
 
-def test_which_universum_is_tested(docker_main):
+def test_which_universum_is_tested(docker_main, pytestconfig):
     config = """
 from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
 """
     # THIS TEST PATCHES ACTUAL SOURCES!! BE CAREFUL
-    init_file = Path(docker_main.environment.get_working_directory()).joinpath("universum", "__init__.py")
+    init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
     backup = init_file.read_bytes()
-    test_line = "THIS IS A TESTING VERSION"
+    test_line = utils.randomize_name("THIS IS A TESTING VERSION")
     init_file.write_text(f"""__title__ = "Universum"
 __version__ = "{test_line}"
 """)
