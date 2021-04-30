@@ -1,5 +1,6 @@
 # pylint: disable = redefined-outer-name
 
+from pathlib import Path
 import pytest
 import P4
 
@@ -119,9 +120,9 @@ def test_p4_failed_opened(perforce_environment, mock_opened):
 def test_p4_api_failed_opened(perforce_environment, mock_opened):
     step_name = "API"
     config = f"""
-from universum.configuration_support import Configuration
+from universum.configuration_support import Step, Configuration
 
-configs = Configuration([dict(name="{step_name}", artifacts="output.json",
+configs = Configuration([Step(name="{step_name}", artifacts="output.json",
                               command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
     """
     settings = shelve_config(config, perforce_environment)
@@ -131,3 +132,28 @@ configs = Configuration([dict(name="{step_name}", artifacts="output.json",
     log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
+
+
+def test_which_universum_is_tested(docker_main, pytestconfig):
+    config = """
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
+"""
+    # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
+    init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
+    backup = init_file.read_bytes()
+    test_line = utils.randomize_name("THIS IS A TESTING VERSION")
+    init_file.write_text(f"""__title__ = "Universum"
+__version__ = "{test_line}"
+""")
+    output = docker_main.run(config, vcs_type="none")
+    init_file.write_bytes(backup)
+    assert test_line in output
+
+    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
+    docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
+    docker_main.clean_artifacts()
+    docker_main.run(config, vcs_type="none")  # not expected to fail
+    if utils.is_pycharm():
+        docker_main.environment.install_python_module(docker_main.working_dir)
