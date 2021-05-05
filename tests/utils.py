@@ -117,6 +117,7 @@ class TestEnvironment:
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
             self.settings.Launcher.output = "console"
+            self.settings.AutomationServer.type = "local"
 
         self.settings.Output.type = "term"
 

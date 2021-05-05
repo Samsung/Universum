@@ -329,7 +329,7 @@ configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
     config_file.write(config)
 
     with subprocess.Popen([python(), "-m", "universum",
-                           "-o", "console", "-vt", "none",
+                           "-o", "console", "-st", "local", "-vt", "none",
                            "-pr", str(tmpdir.join("project_root")),
                            "-ad", str(tmpdir.join("artifacts")),
                            "-fsd", str(local_sources.root_directory),
