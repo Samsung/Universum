@@ -32,7 +32,9 @@ configs = Variations([Step(name="Create virtual environment", command=[python, "
                                                f"--python-version={python_version} --rcfile=pylintrc "
                                                "--result-file=\"${CODE_REPORT_FILE}\" --files *.py universum/ tests/")),
                       Step(name="Run static type checker", code_report=True,
-                           command=run_virtual("make mypy")),
+                           command=run_virtual(f"{python} -m universum.analyzers.mypy "
+                                               f"--python-version={python_version} "
+                                               "--result-file=\"${CODE_REPORT_FILE}\" --files *.py universum/")),
 
                       Step(name="Run Jenkins plugin Java tests",
                            artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",
