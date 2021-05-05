@@ -27,23 +27,23 @@ class HtmlDiffFileWriter:
 
 
 def form_arguments_for_documentation() -> argparse.ArgumentParser:
-    return uncrustify_argument_parser()
+    return _uncrustify_argument_parser()
 
 
 def main() -> int:
-    settings: argparse.Namespace = uncrustify_argument_parser().parse_args()
+    settings: argparse.Namespace = _uncrustify_argument_parser().parse_args()
     src_folder: AbsPath = os.getcwd()
     target_folder: AbsPath = cast(AbsPath, os.path.join(src_folder, settings.output_directory))
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
         sys.stderr.write("Please specify the '--cfg_file' parameter "
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
-    wrapcolumn, tabsize = get_htmldiff_parameters(settings.cfg_file)
+    wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
     html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
 
     files: List[Tuple[AbsPath, AbsPath]] = []
     try:
-        src_files: List[AbsPath] = parse_files(settings.file_list, settings.file_list_config)
+        src_files: List[AbsPath] = _get_src_files(settings.file_list, settings.file_list_config)
         for pattern in settings.pattern_form:
             regexp = re.compile(pattern)  # TODO: combine patterns via join
             src_files = [file_name for file_name in src_files if regexp.match(file_name)]
@@ -62,11 +62,11 @@ def main() -> int:
     cmd.extend([os.path.relpath(path) for path in src_files])
 
     return utils.report_parsed_outcome(cmd,
-                                       lambda _: get_file_issues(files, html_diff_file_writer, _),
+                                       lambda _: _uncrustify_output_parser(files, html_diff_file_writer, _),
                                        settings.result_file)
 
 
-def uncrustify_argument_parser() -> argparse.ArgumentParser:
+def _uncrustify_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Uncrustify analyzer")
     utils.add_files_argument(parser, False)
     parser.add_argument("--file-list", "-fl", dest="file_list_config", nargs="*", default=[],
@@ -87,19 +87,19 @@ def uncrustify_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_files(file_list: List[str], file_list_config: List[str]) -> List[AbsPath]:
+def _get_src_files(file_list: List[str], file_list_config: List[str]) -> List[AbsPath]:
     files: List[AbsPath] = []
     for file_list_stored in file_list_config:
         with open(file_list_stored) as f:
             for file_name in f.readlines():
                 file_list.append(file_name.strip())
     for file_name in set(file_list):
-        files.extend(add_files_recursively(file_name))
+        files.extend(_add_files_recursively(file_name))
 
     return files
 
 
-def add_files_recursively(item_path: str) -> List[AbsPath]:
+def _add_files_recursively(item_path: str) -> List[AbsPath]:
     files: List[AbsPath] = []
     item_path = cast(AbsPath, os.path.join(os.getcwd(), item_path))
     if os.path.isfile(item_path):
@@ -114,9 +114,9 @@ def add_files_recursively(item_path: str) -> List[AbsPath]:
     return files
 
 
-def get_file_issues(files: List[Tuple[AbsPath, AbsPath]],
-                    diff_file_writer: HtmlDiffFileWriter,
-                    _: str) -> List[utils.ReportData]:
+def _uncrustify_output_parser(files: List[Tuple[AbsPath, AbsPath]],
+                              diff_file_writer: HtmlDiffFileWriter,
+                              _: str) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
         with open(src_file) as src:
@@ -124,14 +124,14 @@ def get_file_issues(files: List[Tuple[AbsPath, AbsPath]],
         with open(uncrustify_file) as fixed:
             fixed_lines = fixed.readlines()
 
-        issues = get_issues_from_diff(src_file, src_lines, fixed_lines)
+        issues = _get_issues_from_diff(src_file, src_lines, fixed_lines)
         if issues:
             diff_file_writer.write_file(src_file, src_lines, fixed_lines)
         result.extend(issues)
     return result
 
 
-def get_htmldiff_parameters(cfg_file: str) -> Tuple[int, int]:
+def _get_wrapcolumn_tabsize(cfg_file: str) -> Tuple[int, int]:
     with open(cfg_file) as config:
         for line in config.readlines():
             if line.startswith("code_width"):
@@ -141,19 +141,19 @@ def get_htmldiff_parameters(cfg_file: str) -> Tuple[int, int]:
     return wrapcolumn, tabsize
 
 
-def get_issues_from_diff(src_file: AbsPath, src: List[str], target: List[str]) -> List[utils.ReportData]:
+def _get_issues_from_diff(src_file: AbsPath, src: List[str], target: List[str]) -> List[utils.ReportData]:
     result = []
     matching_blocks: List[difflib.Match] = \
         difflib.SequenceMatcher(a=src, b=target).get_matching_blocks()
     previous_match = matching_blocks[0]
     for match in matching_blocks[1:]:
-        block = get_mismatching_block(previous_match, match, src, target)
+        block = _get_mismatching_block(previous_match, match, src, target)
         previous_match = match
         if not block:
             continue
         line, before, after = block
         path: RelPath = os.path.relpath(src_file, os.getcwd())
-        message = get_issue_message(before, after)
+        message = _get_issue_message(before, after)
         result.append(utils.ReportData(
             symbol="Uncrustify Code Style issue",
             message=message,
@@ -164,7 +164,7 @@ def get_issues_from_diff(src_file: AbsPath, src: List[str], target: List[str]) -
     return result
 
 
-def get_issue_message(before: str, after: str) -> str:
+def _get_issue_message(before: str, after: str) -> str:
     # The maximum number of lines to write separate comments for
     # If exceeded, summarized comment will be provided instead
     max_lines = 11
@@ -178,10 +178,10 @@ def get_issue_message(before: str, after: str) -> str:
     return message
 
 
-def get_mismatching_block(previous_match: difflib.Match,  # src[a:a+size] = target[b:b+size]
-                          match: difflib.Match,
-                          src: List[str], target: List[str]
-                          ) -> Optional[Tuple[int, str, str]]:
+def _get_mismatching_block(previous_match: difflib.Match,  # src[a:a+size] = target[b:b+size]
+                           match: difflib.Match,
+                           src: List[str], target: List[str]
+                           ) -> Optional[Tuple[int, str, str]]:
     previous_match_end_in_src = previous_match.a + previous_match.size
     previous_match_end_in_target = previous_match.b + previous_match.size
     match_start_in_src = match.a
@@ -189,16 +189,16 @@ def get_mismatching_block(previous_match: difflib.Match,  # src[a:a+size] = targ
     if previous_match_end_in_src == match_start_in_src:
         return None
     line = match_start_in_src
-    before = get_text_for_block(previous_match_end_in_src - 1, match_start_in_src, src)
-    after = get_text_for_block(previous_match_end_in_target - 1, match_start_in_target, target)
+    before = _get_text_for_block(previous_match_end_in_src - 1, match_start_in_src, src)
+    after = _get_text_for_block(previous_match_end_in_target - 1, match_start_in_target, target)
     return line, before, after
 
 
-def get_text_for_block(start: int, end: int, lines: List[str]) -> str:
-    return replace_invisible_symbols(''.join(lines[start: end]))
+def _get_text_for_block(start: int, end: int, lines: List[str]) -> str:
+    return _replace_invisible_symbols(''.join(lines[start: end]))
 
 
-def replace_invisible_symbols(line: str) -> str:
+def _replace_invisible_symbols(line: str) -> str:
     for old_str, new_str in zip([u" ", u"\t", u"\n"], [u"\u00b7", u"\u2192\u2192\u2192\u2192", u"\u2193\u000a"]):
         line = line.replace(old_str, new_str)
     return line
