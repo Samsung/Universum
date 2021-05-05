@@ -39,12 +39,24 @@ s: str = "world"
 print(f"Hello {s}.")
 """
 
+source_code_c = """
+int main() {
+\treturn 0;
+}
+"""
+
+cfg_uncrustify = """
+code_width = 120
+input_tab_size = 2
+"""
 
 log_fail = r'Found [0-9]+ issues'
 log_success = r'Issues not found'
 
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
+    [['uncrustify'], [], source_code_c, True],
+    [['uncrustify'], [], source_code_c.replace('\t', ' '), False],
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python, True],
     [['pylint'], ["--python-version", python_version()], source_code_python + '\n', False],
     [['mypy'], ["--python-version", python_version()], source_code_python.replace(': str', ': int'), False],
@@ -61,6 +73,9 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
     config = ConfigData()
     for analyzer in analyzers:
         args = common_args + extra_args
+        if analyzer == 'uncrustify':
+            args += ["--cfg-file", "cfg"]
+            runner_with_analyzers.local.root_directory.join("cfg").write(cfg_uncrustify)
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
@@ -101,6 +116,8 @@ def test_pylint_analyzer_wrong_common_params(runner_with_analyzers, analyzer, co
     ['pylint', ["--python-version", python_version(), "--files", "source_file",
                 "--result-file", "${CODE_REPORT_FILE}", '--rcfile'],
      "rcfile: expected one argument"],
+    ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
+     "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
 ])
 def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
     source_file = runner_with_analyzers.local.root_directory.join("source_file")

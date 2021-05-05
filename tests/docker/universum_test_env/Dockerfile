@@ -21,3 +21,6 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && 
 
 RUN apt install -y helix-cli
 RUN ${PYTHON} -m pip install p4python
+
+# Install uncrustify for testing
+RUN DEBIAN_FRONTEND=noninteractive apt install -y uncrustify
