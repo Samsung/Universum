@@ -4,18 +4,13 @@ import sys
 import os
 
 import re
-from typing import cast, List, Optional, Protocol, Tuple
+from typing import cast, List, Optional, Tuple
 
 from . import utils
 
 
 AbsPath = str  # TODO: create dedicated type-enforcing classes in utils for path-like strings
 RelPath = str
-
-
-class DiffFileWriter(Protocol):
-    def write_file(self, filename: str, src: List[str], target: List[str]) -> None:
-        ...  # Empty method body (explicit '...')
 
 
 class HtmlDiffFileWriter:
@@ -120,7 +115,7 @@ def _add_files_recursively(item_path: str) -> List[AbsPath]:
 
 
 def _uncrustify_output_parser(files: List[Tuple[AbsPath, AbsPath]],
-                              diff_file_writer: DiffFileWriter,
+                              diff_file_writer: HtmlDiffFileWriter,
                               _: str) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
