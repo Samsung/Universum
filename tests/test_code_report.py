@@ -14,6 +14,7 @@ from .utils import python, python_version
 def fixture_runner_with_analyzers(docker_main):
     docker_main.environment.install_python_module("pylint")
     docker_main.environment.install_python_module("mypy")
+    docker_main.environment.assert_successful_execution("apt install uncrustify")
     yield docker_main
 
 
