@@ -18,3 +18,6 @@ RUN ${PYTHON} -m pip install gitpython
 RUN wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && \
     echo "deb http://package.perforce.com/apt/ubuntu bionic release" > /etc/apt/sources.list.d/perforce.list && \
     apt update
+
+RUN apt install -y helix-cli
+RUN ${PYTHON} -m pip install p4python
