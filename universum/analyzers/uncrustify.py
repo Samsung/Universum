@@ -1,28 +1,25 @@
 import argparse
 import difflib
 import sys
-import os
+from os import environ
+from pathlib import Path
 
 import re
-from typing import cast, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from . import utils
 
 
-AbsPath = str  # TODO: create dedicated type-enforcing classes in utils for path-like strings
-RelPath = str
-
-
 class HtmlDiffFileWriter:
 
-    def __init__(self, target_folder: AbsPath, wrapcolumn: int, tabsize: int) -> None:
+    def __init__(self, target_folder: Path, wrapcolumn: int, tabsize: int) -> None:
         self.differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
         self.target_folder = target_folder
 
-    def write_file(self, file_name: AbsPath, src: List[str], target: List[str]) -> None:
-        relative_path = os.path.relpath(file_name, self.target_folder)
-        out_file_name = relative_path.replace('/', '_') + '.html'
-        with open(os.path.join(self.target_folder, out_file_name), 'w') as out_file:
+    def write_file(self, file_name: Path, src: List[str], target: List[str]) -> None:
+        relative_path = file_name.relative_to(Path.cwd())
+        out_file_name: str = str(relative_path).replace('/', '_') + '.html'
+        with open(self.target_folder.joinpath(out_file_name), 'w') as out_file:
             out_file.write(self.differ.make_file(src, target, context=False))
 
 
@@ -32,25 +29,24 @@ def form_arguments_for_documentation() -> argparse.ArgumentParser:
 
 def main() -> int:
     settings: argparse.Namespace = _uncrustify_argument_parser().parse_args()
-    src_folder: AbsPath = os.getcwd()
-    target_folder: AbsPath = cast(AbsPath, os.path.join(src_folder, settings.output_directory))
-    if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
+    src_folder: Path = Path.cwd()
+    target_folder: Path = Path.cwd().joinpath(settings.output_directory)
+    if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in environ:
         sys.stderr.write("Please specify the '--cfg_file' parameter "
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
     wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
     html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
 
-    files: List[Tuple[AbsPath, AbsPath]] = []
+    files: List[Tuple[Path, Path]] = []
     try:
-        src_files: List[AbsPath] = _get_src_files(settings.file_list, settings.file_list_config)
+        src_files: List[Path] = _get_src_files(settings.file_list, settings.file_list_config)
         for pattern in settings.pattern_form:
             regexp = re.compile(pattern)  # TODO: combine patterns via join
-            src_files = [file_name for file_name in src_files if regexp.match(file_name)]
+            src_files = [file for file in src_files if regexp.match(str(file))]
         for src_file in src_files:
-            rel_name = os.path.relpath(src_file, src_folder)
-            # Uncrustify copies absolute path in its target folder, that's why we use '+'
-            target_file: AbsPath = os.path.normpath(target_folder + '/' + rel_name)
+            rel_name = src_file.relative_to(src_folder)
+            target_file: Path = target_folder.joinpath(rel_name)
             files.append((src_file, target_file))
         if not files:
             raise EnvironmentError("Please provide at least one file for analysis")
@@ -59,7 +55,7 @@ def main() -> int:
         return 2
 
     cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
-    cmd.extend([os.path.relpath(path) for path in src_files])
+    cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
 
     return utils.report_parsed_outcome(cmd,
                                        lambda _: _uncrustify_output_parser(files, html_diff_file_writer, _),
@@ -87,8 +83,8 @@ def _uncrustify_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _get_src_files(file_list: List[str], file_list_config: List[str]) -> List[AbsPath]:
-    files: List[AbsPath] = []
+def _get_src_files(file_list: List[str], file_list_config: List[str]) -> List[Path]:
+    files: List[Path] = []
     for file_list_stored in file_list_config:
         with open(file_list_stored) as f:
             for file_name in f.readlines():
@@ -99,22 +95,20 @@ def _get_src_files(file_list: List[str], file_list_config: List[str]) -> List[Ab
     return files
 
 
-def _add_files_recursively(item_path: str) -> List[AbsPath]:
-    files: List[AbsPath] = []
-    item_path = cast(AbsPath, os.path.join(os.getcwd(), item_path))
-    if os.path.isfile(item_path):
+def _add_files_recursively(item: str) -> List[Path]:
+    files: List[Path] = []
+    item_path = Path.cwd().joinpath(item)
+    if item_path.is_file():
         files.append(item_path)
-    elif os.path.isdir(item_path):
-        for root_dir, _, file_names in os.walk(item_path):
-            for file_name in file_names:
-                files.append(cast(AbsPath, os.path.join(root_dir, file_name)))
+    elif item_path.is_dir():
+        files.extend(item_path.joinpath(x) for x in item_path.rglob('*') if x.is_file())
     else:
-        raise EnvironmentError(item_path + " doesn't exist.")
+        raise EnvironmentError(str(item_path) + " doesn't exist.")
 
     return files
 
 
-def _uncrustify_output_parser(files: List[Tuple[AbsPath, AbsPath]],
+def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
                               diff_file_writer: HtmlDiffFileWriter,
                               _: str) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
@@ -141,7 +135,7 @@ def _get_wrapcolumn_tabsize(cfg_file: str) -> Tuple[int, int]:
     return wrapcolumn, tabsize
 
 
-def _get_issues_from_diff(src_file: AbsPath, src: List[str], target: List[str]) -> List[utils.ReportData]:
+def _get_issues_from_diff(src_file: Path, src: List[str], target: List[str]) -> List[utils.ReportData]:
     result = []
     matching_blocks: List[difflib.Match] = \
         difflib.SequenceMatcher(a=src, b=target).get_matching_blocks()
@@ -152,12 +146,12 @@ def _get_issues_from_diff(src_file: AbsPath, src: List[str], target: List[str]) 
         if not block:
             continue
         line, before, after = block
-        path: RelPath = os.path.relpath(src_file, os.getcwd())
+        path: Path = src_file.relative_to(Path.cwd())
         message = _get_issue_message(before, after)
         result.append(utils.ReportData(
             symbol="Uncrustify Code Style issue",
             message=message,
-            path=path,
+            path=str(path),
             line=line
         ))
 
