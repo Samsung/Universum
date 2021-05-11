@@ -68,7 +68,7 @@ This file will get us the following list of configurations:
 .. _code_report#mypy:
 
 Mypy
-------
+----
 
 .. argparse::
     :ref: universum.analyzers.mypy.form_arguments_for_documentation
