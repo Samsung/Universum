@@ -157,7 +157,8 @@ def _get_issue_message(before: str, after: str) -> str:
     max_lines = 11
     diff_size = len(before.splitlines())
     if diff_size > max_lines:
-        message = f"\nLarge block of code ({diff_size} lines) has issues\n"
+        message = f"\nLarge block of code ({diff_size} lines) has issues\n" + \
+                  f"Non-compliant code blocks exceeding {max_lines} lines are not reported\n"
     else:
         # Message with before&after
         message = f"\nOriginal code:\n```diff\n{before}```\n" + \
