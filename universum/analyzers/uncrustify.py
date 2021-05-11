@@ -16,7 +16,6 @@ def form_arguments_for_documentation() -> argparse.ArgumentParser:  # TODO: modi
 
 def main() -> int:
     settings: argparse.Namespace = _uncrustify_argument_parser().parse_args()
-    src_folder: Path = Path.cwd()
     target_folder: Path = Path.cwd().joinpath(settings.output_directory)
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in environ:
         sys.stderr.write("Please specify the '--cfg_file' parameter "
@@ -25,9 +24,10 @@ def main() -> int:
     wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
     differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
 
-    def write_html_diff_file(file_name: Path, src: List[str], target: List[str]) -> None:
-        relative_path = file_name.relative_to(Path.cwd())
-        out_file_name: str = str(relative_path).replace('/', '_') + '.html'
+    def write_html_diff_file(file: Path, src: List[str], target: List[str]) -> None:
+        # target_folder and differ used from outer scope
+        file_relative = file.relative_to(Path.cwd())
+        out_file_name: str = str(file_relative).replace('/', '_') + '.html'
         with open(target_folder.joinpath(out_file_name), 'w') as out_file:
             out_file.write(differ.make_file(src, target, context=False))
 
@@ -38,8 +38,8 @@ def main() -> int:
             regexp = re.compile(pattern)  # TODO: combine patterns via join
             src_files = [file for file in src_files if regexp.match(str(file))]
         for src_file in src_files:
-            rel_name = src_file.relative_to(src_folder)
-            target_file: Path = target_folder.joinpath(rel_name)
+            src_file_relative = src_file.relative_to(Path.cwd())
+            target_file: Path = target_folder.joinpath(src_file_relative)
             files.append((src_file, target_file))
         if not files:
             raise EnvironmentError("Please provide at least one file for analysis")
@@ -50,10 +50,9 @@ def main() -> int:
     cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
     cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
 
-    def parse_output_file(_: str) -> List[utils.ReportData]:
-        return _uncrustify_output_parser(files, write_html_diff_file)
-
-    return utils.report_parsed_outcome(cmd, parse_output_file, settings.result_file)
+    return utils.report_parsed_outcome(cmd,
+                                       lambda _: _uncrustify_output_parser(files, write_html_diff_file),
+                                       settings.result_file)
 
 
 def _uncrustify_argument_parser() -> argparse.ArgumentParser:
