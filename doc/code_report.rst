@@ -4,6 +4,7 @@ Code report
 The following analysing modules (analysers) are currently added to Universum:
 
    * `pylint`_
+   * `mypy`_
    * `svace`_
    * `uncrustify`_
 
@@ -62,6 +63,43 @@ This file will get us the following list of configurations:
 
     $ ./.universum.py
     [{'name': 'pylint', 'code_report': True, 'command': '{python} -m universum.analyzers.pylint --python-version 2.7 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
+
+
+.. _code_report#mypy:
+
+Mypy
+------
+
+.. argparse::
+    :ref: universum.analyzers.mypy.form_arguments_for_documentation
+    :prog: {python} -m universum.analyzers.mypy
+
+Config example for ``universum.analyzers.mypy``:
+
+.. testcode::
+
+    from universum.configuration_support import Configuration, Step
+
+    configs = Configuration([Step(name="mypy", code_report=True, command=[
+        "{python}", "-m", "universum.analyzers.mypy", "--python-version", "3",
+        "--result-file", "${CODE_REPORT_FILE}", "--files", "*.py", "examples/"
+    ])])
+
+    if __name__ == '__main__':
+        print(configs.dump())
+
+This file will get us the following list of configurations:
+
+.. testcode::
+    :hide:
+
+    print("$ ./.universum.py")
+    print(configs.dump())
+
+.. testoutput::
+
+    $ ./.universum.py
+    [{'name': 'mypy', 'code_report': True, 'command': '{python} -m universum.analyzers.mypy --python-version 3 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
 
 
 .. _code_report#svace:
