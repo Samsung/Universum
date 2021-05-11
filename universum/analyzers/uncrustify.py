@@ -50,8 +50,8 @@ def main() -> int:
     cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
     cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
 
-    def parse_output_file(output: str) -> List[utils.ReportData]:
-        return _uncrustify_output_parser(files, write_html_diff_file, output)
+    def parse_output_file(_: str) -> List[utils.ReportData]:
+        return _uncrustify_output_parser(files, write_html_diff_file)
 
     return utils.report_parsed_outcome(cmd, parse_output_file, settings.result_file)
 
@@ -103,8 +103,8 @@ def _add_files_recursively(item: str) -> List[Path]:
 
 
 def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
-                              write_diff_file: Callable[[Path, List[str], List[str]], None],
-                              _: str) -> List[utils.ReportData]:
+                              write_diff_file: Callable[[Path, List[str], List[str]], None]
+                              ) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
         with open(src_file) as src:
