@@ -5,25 +5,12 @@ from os import environ
 from pathlib import Path
 
 import re
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from . import utils
 
 
-class HtmlDiffFileWriter:
-
-    def __init__(self, target_folder: Path, wrapcolumn: int, tabsize: int) -> None:
-        self.differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
-        self.target_folder = target_folder
-
-    def write_file(self, file_name: Path, src: List[str], target: List[str]) -> None:
-        relative_path = file_name.relative_to(Path.cwd())
-        out_file_name: str = str(relative_path).replace('/', '_') + '.html'
-        with open(self.target_folder.joinpath(out_file_name), 'w') as out_file:
-            out_file.write(self.differ.make_file(src, target, context=False))
-
-
-def form_arguments_for_documentation() -> argparse.ArgumentParser:
+def form_arguments_for_documentation() -> argparse.ArgumentParser:  # TODO: modify callers to remove wrapper
     return _uncrustify_argument_parser()
 
 
@@ -36,7 +23,13 @@ def main() -> int:
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
     wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
-    html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
+    differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
+
+    def write_html_diff_file(file_name: Path, src: List[str], target: List[str]) -> None:
+        relative_path = file_name.relative_to(Path.cwd())
+        out_file_name: str = str(relative_path).replace('/', '_') + '.html'
+        with open(target_folder.joinpath(out_file_name), 'w') as out_file:
+            out_file.write(differ.make_file(src, target, context=False))
 
     files: List[Tuple[Path, Path]] = []
     try:
@@ -57,9 +50,10 @@ def main() -> int:
     cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
     cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
 
-    return utils.report_parsed_outcome(cmd,
-                                       lambda _: _uncrustify_output_parser(files, html_diff_file_writer, _),
-                                       settings.result_file)
+    def parse_output_file(output: str) -> List[utils.ReportData]:
+        return _uncrustify_output_parser(files, write_html_diff_file, output)
+
+    return utils.report_parsed_outcome(cmd, parse_output_file, settings.result_file)
 
 
 def _uncrustify_argument_parser() -> argparse.ArgumentParser:
@@ -109,7 +103,7 @@ def _add_files_recursively(item: str) -> List[Path]:
 
 
 def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
-                              diff_file_writer: HtmlDiffFileWriter,
+                              write_diff_file: Callable[[Path, List[str], List[str]], None],
                               _: str) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
@@ -120,7 +114,7 @@ def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
 
         issues = _get_issues_from_diff(src_file, src_lines, fixed_lines)
         if issues:
-            diff_file_writer.write_file(src_file, src_lines, fixed_lines)
+            write_diff_file(src_file, src_lines, fixed_lines)
         result.extend(issues)
     return result
 
