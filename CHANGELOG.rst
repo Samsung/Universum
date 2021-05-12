@@ -7,13 +7,7 @@ Change log
 New features
 ~~~~~~~~~~~~
 
-* **analyzers:** add Mypy checks and inline commenting support
-
-Bug fixes
-~~~~~~~~~
-
-* **test:** unify server and output type in Universum launches
-* **test:** launch Universum sources from workdir in Docker container instead of those installed
+* **analyzers:** add static type checking for Python (with inline comments on the issues)
 
 
 0.19.5 (2021-04-20)
