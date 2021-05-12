@@ -22,7 +22,7 @@ def main() -> int:
 
 
 def _mypy_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pylint analyzer")
+    parser = argparse.ArgumentParser(description="Mypy analyzer")
     utils.add_files_argument(parser)
     parser.add_argument("--config-file", dest="config_file", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
