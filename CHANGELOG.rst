@@ -7,7 +7,7 @@ Change log
 New features
 ~~~~~~~~~~~~
 
-* **analyzers:** add Mypy support
+* **analyzers:** add Mypy checks and inline commenting support
 
 Bug fixes
 ~~~~~~~~~
