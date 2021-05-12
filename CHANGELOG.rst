@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.19.6 (2021-05-12)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **analyzers:** add static type checking for Python (with inline comments on the issues)
+
+
 0.19.5 (2021-04-20)
 -------------------
 
