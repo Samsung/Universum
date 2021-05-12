@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.19.6 (2021-05-12)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **analyzers:** add Mypy support
+
+Bug fixes
+~~~~~~~~~
+
+* **test:** unify server and output type in Universum launches
+* **test:** launch Universum sources from workdir in Docker container instead of those installed
+
+
 0.19.5 (2021-04-20)
 -------------------
 
