@@ -64,6 +64,13 @@ log_success = r'Issues not found'
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python.replace(': str', ': int') + '\n', False],
     # TODO: add test with rcfile
     # TODO: parametrize test for different versions of python
+], ids=[
+    'uncrustify_no_issues',
+    'uncrustify_found_issues',
+    'pylint_and_mypy_both_no_issues',
+    'pylint_found_issues',
+    'mypy_found_issues',
+    'pylint_and_mypy_found_issues_independently',
 ])
 def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_content, expected_success):
     common_args = [
