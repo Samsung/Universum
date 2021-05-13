@@ -1,5 +1,9 @@
 FROM ubuntu:bionic
 
+# Please note: apt-get install will produce the following message in stderr:
+# 'debconf: delaying package configuration, since apt-utils is not installed`
+# In scope of non-interactive configuration there's no need to fix it
+
 # Update package list and install wget
 RUN apt-get update && apt-get install -y wget gnupg2
 
