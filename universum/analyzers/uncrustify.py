@@ -22,7 +22,7 @@ def main() -> int:
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
     wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
-    write_html_diff_file = _get_html_diff_file_writer(target_folder, wrapcolumn, tabsize)
+    html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
 
     files: List[Tuple[Path, Path]] = []
     try:
@@ -44,7 +44,7 @@ def main() -> int:
     cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
 
     return utils.report_parsed_outcome(cmd,
-                                       lambda _: _uncrustify_output_parser(files, write_html_diff_file),
+                                       lambda _: _uncrustify_output_parser(files, html_diff_file_writer),
                                        settings.result_file)
 
 
@@ -94,17 +94,17 @@ def _add_files_recursively(item: str) -> List[Path]:
     return files
 
 
-def _get_html_diff_file_writer(target_folder: Path, wrapcolumn: int, tabsize: int
-                               ) -> Callable[[Path, List[str], List[str]], None]:
-    differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
+class HtmlDiffFileWriter:
 
-    def write_html_file(file: Path, src: List[str], target: List[str]) -> None:
+    def __init__(self, target_folder: Path, wrapcolumn: int, tabsize: int) -> None:
+        self.target_folder = target_folder
+        self.differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
+
+    def __call__(self, file: Path, src: List[str], target: List[str]) -> None:
         file_relative = file.relative_to(Path.cwd())
         out_file_name: str = str(file_relative).replace('/', '_') + '.html'
-        with open(target_folder.joinpath(out_file_name), 'w') as out_file:
-            out_file.write(differ.make_file(src, target, context=False))
-
-    return write_html_file
+        with open(self.target_folder.joinpath(out_file_name), 'w') as out_file:
+            out_file.write(self.differ.make_file(src, target, context=False))
 
 
 def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
