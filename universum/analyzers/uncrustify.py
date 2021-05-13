@@ -22,14 +22,7 @@ def main() -> int:
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
     wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
-    differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
-
-    def write_html_diff_file(file: Path, src: List[str], target: List[str]) -> None:
-        # target_folder and differ used from outer scope
-        file_relative = file.relative_to(Path.cwd())
-        out_file_name: str = str(file_relative).replace('/', '_') + '.html'
-        with open(target_folder.joinpath(out_file_name), 'w') as out_file:
-            out_file.write(differ.make_file(src, target, context=False))
+    write_html_diff_file = _get_html_diff_file_writer(target_folder, wrapcolumn, tabsize)
 
     files: List[Tuple[Path, Path]] = []
     try:
@@ -101,8 +94,21 @@ def _add_files_recursively(item: str) -> List[Path]:
     return files
 
 
+def _get_html_diff_file_writer(target_folder: Path, wrapcolumn: int, tabsize: int
+                               ) -> Callable[[Path, List[str], List[str]], None]:
+    differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
+
+    def write_html_file(file: Path, src: List[str], target: List[str]) -> None:
+        file_relative = file.relative_to(Path.cwd())
+        out_file_name: str = str(file_relative).replace('/', '_') + '.html'
+        with open(target_folder.joinpath(out_file_name), 'w') as out_file:
+            out_file.write(differ.make_file(src, target, context=False))
+
+    return write_html_file
+
+
 def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
-                              write_diff_file: Callable[[Path, List[str], List[str]], None]
+                              write_diff_file: Optional[Callable[[Path, List[str], List[str]], None]]
                               ) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
@@ -112,7 +118,7 @@ def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
             fixed_lines = fixed.readlines()
 
         issues = _get_issues_from_diff(src_file, src_lines, fixed_lines)
-        if issues:
+        if issues and write_diff_file:
             write_diff_file(src_file, src_lines, fixed_lines)
         result.extend(issues)
     return result
