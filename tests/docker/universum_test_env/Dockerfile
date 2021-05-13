@@ -21,6 +21,12 @@ ARG PYTHON=python3.7
 
 # Install Git & gitpython
 RUN apt-get install -y git
+
+# Please note, that using Pip as a root user is, indeed, a bad practice
+# But in case of 'gitpython' and 'p4python' installing packages into system once per image instead of repeatedly
+# installing them into every newly created container as user
+# a) is not that dangerous as we use disposable docker containers anyway
+# b) saves a lot of times and adds more stability to tests
 RUN ${PYTHON} -m pip install gitpython
 
 FROM universum_test_env_no_p4 AS universum_test_env
@@ -33,7 +39,3 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | APT_KEY_DONT_WARN
 
 RUN apt-get install -y helix-cli
 RUN ${PYTHON} -m pip install p4python
-
-# Please note, that using Pip as a root user is, indeed, a bad practice
-# But in this case installing packages into system is not that dangerous as we use disposable containers anyway
-# And installing these modules once per image saves a lot of time in every test run
