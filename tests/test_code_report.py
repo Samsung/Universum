@@ -139,8 +139,8 @@ def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, 
 
 @pytest.mark.parametrize('extra_args, tested_content, expected_success, expected_artifact', [
     [[], source_code_c, True, False],
-    [[], source_code_c.replace('\t', ' '), False, True],
-    [["--no-html"], source_code_c.replace('\t', ' '), False, False],
+    [["--report-html"], source_code_c.replace('\t', ' '), False, True],
+    [[], source_code_c.replace('\t', ' '), False, False],
 ], ids=[
     "uncrustify_html_file_not_needed",
     "uncrustify_html_file_saved",
