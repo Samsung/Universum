@@ -162,8 +162,8 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_cfg).finalize())
 
     assert re.findall(log_success if expected_success else log_fail, log)
-    assert re.findall(fr"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
-                      else fr"Collecting 'source_file.html' - [^\n]*Failed", log)
+    assert re.findall(r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
+                      else r"Collecting 'source_file.html' - [^\n]*Failed", log)
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):

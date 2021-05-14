@@ -21,11 +21,10 @@ def main() -> int:
         sys.stderr.write("Please specify the '--cfg_file' parameter "
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
+    html_diff_file_writer: Optional[Callable[[Path, List[str], List[str]], None]] = None
     if settings.write_html:
         wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
         html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
-    else:
-        html_diff_file_writer = None
 
     files: List[Tuple[Path, Path]] = []
     try:
