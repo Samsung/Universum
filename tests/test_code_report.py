@@ -14,6 +14,7 @@ from .utils import python, python_version
 def fixture_runner_with_analyzers(docker_main):
     docker_main.environment.install_python_module("pylint")
     docker_main.environment.install_python_module("mypy")
+    docker_main.environment.assert_successful_execution("apt install uncrustify")
     yield docker_main
 
 
@@ -22,10 +23,11 @@ class ConfigData:
         self.text = "from universum.configuration_support import Configuration, Step\n"
         self.text += "configs = Configuration()\n"
 
-    def add_analyzer(self, analyzer: str, arguments: List[str]) -> 'ConfigData':
+    def add_analyzer(self, analyzer: str, arguments: List[str], extra_cfg: str = '') -> 'ConfigData':
         args = [f", '{arg}'" for arg in arguments]
         cmd = f"['{python()}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
-        self.text += f"configs += Configuration([Step(name='Run {analyzer}', code_report=True, command={cmd})])\n"
+        self.text +=\
+            f"configs += Configuration([Step(name='Run {analyzer}', {extra_cfg} code_report=True, command={cmd})])\n"
         return self
 
     def finalize(self) -> str:
@@ -39,18 +41,37 @@ s: str = "world"
 print(f"Hello {s}.")
 """
 
+source_code_c = """
+int main() {
+\treturn 0;
+}
+"""
+
+cfg_uncrustify = """
+code_width = 120
+input_tab_size = 2
+"""
 
 log_fail = r'Found [0-9]+ issues'
 log_success = r'Issues not found'
 
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
+    [['uncrustify'], [], source_code_c, True],
+    [['uncrustify'], [], source_code_c.replace('\t', ' '), False],
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python, True],
     [['pylint'], ["--python-version", python_version()], source_code_python + '\n', False],
     [['mypy'], ["--python-version", python_version()], source_code_python.replace(': str', ': int'), False],
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python.replace(': str', ': int') + '\n', False],
     # TODO: add test with rcfile
     # TODO: parametrize test for different versions of python
+], ids=[
+    'uncrustify_no_issues',
+    'uncrustify_found_issues',
+    'pylint_and_mypy_both_no_issues',
+    'pylint_found_issues',
+    'mypy_found_issues',
+    'pylint_and_mypy_found_issues_independently',
 ])
 def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_content, expected_success):
     common_args = [
@@ -61,6 +82,9 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
     config = ConfigData()
     for analyzer in analyzers:
         args = common_args + extra_args
+        if analyzer == 'uncrustify':
+            args += ["--cfg-file", "cfg"]
+            runner_with_analyzers.local.root_directory.join("cfg").write(cfg_uncrustify)
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
@@ -101,6 +125,8 @@ def test_pylint_analyzer_wrong_common_params(runner_with_analyzers, analyzer, co
     ['pylint', ["--python-version", python_version(), "--files", "source_file",
                 "--result-file", "${CODE_REPORT_FILE}", '--rcfile'],
      "rcfile: expected one argument"],
+    ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
+     "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
 ])
 def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
     source_file = runner_with_analyzers.local.root_directory.join("source_file")
@@ -109,6 +135,35 @@ def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
     assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log)
     assert expected_log in log
+
+
+@pytest.mark.parametrize('extra_args, tested_content, expected_success, expected_artifact', [
+    [[], source_code_c, True, False],
+    [["--report-html"], source_code_c.replace('\t', ' '), False, True],
+    [[], source_code_c.replace('\t', ' '), False, False],
+], ids=[
+    "uncrustify_html_file_not_needed",
+    "uncrustify_html_file_saved",
+    "uncrustify_html_file_disabled",
+])
+def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content, expected_success, expected_artifact):
+    root = runner_with_analyzers.local.root_directory
+    source_file = root.join("source_file")
+    source_file.write(tested_content)
+    root.join("cfg").write(cfg_uncrustify)
+    common_args = [
+        "--result-file", "${CODE_REPORT_FILE}",
+        "--files", "source_file",
+        "--cfg-file", "cfg",
+    ]
+
+    args = common_args + extra_args
+    extra_cfg = "artifacts='./uncrustify/source_file.html',"
+    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_cfg).finalize())
+
+    assert re.findall(log_success if expected_success else log_fail, log)
+    assert re.findall(r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
+                      else r"Collecting 'source_file.html' - [^\n]*Failed", log)
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):
