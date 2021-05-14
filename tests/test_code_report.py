@@ -23,10 +23,11 @@ class ConfigData:
         self.text = "from universum.configuration_support import Configuration, Step\n"
         self.text += "configs = Configuration()\n"
 
-    def add_analyzer(self, analyzer: str, arguments: List[str]) -> 'ConfigData':
+    def add_analyzer(self, analyzer: str, arguments: List[str], extra_cfg: str = '') -> 'ConfigData':
         args = [f", '{arg}'" for arg in arguments]
         cmd = f"['{python()}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
-        self.text += f"configs += Configuration([Step(name='Run {analyzer}', code_report=True, command={cmd})])\n"
+        self.text +=\
+            f"configs += Configuration([Step(name='Run {analyzer}', {extra_cfg} code_report=True, command={cmd})])\n"
         return self
 
     def finalize(self) -> str:
@@ -134,6 +135,35 @@ def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
     assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log)
     assert expected_log in log
+
+
+@pytest.mark.parametrize('extra_args, tested_content, expected_success, expected_artifact', [
+    [[], source_code_c, True, False],
+    [[], source_code_c.replace('\t', ' '), False, True],
+    [["--no-html"], source_code_c.replace('\t', ' '), False, False],
+], ids=[
+    "uncrustify_html_file_not_needed",
+    "uncrustify_html_file_saved",
+    "uncrustify_html_file_disabled",
+])
+def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content, expected_success, expected_artifact):
+    root = runner_with_analyzers.local.root_directory
+    source_file = root.join("source_file")
+    source_file.write(tested_content)
+    root.join("cfg").write(cfg_uncrustify)
+    common_args = [
+        "--result-file", "${CODE_REPORT_FILE}",
+        "--files", "source_file",
+        "--cfg-file", "cfg",
+    ]
+
+    args = common_args + extra_args
+    extra_cfg = "artifacts='./uncrustify/source_file.html',"
+    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_cfg).finalize())
+
+    assert re.findall(log_success if expected_success else log_fail, log)
+    assert re.findall(fr"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
+                      else fr"Collecting 'source_file.html' - [^\n]*Failed", log)
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):
