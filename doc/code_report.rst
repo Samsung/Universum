@@ -118,7 +118,7 @@ Config example for ``universum.analyzers.uncrustify``:
     from universum.configuration_support import Configuration, Step
 
     configs = Configuration([Step(name="uncrustify", code_report=True, command=[
-        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", get_project_root(),
+        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "/home/user/workspace/temp",
         "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
         "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
     ])])
