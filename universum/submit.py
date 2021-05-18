@@ -22,29 +22,40 @@ class Submit(HasOutput, HasStructure, HasErrorState):
                             help="Only submit existing vcs modifications, no adding or deleting")
 
         parser.add_argument('--commit-message', '-cm', dest='commit_message', metavar="COMMIT_MESSAGE",
-                            help='Commit message to add')
-        parser.add_argument("--reconcile-list", "-rl", action="append", nargs='+', dest="reconcile_list",
-                            metavar="RECONCILE_LIST",
-                            help="List of vcs or directories to be reconciled for commit. "
-                                 "Relative paths starting at client root are supported")
+                            help="Commit message. Enter in command line directly, store in environment variable "
+                                 "or pass a file path to read the message from by starting the value string with '@'. "
+                                 "File path can be either absolute or relative")
+        parser.add_argument("--reconcile-list", "-rl", dest="reconcile_list", metavar="RECONCILE_LIST",
+                            help="Comma-separated or linebreak-separated list of vcs or directories "
+                                 "to be reconciled for commit (relative paths starting at client root "
+                                 "are supported). To use command line directly, add quotes if needed "
+                                 "(e.g. ``-rl 'target1, target2'``). To use a file with reconcile list, "
+                                 "start a path to file with '@' (e.g. ``-rl @/path/to/file``)")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
-        self.check_required_option("commit_message", """
+        self.read_and_check_multiline_option("commit_message", """
             Commit message is not specified.
             
-            Please use '--commit-message' option or COMMIT_MESSAGE environment variable.
+            Please use '--commit-message' option to provide it. If you start the parameter with '@', the
+            rest should be the path to a file containing the commit message text. The path can be absolute
+            or relative to the project root. You can pass '-' if you want the Universum to read the commit
+            message from the stdin. You can also store the key in COMMIT_MESSAGE environment variable.
             """)
+
+        self.read_multiline_option("reconcile_list")
+        try:
+            self.reconcile_list = utils.unify_argument_list(self.settings.reconcile_list.splitlines())
+        except AttributeError:
+            self.reconcile_list = []
 
         self.vcs = self.vcs_factory()
         self.client = None
 
     @make_block("Executing")
     def execute(self):
-        path_list = utils.unify_argument_list(self.settings.reconcile_list)
         change = self.vcs.driver.submit_new_change(self.settings.commit_message,
-                                                   path_list,
+                                                   self.reconcile_list,
                                                    review=self.settings.review,
                                                    edit_only=self.settings.edit_only)
 

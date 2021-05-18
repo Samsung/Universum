@@ -150,6 +150,9 @@ def unify_argument_list(source_list: Optional[List[str]], separator: str = ',',
     # Split one-element arguments and merge to one list
     resulting_list = [item.strip() for entry in resulting_list for item in entry.strip('"\'').split(separator)]
 
+    # Remove empty elements that might have been introduced by splitting
+    resulting_list = [item for item in resulting_list if item]
+
     return resulting_list
 
 

@@ -34,7 +34,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     file_to_add.write(text + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [str(file_to_add)])
+    setattr(settings.Submit, "reconcile_list", str(file_to_add))
 
     assert __main__.run(settings)
 
@@ -59,7 +59,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
     new_file.write("This is a new file" + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [str(new_file)])
+    setattr(settings.Submit, "reconcile_list", str(new_file))
 
     assert not __main__.run(settings)
     assert text in p4_file.read()
@@ -80,7 +80,7 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     new_file.write(text_new + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [str(new_file)])
+    setattr(settings.Submit, "reconcile_list", str(new_file))
 
     assert __main__.run(settings)
     assert text_default in p4_file.read()
@@ -95,7 +95,7 @@ class SubmitterParameters:
 
     def submit_path_list(self, path_list, **kwargs):
         settings = copy.deepcopy(self.submit_settings)
-        setattr(settings.Submit, "reconcile_list", path_list)
+        setattr(settings.Submit, "reconcile_list", ",".join(path_list))
 
         if kwargs:
             for key in kwargs:
