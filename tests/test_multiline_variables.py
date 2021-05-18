@@ -51,24 +51,3 @@ def test_multiline_variable_files(tmp_path):
     error = module.global_error_state.get_errors()[0]
     assert "argument" in str(error)
     assert "this-is-not-a-file" in str(error)
-
-
-def test_multiline_variable_stdin(tmp_path):
-    script_file = tmp_path / "script.py"
-    script_file.write_text(script)
-    script_path = str(script_file)
-
-    env = dict(os.environ)
-    env['PYTHONPATH'] = os.getcwd()
-    common_args = {"capture_output": True, "text": True, "env": env}
-
-    result = subprocess.run([python(), script_path, "-a", "-"], **common_args, input=text, check=True)
-    assert result.stdout[:-1] == text
-
-    env['ARGUMENT'] = '-'
-    result = subprocess.run([python(), script_path], **common_args, input=text, check=True)
-    assert result.stdout[:-1] == text
-    del env['ARGUMENT']
-
-    result = subprocess.run([python(), script_path, "-a", "-"], **common_args, input="", check=False)
-    assert error_message in result.stdout
