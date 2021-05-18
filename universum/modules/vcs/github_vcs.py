@@ -29,7 +29,7 @@ class GithubToken(HasErrorState):
         parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
                             help="GitHub application ID to use for check run report. Only GitHub App "
                                  "can report a check run result! If you don't have an App for reporting purposes, "
-                                 "please don't use '--report-to-review' with GitHub")
+                                 "please don't use ``--report-to-review`` with GitHub")
         parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
                             help="GitHub App private key for obtaining installation authentication token. "
                                  "Pass raw key data via environment variable, or redirect key reading to stdin "
@@ -40,16 +40,16 @@ class GithubToken(HasErrorState):
         super().__init__(*args, **kwargs)
         self.check_required_option("integration_id", """
             The GitHub App ID is not specified.
-    
+
             Only GitHub Application owner knows this ID. If you are the App owner, please
             check your App's general settings. If not, please contact the App owner for this
             information.
-    
+
             Please note that 'universum github-handler' DOES NOT pass App ID to CI builds.
             It is assumed that one CI configuration (job, build, workflow) serves as one
             GitHub App. Because of that, it is required to specify App ID within the CI
             configuration.
-    
+
             Please specify the GitHub App ID by using '--github-app-id' ('-gta') command
             line parameter or by setting GITHUB_APP_ID environment variable.
             """)
@@ -63,11 +63,10 @@ class GithubToken(HasErrorState):
             the CI configuration.
 
             As the private key is a multiline string, it is not convenient to pass it
-            directly via command line. If you start the parameter with '@', the rest should
-            be the path to a file containing the key. The path can be absolute or relative
-            to the project root. You can pass '-' if you want the universum to read the key
-            from the stdin.   You can also store the key in GITHUB_PRIVATE_KEY environment
-            variable.
+            directly via command line. If you start the parameter with '@', the rest should be
+            the path to a file containing the key. The path can be absolute or relative to the 
+            project root. You can pass '-' if you want the Universum to read the key from the
+            stdin. You can also store the key in GITHUB_PRIVATE_KEY environment variable.
             """)
 
         global github
@@ -114,12 +113,12 @@ class GithubTokenWithInstallation(GithubToken):
         super().__init__(*args, **kwargs)
         self.check_required_option("installation_id", """
             The GitHub App installation ID not specified.
-    
+
             An installation refers to any user or organization account that has installed
             the app. Even if someone installs the app on more than one repository, it only
             counts as one installation because it's within the same account. Installation ID
             can be retrieved via REST API or simply parsed from GitHub App web-hook.
-    
+
             If using 'universum github-handler', installation ID is automatically extracted
             from the webhook payload and  passed via GITHUB_INSTALLATION_ID environment
             variable.

@@ -55,8 +55,8 @@ def _uncrustify_argument_parser() -> argparse.ArgumentParser:
     utils.add_files_argument(parser, False)
     parser.add_argument("--file-list", "-fl", dest="file_list_config", nargs="*", default=[],
                         help="Text file with list of files or directories to check; "
-                             "can be used with '--files'; accepts multiple values; "
-                             "all files specified by both '--files' and '--file-list' "
+                             "can be used with ``--files``; accepts multiple values; "
+                             "all files specified by both ``--files`` and ``--file-list`` "
                              "are gathered into one combined list of files")
     parser.add_argument("--cfg-file", "-cf", dest="cfg_file",
                         help="Name of the configuration file of Uncrustify; "
