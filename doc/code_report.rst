@@ -5,7 +5,6 @@ The following analysing modules (analysers) are currently added to Universum:
 
    * `pylint`_
    * `mypy`_
-   * `svace`_
    * `uncrustify`_
 
 Analysers are separate scripts, fully compatible with Universum. It is possible to use them
@@ -102,43 +101,6 @@ This file will get us the following list of configurations:
     [{'name': 'mypy', 'code_report': True, 'command': '{python} -m universum.analyzers.mypy --python-version 3 --result-file ${CODE_REPORT_FILE} --files *.py examples/'}]
 
 
-.. _code_report#svace:
-
-Svace
------
-
-.. argparse::
-    :ref: universum.analyzers.svace.form_arguments_for_documentation
-    :prog: {python} -m universum.analyzers.svace
-
-Config example for ``universum.analyzers.svace``:
-
-.. testcode::
-
-    from universum.configuration_support import Configuration, Step
-
-    configs = Configuration([Step(name="svace", code_report=True, command=[
-        "{python}", "-m", "universum.analyzers.svace", "--build-cmd", "make", "--lang", "CXX",
-        "--result-file", "${CODE_REPORT_FILE}"
-    ])])
-
-    if __name__ == '__main__':
-        print(configs.dump())
-
-will produce this list of configurations:
-
-.. testcode::
-    :hide:
-
-    print("$ ./.universum.py")
-    print(configs.dump())
-
-.. testoutput::
-
-    $ ./.universum.py
-    [{'name': 'svace', 'code_report': True, 'command': '{python} -m universum.analyzers.svace --build-cmd make --lang CXX --result-file ${CODE_REPORT_FILE}'}]
-
-
 .. _code_report#uncrustify:
 
 Uncrustify
@@ -156,7 +118,7 @@ Config example for ``universum.analyzers.uncrustify``:
     from universum.configuration_support import Configuration, Step
 
     configs = Configuration([Step(name="uncrustify", code_report=True, command=[
-        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "project_root_directory",
+        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", get_project_root(),
         "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
         "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
     ])])
