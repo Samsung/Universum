@@ -1,4 +1,3 @@
-import sys
 from typing import List
 import inspect
 
@@ -46,9 +45,6 @@ class HasErrorState(Module):
                 except FileNotFoundError as e:
                     self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")
                     return ""
-
-            elif value == '-':
-                result = "".join(sys.stdin.readlines())
             else:
                 result = value
         except AttributeError as e:

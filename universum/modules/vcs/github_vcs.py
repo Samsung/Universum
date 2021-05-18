@@ -32,8 +32,7 @@ class GithubToken(HasErrorState):
                                  "please don't use ``--report-to-review`` with GitHub")
         parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
                             help="GitHub App private key for obtaining installation authentication token. "
-                                 "Pass raw key data via environment variable, or redirect key reading to stdin "
-                                 "by passing '-' as param value, or pass a file path to read the key from "
+                                 "Pass raw key data via environment variable or pass a file path to read the key from "
                                  "by starting the value string with '@'. File path can be either absolute or relative")
 
     def __init__(self, *args, **kwargs):
@@ -65,8 +64,7 @@ class GithubToken(HasErrorState):
             As the private key is a multiline string, it is not convenient to pass it
             directly via command line. If you start the parameter with '@', the rest should be
             the path to a file containing the key. The path can be absolute or relative to the 
-            project root. You can pass '-' if you want the Universum to read the key from the
-            stdin. You can also store the key in GITHUB_PRIVATE_KEY environment variable.
+            project root. You can also store the key in GITHUB_PRIVATE_KEY environment variable.
             """)
 
         global github
