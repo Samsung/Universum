@@ -23,10 +23,10 @@ class Submit(HasOutput, HasStructure, HasErrorState):
 
         parser.add_argument('--commit-message', '-cm', dest='commit_message', metavar="COMMIT_MESSAGE",
                             help="Commit message. Enter in command line directly, store in environment variable "
-                                 "or pass a file path to read the message from by starting the value string with '@'. "
-                                 "File path can be either absolute or relative")
+                                 "or pass a file path to read the message from by starting the value string with "
+                                 "'@'. File path can be either absolute or relative")
         parser.add_argument("--reconcile-list", "-rl", dest="reconcile_list", metavar="RECONCILE_LIST",
-                            help="Comma-separated or linebreak-separated list of vcs or directories "
+                            help="Comma-separated or linebreak-separated list of files or directories "
                                  "to be reconciled for commit (relative paths starting at client root "
                                  "are supported). To use command line directly, add quotes if needed "
                                  "(e.g. ``-rl 'target1, target2'``). To use a file with reconcile list, "
@@ -39,8 +39,7 @@ class Submit(HasOutput, HasStructure, HasErrorState):
             
             Please use '--commit-message' option to provide it. If you start the parameter with '@', the
             rest should be the path to a file containing the commit message text. The path can be absolute
-            or relative to the project root. You can pass '-' if you want the Universum to read the commit
-            message from the stdin. You can also store the key in COMMIT_MESSAGE environment variable.
+            or relative to the project root. You can also store the message in COMMIT_MESSAGE environment variable.
             """)
 
         self.read_multiline_option("reconcile_list")
