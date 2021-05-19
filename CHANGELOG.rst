@@ -8,7 +8,7 @@ BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
 * **submit:** ``--reconcile-list`` option can no longer be passed several times. Please use comma-separated
-  single string instead (e.g. ``{python} -m universum submit -rl 'target1, target2'``)
+  single string instead (e.g. ``python -m universum submit -rl 'target1, target2'``)
 * **analyzers:** ``universum.analyzers.svace`` support is deprecated until further notice
 
 New features
