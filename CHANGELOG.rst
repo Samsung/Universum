@@ -1,6 +1,30 @@
 Change log
 ==========
 
+0.19.7 (2021-05-19)
+-------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **submit:** ``--reconcile-list`` option can no longer be passed several times. Please use comma-separated
+  single string instead (e.g. ``python -m universum submit -rl 'target1, target2'``)
+* **analyzers:** ``universum.analyzers.svace`` support is deprecated until further notice
+
+New features
+~~~~~~~~~~~~
+
+* **submit:** ``--commit-message`` and ``--reconcile-list`` now support passing required values via local file.
+  To use this feature, pass an absolute or relative file path starting with '@' as a corresponding argument.
+  See :ref:`argument description <additional_commands#submit>` for details
+
+Bug fixes
+~~~~~~~~~
+
+* **analyzers:** ``'Namespace' object has no attribute 'file_names'`` error message
+  from :ref:`Uncrustify <code_report#uncrustify>` module fixed
+
+
 0.19.6 (2021-05-12)
 -------------------
 

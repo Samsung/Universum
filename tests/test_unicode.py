@@ -38,7 +38,7 @@ def test_unicode(vcs, test_type, perforce_workspace, git_client, unicode_dir):
     if test_type == "submit":
         temp_file = env.vcs_cooking_dir.join(utils.randomize_name("new_file") + ".txt")
         temp_file.write("This is a new file" + "\n")
-        env.settings.Submit.reconcile_list = [str(temp_file)]
+        env.settings.Submit.reconcile_list = str(temp_file)
 
     res = __main__.run(env.settings)
     assert res == 0

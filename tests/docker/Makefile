@@ -1,4 +1,4 @@
-UNIVERSUM_ENVIRONMENT=$(filter-out Makefile perforce, $(wildcard *))
+UNIVERSUM_ENVIRONMENT= universum_test_env universum_test_env_no_p4 universum_test_env_no_vcs
 DOCKER_ARGS :=
 PYTHON ?= $(shell python -c 'import sys; print("python%d.%d"% sys.version_info[0:2])' )
 ifeq ($(PYTHON),)
@@ -10,7 +10,7 @@ endif
 all: $(UNIVERSUM_ENVIRONMENT) perforce
 
 $(UNIVERSUM_ENVIRONMENT):
-	docker build --build-arg PYTHON=$(PYTHON) $(DOCKER_ARGS) $@ -t $@_$(PYTHON)
+	docker build --target $@ --build-arg PYTHON=$(PYTHON) $(DOCKER_ARGS) universum_test_env -t $@_$(PYTHON)
 
 perforce:
 	docker build $(DOCKER_ARGS) $@ -t $@
