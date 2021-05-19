@@ -35,22 +35,21 @@ class HasErrorState(Module):
             return False
         return True
 
-    def read_and_check_multiline_option(self, setting_name: str, error_message: str) -> str:
-        try:
-            value: str = getattr(self.settings, setting_name, None)
-            if value.startswith('@'):
-                try:
-                    with open(value.lstrip('@')) as file_name:
-                        result = file_name.read()
-                except FileNotFoundError as e:
-                    self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")
-                    return ""
-            else:
-                result = value
-        except AttributeError as e:
-            self.error(error_message)
+    def read_multiline_option(self, setting_name: str) -> str:
+        value: str = getattr(self.settings, setting_name, None)
+        if not value:
             return ""
+        if value.startswith('@'):
+            try:
+                with open(value.lstrip('@')) as value_file:
+                    return value_file.read()
+            except FileNotFoundError as e:
+                self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")
+                return ""
+        return value
 
+    def read_and_check_multiline_option(self, setting_name: str, error_message: str) -> str:
+        result = self.read_multiline_option(setting_name)
         if not result:
             self.error(error_message)
             return ""
