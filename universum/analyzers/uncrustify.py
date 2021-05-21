@@ -44,8 +44,8 @@ def main() -> int:
             src_file_relative = src_file.relative_to(Path.cwd())
             target_file: Path = target_folder.joinpath(src_file_relative)
             files.append((src_file, target_file))
-    except EnvironmentError as e:
-        sys.stderr.write(str(e))
+    except Exception as e:
+        sys.stderr.write(f"Caught {type(e)} exception: {str(e)}")
         return 2
 
     cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
