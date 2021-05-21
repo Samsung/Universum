@@ -1,8 +1,8 @@
 import argparse
 import difflib
+import os
+import shutil
 import sys
-from shutil import which
-from os import environ
 from pathlib import Path
 
 import re
@@ -16,12 +16,12 @@ def form_arguments_for_documentation() -> argparse.ArgumentParser:  # TODO: modi
 
 
 def main() -> int:
-    if not which('uncrustify'):
+    if not shutil.which('uncrustify'):
         sys.stderr.write("Please install uncrustify")
         return 2
     settings: argparse.Namespace = _uncrustify_argument_parser().parse_args()
     target_folder: Path = Path.cwd().joinpath(settings.output_directory)
-    if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in environ:
+    if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
         sys.stderr.write("Please specify the '--cfg_file' parameter "
                          "or set an env. variable 'UNCRUSTIFY_CONFIG'")
         return 2
