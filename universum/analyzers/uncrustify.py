@@ -1,6 +1,7 @@
 import argparse
 import difflib
 import sys
+from shutil import which
 from os import environ
 from pathlib import Path
 
@@ -15,6 +16,9 @@ def form_arguments_for_documentation() -> argparse.ArgumentParser:  # TODO: modi
 
 
 def main() -> int:
+    if not which('uncrustify'):
+        sys.stderr.write("Please install uncrustify")
+        return 2
     settings: argparse.Namespace = _uncrustify_argument_parser().parse_args()
     target_folder: Path = Path.cwd().joinpath(settings.output_directory)
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in environ:
@@ -29,15 +33,17 @@ def main() -> int:
     files: List[Tuple[Path, Path]] = []
     try:
         src_files: List[Path] = _get_src_files(settings.file_list, settings.file_list_config)
+        if not src_files:
+            raise EnvironmentError("Please provide at least one file for analysis")
         for pattern in settings.pattern_form:
             regexp = re.compile(pattern)  # TODO: combine patterns via join
             src_files = [file for file in src_files if regexp.match(str(file))]
+        if not src_files:
+            raise EnvironmentError("No files matched the provided filter pattern(s)")
         for src_file in src_files:
             src_file_relative = src_file.relative_to(Path.cwd())
             target_file: Path = target_folder.joinpath(src_file_relative)
             files.append((src_file, target_file))
-        if not files:
-            raise EnvironmentError("Please provide at least one file for analysis")
     except EnvironmentError as e:
         sys.stderr.write(str(e))
         return 2
@@ -80,14 +86,16 @@ def _get_src_files(file_list: List[str], file_list_config: List[str]) -> List[Pa
             for file_name in f.readlines():
                 file_list.append(file_name.strip())
     for file_name in set(file_list):
-        files.extend(_add_files_recursively(file_name))
+        file_path: Path = Path(file_name)
+        if not file_path.is_absolute():
+            file_path = Path.cwd().joinpath(file_path)
+        files.extend(_add_files_recursively(file_path))
 
     return files
 
 
-def _add_files_recursively(item: str) -> List[Path]:
+def _add_files_recursively(item_path: Path) -> List[Path]:
     files: List[Path] = []
-    item_path = Path.cwd().joinpath(item)
     if item_path.is_file():
         files.append(item_path)
     elif item_path.is_dir():
