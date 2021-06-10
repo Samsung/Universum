@@ -4,23 +4,24 @@ import argparse
 import glob
 import subprocess
 
-from typing import Callable, List
+from typing import Callable, List, Optional, TypeVar
 from typing_extensions import TypedDict
 
 ReportData = TypedDict('ReportData', {'path': str, 'message': str, 'symbol': str, 'line': int})
 
 
-def report_parsed_outcome(cmd: List[str],
+def report_parsed_outcome(cmd: Optional[List[str]],
                           parse_function: Callable[[str], List[ReportData]],
                           out_file: str) -> int:
-    result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.stderr and not result.stdout:
-        sys.stderr.write(result.stderr)
-        return result.returncode
+    if cmd:
+        result = subprocess.run(cmd, universal_newlines=True,  # pylint: disable=subprocess-run-check
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.stderr and not result.stdout:
+            sys.stderr.write(result.stderr)
+            return result.returncode
 
     try:
-        parsed_issues = parse_function(result.stdout)
+        parsed_issues = parse_function(result.stdout if cmd else '')
     except Exception as e:
         sys.stderr.write("Error encountered while parsing output:\n")
         sys.stderr.write(str(e))
@@ -33,7 +34,7 @@ def report_parsed_outcome(cmd: List[str],
 def add_files_argument(parser: argparse.ArgumentParser, is_required: bool = True) -> None:
     parser.add_argument("--files", dest="file_list", nargs='+' if is_required else '*', required=is_required,
                         default=None if is_required else [],
-                        help="File or directory to check; accepts multiple values; ")
+                        help="Target file or directory; accepts multiple values; ")
 
 
 def expand_files_argument(settings: argparse.Namespace) -> List[str]:

@@ -47,6 +47,16 @@ int main() {
 }
 """
 
+scan_build_html_report = """
+<html><head></head><body>
+<!-- REPORTHEADER -->
+<h3>Bug Summary</h3>
+<table class="simpletable">
+<tr><td class="rowname">File:</td><td>my_path/my_file.c</td></tr>
+<tr><td class="rowname">Warning:</td><td><a href="#EndPath">line 1, column 1</a><br />Error!</td></tr>
+</table></body></html>
+"""
+
 cfg_uncrustify = """
 code_width = 120
 input_tab_size = 2
@@ -57,6 +67,8 @@ log_success = r'Issues not found'
 
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
+    [['scan_build_report'], [], None, True],
+    [['scan_build_report'], [], scan_build_html_report, False],
     [['uncrustify'], [], source_code_c, True],
     [['uncrustify'], [], source_code_c.replace('\t', ' '), False],
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python, True],
@@ -66,6 +78,8 @@ log_success = r'Issues not found'
     # TODO: add test with rcfile
     # TODO: parametrize test for different versions of python
 ], ids=[
+    'scan_build_no_issues',
+    'scan_build_issues_found',
     'uncrustify_no_issues',
     'uncrustify_found_issues',
     'pylint_and_mypy_both_no_issues',
@@ -76,9 +90,10 @@ log_success = r'Issues not found'
 def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_content, expected_success):
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
-        "--files", "source_file",
+        "--files", "*.test",
     ]
-    runner_with_analyzers.local.root_directory.join("source_file").write(tested_content)
+    if tested_content:
+        runner_with_analyzers.local.root_directory.join("source_file.test").write(tested_content)
     config = ConfigData()
     for analyzer in analyzers:
         args = common_args + extra_args
@@ -106,19 +121,24 @@ configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
     assert not pattern.findall(log)
 
 
+@pytest.mark.parametrize('analyzer', ['scan_build_report', 'pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('common_arg_set, expected_log', [
+    [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
+    [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],
+    [["--result-file", "${CODE_REPORT_FILE}"], "error: the following arguments are required: --files"],
+    [["--files", "--result-file", "${CODE_REPORT_FILE}"], "files: expected at least one argument"],
+])
+def test_analyzer_common_params(runner_with_analyzers, analyzer, common_arg_set, expected_log):
+    test_analyzer_specific_params(runner_with_analyzers, analyzer, common_arg_set, expected_log)
+
+
 @pytest.mark.parametrize('analyzer', ['pylint', 'mypy'])
 @pytest.mark.parametrize('common_arg_set, expected_log', [
-    [["--python-version", python_version(), "--files", "source_file.py", "--result-file"],
-     'result-file: expected one argument'],
-    [["--python-version", python_version(), "--files", "--result-file", "${CODE_REPORT_FILE}"],
-     "files: expected at least one argument"],
     [["--python-version", "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}"],
      "python-version: expected one argument"],
-    [["--python-version", python_version(), "--result-file", "${CODE_REPORT_FILE}"],
-     "error: the following arguments are required: --files"],
 ])
-def test_pylint_analyzer_wrong_common_params(runner_with_analyzers, analyzer, common_arg_set, expected_log):
-    test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, common_arg_set, expected_log)
+def test_analyzer_python_version_params(runner_with_analyzers, analyzer, common_arg_set, expected_log):
+    test_analyzer_specific_params(runner_with_analyzers, analyzer, common_arg_set, expected_log)
 
 
 @pytest.mark.parametrize('analyzer, arg_set, expected_log', [
@@ -128,7 +148,7 @@ def test_pylint_analyzer_wrong_common_params(runner_with_analyzers, analyzer, co
     ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
      "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
 ])
-def test_pylint_analyzer_wrong_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
+def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
     source_file = runner_with_analyzers.local.root_directory.join("source_file")
     source_file.write(source_code_python)
 
