@@ -7,22 +7,18 @@ from typing import List
 from . import utils
 
 
-def form_arguments_for_documentation() -> argparse.ArgumentParser:
-    return _pylint_argument_parser()
-
-
 def main() -> int:
-    settings: argparse.Namespace = _pylint_argument_parser().parse_args()
+    settings: argparse.Namespace = pylint_argument_parser().parse_args()
 
     cmd = [f"python{settings.version}", '-m', 'pylint', '-f', 'json']
     if settings.rcfile:
         cmd.append(f'--rcfile={settings.rcfile}')
     cmd.extend(utils.expand_files_argument(settings))
 
-    return utils.report_parsed_outcome(cmd, _pylint_output_parser, settings.result_file)
+    return utils.report_parsed_outcome(cmd, pylint_output_parser, settings.result_file)
 
 
-def _pylint_argument_parser() -> argparse.ArgumentParser:
+def pylint_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Pylint analyzer")
     utils.add_files_argument(parser)
     parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
@@ -31,7 +27,7 @@ def _pylint_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _pylint_output_parser(output: str) -> List[utils.ReportData]:
+def pylint_output_parser(output: str) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for data in json.loads(output):
         # pylint has its own escape rules for json output of "message" values.
