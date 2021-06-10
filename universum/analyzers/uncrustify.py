@@ -11,15 +11,11 @@ from typing import Callable, List, Optional, Tuple
 from . import utils
 
 
-def form_arguments_for_documentation() -> argparse.ArgumentParser:  # TODO: modify callers to remove wrapper
-    return _uncrustify_argument_parser()
-
-
 def main() -> int:
     if not shutil.which('uncrustify'):
         sys.stderr.write("Please install uncrustify")
         return 2
-    settings: argparse.Namespace = _uncrustify_argument_parser().parse_args()
+    settings: argparse.Namespace = uncrustify_argument_parser().parse_args()
     target_folder: Path = Path.cwd().joinpath(settings.output_directory)
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
         sys.stderr.write("Please specify the '--cfg_file' parameter "
@@ -52,11 +48,11 @@ def main() -> int:
     cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
 
     return utils.report_parsed_outcome(cmd,
-                                       lambda _: _uncrustify_output_parser(files, html_diff_file_writer),
+                                       lambda _: uncrustify_output_parser(files, html_diff_file_writer),
                                        settings.result_file)
 
 
-def _uncrustify_argument_parser() -> argparse.ArgumentParser:
+def uncrustify_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Uncrustify analyzer")
     utils.add_files_argument(parser, False)
     parser.add_argument("--file-list", "-fl", dest="file_list_config", nargs="*", default=[],
@@ -119,9 +115,9 @@ class HtmlDiffFileWriter:
             out_file.write(self.differ.make_file(src, target, context=False))
 
 
-def _uncrustify_output_parser(files: List[Tuple[Path, Path]],
-                              write_diff_file: Optional[Callable[[Path, List[str], List[str]], None]]
-                              ) -> List[utils.ReportData]:
+def uncrustify_output_parser(files: List[Tuple[Path, Path]],
+                             write_diff_file: Optional[Callable[[Path, List[str], List[str]], None]]
+                             ) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
         with open(src_file) as src:
