@@ -33,7 +33,7 @@ def report_parsed_outcome(cmd: List[str],
 def add_files_argument(parser: argparse.ArgumentParser, is_required: bool = True) -> None:
     parser.add_argument("--files", dest="file_list", nargs='+' if is_required else '*', required=is_required,
                         default=None if is_required else [],
-                        help="File or directory to check; accepts multiple values; ")
+                        help="Target file or directory; accepts multiple values; ")
 
 
 def expand_files_argument(settings: argparse.Namespace) -> List[str]:
