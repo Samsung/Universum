@@ -184,3 +184,5 @@ configs = Configuration([Step(name="Create present file", command=["touch", "{pr
 
     assert not __main__.run(settings)
     stdout_checker.assert_absent_calls_with_param("Submit - \x1b[1;31mFailed\x1b[00m")  # terminal coloring included
+    assert perforce_environment.file_present(f"//depot/{present_file_name}")
+    assert not perforce_environment.file_present(f"//depot/{absent_file_name}")
