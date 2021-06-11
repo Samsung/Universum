@@ -120,7 +120,7 @@ configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
     assert not pattern.findall(log)
 
 
-@pytest.mark.parametrize('analyzer', ['scan_build_report', 'pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('analyzer', ['scan_build_report', 'pylint', 'mypy'])
 @pytest.mark.parametrize('common_arg_set, expected_log', [
     [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
     [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],

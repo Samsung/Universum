@@ -48,7 +48,7 @@ def expand_files_argument(settings: argparse.Namespace) -> List[str]:
 
 
 def add_result_file_argument(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--result-file", dest="result_file",
+    parser.add_argument("--result-file", dest="result_file", required=True,
                         help="File for storing json results of Universum run. Set it to \"${CODE_REPORT_FILE}\" "
                              "for running from Universum, variable will be handled during run. If you run this "
                              "script separately from Universum, just name the result file or leave it empty.")
