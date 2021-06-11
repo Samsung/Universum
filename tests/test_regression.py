@@ -158,8 +158,7 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     assert "Getting file diff failed due to Perforce server internal error" in log
 
 
-# def test_p4_clean_empty_cl(perforce_environment, stdout_checker):
-def test_p4_clean_empty_cl(perforce_environment):
+def test_p4_clean_empty_cl(perforce_environment, stdout_checker):
     config = f"""
 from universum.configuration_support import Step, Configuration
 
@@ -174,4 +173,4 @@ configs = Configuration([Step(name="Create present file",
     settings = shelve_config(config, perforce_environment)
     assert not __main__.run(settings)
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
-    # assert stdout_checker.assert_absent_calls_with_param(error_message)
+    stdout_checker.assert_absent_calls_with_param(error_message)
