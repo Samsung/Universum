@@ -19,9 +19,12 @@ def report_parsed_outcome(cmd: Optional[List[str]],
         if result.stderr and not result.stdout:
             sys.stderr.write(result.stderr)
             return result.returncode
+        data_to_parse = result.stdout
+    else:
+        data_to_parse = ''  # nothing to parse from stdout
 
     try:
-        parsed_issues = parse_function(result.stdout if cmd else '')
+        parsed_issues = parse_function(data_to_parse)
     except Exception as e:
         sys.stderr.write("Error encountered while parsing output:\n")
         sys.stderr.write(str(e))
