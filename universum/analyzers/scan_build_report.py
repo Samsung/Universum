@@ -1,8 +1,7 @@
 import argparse
-from lxml import etree
 import sys
-
 from typing import List
+from lxml import etree
 
 from . import utils
 

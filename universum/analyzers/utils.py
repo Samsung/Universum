@@ -4,7 +4,7 @@ import argparse
 import glob
 import subprocess
 
-from typing import Callable, List, Optional, TypeVar
+from typing import Callable, List, Optional
 from typing_extensions import TypedDict
 
 ReportData = TypedDict('ReportData', {'path': str, 'message': str, 'symbol': str, 'line': int})
