@@ -590,8 +590,14 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def clean_workspace(self):
         try:
             self.p4.client = self.client_name
-            report = self.p4.run_revert("-k", "-c", "default", "//...")
-            self.p4report(report)
+            try:
+                report = self.p4.run_revert("-k", "-c", "default", "//...")
+                self.p4report(report)
+            except P4Exception as e:
+                if "file(s) not opened on this client" in e.value:
+                    self.out.log("Default CL is empty")
+                else:
+                    raise
             shelves = self.p4.run_changes("-c", self.client_name, "-s", "shelved")
             for item in shelves:
                 self.out.log("Deleting shelve from CL " + item["change"])
@@ -599,19 +605,18 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             all_cls = self.p4.run_changes("-c", self.client_name, "-s", "pending")
             for item in all_cls:
                 self.out.log("Deleting CL " + item["change"])
-                self.p4.run_revert("-k", "-c", item["change"], "//...")
+                try:
+                    self.p4.run_revert("-k", "-c", item["change"], "//...")
+                except P4Exception as e:
+                    if "file(s) not opened on this client" in e.value:
+                        self.out.log(f"CL {item['change']} is empty")
+                    else:
+                        raise
                 self.p4.run_change("-d", item["change"])
-        except P4Exception as e:
-            if "Client '{}' unknown".format(self.client_name) not in e.value \
-                    and "file(s) not opened on this client" not in e.value:
-                self.structure.fail_current_block(e.value)
-            else:
-                self.out.log("No files to clean")
-        try:
             self.p4.delete_client(self.client_name)
             self.out.log(f"Client '{self.client_name}' deleted")
         except P4Exception as e:
-            if "Client '{}' doesn't exist".format(self.client_name) in e.value:
+            if "Client '{}' unknown".format(self.client_name) in e.value:
                 self.out.log("No client to delete")
             else:
                 self.structure.fail_current_block(e.value)
