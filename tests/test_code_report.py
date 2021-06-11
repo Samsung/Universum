@@ -67,7 +67,7 @@ log_success = r'Issues not found'
 
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
-    [['scan_build_report'], [], None, True],
+    [['scan_build_report'], [], "<html></html>", True],
     [['scan_build_report'], [], scan_build_html_report, False],
     [['uncrustify'], [], source_code_c, True],
     [['uncrustify'], [], source_code_c.replace('\t', ' '), False],
@@ -90,10 +90,9 @@ log_success = r'Issues not found'
 def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_content, expected_success):
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
-        "--files", "*.test",
+        "--files", "source_file",
     ]
-    if tested_content:
-        runner_with_analyzers.local.root_directory.join("source_file.test").write(tested_content)
+    runner_with_analyzers.local.root_directory.join("source_file").write(tested_content)
     config = ConfigData()
     for analyzer in analyzers:
         args = common_args + extra_args
