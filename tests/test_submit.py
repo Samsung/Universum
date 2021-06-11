@@ -360,3 +360,31 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     parameters.assert_submit_success([str(parameters.environment.vcs_cooking_dir) + "/*"])
     assert not parameters.file_present(str(tmp_dir))
     assert not parameters.file_present(str(other_tmp_dir))
+
+
+def test_success_reconcile_partial(submit_parameters, submit_environment):
+    parameters = submit_parameters(submit_environment)
+
+    dir_name = utils.randomize_name("new_directory")
+
+    tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(dir_name)
+    for i in range(0, 9):
+        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file.write("This is some file" + "\n")
+
+    reconcile_list = [str(tmp_dir.join("new_file{}.txt".format(i))) for i in range(0, 4)]
+    reconcile_list.extend(["", " ", "\n"])
+    parameters.assert_submit_success(reconcile_list)
+
+    for i in range(0, 4):
+        file_path = tmp_dir.join("new_file{}.txt".format(i))
+        assert parameters.file_present(str(file_path))
+
+    for i in range(5, 9):
+        file_path = tmp_dir.join("new_file{}.txt".format(i))
+        assert not parameters.file_present(str(file_path))
+
+    # Delete a directory
+    shutil.rmtree(tmp_dir)
+    parameters.assert_submit_success([str(tmp_dir)])
+    assert not parameters.file_present(str(tmp_dir))

@@ -157,3 +157,30 @@ __version__ = "{test_line}"
     docker_main.run(config, vcs_type="none")  # not expected to fail
     if utils.is_pycharm():
         docker_main.environment.install_python_module(docker_main.working_dir)
+
+
+def test_file_args_from_config(perforce_environment, stdout_checker):
+    step_name = "Submit"
+    present_file_name = utils.randomize_name("present_file") + ".txt"
+    absent_file_name = utils.randomize_name("absent_file") + ".txt"
+    reconcile_file_name = "reconcile_list.txt"
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Create present file", command=["touch", "{present_file_name}"]),
+                         Step(name="Create absent file", command=["touch", "{absent_file_name}"]),
+                         Step(name="Create reconcile file",
+                              command=["bash", "-c", "echo '{present_file_name}\\\n' > {reconcile_file_name}"]),
+                         Step(name="Check reconcile file", command=["cat", "{reconcile_file_name}"]),
+                         Step(name="{step_name}",
+                              command=["{python()}", "-m", "universum", "submit", "-rl", "@{reconcile_file_name}",
+                                       "-cm", "This is change", "-vt", "p4"],
+                              environment = {{"P4CLIENT": "{perforce_environment.client_name}",
+                                              "P4PORT": "{perforce_environment.p4.port}",
+                                              "P4USER": "{perforce_environment.p4.user}",
+                                              "P4PASSWD": "{perforce_environment.p4.password}"}})])
+"""
+    settings = shelve_config(config, perforce_environment)
+
+    assert not __main__.run(settings)
+    stdout_checker.assert_absent_calls_with_param("Submit - \x1b[1;31mFailed\x1b[00m")  # terminal coloring included
