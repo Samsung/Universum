@@ -147,7 +147,7 @@ def test_analyzer_python_version_params(runner_with_analyzers, analyzer, arg_set
     ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
      "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
     ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}",
-                    "--output-directory", "."],
+                    "--cfg-file", "cfg", "--output-directory", "."],
      "Target and source folders for uncrustify are not allowed to match"],
 ])
 def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
