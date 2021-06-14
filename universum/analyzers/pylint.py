@@ -1,30 +1,27 @@
 import argparse
 import json
-import sys
 
 from typing import List
 
 from . import utils
 
 
-def main() -> int:
-    settings: argparse.Namespace = pylint_argument_parser().parse_args()
+def pylint_argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Pylint analyzer")
+    parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
+    utils.add_python_version_argument(parser)
+    return parser
 
+
+@utils.sys_exit
+@utils.analyzer(pylint_argument_parser())
+def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     cmd = [f"python{settings.version}", '-m', 'pylint', '-f', 'json']
     if settings.rcfile:
         cmd.append(f'--rcfile={settings.rcfile}')
-    cmd.extend(utils.expand_files_argument(settings))
-
-    return utils.report_parsed_outcome(cmd, pylint_output_parser, settings.result_file)
-
-
-def pylint_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pylint analyzer")
-    utils.add_files_argument(parser)
-    parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
-    utils.add_python_version_argument(parser)
-    utils.add_result_file_argument(parser)
-    return parser
+    cmd.extend(settings.file_list)
+    output, _ = utils.run_for_output(cmd)
+    return pylint_output_parser(output)
 
 
 def pylint_output_parser(output: str) -> List[utils.ReportData]:
@@ -42,5 +39,4 @@ def pylint_output_parser(output: str) -> List[utils.ReportData]:
 
 
 if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)
+    main()  # pylint: disable=no-value-for-parameter  # see https://github.com/PyCQA/pylint/issues/259
