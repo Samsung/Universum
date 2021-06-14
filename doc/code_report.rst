@@ -119,8 +119,7 @@ Config example for ``universum.analyzers.uncrustify``:
 
     configs = Configuration([Step(name="uncrustify", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "/home/user/workspace/temp",
-        "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
-        "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
+        "--cfg-file", "file_name.cfg", "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
     ])])
 
     if __name__ == '__main__':
@@ -137,4 +136,4 @@ will produce this list of configurations:
 .. testoutput::
 
     $ ./.universum.py
-    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files /home/user/workspace/temp --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
+    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files /home/user/workspace/temp --cfg-file file_name.cfg --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
