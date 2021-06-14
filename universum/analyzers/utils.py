@@ -103,7 +103,8 @@ def add_files_argument(parser: argparse.ArgumentParser) -> None:
                         help="Target file or directory; accepts multiple values; ")
 
 
-def expand_files_argument(settings: argparse.Namespace) -> List[str]:
+def expand_files_argument(settings: argparse.Namespace) -> None:
+    # TODO: subclass argparse.Action
     result = []
     for pattern in settings.file_list:
         result.extend(glob.glob(pattern))
