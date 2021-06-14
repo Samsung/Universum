@@ -1,20 +1,8 @@
 import argparse
-import sys
 
 from typing import List
 
 from . import utils
-
-
-def main() -> int:
-    settings = mypy_argument_parser().parse_args()
-
-    cmd = [f"python{settings.version}", '-m', 'mypy', '--ignore-missing-imports']
-    if settings.config_file:
-        cmd.append(f'--config-file={settings.config_file}')
-    cmd.extend(utils.expand_files_argument(settings))
-
-    return utils.report_parsed_outcome(cmd, mypy_output_parser, settings.result_file)
 
 
 def mypy_argument_parser() -> argparse.ArgumentParser:
@@ -22,8 +10,18 @@ def mypy_argument_parser() -> argparse.ArgumentParser:
     utils.add_files_argument(parser)
     parser.add_argument("--config-file", dest="config_file", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
-    utils.add_result_file_argument(parser)
     return parser
+
+
+@utils.sys_exit
+@utils.analyzer(mypy_argument_parser())
+def main(settings: argparse.Namespace) -> List[utils.ReportData]:
+    cmd = [f"python{settings.version}", '-m', 'mypy', '--ignore-missing-imports']
+    if settings.config_file:
+        cmd.append(f'--config-file={settings.config_file}')
+    cmd.extend(utils.expand_files_argument(settings))
+    output, _ = utils.run_for_output(cmd)
+    return mypy_output_parser(output)
 
 
 def mypy_output_parser(output: str) -> List[utils.ReportData]:
@@ -42,4 +40,4 @@ def mypy_output_parser(output: str) -> List[utils.ReportData]:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

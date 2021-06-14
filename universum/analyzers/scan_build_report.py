@@ -1,24 +1,22 @@
 import argparse
-import sys
 from typing import List
 from lxml import etree
 
 from . import utils
 
 
-def main() -> int:
-    settings = scan_build_report_argument_parser().parse_args()
-    files = utils.expand_files_argument(settings)
-    return utils.report_parsed_outcome(None,
-                                       lambda _: scan_build_report_output_parser(files),
-                                       settings.result_file)
-
-
 def scan_build_report_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Parse scan-build report")
     utils.add_files_argument(parser)
-    utils.add_result_file_argument(parser)
     return parser
+
+
+@utils.sys_exit
+@utils.analyzer(scan_build_report_argument_parser())
+def main(settings: argparse.Namespace) -> List[utils.ReportData]:
+    files = utils.expand_files_argument(settings)
+    issues = scan_build_report_output_parser(files)
+    return issues
 
 
 def scan_build_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
@@ -48,4 +46,4 @@ def scan_build_report_output_parser(file_list: List[str]) -> List[utils.ReportDa
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

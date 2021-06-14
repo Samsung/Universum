@@ -2,54 +2,12 @@ import argparse
 import difflib
 import os
 import shutil
-import sys
 from pathlib import Path
 
 import re
 from typing import Callable, List, Optional, Tuple
 
 from . import utils
-
-
-def main() -> int:
-    if not shutil.which('uncrustify'):
-        sys.stderr.write("Please install uncrustify")
-        return 2
-    settings: argparse.Namespace = uncrustify_argument_parser().parse_args()
-    target_folder: Path = Path.cwd().joinpath(settings.output_directory)
-    if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
-        sys.stderr.write("Please specify the '--cfg_file' parameter "
-                         "or set an env. variable 'UNCRUSTIFY_CONFIG'")
-        return 2
-    html_diff_file_writer: Optional[Callable[[Path, List[str], List[str]], None]] = None
-    if settings.write_html:
-        wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
-        html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
-
-    files: List[Tuple[Path, Path]] = []
-    try:
-        src_files: List[Path] = _get_src_files(settings.file_list, settings.file_list_config)
-        if not src_files:
-            raise EnvironmentError("Please provide at least one file for analysis")
-        for pattern in settings.pattern_form:
-            regexp = re.compile(pattern)  # TODO: combine patterns via join
-            src_files = [file for file in src_files if regexp.match(str(file))]
-        if not src_files:
-            raise EnvironmentError("No files matched the provided filter pattern(s)")
-        for src_file in src_files:
-            src_file_relative = src_file.relative_to(Path.cwd())
-            target_file: Path = target_folder.joinpath(src_file_relative)
-            files.append((src_file, target_file))
-    except Exception as e:
-        sys.stderr.write(f"Caught {type(e)} exception: {str(e)}")
-        return 2
-
-    cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
-    cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
-
-    return utils.report_parsed_outcome(cmd,
-                                       lambda _: uncrustify_output_parser(files, html_diff_file_writer),
-                                       settings.result_file)
 
 
 def uncrustify_argument_parser() -> argparse.ArgumentParser:
@@ -71,8 +29,43 @@ def uncrustify_argument_parser() -> argparse.ArgumentParser:
                              "and HTML files with diff; the default value is 'uncrustify'")
     parser.add_argument("--report-html", dest="write_html", action="store_true", default=False,
                         help="(optional) Set to generate html reports for each modified file")
-    utils.add_result_file_argument(parser)
     return parser
+
+
+@utils.sys_exit
+@utils.analyzer(uncrustify_argument_parser())
+def main(settings: argparse.Namespace) -> List[utils.ReportData]:
+    if not shutil.which('uncrustify'):
+        raise utils.AnalyzerException(code=2, message="Please install uncrustify")
+    target_folder: Path = Path.cwd().joinpath(settings.output_directory)
+    if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
+        raise utils.AnalyzerException(code=2, message="Please specify the '--cfg_file' parameter "
+                                      "or set an env. variable 'UNCRUSTIFY_CONFIG'")
+    html_diff_file_writer: Optional[Callable[[Path, List[str], List[str]], None]] = None
+    if settings.write_html:
+        wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
+        html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
+
+    files: List[Tuple[Path, Path]] = []
+
+    src_files: List[Path] = _get_src_files(settings.file_list, settings.file_list_config)
+    if not src_files:
+        raise EnvironmentError("Please provide at least one file for analysis")
+    for pattern in settings.pattern_form:
+        regexp = re.compile(pattern)  # TODO: combine patterns via join
+        src_files = [file for file in src_files if regexp.match(str(file))]
+    if not src_files:
+        raise EnvironmentError("No files matched the provided filter pattern(s)")
+    for src_file in src_files:
+        src_file_relative = src_file.relative_to(Path.cwd())
+        target_file: Path = target_folder.joinpath(src_file_relative)
+        files.append((src_file, target_file))
+
+    cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
+    cmd.extend([str(path.relative_to(Path.cwd())) for path in src_files])
+
+    _, _ = utils.run_for_output(cmd)
+    return uncrustify_output_parser(files, html_diff_file_writer)
 
 
 def _get_src_files(file_list: List[str], file_list_config: List[str]) -> List[Path]:
@@ -207,4 +200,4 @@ def _replace_invisible_symbols(line: str) -> str:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
