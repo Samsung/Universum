@@ -7,7 +7,6 @@ from . import utils
 
 def mypy_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Mypy analyzer")
-    utils.add_files_argument(parser)
     parser.add_argument("--config-file", dest="config_file", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
     return parser
@@ -19,7 +18,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     cmd = [f"python{settings.version}", '-m', 'mypy', '--ignore-missing-imports']
     if settings.config_file:
         cmd.append(f'--config-file={settings.config_file}')
-    cmd.extend(utils.expand_files_argument(settings))
+    cmd.extend(settings.file_list)
     output, _ = utils.run_for_output(cmd)
     return mypy_output_parser(output)
 
@@ -40,4 +39,4 @@ def mypy_output_parser(output: str) -> List[utils.ReportData]:
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pylint: disable=no-value-for-parameter  # see https://github.com/PyCQA/pylint/issues/259

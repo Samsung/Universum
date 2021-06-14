@@ -7,15 +7,13 @@ from . import utils
 
 def scan_build_report_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Parse scan-build report")
-    utils.add_files_argument(parser)
     return parser
 
 
 @utils.sys_exit
 @utils.analyzer(scan_build_report_argument_parser())
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
-    files = utils.expand_files_argument(settings)
-    issues = scan_build_report_output_parser(files)
+    issues = scan_build_report_output_parser(settings.file_list)
     return issues
 
 
@@ -46,4 +44,4 @@ def scan_build_report_output_parser(file_list: List[str]) -> List[utils.ReportDa
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pylint: disable=no-value-for-parameter  # see https://github.com/PyCQA/pylint/issues/259

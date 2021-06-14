@@ -2,6 +2,7 @@ import json
 import sys
 import argparse
 import glob
+import pathlib
 import subprocess
 
 from typing import Any, Callable, List, Optional, Tuple
@@ -19,10 +20,21 @@ class AnalyzerException(CiException):
 
 
 def analyzer(parser: argparse.ArgumentParser):
+    """
+    Wraps the analyzer specific data and adds common protocol information:
+      --files argument and its processing
+      --result-file argument and its processing
+    This function exists to define analyzer report interface
+
+    :param parser: Definition of analyzer custom arguments
+    :return: Wrapped analyzer with common reporting behaviour
+    """
     def internal(func: Callable[[argparse.Namespace], List[ReportData]]) -> Callable[[], List[ReportData]]:
         def wrapper() -> List[ReportData]:
+            add_files_argument(parser)
             add_result_file_argument(parser)
             settings: argparse.Namespace = parser.parse_args()
+            expand_files_argument(settings)
             issues: List[ReportData] = func(settings)
             report_to_file(issues, settings.result_file)
             return issues
@@ -70,6 +82,8 @@ def sys_exit(func: Callable[[], Any]) -> Callable[[], None]:
             exit_code = getattr(e, 'code', 2)
             if message:
                 sys.stderr.write(message)
+            else:
+                sys.stderr.write(str(e))
         sys.exit(exit_code)
 
     return wrapper
@@ -84,10 +98,8 @@ def run_for_output(cmd: List[str]) -> Tuple[str, str]:
     return result.stdout, result.stderr
 
 
-def add_files_argument(parser: argparse.ArgumentParser, is_required: bool = True) -> None:
-    # TODO: refactor uncrustify to make 'file_list' arg as common as 'result_file'
-    parser.add_argument("--files", dest="file_list", nargs='+' if is_required else '*', required=is_required,
-                        default=None if is_required else [],
+def add_files_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--files", dest="file_list", nargs='+', required=True,
                         help="Target file or directory; accepts multiple values; ")
 
 
@@ -95,7 +107,7 @@ def expand_files_argument(settings: argparse.Namespace) -> List[str]:
     result = []
     for pattern in settings.file_list:
         result.extend(glob.glob(pattern))
-    return result
+    settings.file_list = result
 
 
 def add_result_file_argument(parser: argparse.ArgumentParser) -> None:
@@ -119,3 +131,8 @@ def report_to_file(issues: List[ReportData], json_file: str = None) -> None:
         open(json_file, "w").write(issues_json)
     else:
         sys.stdout.write(issues_json)
+
+
+def normalize(s: str) -> pathlib.Path:
+    p = pathlib.Path(s)
+    return p if p.is_absolute() else pathlib.Path.cwd().joinpath(p)

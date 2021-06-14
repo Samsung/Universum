@@ -120,24 +120,24 @@ configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
     assert not pattern.findall(log)
 
 
-@pytest.mark.parametrize('analyzer', ['scan_build_report', 'pylint', 'mypy'])
-@pytest.mark.parametrize('common_arg_set, expected_log', [
+@pytest.mark.parametrize('analyzer', ['scan_build_report', 'pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('arg_set, expected_log', [
     [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
     [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],
     [["--result-file", "${CODE_REPORT_FILE}"], "error: the following arguments are required: --files"],
     [["--files", "--result-file", "${CODE_REPORT_FILE}"], "files: expected at least one argument"],
 ])
-def test_analyzer_common_params(runner_with_analyzers, analyzer, common_arg_set, expected_log):
-    test_analyzer_specific_params(runner_with_analyzers, analyzer, common_arg_set, expected_log)
+def test_analyzer_common_params(runner_with_analyzers, analyzer, arg_set, expected_log):
+    test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log)
 
 
 @pytest.mark.parametrize('analyzer', ['pylint', 'mypy'])
-@pytest.mark.parametrize('common_arg_set, expected_log', [
+@pytest.mark.parametrize('arg_set, expected_log', [
     [["--python-version", "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}"],
      "python-version: expected one argument"],
 ])
-def test_analyzer_python_version_params(runner_with_analyzers, analyzer, common_arg_set, expected_log):
-    test_analyzer_specific_params(runner_with_analyzers, analyzer, common_arg_set, expected_log)
+def test_analyzer_python_version_params(runner_with_analyzers, analyzer, arg_set, expected_log):
+    test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log)
 
 
 @pytest.mark.parametrize('analyzer, arg_set, expected_log', [
@@ -146,6 +146,9 @@ def test_analyzer_python_version_params(runner_with_analyzers, analyzer, common_
      "rcfile: expected one argument"],
     ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
      "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
+    ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}",
+                    "--output-directory", "."],
+     "Target and source folders for uncrustify are not allowed to match"],
 ])
 def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
     source_file = runner_with_analyzers.local.root_directory.join("source_file")
