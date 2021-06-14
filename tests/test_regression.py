@@ -159,10 +159,13 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
 
 
 def test_p4_clean_empty_cl(perforce_environment, stdout_checker):
+    # This test creates an empty CL, triggering "file(s) not opened on this client" exception on cleanup
+    # Wrong exception handling prevented further client cleanup on force clean, making final client deleting impossible
+
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Create present file",
+configs = Configuration([Step(name="Create empty CL",
                               command=["bash", "-c",
                               "p4 --field 'Description=My pending change' --field 'Files=' change -o | p4 change -i"],
                               environment = {{"P4CLIENT": "{perforce_environment.client_name}",
