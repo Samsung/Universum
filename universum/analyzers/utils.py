@@ -137,6 +137,6 @@ def report_to_file(issues: List[ReportData], json_file: str = None) -> None:
         sys.stdout.write(issues_json)
 
 
-def normalize(s: str) -> pathlib.Path:
-    p = pathlib.Path(s)
-    return p if p.is_absolute() else pathlib.Path.cwd().joinpath(p)
+def normalize(file: str) -> pathlib.Path:
+    file_path = pathlib.Path(file)
+    return file_path if file_path.is_absolute() else pathlib.Path.cwd().joinpath(file_path)
