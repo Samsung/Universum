@@ -51,6 +51,9 @@ def sys_exit(func: Callable[[], Any]) -> Callable[[], None]:
     Exit with code 1, if target function generates any outputs, but executes normally
     Exit with code 2 (or custom), if target function fails with an exception
 
+    This decorator is used for analyzer modules to provide normal script interface
+    Note: while debugging, remove it from the analyzer code to see the full error state
+
     :param func: Target function to execute
     :return: None
 
