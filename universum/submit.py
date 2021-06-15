@@ -34,17 +34,16 @@ class Submit(HasOutput, HasStructure, HasErrorState):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.read_and_check_multiline_option("commit_message", """
+        self.commit_message = self.read_and_check_multiline_option("commit_message", """
             Commit message is not specified.
-            
+
             Please use '--commit-message' option to provide it. If you start the parameter with '@', the
             rest should be the path to a file containing the commit message text. The path can be absolute
             or relative to the project root. You can also store the message in COMMIT_MESSAGE environment variable.
             """)
 
-        self.read_multiline_option("reconcile_list")
         try:
-            self.reconcile_list = utils.unify_argument_list(self.settings.reconcile_list.splitlines())
+            self.reconcile_list = utils.unify_argument_list(self.read_multiline_option("reconcile_list").splitlines())
         except AttributeError:
             self.reconcile_list = []
 
@@ -53,7 +52,7 @@ class Submit(HasOutput, HasStructure, HasErrorState):
 
     @make_block("Executing")
     def execute(self):
-        change = self.vcs.driver.submit_new_change(self.settings.commit_message,
+        change = self.vcs.driver.submit_new_change(self.commit_message,
                                                    self.reconcile_list,
                                                    review=self.settings.review,
                                                    edit_only=self.settings.edit_only)

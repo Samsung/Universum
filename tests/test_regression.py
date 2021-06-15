@@ -1,6 +1,5 @@
 # pylint: disable = redefined-outer-name
 
-from pathlib import Path
 import pytest
 import P4
 
@@ -8,6 +7,31 @@ from universum import __main__
 from . import utils
 from .utils import python
 from .perforce_utils import P4Environment
+
+
+def test_which_universum_is_tested(docker_main, pytestconfig):
+    config = """
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
+"""
+    # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
+    init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
+    backup = init_file.read_bytes()
+    test_line = utils.randomize_name("THIS IS A TESTING VERSION")
+    init_file.write_text(f"""__title__ = "Universum"
+__version__ = "{test_line}"
+""")
+    output = docker_main.run(config, vcs_type="none")
+    init_file.write_bytes(backup)
+    assert test_line in output
+
+    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
+    docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
+    docker_main.clean_artifacts()
+    docker_main.run(config, vcs_type="none")  # not expected to fail
+    if utils.is_pycharm():
+        docker_main.environment.install_python_module(docker_main.working_dir)
 
 
 @pytest.fixture(name='print_text_on_teardown')
@@ -134,26 +158,22 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     assert "Getting file diff failed due to Perforce server internal error" in log
 
 
-def test_which_universum_is_tested(docker_main, pytestconfig):
-    config = """
+def test_p4_clean_empty_cl(perforce_environment, stdout_checker):
+    # This test creates an empty CL, triggering "file(s) not opened on this client" exception on cleanup
+    # Wrong exception handling prevented further client cleanup on force clean, making final client deleting impossible
+
+    config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
+configs = Configuration([Step(name="Create empty CL",
+                              command=["bash", "-c",
+                              "p4 --field 'Description=My pending change' --field 'Files=' change -o | p4 change -i"],
+                              environment = {{"P4CLIENT": "{perforce_environment.client_name}",
+                                              "P4PORT": "{perforce_environment.p4.port}",
+                                              "P4USER": "{perforce_environment.p4.user}",
+                                              "P4PASSWD": "{perforce_environment.p4.password}"}})])
 """
-    # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
-    init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
-    backup = init_file.read_bytes()
-    test_line = utils.randomize_name("THIS IS A TESTING VERSION")
-    init_file.write_text(f"""__title__ = "Universum"
-__version__ = "{test_line}"
-""")
-    output = docker_main.run(config, vcs_type="none")
-    init_file.write_bytes(backup)
-    assert test_line in output
-
-    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
-    docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
-    docker_main.clean_artifacts()
-    docker_main.run(config, vcs_type="none")  # not expected to fail
-    if utils.is_pycharm():
-        docker_main.environment.install_python_module(docker_main.working_dir)
+    settings = shelve_config(config, perforce_environment)
+    assert not __main__.run(settings)
+    error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
+    stdout_checker.assert_absent_calls_with_param(error_message)

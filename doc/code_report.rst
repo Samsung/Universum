@@ -33,7 +33,7 @@ Pylint
 ------
 
 .. argparse::
-    :ref: universum.analyzers.pylint.form_arguments_for_documentation
+    :ref: universum.analyzers.pylint.pylint_argument_parser
     :prog: {python} -m universum.analyzers.pylint
 
 Config example for ``universum.analyzers.pylint``:
@@ -70,7 +70,7 @@ Mypy
 ----
 
 .. argparse::
-    :ref: universum.analyzers.mypy.form_arguments_for_documentation
+    :ref: universum.analyzers.mypy.mypy_argument_parser
     :prog: {python} -m universum.analyzers.mypy
 
 Config example for ``universum.analyzers.mypy``:
@@ -107,7 +107,7 @@ Uncrustify
 ----------
 
 .. argparse::
-    :ref: universum.analyzers.uncrustify.form_arguments_for_documentation
+    :ref: universum.analyzers.uncrustify.uncrustify_argument_parser
     :prog: {python} -m universum.analyzers.uncrustify
     :nodefault:
 
@@ -119,8 +119,7 @@ Config example for ``universum.analyzers.uncrustify``:
 
     configs = Configuration([Step(name="uncrustify", code_report=True, command=[
         "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "/home/user/workspace/temp",
-        "--cfg-file", "file_name.cfg", "--filter-regex", ".*//.(?:c|cpp)",
-        "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
+        "--cfg-file", "file_name.cfg", "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
     ])])
 
     if __name__ == '__main__':
@@ -137,4 +136,4 @@ will produce this list of configurations:
 .. testoutput::
 
     $ ./.universum.py
-    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files /home/user/workspace/temp --cfg-file file_name.cfg --filter-regex .*//.(?:c|cpp) --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
+    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files /home/user/workspace/temp --cfg-file file_name.cfg --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]

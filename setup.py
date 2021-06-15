@@ -53,7 +53,8 @@ setup(
             'teamcity-messages',
             'pytest-cov',
             'coverage',
-            'mypy'
+            'mypy',
+            'types-requests'
         ]
     }
 )
