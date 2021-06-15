@@ -1,6 +1,17 @@
 Change log
 ==========
 
+0.19.8 (2021-06-15)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **perforce:** when encountering ``p4 opened`` bug, only print warning instead of block failing
+* **submit:** file arguments (such as ``-rl`` and ``-cm``) are now parsed correctly
+* **perforce:** empty CLs are now deleted correctly when force cleaning workspace
+
+
 0.19.7 (2021-05-19)
 -------------------
 
