@@ -25,7 +25,7 @@ def sarif_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
             try:
                 result.extend(parse_sarif_json(report))
             except AttributeError as e:
-                raise ValueError(f"Malformed SARIF file, details: {str(e)}")
+                raise ValueError(f"Malformed SARIF file") from e
     return result
 
 
@@ -47,8 +47,7 @@ def parse_sarif_json(report: Dict[str, Any]) -> List[utils.ReportData]:
                 if not artifact_data:
                     if location_data.get('address'):
                         continue  # binary artifact can't be processed
-                    else:
-                        raise ValueError("Unexpected lack of artifactLocation tag")
+                    raise ValueError("Unexpected lack of artifactLocation tag")
                 path: str = artifact_data.get('uri', '').replace('file://', '')
                 region_data = location_data.get('region')
                 if not region_data:
