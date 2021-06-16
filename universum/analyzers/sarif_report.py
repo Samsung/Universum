@@ -39,7 +39,7 @@ def parse_sarif_json(report: Dict[str, Any]) -> List[utils.ReportData]:
             for location in issue.get('locations', []):
                 location_data: Dict[str, Dict[str, str]] = location.get('physicalLocation')
                 if not location_data:
-                    pass
+                    continue
                 artifact_data = location_data.get('artifactLocation')
                 if not artifact_data:
                     if location_data.get('address'):
