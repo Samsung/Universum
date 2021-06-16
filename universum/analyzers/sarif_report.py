@@ -1,0 +1,50 @@
+import argparse
+import json
+from typing import List
+
+from . import utils
+
+
+def scan_build_report_argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Parse SARIF report")
+    return parser
+
+
+@utils.sys_exit
+@utils.analyzer(scan_build_report_argument_parser())
+def main(settings: argparse.Namespace) -> List[utils.ReportData]:
+    issues = sarif_report_output_parser(settings.file_list)
+    return issues
+
+
+def sarif_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
+    result: List[utils.ReportData] = []
+    for report_file in file_list:
+        with open(report_file, "r") as f:
+            report_json = json.loads(f.read())
+            for run in report_json.get('runs', []):
+                analyzer_data = run.get('tool').get('driver')  # non-optional per definition
+                who = f"{analyzer_data.get('name')} [{analyzer_data.get('version', '?')}]"
+                for issue in run.get('results', []):
+                    what = issue.get('message')
+                    for location in issue.get('locations', []):
+                        location_data = location.get('physicalLocation')
+                        if not location_data:
+                            pass
+                        # physicalLocation shall have either artifactLocations or address
+                        # address object describes physical or virtual memory - not applicable to code analysis
+                        path = location_data.get('artifactLocation').get('uri').replace('file://', '')
+                        # If the region property is absent, the physicalLocation object refers to the entire artifact.
+                        # TODO: cover this case as comment to the file as a whole
+                        line = location_data.get('region').get('startLine')
+                        result.append(utils.ReportData(
+                            symbol="Reported issue",
+                            message=f"{who} : {what}",
+                            path=path,
+                            line=int(line)
+                        ))
+    return result
+
+
+if __name__ == "__main__":
+    main()  # pylint: disable=no-value-for-parameter  # see https://github.com/PyCQA/pylint/issues/259

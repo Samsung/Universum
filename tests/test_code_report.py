@@ -57,6 +57,58 @@ scan_build_html_report = """
 </table></body></html>
 """
 
+sarif_report_minimal = """
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": { "driver": { "name": "Dummy" } },
+      "results": [ ]
+    }
+  ]
+}
+"""
+
+sarif_report = """
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Checkstyle",
+          "semanticVersion": "8.43",
+          "version": "8.43"
+        }
+      },
+      "results": [
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "my_path/my_file"
+                },
+                "region": {
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Error!"
+          },
+          "ruleId": "testRule"
+        }
+      ]
+    }
+  ]
+}
+"""
+
 cfg_uncrustify = """
 code_width = 120
 input_tab_size = 2
@@ -67,6 +119,8 @@ log_success = r'Issues not found'
 
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
+    [['sarif_report'], [], sarif_report_minimal, True],
+    [['sarif_report'], [], sarif_report, False],
     [['scan_build_report'], [], "<html></html>", True],
     [['scan_build_report'], [], scan_build_html_report, False],
     [['uncrustify'], [], source_code_c, True],
@@ -78,6 +132,8 @@ log_success = r'Issues not found'
     # TODO: add test with rcfile
     # TODO: parametrize test for different versions of python
 ], ids=[
+    'sarif_no_issues',
+    'sarif_issues_found',
     'scan_build_no_issues',
     'scan_build_issues_found',
     'uncrustify_no_issues',
@@ -120,7 +176,7 @@ configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
     assert not pattern.findall(log)
 
 
-@pytest.mark.parametrize('analyzer', ['scan_build_report', 'pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('analyzer', ['sarif_report', 'scan_build_report', 'pylint', 'mypy', 'uncrustify'])
 @pytest.mark.parametrize('arg_set, expected_log', [
     [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
     [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],
