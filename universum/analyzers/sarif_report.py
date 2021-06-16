@@ -1,6 +1,6 @@
 import argparse
 import json
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from . import utils
 
@@ -22,18 +22,15 @@ def sarif_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
     for report_file in file_list:
         with open(report_file, "r") as f:
             report = json.loads(f.read())
-            version: str = result.get('version')
-            if version != '2.1.0':
-                raise ValueError(f"Version {version} is not supported")
-            try:
-                result.extend(parse_sarif_2_1_0_json(report))
-            except AttributeError:
-                raise ValueError("Malformed SARIF file")
+            result.extend(parse_sarif_json(report))
     return result
 
 
-def parse_sarif_2_1_0_json(report: str) -> List[utils.ReportData]:
+def parse_sarif_json(report: Dict[str, Any]) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
+    version: str = report.get('version', '')
+    if version != '2.1.0':
+        raise ValueError(f"Version {version} is not supported")
     for run in report.get('runs', []):
         analyzer_data: Dict[str, str] = run.get('tool').get('driver')  # non-optional per definition
         who: str = f"{analyzer_data.get('name')} [{analyzer_data.get('version', '?')}]"
@@ -46,14 +43,14 @@ def parse_sarif_2_1_0_json(report: str) -> List[utils.ReportData]:
                 artifact_data = location_data.get('artifactLocation')
                 if not artifact_data:
                     if location_data.get('address'):
-                        pass  # binary artifact can't be processed
+                        continue  # binary artifact can't be processed
                     else:
                         raise ValueError("Unexpected lack of artifactLocation tag")
-                path = artifact_data.get('uri').replace('file://', '')
+                path: str = artifact_data.get('uri', '').replace('file://', '')
                 region_data = location_data.get('region')
                 if not region_data:
-                    pass  # TODO: cover this case as comment to the file as a whole
-                line = region_data.get('startLine')
+                    continue  # TODO: cover this case as comment to the file as a whole
+                line: str = region_data.get('startLine', '')
                 result.append(utils.ReportData(
                     symbol="Reported issue",
                     message=f"{who} : {what}",
