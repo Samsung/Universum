@@ -1,6 +1,6 @@
 import argparse
 import json
-from typing import List
+from typing import Dict, List
 
 from . import utils
 
@@ -21,28 +21,42 @@ def sarif_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for report_file in file_list:
         with open(report_file, "r") as f:
-            report_json = json.loads(f.read())
-            for run in report_json.get('runs', []):
-                analyzer_data = run.get('tool').get('driver')  # non-optional per definition
-                who = f"{analyzer_data.get('name')} [{analyzer_data.get('version', '?')}]"
-                for issue in run.get('results', []):
-                    what = issue.get('message')
-                    for location in issue.get('locations', []):
-                        location_data = location.get('physicalLocation')
-                        if not location_data:
-                            pass
-                        # physicalLocation shall have either artifactLocations or address
-                        # address object describes physical or virtual memory - not applicable to code analysis
-                        path = location_data.get('artifactLocation').get('uri').replace('file://', '')
-                        # If the region property is absent, the physicalLocation object refers to the entire artifact.
-                        # TODO: cover this case as comment to the file as a whole
-                        line = location_data.get('region').get('startLine')
-                        result.append(utils.ReportData(
-                            symbol="Reported issue",
-                            message=f"{who} : {what}",
-                            path=path,
-                            line=int(line)
-                        ))
+            report = json.loads(f.read())
+            result.extend(parse_sarif_json(report))
+    return result
+
+
+def parse_sarif_json(report: str) -> List[utils.ReportData]:
+    result: List[utils.ReportData] = []
+    version: str = result.get('version')
+    if version != '2.1.0':
+        raise ValueError(f"Version {version} is not supported")
+    for run in report.get('runs', []):
+        analyzer_data: Dict[str, str] = run.get('tool').get('driver')  # non-optional per definition
+        who: str = f"{analyzer_data.get('name')} [{analyzer_data.get('version', '?')}]"
+        for issue in run.get('results', []):
+            what: str = issue.get('message')
+            for location in issue.get('locations', []):
+                location_data: Dict[str, Dict[str, str]] = location.get('physicalLocation')
+                if not location_data:
+                    pass
+                artifact_data = location_data.get('artifactLocation')
+                if not artifact_data:
+                    if location_data.get('address'):
+                        pass  # binary artifact can't be processed
+                    else:
+                        raise ValueError("Unexpected lack of artifactLocation tag")
+                path = artifact_data.get('uri').replace('file://', '')
+                region_data = location_data.get('region')
+                if not region_data:
+                    pass  # TODO: cover this case as comment to the file as a whole
+                line = region_data.get('startLine')
+                result.append(utils.ReportData(
+                    symbol="Reported issue",
+                    message=f"{who} : {what}",
+                    path=path,
+                    line=int(line)
+                ))
     return result
 
 
