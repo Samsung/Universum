@@ -25,7 +25,7 @@ def sarif_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
             try:
                 result.extend(parse_sarif_json(report))
             except AttributeError as e:
-                raise ValueError(f"Malformed SARIF file") from e
+                raise ValueError("Malformed SARIF file") from e
     return result
 
 
