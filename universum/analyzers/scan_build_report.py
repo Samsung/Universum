@@ -38,8 +38,8 @@ def scan_build_report_output_parser(file_list: List[str]) -> List[utils.ReportDa
                 symbol="Reported issue",
                 message=list(issue_data)[1].tail,
                 path=row_path[1].text,
-                line=int(line_data.split(',')[0][5:]))
-            )
+                line=int(line_data.split(',')[0][5:])
+            ))
     return result
 
 
