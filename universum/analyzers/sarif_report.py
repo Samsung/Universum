@@ -1,5 +1,6 @@
 import argparse
 import json
+import urllib.parse
 from typing import Any, Dict, List
 
 from . import utils
@@ -48,16 +49,16 @@ def parse_sarif_json(report: Dict[str, Any]) -> List[utils.ReportData]:
                     if location_data.get('address'):
                         continue  # binary artifact can't be processed
                     raise ValueError("Unexpected lack of artifactLocation tag")
-                path: str = artifact_data.get('uri', '').replace('file://', '')
+                path: str = urllib.parse.unquote(artifact_data.get('uri', ''))
                 region_data = location_data.get('region')
                 if not region_data:
                     continue  # TODO: cover this case as comment to the file as a whole
-                line: str = region_data.get('startLine', '')
+                line = int(region_data.get('startLine', ''))
                 result.append(utils.ReportData(
                     symbol="Reported issue",
                     message=f"{who} : {what}",
                     path=path,
-                    line=int(line)
+                    line=line
                 ))
     return result
 
