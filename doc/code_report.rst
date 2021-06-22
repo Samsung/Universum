@@ -27,7 +27,7 @@ The result file must conform to the following pylint-like json schema::
         "type": "array",
         "items": {
             "type": "object",
-            "required": [ "path", "line", "message" ],
+            "required": [ "path", "line", "message", "symbol" ],
             "properties": {
                 "path": { "type": "string" },
                 "line": { "type": "number" },
