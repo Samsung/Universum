@@ -190,11 +190,11 @@ def mock_diff(monkeypatch):
 
 
 def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
-    config = f"""
+    config = """
 from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Step", command=["ls"])])
-    """
+"""
     settings = shelve_config(config, perforce_environment)
     assert __main__.run(settings)
     stdout_checker.assert_has_calls_with_param("This is error text")
