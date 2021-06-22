@@ -116,7 +116,7 @@ def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
 
 def trim_and_convert_to_unicode(line: Union[bytes, str]) -> str:
     if isinstance(line, bytes):
-        line = line.decode("utf-8")
+        line = line.decode("utf-8", "replace")
     elif not isinstance(line, str):
         line = str(line)
 
