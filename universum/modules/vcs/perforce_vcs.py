@@ -473,10 +473,11 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
             for line in e.stderr.splitlines():
-                if not (line.startswith("Librarian checkout")
-                        or line.startswith("Error opening librarian file")
-                        or line.startswith("Transfer of librarian file")
-                        or line.endswith(".gz: No such file or directory")):
+                text = str(line)
+                if not (text.startswith("Librarian checkout")
+                        or text.startswith("Error opening librarian file")
+                        or text.startswith("Transfer of librarian file")
+                        or text.endswith(".gz: No such file or directory")):
                     raise CriticalCiException(utils.trim_and_convert_to_unicode(e.stderr)) from e
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result

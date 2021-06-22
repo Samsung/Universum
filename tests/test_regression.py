@@ -2,6 +2,7 @@
 
 import pytest
 import P4
+import sh
 
 from universum import __main__
 from . import utils
@@ -177,3 +178,24 @@ configs = Configuration([Step(name="Create empty CL",
     assert not __main__.run(settings)
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)
+
+
+@pytest.fixture()
+def mock_diff(monkeypatch):
+    def mocking_function(*args, **kwargs):
+        raise sh.ErrorReturnCode(stderr=b"This is error text", stdout=b"This is text",
+                                 full_cmd="any shell call with any params")
+
+    monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
+
+
+def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Step", command=["ls"])])
+    """
+    settings = shelve_config(config, perforce_environment)
+    assert __main__.run(settings)
+    stdout_checker.assert_has_calls_with_param("This is error text")
+    # Without the fix all error messages to stderr instead of stdout
