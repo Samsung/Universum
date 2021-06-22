@@ -32,7 +32,7 @@ The result file must conform to the following pylint-like json schema::
                 "path": { "type": "string" },
                 "line": { "type": "number" },
                 "message": { "type": "string" },
-                "symbol": {  "type": "int" }
+                "symbol": {  "type": "string" }
             }
         }
     }
