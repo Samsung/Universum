@@ -198,4 +198,4 @@ configs = Configuration([Step(name="Step", command=["ls"])])
     settings = shelve_config(config, perforce_environment)
     assert __main__.run(settings)
     stdout_checker.assert_has_calls_with_param("This is error text")
-    # Without the fix all error messages to stderr instead of stdout
+    # Without the fix all error messages go to stderr instead of stdout
