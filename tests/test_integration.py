@@ -328,12 +328,12 @@ configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
     config_file = tmpdir.join("configs.py")
     config_file.write(config)
 
-    process = subprocess.Popen([python(), "-m", "universum",
-                                "-o", "console", "-vt", "none",
-                                "-pr", str(tmpdir.join("project_root")),
-                                "-ad", str(tmpdir.join("artifacts")),
-                                "-fsd", str(local_sources.root_directory),
-                                "-cfg", str(config_file)])
-    time.sleep(5)
-    process.send_signal(terminate_type)
-    assert process.wait(5) == 3
+    with subprocess.Popen([python(), "-m", "universum",
+                           "-o", "console", "-st", "local", "-vt", "none",
+                           "-pr", str(tmpdir.join("project_root")),
+                           "-ad", str(tmpdir.join("artifacts")),
+                           "-fsd", str(local_sources.root_directory),
+                           "-cfg", str(config_file)]) as process:
+        time.sleep(5)
+        process.send_signal(terminate_type)
+        assert process.wait(5) == 3

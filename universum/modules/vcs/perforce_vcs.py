@@ -1,9 +1,10 @@
-from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple
+from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple, Type
 from types import ModuleType
 
 import importlib
 import os
 import shutil
+import time
 import warnings
 
 import sh
@@ -27,12 +28,18 @@ __all__ = [
     "catch_p4exception"
 ]
 
-P4Exception = None
+
+class P4ExceptionStub(BaseException):
+    warnings: List[str]
+    value: str
 
 
 class P4stub(ModuleType):  # replace with proper stubs
-    P4Exception: Exception
+    P4Exception: Type[P4ExceptionStub]
     P4: Callable
+
+
+P4Exception = P4ExceptionStub
 
 
 def catch_p4exception(ignore_if=None):
@@ -466,17 +473,30 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
             for line in e.stderr.splitlines():
-                if not (line.startswith("Librarian checkout")
-                        or line.startswith("Error opening librarian file")
-                        or line.startswith("Transfer of librarian file")
-                        or line.endswith(".gz: No such file or directory")):
+                if not (line.startswith(b"Librarian checkout")
+                        or line.startswith(b"Error opening librarian file")
+                        or line.startswith(b"Transfer of librarian file")
+                        or line.endswith(b".gz: No such file or directory")):
                     raise CriticalCiException(utils.trim_and_convert_to_unicode(e.stderr)) from e
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result
 
-    def calculate_file_diff(self) -> List[Dict[str, str]]:
+    def calculate_file_diff(self) -> Optional[List[Dict[str, str]]]:
         action_list: Dict[str, str] = {}
-        for entry in self.p4.run_opened():
+        for timeout in [0, 5, 10, 20, 40, 80]:
+            time.sleep(timeout)
+            try:
+                opened_files = self.p4.run_opened()
+                break
+            except P4Exception as e:
+                if f"Client '{self.client_name}' unknown" not in e.value:
+                    raise
+                self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
+        else:
+            self.out.log_stderr("Calculating file diff failed, leaving blank")
+            return None
+
+        for entry in opened_files:
             action_list[entry["depotFile"]] = entry["action"]
         if not action_list:
             return [{}]
@@ -570,8 +590,14 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def clean_workspace(self):
         try:
             self.p4.client = self.client_name
-            report = self.p4.run_revert("-k", "-c", "default", "//...")
-            self.p4report(report)
+            try:
+                report = self.p4.run_revert("-k", "-c", "default", "//...")
+                self.p4report(report)
+            except P4Exception as e:
+                if "file(s) not opened on this client" in e.value:
+                    self.out.log("Default CL is empty")
+                else:
+                    raise
             shelves = self.p4.run_changes("-c", self.client_name, "-s", "shelved")
             for item in shelves:
                 self.out.log("Deleting shelve from CL " + item["change"])
@@ -579,19 +605,18 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             all_cls = self.p4.run_changes("-c", self.client_name, "-s", "pending")
             for item in all_cls:
                 self.out.log("Deleting CL " + item["change"])
-                self.p4.run_revert("-k", "-c", item["change"], "//...")
+                try:
+                    self.p4.run_revert("-k", "-c", item["change"], "//...")
+                except P4Exception as e:
+                    if "file(s) not opened on this client" in e.value:
+                        self.out.log(f"CL {item['change']} is empty")
+                    else:
+                        raise
                 self.p4.run_change("-d", item["change"])
-        except P4Exception as e:
-            if "Client '{}' unknown".format(self.client_name) not in e.value \
-                    and "file(s) not opened on this client" not in e.value:
-                self.structure.fail_current_block(e.value)
-            else:
-                self.out.log("No files to clean")
-        try:
             self.p4.delete_client(self.client_name)
             self.out.log(f"Client '{self.client_name}' deleted")
         except P4Exception as e:
-            if "Client '{}' doesn't exist".format(self.client_name) in e.value:
+            if "Client '{}' unknown".format(self.client_name) in e.value:
                 self.out.log("No client to delete")
             else:
                 self.structure.fail_current_block(e.value)

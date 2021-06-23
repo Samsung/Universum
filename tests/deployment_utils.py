@@ -107,7 +107,8 @@ class ExecutionEnvironment:
             module_name = name
         if not utils.is_pycharm() or self._force_clean:
             self.assert_unsuccessful_execution("pip show " + module_name)
-        cmd = "pip --default-timeout=1200 install " + name
+        # in PyCharm modules are already installed and therefore should be updated
+        cmd = "pip --default-timeout=1200 install -U " + name
         self.assert_successful_execution(cmd)
         self.assert_successful_execution("pip show " + module_name)
 
@@ -250,6 +251,10 @@ class UniversumRunner:
         config_file = self._create_temp_config(config)
         cmd += self._mandatory_args(config_file) + ' ' + additional_parameters
 
+        # if workdir is None, cmd will be launched from '/', which is clearly not a directory with universum sources
+        if not workdir:
+            workdir = self.working_dir
+
         if expected_to_fail:
             result = self.environment.assert_unsuccessful_execution(cmd, environment=environment, workdir=workdir)
         else:
@@ -284,8 +289,8 @@ def docker_fixture_template(request, execution_environment, local_sources):
     runner.clean_artifacts()
 
 
-docker_main = pytest.fixture(params=[False])(docker_fixture_template)
-docker_nonci = pytest.fixture(params=[True])(docker_fixture_template)
+docker_main = pytest.fixture(params=[False], ids=["main"])(docker_fixture_template)
+docker_nonci = pytest.fixture(params=[True], ids=["nonci"])(docker_fixture_template)
 docker_main_and_nonci = pytest.fixture(params=[False, True], ids=["main", "nonci"])(docker_fixture_template)
 
 

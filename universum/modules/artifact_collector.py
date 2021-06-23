@@ -1,5 +1,3 @@
-from typing import List, Dict
-
 import codecs
 import distutils
 from distutils import dir_util, errors
@@ -96,6 +94,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     def make_file_name(self, name):
         return utils.calculate_file_absolute_path(self.artifact_dir, name)
 
+    # TODO: using codecs is legacy from Python2; this function needs to be refactored
     def create_text_file(self, name):
         try:
             file_name = self.make_file_name(name)
@@ -108,7 +107,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             self.file_list.add(file_name)
             file_path = self.automation_server.artifact_path(self.artifact_dir, os.path.basename(file_name))
             self.out.log("Adding file " + file_path + " to artifacts...")
-            return codecs.open(file_name, "a", encoding="utf-8")
+            return codecs.open(file_name, "a", encoding="utf-8")          # pylint: disable = consider-using-with
 
         except IOError as e:
             raise CiException("The following error occurred while working with file: " + str(e)) from e

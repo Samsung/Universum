@@ -116,7 +116,7 @@ def catch_exception(exception_name: str, ignore_if: str = None) -> DecoratorT:
 
 def trim_and_convert_to_unicode(line: Union[bytes, str]) -> str:
     if isinstance(line, bytes):
-        line = line.decode("utf-8")
+        line = line.decode("utf-8", "replace")
     elif not isinstance(line, str):
         line = str(line)
 
@@ -149,6 +149,9 @@ def unify_argument_list(source_list: Optional[List[str]], separator: str = ',',
 
     # Split one-element arguments and merge to one list
     resulting_list = [item.strip() for entry in resulting_list for item in entry.strip('"\'').split(separator)]
+
+    # Remove empty elements that might have been introduced by splitting
+    resulting_list = [item for item in resulting_list if item]
 
     return resulting_list
 

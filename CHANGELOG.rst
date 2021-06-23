@@ -1,6 +1,59 @@
 Change log
 ==========
 
+0.19.8 (2021-06-15)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **perforce:** when encountering ``p4 opened`` bug, only print warning instead of block failing
+* **submit:** file arguments (such as ``-rl`` and ``-cm``) are now parsed correctly
+* **perforce:** empty CLs are now deleted correctly when force cleaning workspace
+
+
+0.19.7 (2021-05-19)
+-------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **submit:** ``--reconcile-list`` option can no longer be passed several times. Please use comma-separated
+  single string instead (e.g. ``python -m universum submit -rl 'target1, target2'``)
+* **analyzers:** ``universum.analyzers.svace`` support is deprecated until further notice
+
+New features
+~~~~~~~~~~~~
+
+* **submit:** ``--commit-message`` and ``--reconcile-list`` now support passing required values via local file.
+  To use this feature, pass an absolute or relative file path starting with '@' as a corresponding argument.
+  See :ref:`argument description <additional_commands#submit>` for details
+
+Bug fixes
+~~~~~~~~~
+
+* **analyzers:** ``'Namespace' object has no attribute 'file_names'`` error message
+  from :ref:`Uncrustify <code_report#uncrustify>` module fixed
+
+
+0.19.6 (2021-05-12)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **analyzers:** add static type checking for Python (with inline comments on the issues)
+
+
+0.19.5 (2021-04-20)
+-------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** HOTFIX for newly introduced bug of Perforce server unexpectedly failing the ``p4 opened`` command
+
+
 0.19.4 (2021-03-29)
 -------------------
 

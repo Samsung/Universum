@@ -17,8 +17,8 @@ class GithubHandler(GithubToken, HasOutput, HasStructure, HasErrorState):
         argument_parser.add_argument('--event', '-e', dest='event', metavar="GITHUB_EVENT",
                                      help='Currently parsed from "x-github-event" header of received web-hook')
         argument_parser.add_argument('--payload', '-pl', dest='payload', metavar="GITHUB_PAYLOAD",
-                                     help='Full contents of web-hook received; leave "-" to redirect to stdin '
-                                          'or pass a JSON file path, starting it with "@" character')
+                                     help='Full contents of web-hook received; pass a JSON file path, starting it '
+                                          'with "@" character, or use an environment variable for convenience')
         argument_parser.add_argument('--trigger-url', '-tu', dest='trigger_url', metavar="TRIGGER_URL",
                                      help='URL for GET request to trigger the CI build and pass all parameters '
                                           'parsed from payload; if any constant parameters (like token) are '
@@ -57,8 +57,7 @@ class GithubHandler(GithubToken, HasOutput, HasStructure, HasErrorState):
             '--payload' ('-pl') command line parameter or by setting GITHUB_PAYLOAD
             environment variable, or by passing file path as the argument value (start
             filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json' for
-            relative path starting at current directory), or via stdin (leave '-' valuer for
-            redirection).
+            relative path starting at current directory)
             """)
 
     @make_block("Analysing trigger payload")

@@ -34,7 +34,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     file_to_add.write(text + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [str(file_to_add)])
+    setattr(settings.Submit, "reconcile_list", str(file_to_add))
 
     assert __main__.run(settings)
 
@@ -59,7 +59,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
     new_file.write("This is a new file" + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [str(new_file)])
+    setattr(settings.Submit, "reconcile_list", str(new_file))
 
     assert not __main__.run(settings)
     assert text in p4_file.read()
@@ -80,7 +80,7 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     new_file.write(text_new + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", [str(new_file)])
+    setattr(settings.Submit, "reconcile_list", str(new_file))
 
     assert __main__.run(settings)
     assert text_default in p4_file.read()
@@ -95,7 +95,7 @@ class SubmitterParameters:
 
     def submit_path_list(self, path_list, **kwargs):
         settings = copy.deepcopy(self.submit_settings)
-        setattr(settings.Submit, "reconcile_list", path_list)
+        setattr(settings.Submit, "reconcile_list", ",".join(path_list))
 
         if kwargs:
             for key in kwargs:
@@ -174,8 +174,8 @@ def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submi
     result = parameters.submit_path_list([str(temp_file), deleted_file_path], edit_only=True)
     assert result == 0
 
-    parameters.stdout_checker.assert_has_calls_with_param("Skipping '{}'".format(new_file_name))
-    parameters.stdout_checker.assert_has_calls_with_param("Skipping '{}'".format(deleted_file_name))
+    parameters.stdout_checker.assert_has_calls_with_param(f"Skipping '{new_file_name}'")
+    parameters.stdout_checker.assert_has_calls_with_param(f"Skipping '{deleted_file_name}'")
     parameters.stdout_checker.assert_has_calls_with_param("Nothing to submit")
     assert parameters.file_present(deleted_file_path)
     assert not parameters.file_present(str(temp_file))
@@ -211,13 +211,13 @@ def test_success_reconcile_directory(submit_parameters, submit_environment):
     # Create and reconcile new directory
     tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(dir_name)
     for i in range(0, 9):
-        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/"])
 
     for i in range(0, 9):
-        file_path = tmp_dir.join("new_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"new_file{i}.txt")
         assert parameters.file_present(str(file_path))
 
     # Create and reconcile a directory in a directory
@@ -231,13 +231,13 @@ def test_success_reconcile_directory(submit_parameters, submit_environment):
     # Modify some vcs
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
-        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/"], edit_only=True)
 
     for i in range(0, 9, 2):
-        file_path = tmp_dir.join("/new_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"/new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
 
     # Delete a directory
@@ -256,22 +256,22 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     inner_dir = tmp_dir.mkdir("inner_directory")
     text = "This is some file" + "\n"
     for i in range(0, 9):
-        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write(text)
-        tmp_file = tmp_dir.join("another_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"another_file{i}.txt")
         tmp_file.write(text)
-        tmp_file = inner_dir.join("new_file{}.txt".format(i))
+        tmp_file = inner_dir.join(f"new_file{i}.txt")
         tmp_file.write(text)
 
     parameters.assert_submit_success([str(tmp_dir) + "/new_file*.txt"])
 
     for i in range(0, 9):
-        file_name = "new_file{}.txt".format(i)
+        file_name = f"new_file{i}.txt"
         file_path = tmp_dir.join(file_name)
         assert parameters.file_present(str(file_path))
         file_path = inner_dir.join(file_name)
         assert not parameters.file_present(str(file_path))
-        file_name = "another_file{}.txt".format(i)
+        file_name = f"another_file{i}.txt"
         file_path = tmp_dir.join(file_name)
         assert not parameters.file_present(str(file_path))
 
@@ -279,79 +279,79 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     other_dir_name = utils.randomize_name("new_directory")
     other_tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(other_dir_name)
     for i in range(0, 9):
-        tmp_file = other_tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = other_tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
 
     parameters.assert_submit_success([str(parameters.environment.vcs_cooking_dir) + "/new_directory*/"])
 
     for i in range(0, 9):
-        file_name = "new_file{}.txt".format(i)
+        file_name = f"new_file{i}.txt"
         file_path = other_tmp_dir.join(file_name)
         assert parameters.file_present(str(file_path))
         file_path = inner_dir.join(file_name)
         assert parameters.file_present(str(file_path))
-        file_name = "another_file{}.txt".format(i)
+        file_name = f"another_file{i}.txt"
         file_path = tmp_dir.join(file_name)
         assert parameters.file_present(str(file_path))
 
     # Modify some vcs
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
-        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = inner_dir.join("new_file{}.txt".format(i))
+        tmp_file = inner_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = tmp_dir.join("another_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"another_file{i}.txt")
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/new_file*.txt"], edit_only=True)
 
     for i in range(0, 9, 2):
-        file_path = tmp_dir.join("/new_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"/new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = inner_dir.join("/new_file{}.txt".format(i))
+        file_path = inner_dir.join(f"/new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join("/another_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"/another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
 
     # Test subdirectory wildcard
     text = utils.randomize_name("This is change ")
     for i in range(1, 9, 2):
-        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = inner_dir.join("new_file{}.txt".format(i))
+        tmp_file = inner_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = tmp_dir.join("another_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"another_file{i}.txt")
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/*/*.txt"])
 
     for i in range(1, 9, 2):
-        file_path = inner_dir.join("new_file{}.txt".format(i))
+        file_path = inner_dir.join(f"new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join("new_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join("another_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
 
     # Test edit-only subdirectory wildcard
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 3):
-        tmp_file = tmp_dir.join("new_file{}.txt".format(i))
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = inner_dir.join("new_file{}.txt".format(i))
+        tmp_file = inner_dir.join(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = tmp_dir.join("another_file{}.txt".format(i))
+        tmp_file = tmp_dir.join("another_file{i}.txt")
         tmp_file.write(text + "\n")
 
         parameters.assert_submit_success([str(tmp_dir) + "/*/*.txt"], edit_only=True)
 
     for i in range(0, 9, 3):
-        file_path = inner_dir.join("new_file{}.txt".format(i))
+        file_path = inner_dir.join(f"new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join("new_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join("another_file{}.txt".format(i))
+        file_path = tmp_dir.join(f"another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
 
     # Clean up the repo
@@ -360,3 +360,32 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     parameters.assert_submit_success([str(parameters.environment.vcs_cooking_dir) + "/*"])
     assert not parameters.file_present(str(tmp_dir))
     assert not parameters.file_present(str(other_tmp_dir))
+
+
+def test_success_reconcile_partial(submit_parameters, submit_environment):
+    # This test was failed when a bug in univesrum.lib.utils.unify_argument_list left empty entries in processed lists
+    # When reconciling "", p4 adds to CL all changes made in scope of workspace (and therefore partial reconcile fails)
+
+    parameters = submit_parameters(submit_environment)
+    dir_name = utils.randomize_name("new_directory")
+    tmp_dir = parameters.environment.vcs_cooking_dir.mkdir(dir_name)
+    for i in range(0, 9):
+        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file.write("This is some file" + "\n")
+
+    reconcile_list = [str(tmp_dir.join(f"new_file{i}.txt")) for i in range(0, 4)]
+    reconcile_list.extend(["", " ", "\n"])
+    parameters.assert_submit_success(reconcile_list)
+
+    for i in range(0, 4):
+        file_path = tmp_dir.join(f"new_file{i}.txt")
+        assert parameters.file_present(str(file_path))
+
+    for i in range(5, 9):
+        file_path = tmp_dir.join(f"new_file{i}.txt")
+        assert not parameters.file_present(str(file_path))
+
+    # Delete a directory
+    shutil.rmtree(tmp_dir)
+    parameters.assert_submit_success([str(tmp_dir)])
+    assert not parameters.file_present(str(tmp_dir))
