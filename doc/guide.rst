@@ -54,7 +54,7 @@ For demonstration purposes let's create a project on GitHub. To do so, we'll nee
 
 
 Read more about creating repositories in `a detailed GitHub guide
-<https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/create-a-repo>`__
+<https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/create-a-repo>`__.
 
 After creating a repo online, clone it locally::
 
@@ -62,7 +62,7 @@ After creating a repo online, clone it locally::
     cd universum-test-project
     ls -a
 
-The output of such command should be::
+The output of the last command should be::
 
     .  ..  .git  README.md
 
@@ -85,11 +85,11 @@ That will create a new file ``.universum.py`` and print a command to use it::
 
 The default :doc:`configuration file <configuring>`, created by this command, looks like this::
 
-    #!/usr/bin/env python3.7
+    #!/usr/bin/env {python}
 
     from universum.configuration_support import Configuration
 
-    configs = Configuration([Step(name='Show directory contents', command=['ls', '-la']),
+    configs = Configuration([Step(name='Show directory contents', command=['ls', '-a']),
                              Step(name='Print a line', command=['bash', '-c', 'echo Hello world'])])
 
     if __name__ == '__main__':
@@ -137,7 +137,7 @@ getting an output like this:
 
          ==> Universum 1.0.0 finished execution
 
-Running this command will also produce a directory ``artifacts``, containing single file: ``CONFIGS_DUMP.txt``.
+Running this command will also produce a directory ``artifacts``, containing a single file: ``CONFIGS_DUMP.txt``.
 The reason for this file existance will be explained in the next paragraph.
 
 
@@ -176,7 +176,7 @@ After this change, running ``{python} -m universum run`` should result in the fo
         ==> Universum 1.0.0 started execution
         ==> Cleaning artifacts...
         1. Processing project configs
-         |   ==> Adding file/home/user/universum-test-project/artifacts/CONFIGS_DUMP.txt to artifacts...
+         |   ==> Adding file /home/user/universum-test-project/artifacts/CONFIGS_DUMP.txt to artifacts...
          └ [Success]
 
         2. Preprocessing artifact lists
@@ -184,7 +184,7 @@ After this change, running ``{python} -m universum run`` should result in the fo
 
         3. Executing build steps
          |   3.1.  [ 1/1 ] Run script
-         |      |   $ /home/user/work/run.sh pass
+         |      |   $ /home/user/universum-test-project/run.sh pass
          |      |   Script succeeded
          |      └ [Success]
          |
@@ -215,6 +215,8 @@ Add static analyzer
 
 Say, instead of writing a script in `bash` we used `python`, and have the following script ``run.py``::
 
+    #!/usr/bin/env {python}
+
     import sys
 
     if len(sys.argv) < 2:
@@ -228,7 +230,7 @@ Say, instead of writing a script in `bash` we used `python`, and have the follow
 
 To use this script, we'd have to modify ``configs`` to this::
 
-    configs = Configuration([Step(name='Run script', command=['python', 'run.py', 'pass'])])
+    configs = Configuration([Step(name='Run script', command=['{python}', 'run.py', 'pass'])])
 
 which will get the same result as the previous one.
 
@@ -239,8 +241,7 @@ corresponds to PEP-8 from the very beginning. We might install `Pylint <https://
     configs = Configuration([
         Step(name='Run script', command=['{python}', 'run.py', 'pass']),
         Step(name='Pylint check', code_report=True, command=[
-            '{python}', '-m', 'universum.analyzers.pylint', '--python-version', '3.7',
-            '--result-file', '${CODE_REPORT_FILE}', '--files', '*.py'
+            '{python}', '-m', 'universum.analyzers.pylint', '--result-file', '${CODE_REPORT_FILE}', '--files', '*.py'
         ])
     ])
 
@@ -262,10 +263,11 @@ Running Universum with this config will produce the following output:
         3. Executing build steps
          |   3.1.  [ 1/2 ] Run script
          |      |   $ /usr/bin/{python} run.py pass
+         |      |   Script succeeded
          |      └ [Success]
          |
          |   3.2.  [ 2/2 ] Pylint check
-         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --python-version 3.7 --result-file /home/user/universum-test-project/code_report_results/Pylint_check.json --files '*.py'
+         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --result-file /home/user/universum-test-project/code_report_results/Pylint_check.json --files '*.py'
          |      |   Error: Module sh got exit code 1
          |      └ [Failed]
          |
@@ -285,7 +287,7 @@ Running Universum with this config will produce the following output:
         ==> Universum 1.0.0 finished execution
 
 Which means we already have some code style issues in the project sources. Open the ``Pylint_check.json`` file
-with code style check results::
+in ``code_report_results`` directory to see the code style check results::
 
     [
         {
@@ -301,13 +303,18 @@ with code style check results::
         }
     ]
 
-Let's presume we do not indend to add docstrings to every module. Then this check failure can be fixed by simply
+Let's presume we do not intend to add docstrings to every module. Then this check failure can be fixed by simply
 putting a ``pylintrc`` file in project root with following content::
 
     [MESSAGES CONTROL]
     disable = missing-docstring
 
-Leading to `Universum` successful execution.
+That should lead to `Universum` successful execution.
+
+.. note::
+
+    Current Pylint docs do not have a separate guide on ``rcfile``, but a sample one can be generated using
+    ``pylint --generate-rcfile`` command.
 
 
 .. _guide#filter:
@@ -335,7 +342,7 @@ a ``{python} -m universum run -f Pylint`` command, we will get the following out
 
         3. Executing build steps
          |   3.1.  [ 1/1 ] Pylint check
-         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --python-version 3.7 --result-file '${CODE_REPORT_FILE}' --files '*.py'
+         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --result-file /home/user/universum-test-project/code_report_results/Pylint_check.json --files '*.py'
          |      └ [Success]
          |
          └ [Success]
@@ -410,7 +417,7 @@ Now let's leave the project root directory, as we no longer need local sources, 
 
     cd ..
     mkdir universum-ci-checks
-    python -m universum --no-diff --vcs-type git --git-repo https://github.com/YOUR-USERNAME/universum-test-project.git
+    {python} -m universum --no-diff --vcs-type git --git-repo https://github.com/YOUR-USERNAME/universum-test-project.git
 
 We will now get a log, very similar to previous one, but with some additional sections:
 
@@ -459,7 +466,7 @@ We will now get a log, very similar to previous one, but with some additional se
          |   5.2.  [ 2/2 ] Pylint check
          |      |   ==> Adding file /home/user/universum-ci-checks/artifacts/Pylint_check_log.txt to artifacts...
          |      |   ==> Execution log is redirected to file
-         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --python-version 3.7 --result-file /home/user/universum-ci-checks/temp/code_report_results/Pylint_check.json --files '*.py'
+         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --result-file /home/user/universum-ci-checks/temp/code_report_results/Pylint_check.json --files '*.py'
          |      └ [Success]
          |
          └ [Success]
@@ -499,11 +506,11 @@ full step list; but now it contains a lot of new files:
     * Pylint_check_log.txt
     * Static_analysis_report.json
 
-First one describes what sources were used for this exact build: repo, fetch target (e.g. `HEAD` or commit hash),
+The first one describes what sources were used for this exact build: repo, fetch target (e.g. `HEAD` or commit hash),
 list of downloaded files. In case of other VCS types (such as Perforce or local folder) the contents of this file
 will vary; the purpose of this file is repeatability of the builds.
 
-Next two files are step execution logs. When project configuration includes many different steps, each containing
+The next two files are step execution logs. When the project configuration includes many different steps, each containing
 a long execution log, reading the whole `Universum` log in console may be not that user-friendly. That's why when
 executing in console, by default the logs are written to files. This befaviour may be changed via ``--out``
 `command-line parameter <args.html#Output>`__.
@@ -562,6 +569,11 @@ Go to http://localhost:8080 and unlock Jenkins, follow the instruction on a titl
 
 Detailed instruction with explanation of the steps can be found `in official Jenkins installation guide
 <https://www.jenkins.io/doc/book/installing/docker/#downloading-and-running-jenkins-in-docker>`__.
+
+.. note::
+
+    Please pay attention, that to let you server to be visible to GitHub (for webhook triggers), its port
+    should be exposed to the Internet. Please use router settings or any other suitable means for this.
 
 
 .. _guide#job:
@@ -645,7 +657,7 @@ After installing the plugin and rebooting change pipeline to this::
 
         [Pipeline] { (Universum check)
         [Pipeline] sh
-        + pip3.7 install -U universum
+        + {pip} install -U universum
 
         Defaulting to user installation because normal site-packages is not writeable
         Requirement already satisfied: universum <and it's dependencies>
@@ -657,12 +669,12 @@ After installing the plugin and rebooting change pipeline to this::
         Fetching changes from the remote Git repository
         <logs of getting sources from Git>
         [Pipeline] sh
-        + python3.7 -m universum run
+        + {python} -m universum run
 
-        ==> Universum 0.19.4 started execution
+        ==> Universum 1.0.0 started execution
         ==> Cleaning artifacts...
         1. Processing project configs
-         |   ==> Adding file http://localhost:8080/job/universum_postcommit/3/artifact/artifacts/CONFIGS_DUMP.txt to artifacts...
+         |   ==> Adding file http://localhost:8080/job/universum_postcommit/1/artifact/artifacts/CONFIGS_DUMP.txt to artifacts...
          └ [Success]
 
         2. Preprocessing artifact lists
@@ -670,11 +682,11 @@ After installing the plugin and rebooting change pipeline to this::
 
         3. Executing build steps
          |   3.1.  [ 1/2 ] Run script
-         |      |   $ /usr/bin/python3.7 run.py pass
+         |      |   $ /usr/bin/{python} run.py pass
          |      └ [Success]
          |
          |   3.2.  [ 2/2 ] Pylint check
-         |      |   $ /usr/bin/python3.7 -m universum.analyzers.pylint --python-version 3.7 --result-file /var/jenkins_home/workspace/universum_postcommit/code_report_results/Pylint_check.json --files '*.py'
+         |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --result-file /var/jenkins_home/workspace/universum_postcommit/code_report_results/Pylint_check.json --files '*.py'
          |      └ [Success]
          |
          └ [Success]
@@ -690,7 +702,7 @@ After installing the plugin and rebooting change pipeline to this::
         5. Collecting artifacts
          └ [Success]
 
-        ==> Universum 0.19.4 finished execution
+        ==> Universum 1.0.0 finished execution
         [Pipeline] }
 
 
