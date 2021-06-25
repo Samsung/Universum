@@ -14,7 +14,8 @@ GitHub application and Pylint analyzer. These are the steps to take:
 8. :ref:`Run Universum in default mode <guide#launch>`
 9. :ref:`Set up Jenkins server <guide#jenkins>`
 10. :ref:`Create a Jenkins job <guide#job>`
-11. :ref:`Set up CI using Universum <guide#set-up-ci>`
+11. :ref:`Set up the simplest CI using Universum <guide#set-up-ci>`
+12. :ref:`Make repo state more precise <guide#set-repo-state>`
 
 
 .. _guide#install:
@@ -575,6 +576,10 @@ Detailed instruction with explanation of the steps can be found `in official Jen
     Please pay attention, that to let you server to be visible to GitHub (for webhook triggers), its port
     should be exposed to the Internet. Please use router settings or any other suitable means for this.
 
+Now that we have server URL and an exposed port, we can set up `a simple PUSH notification webhook
+<https://docs.github.com/en/developers/webhooks-and-events/webhooks/creating-webhooks>`__ to know about sources
+updates.
+
 
 .. _guide#job:
 
@@ -589,7 +594,7 @@ On configuration page find ``Build Triggers`` and check the ``GitHub hook trigge
 
 .. note::
 
-    For Git SCM to work automatically, PUSH notifications should be set up in your repository settings.
+    For Git SCM to work automatically, PUSH notifications should be set up right in your repository settings.
     Please refer to the following `official guide <https://plugins.jenkins.io/git/#push-notification-from-repository>`__
     on managing such triggers.
 
@@ -708,8 +713,8 @@ After installing the plugin and rebooting change pipeline to this::
 
 .. _guide#set-up-ci:
 
-Set up CI using Universum
--------------------------
+Set up the simplest CI using Universum
+--------------------------------------
 
 Universum offers a lot of additional functionality, but to use it, we first have to let it know
 about VCS we're using. First, let's change Jenkins GitHub plugin to
@@ -721,6 +726,75 @@ download sources automatically before Universum even started.
     This also can be, for example, used later, to cherry-pick some files, including Universum config itself,
     from a different commit (e.g. in another branch).
 
+In job configuration go to ``Build Triggers``, uncheck the ``GitHub hook trigger for GITScm polling``
+and instead check the ``Generic Webhook Trigger``.
 
+Running `Universum` in default mode will require all parameters we already `tried locally <guide#launch>`.
+So first, let's change job pipeline accordingly::
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Universum check') {
+          steps {
+            sh("{pip} install -U universum[git] pylint")
+            sh("{python} -m universum --no-diff --vcs-type git --git-repo https://github.com/YOUR-USERNAME/universum-test-project.git")
+          }
+        }
+      }
+    }
+
+Even though first launch might be successful, further job reruns will fail with the following error::
+
+    ==> Universum 1.0.0 started execution
+    1. Preparing repository
+     |   Error: File 'REPOSITORY_STATE.txt' already exists in artifact directory.
+     |   Possible reason of this error: previous build artifacts are not cleaned
+     └ [Failed]
+
+    2. Finalizing
+     └ [Success]
+
+    ==> Universum 1.0.0 finished execution
+
+The reason for such error is that CI build is meant to be run in an empty clean directory to make sure
+no leftovers from previous builds could affect the result. An example of such contamination can be some build
+artifacts, created with previous sources and not created in most current run at all: in this scenario the outdated
+files might be considered created successfully.
+
+So, to avoid this problem, we can install `Workspace Cleanup plugin <https://plugins.jenkins.io/ws-cleanup/>` to
+Jenkins, and modify pipeline to clean working directory before execution::
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Clean workspace') {
+          steps {
+            cleanWs()
+          }
+        }
+        stage ('Universum check') {
+          steps {
+            sh("{pip} install -U universum[git] pylint")
+            sh("{python} -m universum --no-diff --vcs-type git --git-repo https://github.com/YOUR-USERNAME/universum-test-project.git")
+          }
+        }
+      }
+    }
+
+So, for now this job will start every time we push a new commit to the Git repository and check the latest
+repository state. Let's apply to this job some useful features.
+
+
+.. _guide#set-repo-state:
+
+Make repo state more precise
+----------------------------
 
 .. TBD
