@@ -16,6 +16,7 @@ GitHub application and Pylint analyzer. These are the steps to take:
 10. :ref:`Create a Jenkins job <guide#job>`
 11. :ref:`Set up the simplest CI using Universum <guide#set-up-ci>`
 12. :ref:`Make repo state more precise <guide#set-repo-state>`
+13. :ref:`Add artifacts to the build <guide#add-artifacts>`
 
 
 .. _guide#install:
@@ -727,7 +728,8 @@ download sources automatically before Universum even started.
     from a different commit (e.g. in another branch).
 
 In job configuration go to ``Build Triggers``, uncheck the ``GitHub hook trigger for GITScm polling``
-and instead check the ``Generic Webhook Trigger``.
+and instead check the ``Generic Webhook Trigger``. In revealed settings for Generic webhook we need to find
+``Token`` parameter and add a triggering token; otherwise we'd have to pass user and password to webhook.
 
 Running `Universum` in default mode will require all parameters we already `tried locally <guide#launch>`.
 So first, let's change job pipeline accordingly::
@@ -796,5 +798,86 @@ repository state. Let's apply to this job some useful features.
 
 Make repo state more precise
 ----------------------------
+
+Let's presume we want to check not the *latest* repository state, but every pushed commit separately.
+Every webhook notification includes a payload with a lot of useful information. Let's investigate its contents
+and decide what of them we might use.
+
+To see a payload, sent to Jenkins by GitHub, first push a commit to the repo. Then open the project settings,
+``Webhooks`` page. There find a webhook you created earlier and click the ``Edit`` button. Go to the end of the
+page to find ``Recent Deliveries`` and click on the latest one. There you will find the headers and request body,
+sent and received by GitHub.
+
+To check the exact commit, we will need its hash, that is referenced in payload as ``after``. We might also pay
+attention to ``repository.url`` to take the value from payload instead of hardcoding it into pipeline.
+But, to use this parameters, we need to extract them from payload.
+
+So, on Jenkins go to job configuration, ``Build Triggers``, ``Generic Webhook Trigger`` and click on ``Add`` button
+in ``Post content parameters`` (actually, click it twice, for we will add two parameters). Parameter usage is
+described in `plugin description <https://plugins.jenkins.io/generic-webhook-trigger/>`__.
+
+1. First, we will add parameter named ``GIT_REPO``, with value ``$.repository.url``, where ``$`` refers to payload,
+   and ``.repository.url`` is a 'JSONPath'
+2. Then, add parameter named ``GIT_CHECKOUT_ID`` with value ``$.after`` to refer to new commit hash
+
+These parameters will become environment variables for the upcoming builds and without further effort will be
+`recognized <args.html#Git>`__ by Universum. Therefore, there's no need to pass ``--git-repo`` directly::
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Clean workspace') {
+          steps {
+            cleanWs()
+          }
+        }
+        stage ('Universum check') {
+          steps {
+            sh("{pip} install -U universum[git] pylint")
+            sh("{python} -m universum --no-diff --vcs-type git")
+          }
+        }
+      }
+    }
+
+This will produce a build log, very similar to those received in previous configuration; main difference will be
+``Preparing repository`` part:
+
+.. collapsible::
+
+    .. code-block::
+       :emphasize-lines: 12-14
+
+        1. Preparing repository
+         |   ==> Adding file http://localhost:8080/job/universum_postcommit/58/artifact/artifacts/REPOSITORY_STATE.txt to artifacts...
+         |   1.1. Cloning repository
+         |      |   ==> Cloning 'https://github.com/YOUR-USERNAME/universum-test-project'...
+         |      |   ==> Cloning into '/var/jenkins_home/workspace/universum_postcommit/temp'...
+         |      |   ==> POST git-upload-pack (165 bytes)
+         |      |   ==> remote: Enumerating objects: 34, done.
+         |      |   ==> remote: Total 34 (delta 10), reused 7 (delta 0), pack-reused 0
+         |      |   ==> Please note that default remote name is 'origin'
+         |      └ [Success]
+         |
+         |   1.2. Checking out
+         |      |   ==> Checking out '4411f3378a3c82cfb9b95487afd77fe6a7a5d472'...
+         |      └ [Success]
+         |
+         |   1.3. Registering file diff for API
+         |      └ [Success]
+         |
+         └ [Success]
+
+Also, the contents of ``REPOSITORY_STATE.txt`` file will vary, but for now we won't be able to see that.
+
+
+.. _guide#add-artifacts:
+
+Add artifacts to the build
+--------------------------
+
 
 .. TBD
