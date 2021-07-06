@@ -199,7 +199,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         change["Files"] = []
         change["Description"] = description
         change_id = self.p4.save_change(change)[0].split()[1]
-        self.out.log(f"Created empty change {change_id} for reconciling.")
+        self.out.log(f"Created empty CL {change_id} for reconciling")
 
         try:
             for file_path in file_list:
@@ -209,9 +209,13 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             # If no changes were reconciled, there will be no file records in CL dictionary
             if "Files" not in current_cl:
                 self.p4.run_change("-d", change_id)
-                self.out.log(f"Deleted empty CL {change_id}.")
+                self.out.log(f"Deleted empty CL {change_id}")
                 return 0
 
+            text = "The changes in following files are going to be submitted:"
+            for line in current_cl["Files"]:
+                text+= "\n\t" + line
+            self.out.log(text)
             self.p4.run_submit(current_cl, "-f", "revertunchanged")
         except Exception as e:
             self.p4.run_revert("-k", "-c", change_id, "//...")
