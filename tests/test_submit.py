@@ -98,8 +98,8 @@ class SubmitterParameters:
         setattr(settings.Submit, "reconcile_list", ",".join(path_list))
 
         if kwargs:
-            for key in kwargs:
-                setattr(settings.Submit, key, kwargs[key])
+            for key, value in kwargs.items():
+                setattr(settings.Submit, key, value)
 
         return __main__.run(settings)
 
