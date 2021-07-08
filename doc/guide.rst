@@ -17,6 +17,7 @@ GitHub application and Pylint analyzer. These are the steps to take:
 11. :ref:`Set up the simplest CI using Universum <guide#set-up-ci>`
 12. :ref:`Make repo state more precise <guide#set-repo-state>`
 13. :ref:`Add artifacts to the build <guide#add-artifacts>`
+14. :ref:`Create a pre-commit job <guide#pre-commit>`
 
 
 .. _guide#install:
@@ -878,6 +879,95 @@ Also, the contents of ``REPOSITORY_STATE.txt`` file will vary, but for now we wo
 
 Add artifacts to the build
 --------------------------
+
+So, now we have this directory, defined with ``--artifact-dir``
+`command line parameter <args.html#Artifact\ collection>`__, that already contains some useful data about the
+recent build. To be able to see it on Jenkins, we will mention it in Jenkins pipeline like this::
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Clean workspace') {
+          steps {
+            cleanWs()
+          }
+        }
+        stage ('Universum check') {
+          steps {
+            sh("{pip} install -U universum[git] pylint")
+            sh("{python} -m universum --no-diff --vcs-type git")
+            archiveArtifacts artifacts: 'artifacts/', followSymlinks: false
+          }
+        }
+      }
+    }
+
+After this, all links in log (like that one leading to ``REPOSITORY_STATE.txt``) will start to work;
+and all the artifacts will be accessible from a build page on Jenkins. Later on, when we will turn on the
+``--report-to-review`` `command line option <args.html#Source\ files>`__, we will be able to use ``report_artifacts``
+key of :class:`~universum.configuration_support.Step`, that will result in link to a chosen file to be posted in
+a comment to checked review.
+
+There two kinds of artifacts, expected by `Universum` from a build:
+
+1. Usual artifacts, that are results of step execution. Absence of such artifacts is a symptom of unsuccessful
+   execution, and therefore is considered a failure
+2. Special artifacts to be reported to a code review, such as static analysis reports. Absence of
+   such artifacts may mean that there simply is nothing to report, and therefore is not considered a failure
+
+If an artifact is to be reported to code review, but is also a mandatory outcome of a build, it should be noted
+in configurations file in both ``artifacts`` and ``report_artifacts`` key.
+
+So, let's presume we want our build checks to generate a mandatory build artifacts. As an example, let's generate
+a log file in our build script ``run.py``::
+
+    #!/usr/bin/env python
+
+    import sys
+
+    with open("execution.log", "w+") as new_file:
+        new_file.write("Here's what a script accepted from command line:\n" + str(sys.argv))
+
+    if len(sys.argv) < 2:
+        print("Unknown outcome")
+        sys.exit(2)
+    if sys.argv[1] == "pass":
+        print("Script succeeded")
+        sys.exit(0)
+    print("Script failed")
+    sys.exit(1)
+
+After that, let's inform `Universum` we expect this file to be generated as an outcome of a build check::
+
+    #!/usr/bin/env python
+
+    from universum.configuration_support import Configuration, Step
+
+    configs = Configuration([
+        Step(name='Run script', command=['python3.7', 'run.py', 'pass'], artifacts="execution.log"),
+        dict(name="Pylint check", code_report=True, command=[
+            "python3.7", "-m", "universum.analyzers.pylint", "--result-file", "${CODE_REPORT_FILE}", "--files", "*.py"
+        ])
+    ])
+
+    if __name__ == '__main__':
+        print(configs.dump())
+
+Actually, if we expect more than one log file to be generated, we can pass ``artifacts="*.log"`` to collect
+all of them. But, be aware: if any of this log files are committed to the repo, the build will fail, as the file,
+expected to be created by step execution, is already present in project directory. If, however, such file is to be
+generated anew instead of the already committed one (this is a common case for builds, utilizing
+:ref:`submit <additional_commands#submit>` `Universum` mode), there's another helpful
+:class:`~universum.configuration_support.Step` key: ``artifact_prebuild_clean=True``.
+
+
+.. _guide#pre-commit:
+
+Create a pre-commit job
+-----------------------
 
 
 .. TBD
