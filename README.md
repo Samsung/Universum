@@ -51,7 +51,7 @@ Prerequisites:
 Further commands:
 ```bash
 python3.7 -m venv virtual-environment-python3.7
-source ./virtual-environment/bin/activate
+source ./virtual-environment-python3.7/bin/activate
 git clone https://github.com/Samsung/Universum.git universum-working-dir
 cd universum-working-dir
 git checkout master
