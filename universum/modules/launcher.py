@@ -201,9 +201,9 @@ class RunningStep:
             raise StepException() from ex
         return True
 
-    def start(self, is_background: bool) -> None:
+    def start(self, is_background: bool) -> bool:
         if not self.prepare_command():
-            return
+            return False
 
         self._is_background = is_background
         self._postponed_out = []
@@ -220,6 +220,8 @@ class RunningStep:
         self.out.log_external_command(log_cmd)
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
+
+        return True
 
     def handle_stdout(self, line: str = u"") -> None:
         line = utils.trim_and_convert_to_unicode(line)

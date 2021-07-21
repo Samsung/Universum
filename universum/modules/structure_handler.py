@@ -138,7 +138,9 @@ class StructureHandler(HasOutput):
         process = step_executor(configuration)
 
         background = configuration.background
-        process.start(is_background=background)
+        is_running = process.start(is_background=background)
+        if not is_running:
+            return
         if not background:
             process.finalize()
             return
