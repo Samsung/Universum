@@ -2,7 +2,7 @@ import glob
 import json
 import os
 from copy import deepcopy
-from typing import cast, Dict, List, Optional, TextIO, Tuple
+from typing import Dict, List, Optional, TextIO, Tuple
 
 from ..configuration_support import Configuration, Step
 from .output import HasOutput
@@ -28,6 +28,8 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
     def prepare_environment(self, project_config: Configuration) -> Configuration:
         afterall_steps: Configuration = Configuration()
         for item in project_config.configs:
+            if item.children:
+                item.children = self.prepare_environment(item.children)
             if not item.code_report:
                 continue
             if not self.report_path:
