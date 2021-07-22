@@ -29,7 +29,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
         afterall_steps: Configuration = Configuration()
         for item in project_config.configs:
             if item.children:
-                new_children = self.prepare_environment(item.children)
+                afterall_steps += self.prepare_environment(item.children)
             if not item.code_report:
                 continue
             if not self.report_path:
@@ -41,7 +41,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             actual_filename: str = os.path.join(self.report_path, name)
 
             item.replace_string(temp_filename, actual_filename)
-            afterall_steps += [deepcopy(item)].extend(new_children)
+            afterall_steps += [deepcopy(item)]
         return afterall_steps
 
     @make_block("Processing code report results")
