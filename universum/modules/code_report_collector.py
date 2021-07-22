@@ -4,7 +4,7 @@ import os
 from copy import deepcopy
 from typing import Dict, List, Optional, TextIO, Tuple
 
-from ..configuration_support import Configuration, Step
+from ..configuration_support import Configuration
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
@@ -28,8 +28,6 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
     def prepare_environment(self, project_config: Configuration) -> Configuration:
         afterall_steps: Configuration = Configuration()
         for item in project_config.configs:
-            if item.children:
-                item.children = self.prepare_environment(item.children)
             if not item.code_report:
                 continue
             if not self.report_path:
@@ -40,6 +38,9 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
             item.replace_string(temp_filename, actual_filename)
+
+            if item.children:
+                item.children = self.prepare_environment(item.children)
             afterall_steps += [deepcopy(item)]
         return afterall_steps
 
