@@ -2,7 +2,7 @@ import glob
 import json
 import os
 from copy import deepcopy
-from typing import Dict, List, Optional, TextIO, Tuple
+from typing import cast, Dict, List, Optional, TextIO, Tuple
 
 from ..configuration_support import Configuration, Step
 from .output import HasOutput
