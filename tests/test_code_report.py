@@ -277,13 +277,13 @@ def test_code_report_extended_arg_search_embedded(tmpdir, stdout_checker):
     source_file = tmpdir.join("source_file.py")
     source_file.write(source_code_python + '\n')
 
-    config = f"""
+    config = """
 from universum.configuration_support import Configuration, Step
 
 configs = Configuration([Step(critical=True)]) * Configuration([
     Step(name='This is step', command=["ls"]),
-    Step(name='This is step to unfold', code_report=True, report_artifacts='${{CODE_REPORT_FILE}}',
-         command=['bash', '-c', 'echo ${{CODE_REPORT_FILE}}']),
+    Step(name='This is step to unfold', code_report=True, report_artifacts='${CODE_REPORT_FILE}',
+         command=['bash', '-c', 'echo ${CODE_REPORT_FILE}']),
 ])
 """
 
