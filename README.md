@@ -47,6 +47,7 @@ Prerequisites:
    https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
 
    * Also add current user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
+3. Install Mozilla WebDriver: `sudo apt install firefox-geckodriver`
 
 Further commands:
 ```bash
