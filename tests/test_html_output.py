@@ -5,7 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 
-config = f"""
+config = """
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Dummy", command=["echo", "dummy"])])
@@ -16,9 +16,9 @@ configs = Configuration([dict(name="Dummy", command=["echo", "dummy"])])
 def browser():
     options = Options()
     options.headless = True
-    browser = webdriver.Firefox(options=options)
-    yield browser
-    browser.close()
+    firefox = webdriver.Firefox(options=options)
+    yield firefox
+    firefox.close()
 
 
 def test_success(docker_main, browser):
@@ -40,4 +40,3 @@ def test_no_html_log_requested(docker_main):
     docker_main.run(config)
     log_path = os.path.join(docker_main.artifact_dir, "log.html")
     assert not os.path.exists(log_path)
-

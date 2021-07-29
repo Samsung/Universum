@@ -10,7 +10,7 @@ __all__ = [
 
 
 class HtmlOutput(BaseOutput):
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filename = None
@@ -43,10 +43,10 @@ class HtmlOutput(BaseOutput):
         self.log(line) # stub
 
     def log(self, line):
-        if self._is_log_start(line):
+        if _is_log_start(line):
             self._write_html_header()
         self._write_to_file(line) # stub
-        if self._is_log_end(line):
+        if _is_log_end(line):
             self._write_html_footer()
 
     def log_external_command(self, command):
@@ -55,11 +55,13 @@ class HtmlOutput(BaseOutput):
     def log_shell_output(self, line):
         self.log(line) # stub
 
-    def _is_log_start(self, line):
+    @staticmethod
+    def _is_log_start(line):
         log_start_pattern = r"^Universum \d+\.\d+\.\d+ started execution$"
         return re.match(log_start_pattern, line)
-    
-    def _is_log_end(self, line):
+
+    @staticmethod
+    def _is_log_end(line):
         log_end_pattern = r"^Universum \d+\.\d+\.\d+ finished execution$"
         return re.match(log_end_pattern, line)
 
@@ -72,7 +74,7 @@ class HtmlOutput(BaseOutput):
                     <pre>
         '''
         self._write_to_file(header)
-    
+
     def _write_html_footer(self):
         footer = '''
                     </pre>
@@ -87,4 +89,3 @@ class HtmlOutput(BaseOutput):
         with open(self.filename, 'a') as file:
             file.write(line)
             file.write(os.linesep)
-
