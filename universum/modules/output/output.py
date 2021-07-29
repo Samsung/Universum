@@ -126,4 +126,3 @@ class HtmlDriverHandler:
         if self.driver:
             return getattr(self.driver, name)
         return lambda *args, **kwargs: None
-

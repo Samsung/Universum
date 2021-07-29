@@ -43,10 +43,10 @@ class HtmlOutput(BaseOutput):
         self.log(line) # stub
 
     def log(self, line):
-        if _is_log_start(line):
+        if self._is_log_start(line):
             self._write_html_header()
         self._write_to_file(line) # stub
-        if _is_log_end(line):
+        if self._is_log_end(line):
             self._write_html_footer()
 
     def log_external_command(self, command):
