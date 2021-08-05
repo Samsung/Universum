@@ -546,6 +546,9 @@ Create a ``Dockerfile`` with following content::
     USER jenkins
     RUN jenkins-plugin-cli --plugins "blueocean:1.24.7 docker-workflow:1.26"
 
+If this results in outdated Jenkins server later, please consult `official Jenkins installation guide
+<https://www.jenkins.io/doc/book/installing/docker/#downloading-and-running-jenkins-in-docker>`__.
+
 Execute the following commands::
 
     docker network create jenkins
@@ -564,13 +567,17 @@ Execute the following commands::
       --volume jenkins-docker-certs:/certs/client:ro \
       myjenkins-blueocean:1.1
 
+Please note that depending on exact ``Dockerfile`` contents resulting server may or may not contain Python and Pip.
+If not, ether add installation to ``Dockerfile`` or execute the following after starting the container::
+
+    docker exec -u root jenkins-blueocean apt install -y {python}
+    docker exec -u root jenkins-blueocean apt install -y python3-pip
+    docker exec -u root jenkins-blueocean {python} -m pip install -U pip
+
 Go to http://localhost:8080 and unlock Jenkins, follow the instruction on a title page:
 
     1. execute ``docker exec jenkins-blueocean cat /var/jenkins_home/secrets/initialAdminPassword``
     2. input the required key and follow further wizard instructions
-
-Detailed instruction with explanation of the steps can be found `in official Jenkins installation guide
-<https://www.jenkins.io/doc/book/installing/docker/#downloading-and-running-jenkins-in-docker>`__.
 
 .. note::
 
@@ -986,7 +993,7 @@ A large list of possible event should appear beneath. Find and uncheck the 'Push
 Register a GitHub Application
 -----------------------------
 
-For the next step (creating pre-commit and reporting results to GitHub) we will need an active `GitHub Application
+For the next step (reporting results to GitHub) we will need an active `GitHub Application
 <https://docs.github.com/en/developers/apps>`__.
 
 
