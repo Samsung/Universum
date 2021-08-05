@@ -980,12 +980,22 @@ we need almost the same information as for the post-commit: commit hash to check
 to know the commit was pushed to server and requires to be checked.
 
 Let's say we don't want to check any commit, pushed to the repo; for the pre-commit we're only interested in
-those pushed in scope of `pull requests` (PRs). To only react to those, go to project `Settings`, `Webhooks`,
-find the webhook created earlier and click 'Edit'. There find the 'Which events would you like to trigger this webhook?'
-radio-button and switch to 'Let me select individual events'.
+those pushed in scope of `pull requests` (PRs). To only react to those, go to project ``Settings``, ``Webhooks``,
+find the webhook created earlier and click ``Edit``. There find the ``Which events would you like to trigger this
+webhook?`` radio-button and switch to ``Let me select individual events``.
 
-A large list of possible event should appear beneath. Find and uncheck the 'Push' event, and instead check the
-'Pull requests'.
+A large list of possible events should appear beneath. Find and uncheck the ``Push`` event, and instead check the
+``Pull requests``. After that create a new PR (requires additional branch, can be performed by GitHub automatically
+when redacting single file). This should trigger the created post-commit configuration (as pass the new info to the
+old `Generic Webhook Trigger`), but the build will most likely fail due to payload content differences.
+
+So, to see the new payload, once again in webhook settings go to ``Recent Deliveries`` and find the latest payload.
+As you can see, now ``repository.url`` contains ``https://api.github.com/repos/YOUR-USERNAME/universum-test-project``,
+which might not be available to anonymous cloning. For now we can replace it with ``repository.html_url``, that
+still contains old familiar ``https://github.com/YOUR-USERNAME/universum-test-project``.
+
+But why ``https://api.github.com/``, and how to use this API to report the check status back to GitHub? To get to
+this, we will need a GitHub Application as a unified way of communication between CI system and GitHub.
 
 
 .. _guide#github-app:
