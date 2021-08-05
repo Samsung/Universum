@@ -18,6 +18,7 @@ GitHub application and Pylint analyzer. These are the steps to take:
 12. :ref:`Make repo state more precise <guide#set-repo-state>`
 13. :ref:`Add artifacts to the build <guide#add-artifacts>`
 14. :ref:`Create a pre-commit job <guide#pre-commit>`
+15. :ref:`Register a GitHub Application <guide#github-app>`
 
 
 .. _guide#install:
@@ -531,7 +532,7 @@ Now that CI builds are working locally, let's set up a real automated CI.
 
 Create a ``Dockerfile`` with following content::
 
-    FROM jenkins/jenkins:2.263.1-lts-slim
+    FROM jenkins/jenkins:2.289.3-lts-jdk11
     USER root
     RUN apt-get update && apt-get install -y apt-transport-https \
            ca-certificates curl gnupg2 \
@@ -542,10 +543,8 @@ Create a ``Dockerfile`` with following content::
            "deb [arch=amd64] https://download.docker.com/linux/debian \
            $(lsb_release -cs) stable"
     RUN apt-get update && apt-get install -y docker-ce-cli
-    RUN apt-get update && apt-get install -y git {python} python3-pip
-    RUN {python} -m pip install -U pip
     USER jenkins
-    RUN jenkins-plugin-cli --plugins blueocean:1.24.3
+    RUN jenkins-plugin-cli --plugins "blueocean:1.24.7 docker-workflow:1.26"
 
 Execute the following commands::
 
@@ -968,6 +967,28 @@ generated anew instead of the already committed one (this is a common case for b
 
 Create a pre-commit job
 -----------------------
+
+So, let's presume we want to check commit before merging it into `main` branch (or any other). To do so,
+we need almost the same information as for the post-commit: commit hash to checkout and a webhook notification
+to know the commit was pushed to server and requires to be checked.
+
+Let's say we don't want to check any commit, pushed to the repo; for the pre-commit we're only interested in
+those pushed in scope of `pull requests` (PRs). To only react to those, go to project `Settings`, `Webhooks`,
+find the webhook created earlier and click 'Edit'. There find the 'Which events would you like to trigger this webhook?'
+radio-button and switch to 'Let me select individual events'.
+
+A large list of possible event should appear beneath. Find and uncheck the 'Push' event, and instead check the
+'Pull requests'.
+
+
+.. _guide#github-app:
+
+Register a GitHub Application
+-----------------------------
+
+For the next step (creating pre-commit and reporting results to GitHub) we will need an active `GitHub Application
+<https://docs.github.com/en/developers/apps>`__.
+
 
 
 .. TBD
