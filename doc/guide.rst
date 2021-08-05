@@ -19,6 +19,7 @@ GitHub application and Pylint analyzer. These are the steps to take:
 13. :ref:`Add artifacts to the build <guide#add-artifacts>`
 14. :ref:`Create a pre-commit job <guide#pre-commit>`
 15. :ref:`Register a GitHub Application <guide#github-app>`
+16. :ref:`Set up pre-commit job with reports <guide#report>`
 
 
 .. _guide#install:
@@ -1004,8 +1005,33 @@ Register a GitHub Application
 -----------------------------
 
 For the next step (reporting results to GitHub) we will need an active `GitHub Application
-<https://docs.github.com/en/developers/apps>`__.
+<https://docs.github.com/en/developers/apps>`__. To `register it
+<https://docs.github.com/en/developers/apps/getting-started-with-apps/
+setting-up-your-development-environment-to-create-a-github-app#step-2-register-a-new-github-app>`__,
+go to you personal account ``Settings``, find ``Developer settings``, and the first page available should be
+``GitHub Apps``. Click the ``New GitHub App`` button.
 
+Enter App name (e.g. ``Universum Test App``, but make sure it's unique) and `Homepage URL` (as it's going to be
+Jenkins-based, you may simply use Jenkins home URL). Somewhere later find the ``Webhook URL`` and enter the same URL
+we used for webhook: ``http://jenkins.url/generic-webhook-trigger/invoke?token=TOKEN``. As the app will receive
+its own payloads, you will no longer require the old webhook itself. It can be deactivated or deleted from now on.
+
+Now go down to ``Repository permissions``. To perform checks and report results, we will need the ``Checks`` set to
+`Read & write` access. As for now we are only interested in `Checks`, in ``Subscribe to events`` we also need
+to check the ``Check suite`` and ``Check run``.
+
+This should be enough to create the test app. After successful creation, you will be redirected to Application
+personal page. On ``General`` page scroll down to ``Private keys`` and click the ``Generate a private key`` button.
+The key will be used later for the App authorization in GitHub, so make sure to save it.
+
+Now all you need is to install the Application to the repo. Go to ``Install App`` page; choose your account;
+select required repo; click ``Install``.
+
+
+.. _guide#report:
+
+Set up pre-commit job with reports
+----------------------------------
 
 
 .. TBD
