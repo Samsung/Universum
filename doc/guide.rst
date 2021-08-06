@@ -1132,7 +1132,7 @@ Now, as for the pipeline, change it to the following::
                                               usernameVariable: 'GITHUB_APP_ID',
                                               passwordVariable: 'GITHUB_PRIVATE_KEY')]) {
               sh("{pip} install -U universum[github]")
-              sh("{python} -m universum github-handler -e ${x_github_event}")
+              sh("{python} -m universum github-handler -e \${x_github_event}")
             }
           }
         }
