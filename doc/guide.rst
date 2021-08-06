@@ -1033,5 +1033,111 @@ select required repo; click ``Install``.
 Set up pre-commit job with reports
 ----------------------------------
 
+Actually, we do have a :ref:`separate manual <github_handler#jenkins>`, explaining how
+`Universum GitHub Application` works and how to apply it.
+
+First thing not very much explained there is working with ``credentials`` to get the `KEY_FILE`. We recommend
+using the `Credentials Jenkins plugin <https://plugins.jenkins.io/credentials/>`__, that is most likely already
+pre-installed in your Jenkins instance, to store sensitive information, such as a private key.
+
+On Jenkins, go to ``Manage Jenkins`` and ``Manage Credentials``. Find ``Stores scoped to Jenkins`` and select
+``Jenkins``, then ``Global credentials (unrestricted)``. There you should be prompted to add new credentials.
+
+In a dropdown list select ``GitHub App``. Enter ``universum-test-app`` as an ID and ``Universum Test App`` as
+a dscription. For `App ID` check your App page on GitHub (find it by going to ``Settings``,
+``Developer settings``, ``GitHub Apps``). Into the ``Key`` enter the contents of the file we acquired after
+:ref:`registering GitHub App <guide#github-app>` (make sure to strip the ``-----BEGIN/END RSA PRIVATE KEY-----``
+lines).
+
+Let's turn our existing Jenkins job, ``universum_postcommit``, into a webhook-handling job that uses the newly
+created GitHub App, and then create another one, not triggered by any webhooks directly, to simply perform the
+checks when need.
+
+First let's create that simple checking job. Follow the already familiar ``New item``, ``Pipeline`` scenario,
+and enter the name (e.g. ``universum_check``). In ``General`` page of settings check the ``This project is
+parameterized`` field and add following empty string params to be passed from webhook processor:
+
+   * GIT_REPO
+   * GIT_REFSPEC
+   * GIT_CHECKOUT_ID
+   * GITHUB_INSTALLATION_ID
+   * GITHUB_CHECK_ID
+
+All these parameters might be helpful when performing the check and are automatically extracted from payload
+by :doc:`GitHub Handler <github_handler>`.
+
+Then we need to extract the `Credentials` parameters to this job, so add a ``Credentials Parameter`` (let's name it
+``GITHUB_APP``), where the credentials type will be ``GitHub App``, and default value set to previously created
+``Universum Test App``.
+
+Then in ``Build Triggers`` check the ``Trigger builds remotely (e.g., from scripts)`` and add the token (e.g.
+``GITHUB``).
+
+Finally add the actual pipeline::
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Clean workspace') {
+          steps {
+            cleanWs()
+          }
+        }
+        stage ('Universum check') {
+          steps {
+            withCredentials([usernamePassword(credentialsId: 'GITHUB_APP',
+                                              usernameVariable: 'GITHUB_APP_ID',
+                                              passwordVariable: 'GITHUB_PRIVATE_KEY')]) {
+              sh("{pip} install -U universum[github] pylint")
+              sh("{python} -m universum --no-diff -vt github --report-to-review -rst -rsu -rof")
+              archiveArtifacts artifacts: 'artifacts/', followSymlinks: false
+            }
+          }
+        }
+      }
+    }
+
+The contents of the pipeline might now look not very familiar, and will be explained after setting up the handler.
+
+Let's transform the existing ``universum_postcommit`` into ``github_webhook_handler``, as it already has conveniently
+set up triggers and payload processing. Change the name and proceed to variables declared by ``Generic Webhook
+Trigger``. As for the payload, we will only need one parameter now, containing the whole payload contents, to be
+passed to handler and parsed. So in ``Post content parameters`` leave one with the following contents:
+
+* `Variable`: ``GITHUB_PAYLOAD``
+* `Expression`: ``$``
+
+But for the handler to work properly we will require more metadata, so we also need to add a ``Header parameter``
+with ``Request header`` set to ``x-github-event``. This is a `GitHub event` header sent by GitHub along with the
+payload itself.
+
+Also, now this job also requires predefined parameters, so in ``General`` check the ``This project is parameterized``
+and add the very same ``GITHUB_APP`` credentials parameter, as described above.
+
+Now, as for the pipeline, change it to the following::
+
+
+    pipeline {
+      agent any
+      options {
+        ansiColor('xterm')
+      }
+      stages {
+        stage ('Run GitHub Handler') {
+          steps {
+            withCredentials([usernamePassword(credentialsId: 'GITHUB_APP',
+                                              usernameVariable: 'GITHUB_APP_ID',
+                                              passwordVariable: 'GITHUB_PRIVATE_KEY')]) {
+              sh("{pip} install -U universum[github]")
+              sh("{python} -m universum github-handler -e ${x_github_event}")
+            }
+          }
+        }
+      }
+    }
+
 
 .. TBD
