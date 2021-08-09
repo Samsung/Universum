@@ -18,8 +18,8 @@ GitHub application and Pylint analyzer. These are the steps to take:
 12. :ref:`Make repo state more precise <guide#set-repo-state>`
 13. :ref:`Add artifacts to the build <guide#add-artifacts>`
 14. :ref:`Create a pre-commit job <guide#pre-commit>`
-15. :ref:`Register a GitHub Application <guide#github-app>`
-16. :ref:`Set up pre-commit job with reports <guide#report>`
+15. :ref:`Set up a GitHub App checks <guide#github-app>`
+16. :ref:`Turn on pre-commit checks reporting <guide#report>`
 
 
 .. _guide#install:
@@ -1001,12 +1001,14 @@ this, we will need a GitHub Application as a unified way of communication betwee
 
 .. _guide#github-app:
 
-Register a GitHub Application
------------------------------
+Set up a GitHub App checks
+--------------------------
 
-For the next step (reporting results to GitHub) we will need an active `GitHub Application
-<https://docs.github.com/en/developers/apps>`__. To `register it
-<https://docs.github.com/en/developers/apps/getting-started-with-apps/
+Register a GitHub App
+~~~~~~~~~~~~~~~~~~~~~
+
+For this step we will need an active `GitHub Application <https://docs.github.com/en/developers/apps>`__.
+To `register it <https://docs.github.com/en/developers/apps/getting-started-with-apps/
 setting-up-your-development-environment-to-create-a-github-app#step-2-register-a-new-github-app>`__,
 go to you personal account ``Settings``, find ``Developer settings``, and the first page available should be
 ``GitHub Apps``. Click the ``New GitHub App`` button.
@@ -1028,17 +1030,15 @@ Now all you need is to install the Application to the repo. Go to ``Install App`
 select required repo; click ``Install``.
 
 
-.. _guide#report:
+Set up Jenkins jobs to work with the GitHub App
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Set up pre-commit job with reports
-----------------------------------
+Actually, we do have a :ref:`separate manual <github_handler#jenkins>`, explaining how `Universum GitHub Application`
+works and how to apply it. Let's focus on those things not payed enough attention there.
 
-Actually, we do have a :ref:`separate manual <github_handler#jenkins>`, explaining how
-`Universum GitHub Application` works and how to apply it.
-
-First thing not very much explained there is working with ``credentials`` to get the `KEY_FILE`. We recommend
+First thing not very much explained is working with ``credentials`` to get the `KEY_FILE`. We recommend
 using the `Credentials Jenkins plugin <https://plugins.jenkins.io/credentials/>`__, that is most likely already
-pre-installed in your Jenkins instance, to store sensitive information, such as a private key.
+pre-installed in the Jenkins instance, to store sensitive information such as a private key.
 
 On Jenkins, go to ``Manage Jenkins`` and ``Manage Credentials``. Find ``Stores scoped to Jenkins`` and select
 ``Jenkins``, then ``Global credentials (unrestricted)``. There you should be prompted to add new credentials.
@@ -1049,9 +1049,11 @@ a dscription. For `App ID` check your App page on GitHub (find it by going to ``
 :ref:`registering GitHub App <guide#github-app>` (make sure to strip the ``-----BEGIN/END RSA PRIVATE KEY-----``
 lines).
 
-Let's turn our existing Jenkins job, ``universum_postcommit``, into a webhook-handling job that uses the newly
-created GitHub App, and then create another one, not triggered by any webhooks directly, to simply perform the
-checks when need.
+Now, for more convenience we are going to split existing ``universum_postcommit`` job into two different jobs:
+
+   * the one triggered by incoming webhooks that :doc:`runs the newly created GitHub App <github_handler>`
+     to process the payloads
+   * the one that performs familiar `Universum` checks given the parsed parameters when needed
 
 First let's create that simple checking job. Follow the already familiar ``New item``, ``Pipeline`` scenario,
 and enter the name (e.g. ``universum_check``). In ``General`` page of settings check the ``This project is
@@ -1064,16 +1066,12 @@ parameterized`` field and add following empty string params to be passed from we
    * GITHUB_CHECK_ID
 
 All these parameters might be helpful when performing the check and are automatically extracted from payload
-by :doc:`GitHub Handler <github_handler>`.
-
-Then we need to extract the `Credentials` parameters to this job, so add a ``Credentials Parameter`` (let's name it
-``GITHUB_APP``), where the credentials type will be ``GitHub App``, and default value set to previously created
-``Universum Test App``.
+by :doc:`GitHub Handler <github_handler>`. Note how they not only include `Git` params, but also several `GitHub` ones.
 
 Then in ``Build Triggers`` check the ``Trigger builds remotely (e.g., from scripts)`` and add the token (e.g.
 ``GITHUB``).
 
-Finally add the actual pipeline::
+Finally add the actual pipeline, extracting the previously added credentials into environment variables::
 
     pipeline {
       agent any
@@ -1088,11 +1086,11 @@ Finally add the actual pipeline::
         }
         stage ('Universum check') {
           steps {
-            withCredentials([usernamePassword(credentialsId: 'GITHUB_APP',
+            withCredentials([usernamePassword(credentialsId: 'universum-test-app',
                                               usernameVariable: 'GITHUB_APP_ID',
                                               passwordVariable: 'GITHUB_PRIVATE_KEY')]) {
               sh("{pip} install -U universum[github] pylint")
-              sh("{python} -m universum --no-diff -vt github --report-to-review -rst -rsu -rof")
+              sh("{python} -m universum --no-diff -vt github")
               archiveArtifacts artifacts: 'artifacts/', followSymlinks: false
             }
           }
@@ -1100,9 +1098,11 @@ Finally add the actual pipeline::
       }
     }
 
-The contents of the pipeline might now look not very familiar, and will be explained after setting up the handler.
+Note how along with adding the credentials we changed the ``--vcs-type```command line parameter
+<args.html#Source\ files>`__ from simple ``git`` to ``github``. As seen from parameters listed above, using this
+VCS type requires valid GitHub App info.
 
-Let's transform the existing ``universum_postcommit`` into ``github_webhook_handler``, as it already has conveniently
+Now let's transform the existing ``universum_postcommit`` into ``github_webhook_handler``, as it already has conveniently
 set up triggers and payload processing. Change the name and proceed to variables declared by ``Generic Webhook
 Trigger``. As for the payload, we will only need one parameter now, containing the whole payload contents, to be
 passed to handler and parsed. So in ``Post content parameters`` leave one with the following contents:
@@ -1115,9 +1115,13 @@ with ``Request header`` set to ``x-github-event``. This is a `GitHub event` head
 payload itself.
 
 Also, now this job also requires predefined parameters, so in ``General`` check the ``This project is parameterized``
-and add the very same ``GITHUB_APP`` credentials parameter, as described above.
+and add the a link to trigger the ``universum_check`` job:
 
-Now, as for the pipeline, change it to the following::
+   * Name: ``TRIGGER_URL``
+   * Default valuer: ``https://localhost:8080/buildByToken/buildWithParameters?job=universum_check&token=GITHUB``
+
+Now, as for the pipeline, we also need to extract GitHub App params, and launch :doc:`the GitHub Handler <github_handler>`
+instead of usual `Universum` check. So let's change it to the following::
 
 
     pipeline {
@@ -1128,7 +1132,7 @@ Now, as for the pipeline, change it to the following::
       stages {
         stage ('Run GitHub Handler') {
           steps {
-            withCredentials([usernamePassword(credentialsId: 'GITHUB_APP',
+            withCredentials([usernamePassword(credentialsId: 'universum-test-app',
                                               usernameVariable: 'GITHUB_APP_ID',
                                               passwordVariable: 'GITHUB_PRIVATE_KEY')]) {
               sh("{pip} install -U universum[github]")
@@ -1138,6 +1142,12 @@ Now, as for the pipeline, change it to the following::
         }
       }
     }
+
+
+.. _guide#report:
+
+Turn on pre-commit checks reporting
+-----------------------------------
 
 
 .. TBD
