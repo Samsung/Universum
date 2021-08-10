@@ -267,3 +267,29 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
     assert res == 0
     stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
+
+
+def test_code_report_extended_arg_search_embedded(tmpdir, stdout_checker):
+    env = utils.TestEnvironment(tmpdir, "main")
+    env.settings.Vcs.type = "none"
+    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+
+    source_file = tmpdir.join("source_file.py")
+    source_file.write(source_code_python + '\n')
+
+    config = """
+from universum.configuration_support import Configuration, Step
+
+configs = Configuration([Step(critical=True)]) * Configuration([
+    Step(name='This is step', command=["ls"]),
+    Step(name='This is step to unfold', code_report=True, report_artifacts='${CODE_REPORT_FILE}',
+         command=['bash', '-c', 'echo ${CODE_REPORT_FILE}']),
+])
+"""
+
+    env.configs_file.write(config)
+
+    res = __main__.run(env.settings)
+
+    assert res == 0
+    stdout_checker.assert_absent_calls_with_param("${CODE_REPORT_FILE}")
