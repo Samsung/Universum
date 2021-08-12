@@ -1,5 +1,4 @@
 import os
-import re
 
 from .base_output import BaseOutput
 
@@ -43,11 +42,7 @@ class HtmlOutput(BaseOutput):
         self.log(line) # stub
 
     def log(self, line):
-        if self._is_log_start(line):
-            self._write_html_header()
         self._write_to_file(line) # stub
-        if self._is_log_end(line):
-            self._write_html_footer()
 
     def log_external_command(self, command):
         self.log(command) # stub
@@ -55,15 +50,13 @@ class HtmlOutput(BaseOutput):
     def log_shell_output(self, line):
         self.log(line) # stub
 
-    @staticmethod
-    def _is_log_start(line):
-        log_start_pattern = r"^Universum \d+\.\d+\.\d+ started execution$"
-        return re.match(log_start_pattern, line)
+    def log_execution_start(self, title, version):
+        self._write_html_header()
+        self._write_to_file(self._build_execution_start_msg(title, version))
 
-    @staticmethod
-    def _is_log_end(line):
-        log_end_pattern = r"^Universum \d+\.\d+\.\d+ finished execution$"
-        return re.match(log_end_pattern, line)
+    def log_execution_finish(self, title, version):
+        self._write_to_file(self._build_execution_finish_msg(title, version))
+        self._write_html_footer()
 
     def _write_html_header(self):
         header = '''

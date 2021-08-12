@@ -86,6 +86,14 @@ class Output(Module):
         self.driver.log_shell_output(line)
         self.html_driver.log_shell_output(line)
 
+    def log_execution_start(self, title: str, version: str) -> None:
+        self.driver.log_execution_start(title, version)
+        self.html_driver.log_execution_start(title, version)
+
+    def log_execution_finish(self, title: str, version: str) -> None:
+        self.driver.log_execution_finish(title, version)
+        self.html_driver.log_execution_finish(title, version)
+
     def _create_html_driver(self):
         html_driver = self.html_driver_factory() if self.settings.html_log else None
         return HtmlDriverHandler(html_driver)

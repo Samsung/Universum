@@ -38,3 +38,17 @@ class BaseOutput(Module):
 
     def log_shell_output(self, line):
         raise NotImplementedError
+
+    def log_execution_start(self, title, version):
+        self.log(self._build_execution_start_msg(title, version))
+
+    def log_execution_finish(self, title, version):
+        self.log(self._build_execution_finish_msg(title, version))
+
+    @staticmethod
+    def _build_execution_start_msg(title, version):
+        return f"{title} {version} started execution"
+
+    @staticmethod
+    def _build_execution_finish_msg(title, version):
+        return f"{title} {version} finished execution"
