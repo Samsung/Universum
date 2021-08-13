@@ -203,7 +203,7 @@ configs = Configuration([Step(name="Step one"),
                          Step(name="Step three", background=True)])
 """)
     assert "'RunningStep' object has no attribute 'process'" not in log
-    assert "Will continue in background" not in log
+    assert "Nothing was executed: this background step had no command" in log
 
 
 def test_minimal_git(docker_main_with_vcs):

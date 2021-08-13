@@ -184,6 +184,7 @@ class RunningStep:
         self.process: sh.RunningCommand
         self._is_background: bool = False
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
+        self._needs_finalization = True
 
     def prepare_command(self) -> bool:  # FIXME: refactor
         if not self.configuration.command:
@@ -201,11 +202,12 @@ class RunningStep:
             raise StepException() from ex
         return True
 
-    def start(self, is_background: bool) -> bool:
-        if not self.prepare_command():
-            return False
-
+    def start(self, is_background: bool) -> None:
         self._is_background = is_background
+        if not self.prepare_command():
+            self._needs_finalization = False
+            return
+
         self._postponed_out = []
         self.process = self.cmd(*self.configuration.command[1:],
                                 _iter=True,
@@ -220,8 +222,6 @@ class RunningStep:
         self.out.log_external_command(log_cmd)
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
-
-        return True
 
     def handle_stdout(self, line: str = u"") -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -253,33 +253,38 @@ class RunningStep:
             self.out.log("Tag '" + tag + "' added to build.")
 
     def finalize(self) -> None:
-        try:
-            text = ""
+        if self._needs_finalization:
             try:
-                self.process.wait()
-            except Exception as e:
-                if isinstance(e, sh.ErrorReturnCode):
-                    text = f"Module sh got exit code {e.exit_code}\n"
-                    if e.stderr:
-                        text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
-                else:
-                    text = str(e) + '\n'
+                text = ""
+                try:
+                    self.process.wait()
+                except Exception as e:
+                    if isinstance(e, sh.ErrorReturnCode):
+                        text = f"Module sh got exit code {e.exit_code}\n"
+                        if e.stderr:
+                            text += utils.trim_and_convert_to_unicode(e.stderr) + "\n"
+                    else:
+                        text = str(e) + '\n'
 
-            self._handle_postponed_out()
-            if text:
-                text = utils.trim_and_convert_to_unicode(text)
+                self._handle_postponed_out()
+                if text:
+                    text = utils.trim_and_convert_to_unicode(text)
+                    if self.file:
+                        self.file.write(text + "\n")
+                    self.fail_block(text)
+                    self.add_tag(self.configuration.fail_tag)
+                    raise StepException()
+
+                self.add_tag(self.configuration.pass_tag)
+            finally:
+                self.handle_stdout()
                 if self.file:
-                    self.file.write(text + "\n")
-                self.fail_block(text)
-                self.add_tag(self.configuration.fail_tag)
-                raise StepException()
-
-            self.add_tag(self.configuration.pass_tag)
-        finally:
-            self.handle_stdout()
-            if self.file:
-                self.file.close()
-            self._is_background = False
+                    self.file.close()
+                self._is_background = False
+        else:
+            if self._is_background:
+                self._is_background = False
+                self.out.log("Nothing was executed: this background step had no command")
 
     def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:

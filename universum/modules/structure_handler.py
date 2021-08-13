@@ -138,14 +138,12 @@ class StructureHandler(HasOutput):
         process = step_executor(configuration)
 
         background = configuration.background
-        is_running = process.start(is_background=background)
-        if not is_running:
-            return
+        process.start(is_background=background)
         if not background:
             process.finalize()
             return
 
-        self.out.log("Will continue in background")
+        self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'finalizer': process.finalize,
                                              'is_critical': is_critical})
