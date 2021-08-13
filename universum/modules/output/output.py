@@ -125,6 +125,12 @@ class MinimalOut:
         ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
         sys.stderr.write("Unexpected error.\n" + utils.format_traceback(exc, ex_traceback))
 
+    def log_execution_start(self, title, version):
+        pass
+
+    def log_execution_finish(self, title, version):
+        pass
+
 
 class HtmlDriverHandler:
     def __init__(self, driver):
