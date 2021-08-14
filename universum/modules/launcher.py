@@ -257,7 +257,7 @@ class RunningStep:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
-                return
+            return
         try:
             text = ""
             try:
