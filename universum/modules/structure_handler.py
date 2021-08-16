@@ -137,13 +137,12 @@ class StructureHandler(HasOutput):
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
-        background = configuration.background
-        process.start(is_background=background)
-        if not background:
+        process.start()
+        if not configuration.background:
             process.finalize()
             return
 
-        self.out.log("Will continue in background")
+        self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'finalizer': process.finalize,
                                              'is_critical': is_critical})

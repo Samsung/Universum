@@ -194,6 +194,18 @@ configs += Configuration([dict(name="Additional step", command=["echo", "This sh
     assert "This should be in log - 3" in log
 
 
+def test_empty_steps(docker_main_and_nonci):
+    log = docker_main_and_nonci.run("""
+from universum.configuration_support import Configuration, Step
+
+configs = Configuration([Step(name="Step one"),
+                         Step(name="Step two", critical=True),
+                         Step(name="Step three", background=True)])
+""")
+    assert "'RunningStep' object has no attribute 'process'" not in log
+    assert "Nothing was executed: this background step had no command" in log
+
+
 def test_minimal_git(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
 from universum.configuration_support import Configuration
