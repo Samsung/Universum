@@ -167,7 +167,8 @@ class RunningStep:
                  send_tag: Callable[[str], Response],
                  log_file: Optional[TextIO],
                  working_directory: str,
-                 additional_environment: Dict[str, str]) -> None:
+                 additional_environment: Dict[str, str],
+                 background: bool) -> None:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
@@ -182,7 +183,7 @@ class RunningStep:
 
         self.cmd: sh.Command
         self.process: sh.RunningCommand
-        self._is_background: bool = False
+        self._is_background = background
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
 
@@ -202,8 +203,7 @@ class RunningStep:
             raise StepException() from ex
         return True
 
-    def start(self, is_background: bool) -> None:
-        self._is_background = is_background
+    def start(self) -> None:
         if not self.prepare_command():
             self._needs_finalization = False
             return
@@ -406,7 +406,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         additional_environment = self.api_support.get_environment_settings()
         return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
-                    log_file, working_directory, additional_environment)
+                    log_file, working_directory, additional_environment, item.background)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)

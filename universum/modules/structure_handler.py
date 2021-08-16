@@ -137,9 +137,8 @@ class StructureHandler(HasOutput):
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
-        background = configuration.background
-        process.start(is_background=background)
-        if not background:
+        process.start()
+        if not configuration.background:
             process.finalize()
             return
 
