@@ -25,7 +25,27 @@ def browser():
 
 def test_success(docker_main, browser):
     docker_main.run(config, additional_parameters="--html-log")
+    check_html_log(docker_main.artifact_dir, browser)
+
+
+def test_success_clean_build(docker_main, browser):
+    docker_main.run(config, additional_parameters="--html-log --clean-build")
+    check_html_log(docker_main.artifact_dir, browser)
+
+
+def test_success_nonci(docker_nonci, browser):
+    docker_nonci.run(config, additional_parameters="--html-log")
+    check_html_log(docker_nonci.artifact_dir, browser)
+
+
+def test_no_html_log_requested(docker_main):
+    docker_main.run(config)
     log_path = os.path.join(docker_main.artifact_dir, "log.html")
+    assert not os.path.exists(log_path)
+
+
+def check_html_log(artifact_dir, browser):
+    log_path = os.path.join(artifact_dir, "log.html")
     assert os.path.exists(log_path)
 
     browser.get(f"file://{log_path}")
@@ -36,9 +56,3 @@ def test_success(docker_main, browser):
     pre_element = body_elements[0]
     assert pre_element.tag_name == "pre"
     assert pre_element.text # will be changed to valid HTML in further commits
-
-
-def test_no_html_log_requested(docker_main):
-    docker_main.run(config)
-    log_path = os.path.join(docker_main.artifact_dir, "log.html")
-    assert not os.path.exists(log_path)
