@@ -163,6 +163,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
+        self.html_output.artifact_dir_ready = True
         artifact_list = []
         report_artifact_list = []
         for configuration in project_configs.all():
