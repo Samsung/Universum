@@ -54,7 +54,8 @@ setup(
             'pytest-cov',
             'coverage',
             'mypy',
-            'types-requests'
+            'types-requests',
+            'selenium'
         ]
     }
 )

@@ -52,7 +52,7 @@ def run(settings: ModuleNamespace) -> int:
     if error_state_module.is_in_error_state():
         raise IncorrectParameterError(("\n\n"+"-"*80 + "\n").join(error_state_module.get_errors()))
 
-    main_module.out.log("{} {} started execution".format(__title__, __version__))
+    main_module.out.log_execution_start(__title__, __version__)
 
     def signal_handler(signal_number, stack_frame):
         raise KeyboardInterrupt
@@ -73,7 +73,7 @@ def run(settings: ModuleNamespace) -> int:
         main_module.out.report_build_problem("Unexpected error while executing script.")
         result = 2
 
-    main_module.out.log("{} {} finished execution".format(__title__, __version__))
+    main_module.out.log_execution_finish(__title__, __version__)
     return result
 
 
