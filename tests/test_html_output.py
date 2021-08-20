@@ -10,7 +10,18 @@ from selenium.webdriver.firefox.options import Options
 config = """
 from universum.configuration_support import Configuration
 
-configs = Configuration([dict(name="Dummy", command=["echo", "dummy"])])
+success_step = Configuration([dict(name="Success step", command=["echo", "success"])])
+failed_step = Configuration([dict(name="Failed step", command=["./non_existing_script.sh"])])
+partially_success_step = Configuration([dict(name="Partially success step: ")])
+all_success_step = Configuration([dict(name="All success step: ")])
+all_failed_step = Configuration([dict(name="All failed step: ")])
+
+configs = \
+    success_step + \
+    failed_step + \
+    partially_success_step * (success_step + failed_step) + \
+    all_success_step * (success_step + success_step) + \
+    all_failed_step * (failed_step + failed_step)
 """
 
 
