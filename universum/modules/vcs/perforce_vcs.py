@@ -457,6 +457,26 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             raise
         return result
 
+    def p4resolve(self):
+        info = {}
+
+        try:
+            info = self.p4.run_resolve("-am")
+            if "resolve skipped" in str(info):
+                error_message = "Problem during merge while resolving shelved CLs!"
+                self.out.log(error_message)
+                self.out.log(str(info))
+                raise Exception(error_message)
+
+        except P4Exception as e:
+            if "No file(s) to resolve." not in str(e):
+                error_message = "Exception encountered while trying to resolve a conflict during unshelve operation!"
+                self.out.log(error_message)
+                self.out.log(str(e))
+                raise Exception(error_message)
+
+        return info
+
     @make_block("Unshelving")
     @catch_p4exception()
     def unshelve(self):
@@ -468,6 +488,9 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.map_local_path_to_depot(report)
                 self.p4report(report)
                 self.append_repo_status(" " + cl)
+                # try to resolve conflicts after each unshelve operation
+                self.out.log("Resolving conflicts (if any)")
+                self.p4resolve()
             self.append_repo_status("\n")
 
     @catch_p4exception(ignore_if="file(s) up-to-date")
