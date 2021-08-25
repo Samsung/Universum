@@ -163,6 +163,8 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         # TODO: cover 'not file_path.startswith("/")' case with tests
         if not file_path.startswith("/"):
             file_path = workspace_root + "/" + file_path
+        if not file_path.endswith("/") and os.path.isdir(file_path):
+            file_path += "/"
         if file_path.endswith("/"):
             file_path += "..."
         if edit_only:
