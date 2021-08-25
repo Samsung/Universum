@@ -30,7 +30,7 @@ class ApiSupport(Module):
             with open(os.getenv("UNIVERSUM_DATA_FILE", ""), "rb+") as data_file:
                 self.data = pickle.load(data_file)
         else:
-            self.data_file = tempfile.NamedTemporaryFile(mode="wb+")  # pylint: disable = consider-using-with
+            self.data_file = tempfile.NamedTemporaryFile(mode="wb+")
             self.data = {}
 
     def _set_entry(self, name: str, entry: Union[str, bool]) -> None:

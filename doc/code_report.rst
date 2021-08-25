@@ -37,6 +37,7 @@ to the following pylint-like json schema::
         }
     }
 
+Alternatively, report file can conform to SARIF schema: https://docs.oasis-open.org/sarif/sarif/v2.0/sarif-v2.0.html
 To provide such report directly, you need to place/copy the pre-formatted file in ``"${CODE_REPORT_FILE}"`` location.
 
 .. testcode::
