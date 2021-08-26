@@ -24,15 +24,17 @@ class ConfigData:
         self.text += "configs = Configuration()\n"
 
     def add_cmd(self, name: str, cmd: str, step_cfg: str = '') -> 'ConfigData':
+        step_cfg = ', ' + step_cfg if step_cfg else ''
         self.text +=\
-            f"configs += Configuration([Step(name='{name}', {step_cfg}, command={cmd})])\n"
+            f"configs += Configuration([Step(name='{name}', command={cmd}{step_cfg})])\n"
         return self
 
     def add_analyzer(self, analyzer: str, arguments: List[str], step_cfg: str = '') -> 'ConfigData':
         name = f"Run {analyzer}"
         args = [f", '{arg}'" for arg in arguments]
         cmd = f"['{python()}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
-        step_cfg += ', code_report=True'
+        step_cfg = ', ' + step_cfg if step_cfg else ''
+        step_cfg = 'code_report=True' + step_cfg
         return self.add_cmd(name, cmd, step_cfg)
 
     def finalize(self) -> str:
