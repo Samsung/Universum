@@ -77,8 +77,8 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                     region_data = location_data.get('region')
                     if not region_data:
                         continue  # TODO: cover this case as comment to the file as a whole
-                    line = int(region_data.get('startLine', ''))
-                    message: reporter.ReportMessage = {"message": f"{who} : {what}", "line": line}
+                    message: reporter.ReportMessage = {"message": f"{who} : {what}",
+                                                       "line": int(region_data.get('startLine', '0'))}
                     self.reporter.code_report(path, message)
         return issue_count
 
