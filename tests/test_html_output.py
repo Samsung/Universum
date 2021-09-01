@@ -104,9 +104,9 @@ class TestElement(FirefoxWebElement):
 
     @staticmethod
     def create(element):
-        assert(element)
+        assert element
         element.__class__ = TestElement
-        return element;
+        return element
 
     # <input type="checkbox" id="1." class="hide">
     # <label for="1.">  <-- returning this element
@@ -123,7 +123,7 @@ class TestElement(FirefoxWebElement):
 
     def get_section_body(self):
         body = TestElement.create(self.find_element_by_xpath("./following-sibling::*[1]"))
-        assert (body.tag_name == "div")
+        assert body.tag_name == "div"
         return body
 
     @property
@@ -141,15 +141,15 @@ class TestElement(FirefoxWebElement):
     @property
     def is_section_collapsed(self):
         label_span = self.find_element_by_tag_name("span")
-        assert(label_span)
+        assert label_span
         script = "return window.getComputedStyle(arguments[0],':before').getPropertyValue('content')"
-        section_state = self.parent.execute_script(script, label_span).replace('"', "").replace(" ", "");
+        section_state = self.parent.execute_script(script, label_span).replace('"', "").replace(" ", "")
         collapsed_state = "[+]"
         not_collapsed_state = "[-]"
         if section_state not in (collapsed_state, not_collapsed_state):
             raise RuntimeError(f"Unexpected section collapsed state: '{section_state}'")
 
-        return (section_state == collapsed_state)
+        return section_state == collapsed_state
 
     @property
     def indent(self):
