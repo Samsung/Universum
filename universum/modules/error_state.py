@@ -41,7 +41,7 @@ class HasErrorState(Module):
             return ""
         if value.startswith('@'):
             try:
-                with open(value.lstrip('@')) as value_file:
+                with open(value.lstrip('@'), encoding="utf-8") as value_file:
                     return value_file.read()
             except FileNotFoundError as e:
                 self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")

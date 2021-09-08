@@ -34,7 +34,7 @@ def test_p4_file_diff(docker_main_with_vcs):
                                    additional_parameters=" --p4-force-clean")
     assert "Module sh got exit code" not in log
 
-    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json")) as f:
+    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json"), encoding="utf-8") as f:
         result = json.load(f)
 
     assert result[0]["action"] == "move/add"
@@ -60,7 +60,7 @@ def test_multiple_p4_file_diff(docker_main_with_vcs):
                                    additional_parameters=" --p4-force-clean")
     assert "Module sh got exit code" not in log
 
-    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json")) as f:
+    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json"), encoding="utf-8") as f:
         result = json.load(f)
     assert len(result) == 10000
     for entry in result:
@@ -85,7 +85,7 @@ def test_git_file_diff(docker_main_with_vcs):
                                                 f"GIT_REFSPEC={server.target_branch}"])
     assert "Module sh got exit code" not in log
 
-    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json")) as f:
+    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json"), encoding="utf-8") as f:
         result = json.load(f)
 
     assert result[0]["action"] == "rename"
@@ -115,7 +115,7 @@ def test_multiple_git_file_diff(docker_main_with_vcs):
                                                 f"GIT_REFSPEC={server.target_branch}"])
     assert "Module sh got exit code" not in log
 
-    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json")) as f:
+    with open(path.join(docker_main_with_vcs.artifact_dir, "output.json"), encoding="utf-8") as f:
         result = json.load(f)
     assert len(result) == 10000
     for entry in result:

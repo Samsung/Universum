@@ -171,7 +171,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
             from the webhook payload and passed via GITHUB_CHECK_ID environment variable.
             """)
 
-        self.request = dict()
+        self.request = {}
         self.request["status"] = "in_progress"
         self.request["output"] = {
             "title": self.settings.check_name,
