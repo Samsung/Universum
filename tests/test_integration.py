@@ -230,7 +230,7 @@ def test_p4_params(docker_main_with_vcs):
     config = """
 from universum.configuration_support import Configuration, Step
 
-configs = Configuration([step(name="Test step", command=["cat", "{}"])])
+configs = Configuration([Step(name="Test step", command=["cat", "{}"])])
 """.format(p4_file.basename)
 
     # Prepare SYNC_CHANGELIST
