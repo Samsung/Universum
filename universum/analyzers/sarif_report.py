@@ -21,7 +21,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
 def sarif_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for report_file in file_list:
-        with open(report_file, "r") as f:
+        with open(report_file, "r", encoding="utf-8") as f:
             report = json.loads(f.read())
             try:
                 result.extend(parse_sarif_json(report))

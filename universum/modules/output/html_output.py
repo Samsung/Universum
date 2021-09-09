@@ -14,7 +14,7 @@ class HtmlOutput(BaseOutput):
         super().__init__(*args, **kwargs)
         self._filename = None
         self.artifact_dir_ready = False
-        self._log_buffer = list()
+        self._log_buffer = []
         self._block_level = 0
 
     def set_artifact_dir(self, artifact_dir):
@@ -80,16 +80,16 @@ class HtmlOutput(BaseOutput):
     def _log_and_clear_buffer(self):
         for buffered_line in self._log_buffer:
             self._write_to_file(buffered_line)
-        self._log_buffer = list()
+        self._log_buffer = []
 
     def _write_to_file(self, line):
-        with open(self._filename, "a") as file:
+        with open(self._filename, "a", encoding="utf-8") as file:
             file.write(self._build_indent())
             file.write(line)
             file.write(os.linesep)
 
     def _build_indent(self):
-        indent_str = list()
+        indent_str = []
         for x in range(0, self._block_level):
             indent_str.append("  " * x)
             indent_str.append(" |   ")

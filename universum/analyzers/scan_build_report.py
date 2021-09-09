@@ -20,7 +20,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
 def scan_build_report_output_parser(file_list: List[str]) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for report_file in file_list:
-        with open(report_file) as f:
+        with open(report_file, encoding="utf-8") as f:
             parser = etree.HTMLParser()
             tree: etree.ElementTree = etree.parse(f, parser)
             found = any(x.text for x in tree.iter() if x.text == 'Bug Summary')

@@ -75,7 +75,7 @@ ComponentType = TypeVar('ComponentType', bound=Module)
 
 def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentType:
     if not getattr(main_settings, "active_modules", None):
-        main_settings.active_modules = dict()
+        main_settings.active_modules = {}
 
     if cls not in main_settings.active_modules:
         cls.settings = Settings(cls)
@@ -107,7 +107,7 @@ class Dependency(Generic[DependencyType]):
 
 def get_dependencies(cls: Type[Module], result: Optional[List[Type[Module]]] = None) -> List[Type[Module]]:
     if result is None:
-        result = list()
+        result = []
 
     result.append(cls)
 

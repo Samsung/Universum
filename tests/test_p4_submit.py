@@ -14,7 +14,7 @@ def test_fail_changing_non_checked_out_file(p4_submit_environment):
     target_file = p4_submit_environment.nonwritable_file
     text = utils.randomize_name("This is change ")
     with pytest.raises(IOError) as excinfo:
-        with open(str(target_file), "w") as tmpfile:
+        with open(str(target_file), "w", encoding="utf-8") as tmpfile:
             tmpfile.write(text + "\n")
 
     assert "Permission denied" in str(excinfo.value)
