@@ -223,7 +223,7 @@ class RunningStep:
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
 
-    def handle_stdout(self, line: str = u"") -> None:
+    def handle_stdout(self, line: str = "") -> None:
         line = utils.trim_and_convert_to_unicode(line)
 
         if self.file:
@@ -358,7 +358,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         sys.path.append(os.path.join(os.path.dirname(config_path)))
 
         try:
-            with open(config_path) as config_file:
+            with open(config_path, encoding="utf-8") as config_file:
                 exec(config_file.read(), config_globals)  # pylint: disable=exec-used
             self.source_project_configs = config_globals["configs"]
             dump_file: TextIO = self.artifacts.create_text_file("CONFIGS_DUMP.txt")

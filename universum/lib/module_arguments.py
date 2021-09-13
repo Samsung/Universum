@@ -71,7 +71,7 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
 class ModuleArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, **kwargs):
-        self.groups = dict()
+        self.groups = {}
         self.dest_prefix = ''
         argparse.ArgumentParser.__init__(self, **kwargs)
 

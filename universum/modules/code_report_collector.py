@@ -48,7 +48,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
     def report_code_report_results(self) -> None:
         reports: List[str] = glob.glob(self.report_path + "/*.json")
         for report_file in reports:
-            with open(report_file, "r") as f:
+            with open(report_file, "r", encoding="utf-8") as f:
                 text: str = f.read()
                 report: Optional[List[Dict[str, str]]] = None
                 if text:

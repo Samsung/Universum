@@ -19,7 +19,7 @@ class BaseVcs(ProjectDirectory):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.repo_status = u""
+        self.repo_status = ""
         self.sources_need_cleaning = False
 
     def append_repo_status(self, line):

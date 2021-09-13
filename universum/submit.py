@@ -24,13 +24,16 @@ class Submit(HasOutput, HasStructure, HasErrorState):
         parser.add_argument('--commit-message', '-cm', dest='commit_message', metavar="COMMIT_MESSAGE",
                             help="Commit message. Enter in command line directly, store in environment variable "
                                  "or pass a file path to read the message from by starting the value string with "
-                                 "'@'. File path can be either absolute or relative")
+                                 "'@'. File path can be either absolute or relative. "
+                                 "Please note, that when passing a file, it is expected to be in UTF-8 encoding")
         parser.add_argument("--reconcile-list", "-rl", dest="reconcile_list", metavar="RECONCILE_LIST",
                             help="Comma-separated or linebreak-separated list of files or directories "
                                  "to be reconciled for commit (relative paths starting at client root "
                                  "are supported). To use command line directly, add quotes if needed "
                                  "(e.g. ``-rl 'target1, target2'``). To use a file with reconcile list, "
-                                 "start a path to file with '@' (e.g. ``-rl @/path/to/file``)")
+                                 "start a path to file with '@' (e.g. ``-rl @/path/to/file``)."
+                                 "Please note, that when passing a file, it's expected to be in UTF-8 "
+                                 "encoding")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -40,6 +43,7 @@ class Submit(HasOutput, HasStructure, HasErrorState):
             Please use '--commit-message' option to provide it. If you start the parameter with '@', the
             rest should be the path to a file containing the commit message text. The path can be absolute
             or relative to the project root. You can also store the message in COMMIT_MESSAGE environment variable.
+            Please note, that when passing a file, it's expected to be in UTF-8 encoding
             """)
 
         try:

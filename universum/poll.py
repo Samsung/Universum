@@ -53,7 +53,7 @@ class Poll(HasOutput, HasStructure):
     @make_block("Enumerating changes")
     def execute(self):
         try:
-            with open(self.settings.db_file) as db_file:
+            with open(self.settings.db_file, encoding="utf-8") as db_file:
                 self.stored_cls = json.load(db_file)
         except IOError as io_error:
             if io_error.errno == 2:
@@ -68,7 +68,7 @@ class Poll(HasOutput, HasStructure):
         except NotImplementedError:
             self.out.log("Polling is skipped because current VCS doesn't support it")
         finally:
-            with open(self.settings.db_file, "w") as db_file:
+            with open(self.settings.db_file, "w", encoding="utf-8") as db_file:
                 json.dump(self.stored_cls, db_file, indent=4, sort_keys=True)
 
     def finalize(self):
