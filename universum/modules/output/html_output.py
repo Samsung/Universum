@@ -73,7 +73,8 @@ class HtmlOutput(BaseOutput):
         self._log_line(html_footer)
 
     def _log_line(self, line, with_line_separator=True):
-        line = f"{line}{os.linesep}" if with_line_separator else line
+        if with_line_separator and not line.endswith(os.linesep):
+            line += os.linesep
         if not self._filename:
             raise RuntimeError("Artifact directory was not set")
         if not self.artifact_dir_ready:
