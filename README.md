@@ -76,6 +76,8 @@ The `[test]` extra will install/update the following additional Python modules:
     * `pytest-cov`
     * `coverage`
     * `mypy`
+    * `types-requests`
+    * `selenium`
 
 Although it is possible to get these modules via `pip3.7 install -U universum[test]`, it might be more convenient
 to checkout the Universum branch you are currently working on, change working directory to project root and
@@ -128,7 +130,7 @@ for implementing static (and other types of) analysis support.
     https://universum.readthedocs.io/en/latest/args.html) and other parameters
   * `gravity` - inter-module communication
   * `utils` - miscellaneous
-  
+
 * `modules` - independent packages
 
   * `api_support` - 'main' mode module to answer API requests
@@ -151,7 +153,7 @@ and 'main' modules/classes for automated driver choosing based on environment an
 `doc` directory contains sources for [project documentation](
 https://universum.readthedocs.io/en/latest/index.html). It can be generated
 locally with running `make` from root directory using Sphinx.
-  
+
 `tests` directory contains test system, based on PyTest. Full tests can be started
 from root directory via `make tests` command, otherwise use standard PyTest syntax.
 *Commits failing any of project tests should not be merged into 'master' branch!*
