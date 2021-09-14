@@ -21,13 +21,17 @@ class HtmlOutput(BaseOutput):
         self._filename = os.path.join(artifact_dir, "log.html")
 
     def open_block(self, num_str, name):
-        self._log_line(f"{num_str} {name}")
+        opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \
+            f'<label for="{num_str}"><span class="sectionLbl">'
+        closing_html = "</span></label><div>"
+        self._log_line(f"{opening_html}{num_str} {name}{closing_html}", with_line_separator=False)
         self._block_level += 1
 
     def close_block(self, num_str, name, status):
         self._block_level -= 1
         indent = "  " * self._block_level
-        self._log_line(f"{indent} \u2514 [{status}]")
+        closing_html = '</div><span class="nl"></span>'
+        self._log_line(f"{indent} \u2514 [{status}]{closing_html}", with_line_separator=False)
         self._log_line("")
 
     def report_error(self, description):
@@ -58,7 +62,8 @@ class HtmlOutput(BaseOutput):
         self._log_line(line)
 
     def log_execution_start(self, title, version):
-        html_header = "<!DOCTYPE html><html><head></head><body><pre>"
+        head_content = self._build_html_head()
+        html_header = f"<!DOCTYPE html><html><head>{head_content}</head><body><pre>"
         self._log_line(html_header)
         self.log(self._build_execution_start_msg(title, version))
 
@@ -67,7 +72,9 @@ class HtmlOutput(BaseOutput):
         html_footer = "</pre></body></html>"
         self._log_line(html_footer)
 
-    def _log_line(self, line):
+    def _log_line(self, line, with_line_separator=True):
+        if with_line_separator and not line.endswith(os.linesep):
+            line += os.linesep
         if not self._filename:
             raise RuntimeError("Artifact directory was not set")
         if not self.artifact_dir_ready:
@@ -86,7 +93,6 @@ class HtmlOutput(BaseOutput):
         with open(self._filename, "a", encoding="utf-8") as file:
             file.write(self._build_indent())
             file.write(line)
-            file.write(os.linesep)
 
     def _build_indent(self):
         indent_str = []
@@ -94,3 +100,48 @@ class HtmlOutput(BaseOutput):
             indent_str.append("  " * x)
             indent_str.append(" |   ")
         return "".join(indent_str)
+
+    @staticmethod
+    def _build_html_head():
+        css_rules = '''
+            .sectionLbl {
+                color: black;
+            }
+            .sectionLbl span {
+                color: black !important;
+            }
+
+            .hide {
+                display: none;
+            }
+            .hide + label ~ div {
+                display: none;
+            }
+            .hide + label {
+                color: black;
+                cursor: pointer;
+                display: inline-block;
+            }
+            .hide:checked + label + div {
+                display: block;
+            }
+
+            .hide + label + div + .nl {
+                display: block;
+            }
+            .hide:checked + label + div + .nl::after {
+                display: none;
+            }
+
+            .hide + label .sectionLbl::before {
+                content: "[+] ";
+            }
+            .hide:checked + label .sectionLbl::before {
+                content: "[-] ";
+            }
+        '''
+        head = []
+        head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
+        head.append('<meta content="utf-8" http-equiv="encoding">')
+        head.append(f"<style>{css_rules}</style>")
+        return "".join(head)
