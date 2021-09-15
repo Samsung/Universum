@@ -114,7 +114,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             self.file_list.add(file_name)
             file_path = self.automation_server.artifact_path(self.artifact_dir, os.path.basename(file_name))
             self.out.log("Adding file " + file_path + " to artifacts...")
-            return codecs.open(file_name, "a", encoding="utf-8")
+            return codecs.open(file_name, "a", encoding="utf-8")          # pylint: disable = consider-using-with
 
         except IOError as e:
             raise CiException("The following error occurred while working with file: " + str(e)) from e
