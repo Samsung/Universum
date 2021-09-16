@@ -23,19 +23,19 @@ class ConfigData:
         self.text = "from universum.configuration_support import Configuration, Step\n"
         self.text += "configs = Configuration()\n"
 
-    def add_cmd(self, name: str, cmd: str, step_cfg: str = '') -> 'ConfigData':
-        step_cfg = ', ' + step_cfg if step_cfg else ''
+    def add_cmd(self, name: str, cmd: str, step_config: str = '') -> 'ConfigData':
+        step_config = ', ' + step_config if step_config else ''
         self.text +=\
-            f"configs += Configuration([Step(name='{name}', command={cmd}{step_cfg})])\n"
+            f"configs += Configuration([Step(name='{name}', command={cmd}{step_config})])\n"
         return self
 
-    def add_analyzer(self, analyzer: str, arguments: List[str], step_cfg: str = '') -> 'ConfigData':
+    def add_analyzer(self, analyzer: str, arguments: List[str], step_config: str = '') -> 'ConfigData':
         name = f"Run {analyzer}"
         args = [f", '{arg}'" for arg in arguments]
         cmd = f"['{python()}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
-        step_cfg = ', ' + step_cfg if step_cfg else ''
-        step_cfg = 'code_report=True' + step_cfg
-        return self.add_cmd(name, cmd, step_cfg)
+        step_config = ', ' + step_config if step_config else ''
+        step_config = 'code_report=True' + step_config
+        return self.add_cmd(name, cmd, step_config)
 
     def finalize(self) -> str:
         return inspect.cleandoc(self.text)
@@ -121,7 +121,7 @@ sarif_report = """
 }
 """
 
-cfg_uncrustify = """
+config_uncrustify = """
 code_width = 120
 input_tab_size = 2
 """
@@ -151,13 +151,13 @@ log_success = r'Issues not found'
 ])
 def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected_success):
     config = ConfigData()
-    step_cfg = "code_report=True"
+    step_config = "code_report=True"
     for idx, tested_content in enumerate(tested_contents):
         prelim_report = "report_file_" + str(idx)
         full_report = "${CODE_REPORT_FILE}"
         runner_with_analyzers.local.root_directory.join(prelim_report).write(tested_content)
         config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat ./{prelim_report} >> {full_report}\"]",
-                       step_cfg)
+                       step_config)
     log = runner_with_analyzers.run(config.finalize())
     if expected_success:
         assert re.findall(log_success, log)
@@ -193,7 +193,7 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
         args = common_args + extra_args
         if analyzer == 'uncrustify':
             args += ["--cfg-file", "cfg"]
-            runner_with_analyzers.local.root_directory.join("cfg").write(cfg_uncrustify)
+            runner_with_analyzers.local.root_directory.join("cfg").write(config_uncrustify)
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
@@ -267,7 +267,7 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     root = runner_with_analyzers.local.root_directory
     source_file = root.join("source_file")
     source_file.write(tested_content)
-    root.join("cfg").write(cfg_uncrustify)
+    root.join("cfg").write(config_uncrustify)
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
         "--files", "source_file",
@@ -275,8 +275,8 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     ]
 
     args = common_args + extra_args
-    extra_cfg = "artifacts='./uncrustify/source_file.html'"
-    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_cfg).finalize())
+    extra_config = "artifacts='./uncrustify/source_file.html'"
+    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_config).finalize())
 
     assert re.findall(log_success if expected_success else log_fail, log)
     assert re.findall(r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
