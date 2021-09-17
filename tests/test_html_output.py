@@ -1,6 +1,7 @@
 # pylint: disable = redefined-outer-name
 
 import os
+import re
 import pytest
 
 from selenium import webdriver
@@ -69,6 +70,7 @@ def check_html_log(artifact_dir, browser):
     steps_section.click()
     check_step_not_collapsed(steps_section, steps_body)
     check_sections_indentation(steps_section)
+    check_text_coloring(steps_section)
     steps_section.click()
     check_step_collapsed(steps_section, steps_body)
 
@@ -86,6 +88,24 @@ def check_sections_indentation(steps_section):
     assert step_lvl2_first.indent == step_lvl2_second.indent
 
     assert steps_section.indent < step_lvl1_first.indent < step_lvl2_first.indent
+    step_lvl1_second.click() # restore sections state
+
+
+def check_text_coloring(steps_section):
+    steps_body = steps_section.get_section_body()
+
+    check_section_style(steps_body.get_section_by_name("Success step"))
+    check_section_style(steps_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_style(steps_body.get_section_by_name("Partially success step"))
+
+    composite_step = steps_body.get_section_by_name("Partially success step")
+    composite_step.click()
+    composite_step_body = composite_step.get_section_body()
+
+    check_section_style(composite_step_body.get_section_by_name("Success step"))
+    check_section_style(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
+
+    composite_step.click() # restore sections state
 
 
 def check_step_collapsed(section, body):
@@ -100,6 +120,33 @@ def check_step_not_collapsed(section, body):
     assert body.is_displayed()
 
 
+def check_section_style(step, is_failed=False):
+    check_section_title_style(step)
+    step.click() # open section body
+    check_section_status_style(step, is_failed)
+    step.click() # close section body
+
+
+def check_section_title_style(step):
+    check_style(step.get_section_title_style(),
+                exp_color="darkslateblue",
+                exp_font="bold")
+
+
+def check_section_status_style(step, is_failed=False):
+    color = "red" if is_failed else "green"
+    check_style(step.get_section_status_style(),
+                exp_color=color,
+                exp_font="bold")
+
+
+def check_style(style, exp_color, exp_font):
+    color = re.search(r"color: (\w+)", style).group(1)
+    assert color == exp_color
+    font = re.search(r"font-weight: (\w+)", style).group(1)
+    assert font == exp_font
+
+
 class TestElement(FirefoxWebElement):
 
     @staticmethod
@@ -108,11 +155,13 @@ class TestElement(FirefoxWebElement):
         element.__class__ = TestElement
         return element
 
-    # <input type="checkbox" id="1." class="hide">
-    # <label for="1.">  <-- returning this element
-    #     <span class="sectionLbl">1. Section name</span>  <-- Searching for this element
-    # </label>
-    # <div>Section body</div>
+    # <any_tag>  <-- self
+    #     <input type="checkbox" id="1." class="hide">
+    #     <label for="1.">  <-- returning this element
+    #         <span class="sectionLbl">1. Section name</span>  <-- Searching for this element
+    #     </label>
+    #     <div>Section body</div>
+    # </any_tag>
     def get_section_by_name(self, section_name):
         span_elements = self.find_elements_by_class_name("sectionLbl")
         result = None
@@ -121,10 +170,39 @@ class TestElement(FirefoxWebElement):
                 result = el.find_element_by_xpath("..")
         return TestElement.create(result)
 
+    # <input type="checkbox" id="1." class="hide">
+    # <label for="1.">  <-- self
+    #     <span class="sectionLbl">1. Section name</span>
+    # </label>
+    # <div>Section body</div>  <-- returning this element
     def get_section_body(self):
         body = TestElement.create(self.find_element_by_xpath("./following-sibling::*[1]"))
         assert body.tag_name == "div"
         return body
+
+    # <label for="1.">  <-- self
+    #     <span class="sectionLbl">
+    #         <span style="color:black">1. Section name</span>  <-- returning this element style attribute
+    #     </span>
+    # </label>
+    def get_section_title_style(self):
+        label_span = self.find_element_by_class_name("sectionLbl")
+        assert label_span
+        styling_span = TestElement.create(label_span.find_element_by_tag_name("span"))
+        return styling_span.style
+
+    # <label for="1.">  <-- self
+    #     ...
+    # </label>
+    # <div>
+    #     ...
+    #     <span style="color:green">[Success]</span>  <-- returning this element style attribute
+    # </div>
+    def get_section_status_style(self):
+        body = self.get_section_body()
+        status_element = TestElement.create(body.find_elements_by_tag_name("span")[-1])
+        assert status_element.text in ("[Success]", "[Failed]")
+        return status_element.style
 
     @property
     def is_body_collapsed(self):
@@ -154,3 +232,9 @@ class TestElement(FirefoxWebElement):
     @property
     def indent(self):
         return self.location['x']
+
+    @property
+    def style(self):
+        css_style = self.get_attribute("style")
+        assert css_style
+        return css_style

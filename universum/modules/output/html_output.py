@@ -24,6 +24,7 @@ class HtmlOutput(BaseOutput):
         opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \
             f'<label for="{num_str}"><span class="sectionLbl">'
         closing_html = "</span></label><div>"
+        name = self._set_text_style(name, color="darkslateblue", bold=True)
         self._log_line(f"{opening_html}{num_str} {name}{closing_html}", with_line_separator=False)
         self._block_level += 1
 
@@ -31,7 +32,9 @@ class HtmlOutput(BaseOutput):
         self._block_level -= 1
         indent = "  " * self._block_level
         closing_html = '</div><span class="nl"></span>'
-        self._log_line(f"{indent} \u2514 [{status}]{closing_html}", with_line_separator=False)
+        status_color = "green" if "Success" in status else "red"
+        status = self._set_text_style(f"[{status}]", color=status_color, bold=True)
+        self._log_line(f"{indent} \u2514 {status}{closing_html}", with_line_separator=False)
         self._log_line("")
 
     def report_error(self, description):
@@ -104,13 +107,6 @@ class HtmlOutput(BaseOutput):
     @staticmethod
     def _build_html_head():
         css_rules = '''
-            .sectionLbl {
-                color: black;
-            }
-            .sectionLbl span {
-                color: black !important;
-            }
-
             .hide {
                 display: none;
             }
@@ -145,3 +141,10 @@ class HtmlOutput(BaseOutput):
         head.append('<meta content="utf-8" http-equiv="encoding">')
         head.append(f"<style>{css_rules}</style>")
         return "".join(head)
+
+    @staticmethod
+    def _set_text_style(text, color, bold=False):
+        style = f"color:{color};"
+        if bold:
+            style += "font-weight:bold"
+        return f'<span style="{style}">{text}</span>'
