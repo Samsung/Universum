@@ -66,9 +66,9 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
         cur_file = test_dir.join(filename)
         p4.run("add", str(cur_file))
         p4.run("edit", str(cur_file))
-        cur_file.write("import os\n\nprint('File {0} has no special modifiers.')\n"
-                       "print(os.name)\nprint(os.getcwd())\nprint(os.strerror(3))\n"
-                       "print('File change type: {0}')\n".format(filename))
+        cur_file.write(f"import os\n\nprint('File {0} has no special modifiers.')\n"
+                       f"print(os.name)\nprint(os.getcwd())\nprint(os.strerror(3))\n"
+                       f"print('File change type: {filename}')\n")
 
     create_file("edit")
     create_file("move")
@@ -87,9 +87,9 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
         p4.run("edit", str(cur_file))
 
     # edit
-    test_dir.join("edit").write("import os\n\nprint('File %s has no special modifiers.')\n"
-                                "print(os.name)\nprint(os.getegid())\nprint(os.ctermid())\n"
-                                "print('File change type: %s')\n" % (test_dir.join("edit"), "edit"))
+    test_dir.join("edit").write(f"import os\n\nprint('File {test_dir.join('edit')} has no special modifiers.')\n"
+                                f"print(os.name)\nprint(os.getegid())\nprint(os.ctermid())\n"
+                                f"print('File change type: \"edit\"')\n")
 
     # move, rename
     p4.run("move", test_dir + "/move", test_dir + "/moved/move")

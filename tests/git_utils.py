@@ -68,7 +68,7 @@ class GitServer:
         """ Make a mergeble commit """
         self._commit_count += 1
         test_file = self._working_directory.join(f"test{self._commit_count}.txt")
-        test_file.write("Commit number #%s" % (self._commit_count))
+        test_file.write(f"Commit number #{self._commit_count}")
         self._repo.index.add([str(test_file)])
         return str(self._repo.index.commit(f"Add file {self._commit_count}"))
 

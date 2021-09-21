@@ -14,7 +14,6 @@ def add_report_line(text):
 
 
 def send_report():
-    global report
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat = os.getenv("TELEGRAM_CHAT_ID")
     requests.post(url=f"https://api.telegram.org/bot{token}/sendMessage",
