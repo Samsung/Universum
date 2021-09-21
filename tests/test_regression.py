@@ -31,7 +31,7 @@ __version__ = "{test_line}"
     docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
     docker_main.run(config, vcs_type="none")  # not expected to fail
-    if utils.is_pycharm():
+    if utils.reuse_docker_containers():
         docker_main.environment.install_python_module(docker_main.working_dir)
 
 

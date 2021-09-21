@@ -111,7 +111,7 @@ def docker_perforce(request):
     client = docker.from_env()
 
     unique_id = utils.randomize_name("ci_test_perforce")
-    if utils.is_pycharm():
+    if utils.reuse_docker_containers():
         unique_id = request.config.cache.get("ci_test/perforce_container", unique_id)
 
     try:
@@ -141,7 +141,7 @@ def docker_perforce(request):
 
     finally:
         if container is not None:
-            if utils.is_pycharm():
+            if utils.reuse_docker_containers():
                 request.config.cache.set("ci_test/perforce_container", unique_id)
             else:
                 try:

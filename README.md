@@ -110,6 +110,10 @@ nox
 This will launch the testing scenario, described in `noxfile.py`. This scenario includes rebuilding docker images
 for every supported Python version and running all the tests for corresponding Python.
 
+Also, setting up "REUSE_DOCKER_CONTAINERS" environment variable (or running tests in PyCharm) will let tests
+run in docker cache and reuse test containers. But do note that this is recommended for development purposes only,
+as recreating clear containers make testing environment more dependable.
+
 
 ## Project contents
 
