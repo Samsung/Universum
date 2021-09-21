@@ -14,7 +14,7 @@ __all__ = [
     "python",
     "python_version",
     "Params",
-    "is_pycharm",
+    "reuse_docker_containers",
     "randomize_name",
     "get_open_port",
     "python_time_from_rfc3339_time",
@@ -41,8 +41,8 @@ class Params:
             setattr(self, key, value)
 
 
-def is_pycharm():
-    return "PYCHARM_HOSTED" in os.environ
+def reuse_docker_containers():
+    return ("PYCHARM_HOSTED" in os.environ) or ("REUSE_DOCKER_CONTAINERS" in os.environ)
 
 
 def randomize_name(name):
