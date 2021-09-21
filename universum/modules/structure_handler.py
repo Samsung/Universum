@@ -41,7 +41,7 @@ class Block:
     True
     """
 
-    def __init__(self, name: str, parent: Optional['Block'] = None) -> None:
+    def __init__(self, name: str, parent: Optional["Block"] = None) -> None:
         self.name: str = name
         self.status: str = "Success"
         self.children: List[Block] = []
@@ -50,11 +50,11 @@ class Block:
         self.number: str = ''
         if parent:
             parent.children.append(self)
-            self.number = '{}{}.'.format(parent.number, len(parent.children))
+            self.number = f"{parent.number}{len(parent.children)}."
 
     def __str__(self) -> str:
         result = self.number + ' ' + self.name
-        return '{} - {}'.format(result, self.status) if not self.children else result
+        return f"{result} - {self.status}" if not self.children else result
 
     def is_successful(self) -> bool:
         return self.status == "Success"
@@ -176,17 +176,13 @@ class StructureHandler(HasOutput):
                     # Here pass_errors=True, because any exception outside executing build step
                     # is not step-related and should stop script executing
 
-                    numbering = " [ {:{length}}+{:{length}} ] ".format("", "", length=step_num_len)
+                    numbering = f" [ {'':{step_num_len}}+{'':{step_num_len}} ] "
                     step_name = numbering + item.name
                     self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a.children, step_executor, skipped)
                 else:
                     self.configs_current_number += 1
-                    numbering = " [ {:>{}}/{} ] ".format(
-                        self.configs_current_number,
-                        step_num_len,
-                        self.configs_total_count
-                    )
+                    numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
                     step_name = numbering + item.name
                     if skipped:
                         self.report_skipped_block(step_name)
