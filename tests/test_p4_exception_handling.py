@@ -63,7 +63,7 @@ def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
 
     assert result != 0
     stdout_checker.assert_has_calls_with_param(
-        "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
+        f"Errors during command execution( \"p4 client -d {perforce_environment.client_name}\" )")
 
 
 def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
@@ -83,7 +83,7 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
 
     assert result == 0
     stdout_checker.assert_has_calls_with_param(
-        "Errors during command execution( \"p4 client -d {}\" )".format(perforce_environment.client_name))
+        f"Errors during command execution( \"p4 client -d {perforce_environment.client_name}\" )")
     stdout_checker.assert_has_calls_with_param("[Errno 2] No such file or directory")
 
 
@@ -110,5 +110,5 @@ def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
     # This is not the 'already committed' case of Swarm review, so it actually should fail
     assert result == 1
     stdout_checker.assert_has_calls_with_param(
-        "Errors during command execution( \"p4 unshelve -s {} -f\" )".format(cl))
+        f"Errors during command execution( \"p4 unshelve -s {cl} -f\" )")
     stdout_checker.assert_has_calls_with_param(f"[Error]: 'Change {cl} is already committed.'")

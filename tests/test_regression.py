@@ -56,11 +56,12 @@ def test_clean_sources_exceptions(tmpdir):
 
     # Check failure with temp dir deleted by the launched project
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
-    env.configs_file.write("""
+    env.configs_file.write(f"""
 from universum.configuration_support import Configuration
 
-configs = Configuration([dict(name="Test configuration", command=["bash", "-c", "rm -rf {}"])])
-""".format(env.settings.ProjectDirectory.project_root))
+configs = Configuration([dict(name="Test configuration",
+                              command=["bash", "-c", "rm -rf {env.settings.ProjectDirectory.project_root}"])])
+""")
 
     __main__.run(env.settings)
     # the log output is automatically checked by the 'detect_fails' fixture

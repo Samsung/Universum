@@ -38,7 +38,7 @@ class ModuleArgumentGroup(argparse._ArgumentGroup):
         if action.metavar is not None:
             try:
                 if 'sphinx' in sys.modules:
-                    action.help += "\n\nEnvironment variable: ${}".format(action.metavar)
+                    action.help += f"\n\nEnvironment variable: ${action.metavar}"
                 else:
                     if not isinstance(action, argparse._SubParsersAction):
                         action.help += f" [env: {action.metavar}]"

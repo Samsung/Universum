@@ -245,7 +245,7 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs, HasErrorState):
             all_matches = glob.glob(file_path)
             relative_path = os.path.relpath(file_path, self.settings.project_root)
             if not all_matches:
-                self.out.log("Skipping '{}'...".format(relative_path))
+                self.out.log(f"Skipping '{relative_path}'...")
                 continue
 
             for matching_path in all_matches:
@@ -254,13 +254,13 @@ class GitSubmitVcs(GitVcs, BaseSubmitVcs, HasErrorState):
                     files_in_dir = [os.path.relpath(item, self.settings.project_root)
                                     for item in modified_files if item.startswith(file_path)]
                     if not files_in_dir:
-                        self.out.log("Skipping '{}'...".format(relative_path))
+                        self.out.log(f"Skipping '{relative_path}'...")
                     result.extend(files_in_dir)
                 else:
                     if matching_path in modified_files:
                         result.append(relative_path)
                     else:
-                        self.out.log("Skipping '{}'...".format(relative_path))
+                        self.out.log(f"Skipping '{relative_path}'...")
         return result
 
     def git_commit_locally(self, description, file_list, edit_only=False):

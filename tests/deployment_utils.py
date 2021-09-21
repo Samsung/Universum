@@ -213,12 +213,12 @@ class UniversumRunner:
         if vcs_type == "git":
             return f" -vt git -gr '{self.git.server.url}' -grs '{self.git.server.target_branch}'"
 
-        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
-            .format(self.perforce.p4.port,
-                    self.perforce.p4.user,
-                    self.perforce.p4.password,
-                    self.perforce.depot,
-                    "my_disposable_p4_client")
+        return f" -vt p4 --p4-force-clean" \
+               f" -p4p '{self.perforce.p4.port}'" \
+               f" -p4u '{self.perforce.p4.user}'" \
+               f" -p4P '{self.perforce.p4.password}'" \
+               f" -p4d '{self.perforce.depot}'" \
+               f" -p4c 'my_disposable_p4_client'"
 
     def _create_temp_config(self, config: str):
         file_path = os.path.join(self.working_dir, "temp_config.py")
