@@ -2,12 +2,11 @@
 
 import pytest
 import P4
-import sh
 
 from universum import __main__
 from . import utils
 from .utils import python
-from .perforce_utils import P4Environment
+from .perforce_utils import P4Environment, shelve_config
 
 
 def test_which_universum_is_tested(docker_main, pytestconfig):
@@ -100,21 +99,6 @@ def test_p4_multiple_spaces_in_mappings(perforce_environment):
     assert not __main__.run(perforce_environment.settings)
 
 
-def shelve_config(config, perforce_environment):
-    p4 = perforce_environment.p4
-    p4_file = perforce_environment.repo_file
-    p4.run_edit(perforce_environment.depot)
-    p4_file.write(config)
-    change = p4.fetch_change()
-    change["Description"] = "CL for shelving"
-    shelve_cl = p4.save_change(change)[0].split()[1]
-    p4.run_shelve("-fc", shelve_cl)
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-    settings.Launcher.config_path = p4_file.basename
-    return settings
-
-
 def test_p4_repository_difference_format(perforce_environment):
     config = """
 from universum.configuration_support import Configuration
@@ -128,7 +112,6 @@ configs = Configuration([dict(name="This is a changed step name", command=["ls",
     diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
-
 
 @pytest.fixture()
 def mock_opened(monkeypatch):
@@ -181,23 +164,5 @@ configs = Configuration([Step(name="Create empty CL",
     stdout_checker.assert_absent_calls_with_param(error_message)
 
 
-@pytest.fixture()
-def mock_diff(monkeypatch):
-    def mocking_function(*args, **kwargs):
-        raise sh.ErrorReturnCode(stderr=b"This is error text\n F\xc3\xb8\xc3\xb6\xbbB\xc3\xa5r",
-                                 stdout=b"This is text'",
-                                 full_cmd="any shell call with any params")
-
-    monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
-
-
-def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
-    config = """
-from universum.configuration_support import Step, Configuration
-
-configs = Configuration([Step(name="Step", command=["ls"])])
-"""
-    settings = shelve_config(config, perforce_environment)
-    assert __main__.run(settings)
-    stdout_checker.assert_has_calls_with_param("This is error text")
-    # Without the fixes all error messages go to stderr instead of stdout
+def test_p4_resolve_unshelved(perforce_environment):
+    pass

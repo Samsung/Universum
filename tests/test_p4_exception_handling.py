@@ -1,9 +1,10 @@
 # pylint: disable = redefined-outer-name
 
 import pytest
+import sh
 
 from universum import __main__
-from .perforce_utils import P4Environment
+from .perforce_utils import P4Environment, shelve_config
 
 
 @pytest.fixture()
@@ -13,7 +14,6 @@ def perforce_environment(perforce_workspace, tmpdir):
 
 def test_p4_forbidden_local_revert(perforce_environment, stdout_checker):
     p4 = perforce_environment.p4
-    p4_file = perforce_environment.repo_file
 
     config = """
 from universum.configuration_support import Configuration
@@ -21,17 +21,8 @@ from universum.configuration_support import Configuration
 configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "555", "."]),
                          dict(name="Check", command=["ls", "-la"])])
 """
-    p4.run_edit(perforce_environment.depot)
-    p4_file.write(config)
-    change = p4.fetch_change()
-    change["Description"] = "CL for shelving"
-    shelve_cl = p4.save_change(change)[0].split()[1]
-    p4.run_shelve("-fc", shelve_cl)
 
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-    settings.Launcher.config_path = p4_file.basename
-
+    settings = shelve_config(config, perforce_environment)
     result = __main__.run(settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
     perforce_environment.temp_dir.chmod(0o0777, rec=1)
@@ -112,3 +103,25 @@ def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
     stdout_checker.assert_has_calls_with_param(
         f"Errors during command execution( \"p4 unshelve -s {cl} -f\" )")
     stdout_checker.assert_has_calls_with_param(f"[Error]: 'Change {cl} is already committed.'")
+
+
+@pytest.fixture()
+def mock_diff(monkeypatch):
+    def mocking_function(*args, **kwargs):
+        raise sh.ErrorReturnCode(stderr=b"This is error text\n F\xc3\xb8\xc3\xb6\xbbB\xc3\xa5r",
+                                 stdout=b"This is text'",
+                                 full_cmd="any shell call with any params")
+
+    monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
+
+
+def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
+    config = """
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Step", command=["ls"])])
+"""
+    settings = shelve_config(config, perforce_environment)
+    assert __main__.run(settings)
+    stdout_checker.assert_has_calls_with_param("This is error text")
+    # Without the fixes all error messages go to stderr instead of stdout

@@ -283,3 +283,18 @@ class P4Environment(utils.TestEnvironment):
 
         cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
         return cl
+
+
+def shelve_config(config, perforce_environment):
+    p4 = perforce_environment.p4
+    p4_file = perforce_environment.repo_file
+    p4.run_edit(perforce_environment.depot)
+    p4_file.write(config)
+    change = p4.fetch_change()
+    change["Description"] = "CL for shelving"
+    shelve_cl = p4.save_change(change)[0].split()[1]
+    p4.run_shelve("-fc", shelve_cl)
+    settings = perforce_environment.settings
+    settings.PerforceMainVcs.shelve_cls = [shelve_cl]
+    settings.Launcher.config_path = p4_file.basename
+    return settings
