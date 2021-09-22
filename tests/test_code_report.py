@@ -159,8 +159,9 @@ def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected
         config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat ./{prelim_report} >> {full_report}\"]",
                        step_config)
     log = runner_with_analyzers.run(config.finalize())
+    print(log)
     if expected_success:
-        assert re.findall(log_success, log)
+        assert re.findall(log_success+' 1', log)
     else:
         assert re.findall(log_fail, log)
 
@@ -215,7 +216,7 @@ configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
     assert not pattern.findall(log)
 
 
-@pytest.mark.parametrize('analyzer', ['sarif_report', 'scan_build_report', 'pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('analyzer', ['pylint', 'mypy', 'uncrustify'])
 @pytest.mark.parametrize('arg_set, expected_log', [
     [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
     [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],
