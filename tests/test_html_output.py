@@ -92,10 +92,18 @@ def check_sections_indentation(steps_section):
 
 
 def check_text_coloring(page_style, steps_section):
+    check_styles(page_style)
+    check_elements_classes(steps_section)
+
+
+def check_styles(page_style):
+    check_body_style(page_style)
     check_css_class(page_style, name="sectionTitle", exp_color="darkslateblue", exp_font="bold")
     check_css_class(page_style, name="sectionSuccessStatus", exp_color="green", exp_font="bold")
     check_css_class(page_style, name="sectionFailedStatus", exp_color="red", exp_font="bold")
 
+
+def check_elements_classes(steps_section):
     steps_body = steps_section.get_section_body()
 
     check_section_elements_classes(steps_body.get_section_by_name("Success step"))
@@ -132,12 +140,23 @@ def check_section_elements_classes(step, is_failed=False):
     step.click() # close section body
 
 
+def check_body_style(style):
+    body_style = parse_css_block(style, "body")
+    assert parse_css_property(body_style, "background-color") == "white"
+
+
 def check_css_class(style, name, exp_color, exp_font):
-    class_style = re.search(r"\." + name + " \\{(.*?)\\}", style, re.DOTALL).group(1)
-    color = re.search(r"color: (\w+)", class_style).group(1)
-    assert color == exp_color
-    font = re.search(r"font-weight: (\w+)", style).group(1)
-    assert font == exp_font
+    class_style = parse_css_block(style, f".{name}")
+    assert parse_css_property(class_style, "color") == exp_color
+    assert parse_css_property(class_style, "font-weight") == exp_font
+
+
+def parse_css_block(style, block_name):
+    return re.search(block_name + r" \{(.*?)\}", style, re.DOTALL).group(1)
+
+
+def parse_css_property(style, css_property):
+    return re.search(fr"{css_property}: (\w+)", style).group(1)
 
 
 def get_page_style(browser):

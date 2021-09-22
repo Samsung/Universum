@@ -106,17 +106,21 @@ class HtmlOutput(BaseOutput):
     @staticmethod
     def _build_html_head():
         css_rules = '''
+            body {
+                background-color: white;
+            }
+
             .sectionTitle {
                 color: darkslateblue;
-                font-weight: bold
+                font-weight: bold;
             }
             .sectionSuccessStatus {
                 color: green;
-                font-weight: bold
+                font-weight: bold;
             }
             .sectionFailedStatus {
                 color: red;
-                font-weight: bold
+                font-weight: bold;
             }
 
             .hide {
