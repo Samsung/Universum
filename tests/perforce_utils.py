@@ -288,7 +288,7 @@ class P4Environment(utils.TestEnvironment):
 def shelve_config(config, perforce_environment):
     p4 = perforce_environment.p4
     p4_file = perforce_environment.repo_file
-    p4.run_edit(perforce_environment.depot)
+    p4.run_edit(str(p4_file))
     p4_file.write(config)
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"

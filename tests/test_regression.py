@@ -113,6 +113,7 @@ configs = Configuration([dict(name="This is a changed step name", command=["ls",
     assert "This is a changed step name" in diff
     assert "b'" not in diff
 
+
 @pytest.fixture()
 def mock_opened(monkeypatch):
     def mocking_function(*args, **kwargs):
@@ -164,5 +165,52 @@ configs = Configuration([Step(name="Create empty CL",
     stdout_checker.assert_absent_calls_with_param(error_message)
 
 
-def test_p4_resolve_unshelved(perforce_environment):
-    pass
+@pytest.fixture()
+def perforce_environment_with_file(perforce_environment):
+    p4 = perforce_environment.p4
+    file_name = utils.randomize_name("new_file") + ".txt"
+    p4_new_file = perforce_environment.vcs_cooking_dir.join(file_name)
+    p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
+    p4.run("add", str(p4_new_file))
+
+    change = p4.run_change("-o")[0]
+    change["Description"] = "Add a file for checks"
+    p4.run_submit(change)
+
+    yield {"env": perforce_environment, "file": p4_new_file}
+
+    p4.run("delete", perforce_environment.depot + file_name)
+    change = p4.run_change("-o")[0]
+    change["Description"] = "Delete created file"
+    p4.run_submit(change)
+
+
+def shelve_file(env, file, content):
+    p4 = env.p4
+    change = p4.fetch_change()
+    change["Description"] = "CL for shelving"
+    shelve_cl = p4.save_change(change)[0].split()[1]
+    p4.run_edit("-c", shelve_cl, str(file))
+    file.write(content)
+    p4.run_shelve("-fc", shelve_cl)
+    p4.run_revert("-c", shelve_cl, str(file))
+    return shelve_cl
+
+
+def test_p4_resolve_unshelved(perforce_environment_with_file, stdout_checker):
+    p4_new_file = perforce_environment_with_file["file"]
+    perforce_environment = perforce_environment_with_file["env"]
+    cl_1 = shelve_file(perforce_environment, p4_new_file, "This is changed line 1\nThis is unchanged line 2")
+    cl_2 = shelve_file(perforce_environment, p4_new_file, "This is unchanged line 1\nThis is changed line 2")
+
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Print file",
+                              command=["bash", "-c", "cat {str(p4_new_file.basename)}"])])
+"""
+    settings = shelve_config(config, perforce_environment)
+    settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
+    assert not __main__.run(settings)
+    stdout_checker.assert_has_calls_with_param("This is changed line 1")
+    stdout_checker.assert_has_calls_with_param("This is changed line 2")
