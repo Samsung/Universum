@@ -159,9 +159,8 @@ def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected
         config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat ./{prelim_report} >> {full_report}\"]",
                        step_config)
     log = runner_with_analyzers.run(config.finalize())
-    print(log)
     if expected_success:
-        assert re.findall(log_success+' 1', log)
+        assert re.findall(log_success, log)
     else:
         assert re.findall(log_fail, log)
 
