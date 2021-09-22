@@ -163,13 +163,15 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         # TODO: cover 'not file_path.startswith("/")' case with tests
         if not file_path.startswith("/"):
             file_path = workspace_root + "/" + file_path
+        if not file_path.endswith("/") and os.path.isdir(file_path):
+            file_path += "/"
         if file_path.endswith("/"):
             file_path += "..."
         if edit_only:
             reconcile_result = self.p4reconcile("-c", change_id, "-e", convert_to_str(file_path))
             if not reconcile_result:
                 self.out.log(
-                    "The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
+                    f"The file was not edited. Skipping '{os.path.relpath(file_path, workspace_root)}'...")
         else:
             reconcile_result = self.p4reconcile("-c", change_id, convert_to_str(file_path))
 
@@ -428,7 +430,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
             line = depot["path"] + '@' + depot["cl"]
             # Set environment variable for each mapping in order of there definition
-            os.environ["SYNC_CL_{}".format(idx)] = depot["cl"]
+            os.environ[f"SYNC_CL_{idx}"] = depot["cl"]
 
             self.out.log("Downloading " + line)
             try:
@@ -623,7 +625,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.p4.delete_client(self.client_name)
             self.out.log(f"Client '{self.client_name}' deleted")
         except P4Exception as e:
-            if "Client '{}' unknown".format(self.client_name) in e.value:
+            if f"Client '{self.client_name}' unknown" in e.value:
                 self.out.log("No client to delete")
             else:
                 self.structure.fail_current_block(e.value)

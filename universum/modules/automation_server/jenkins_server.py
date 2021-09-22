@@ -33,7 +33,7 @@ class JenkinsServerForTrigger(HasOutput, BaseServerForTrigger, HasErrorState):
 
     def trigger_build(self, revision: str) -> None:
         processed_url = self.settings.trigger_url % revision
-        self.out.log("Triggering url %s" % processed_url)
+        self.out.log(f"Triggering url {processed_url}")
         utils.make_request(processed_url)
 
 

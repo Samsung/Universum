@@ -38,14 +38,14 @@ class Poll(HasOutput, HasStructure):
 
         for change in self.latest_cls[depot]:
             if change == self.stored_cls[depot]:
-                self.out.log("Commit {} is latest known".format(change))
+                self.out.log(f"Commit {change} is latest known")
                 continue
 
             if change in self.triggered_cls:
-                self.out.log("Commit {} already processed".format(change))
+                self.out.log(f"Commit {change} already processed")
                 continue
 
-            self.out.log("Detected commit {}, triggering build".format(change))
+            self.out.log(f"Detected commit {change}, triggering build")
             self.server.trigger_build(change)
             self.triggered_cls.add(change)
             self.stored_cls[depot] = change

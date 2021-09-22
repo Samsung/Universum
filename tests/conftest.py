@@ -14,7 +14,7 @@ class FuzzyCallChecker:
         self.mock_object = mock_object
 
     def _assertion_message(self, string_to_find):
-        return '\nExpected param: %s\nActual list: %r' % (string_to_find, self.mock_object.mock_calls)
+        return f"\nExpected param: {string_to_find}\nActual list: {str(self.mock_object.mock_calls)}"
 
     def _find_call_with_param(self, pattern_to_search, is_regexp):
         if is_regexp:
@@ -69,13 +69,13 @@ class HttpChecker:
             if request.querystring == query:
                 if ensure:
                     return
-                assert False, 'Query string was found in calls to http server.\n' \
-                              'Expected: %s\nActual: %r' % (query, queries)
+                assert False, f"Query string was found in calls to http server.\n" \
+                              f"Expected: {query}\nActual:{str(queries)}"
             queries.append(request.querystring)
 
         if ensure:
-            assert False, 'Query string is not found in calls to http server.\n' \
-                          'Expected: %s\nActual: %r' % (query, queries)
+            assert False, f"Query string is not found in calls to http server.\n" \
+                          f"Expected: {query}\nActual:{str(queries)}"
 
     @staticmethod
     def assert_request_was_made(query):

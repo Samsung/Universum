@@ -227,11 +227,11 @@ configs = Configuration([Step(name="Test step", command=["ls", "-la"])])
 def test_p4_params(docker_main_with_vcs):
     p4 = docker_main_with_vcs.perforce.p4
     p4_file = docker_main_with_vcs.perforce.repo_file
-    config = """
+    config = f"""
 from universum.configuration_support import Configuration, Step
 
-configs = Configuration([Step(name="Test step", command=["cat", "{}"])])
-""".format(p4_file.basename)
+configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.basename}"])])
+"""
 
     # Prepare SYNC_CHANGELIST
     sync_cl = p4.run_changes("-s", "submitted", "-m1", docker_main_with_vcs.perforce.depot)[0]["change"]

@@ -52,7 +52,7 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasStructure, HasErrorSt
             text = f"{e}\nPossible reasons of this error:"
             text += f"\n * Sources path, passed to the script ('{self.settings.source_dir}')," + \
                     " does not lead to actual sources or was processed incorrectly"
-            text += "\n * Directory '{}' already exists in working dir (e.g. due to previous builds)".format(
-                os.path.basename(self.settings.project_root))
+            text += f"\n * Directory '{os.path.basename(self.settings.project_root)}'" + \
+                    " already exists in working dir (e.g. due to previous builds)"
             text += "\n * File reading permissions troubles"
             raise CriticalCiException(text) from e

@@ -154,8 +154,8 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
         if self.review_latest_version == self.review_version:
             return True
 
-        text = "Current review version is {0}, while latest review version is already {1}".format(
-            self.review_version, self.review_latest_version)
+        text = f"Current review version is {self.review_version}, " + \
+               f"while latest review version is already {self.review_latest_version}"
         self.out.log(text)
         return False
 
@@ -217,12 +217,12 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
                 utils.make_request(link, critical=False)
             else:
                 self.out.log("Build status on Swarm will not be updated because " +
-                             "the '{0}' link has not been provided.".format("PASS" if result else "FAIL"))
+                             f"the '{'PASS' if result else 'FAIL'}' link has not been provided.")
         else:
             text = "Build status on Swarm will not be updated because tested review revision is not latest."
             if not link:
-                text += " Also, even if the review revision was latest, we wouldn't be able to report the status " \
-                        "because the '{0}' link has not been provided.".format("PASS" if result else "FAIL")
+                text += " Also, even if the review revision was latest, we wouldn't be able to report the status " + \
+                        f"because the '{'PASS' if result else 'FAIL'}' link has not been provided."
             self.out.log(text)
 
         # Voting up or down; posting comments if any
