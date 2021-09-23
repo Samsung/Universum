@@ -197,7 +197,7 @@ def shelve_file(env, file, content):
     return shelve_cl
 
 
-def test_p4_resolve_unshelved(perforce_environment_with_file, stdout_checker):
+def test_success_p4_resolve_unshelved(perforce_environment_with_file, stdout_checker):
     p4_new_file = perforce_environment_with_file["file"]
     perforce_environment = perforce_environment_with_file["env"]
     cl_1 = shelve_file(perforce_environment, p4_new_file, "This is changed line 1\nThis is unchanged line 2")
@@ -214,3 +214,23 @@ configs = Configuration([Step(name="Print file",
     assert not __main__.run(settings)
     stdout_checker.assert_has_calls_with_param("This is changed line 1")
     stdout_checker.assert_has_calls_with_param("This is changed line 2")
+
+
+def test_fail_p4_resolve_unshelved(perforce_environment_with_file, stdout_checker):
+    p4_new_file = perforce_environment_with_file["file"]
+    perforce_environment = perforce_environment_with_file["env"]
+    cl_1 = shelve_file(perforce_environment, p4_new_file, "This is changed line 1\nThis is unchanged line 2")
+    cl_2 = shelve_file(perforce_environment, p4_new_file, "This is a different line 1\nThis is changed line 2")
+
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Print file",
+                              command=["bash", "-c", "cat {str(p4_new_file.basename)}"])])
+"""
+    settings = shelve_config(config, perforce_environment)
+    settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
+    assert __main__.run(settings)
+    stdout_checker.assert_has_calls_with_param(
+        "Exception encountered while trying to resolve a conflict during unshelve operation!"
+    )
