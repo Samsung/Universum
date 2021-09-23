@@ -24,14 +24,16 @@ class HtmlOutput(BaseOutput):
         opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \
             f'<label for="{num_str}"><span class="sectionLbl">'
         closing_html = "</span></label><div>"
-        self._log_line(f"{opening_html}{num_str} {name}{closing_html}", with_line_separator=False)
+        name_html = f'<span class="sectionTitle">{name}</span>'
+        self._log_line(f"{opening_html}{num_str} {name_html}{closing_html}", with_line_separator=False)
         self._block_level += 1
 
     def close_block(self, num_str, name, status):
         self._block_level -= 1
         indent = "  " * self._block_level
         closing_html = '</div><span class="nl"></span>'
-        self._log_line(f"{indent} \u2514 [{status}]{closing_html}", with_line_separator=False)
+        status_html = f'<span class="section{status}Status">[{status}]</span>'
+        self._log_line(f"{indent} \u2514 {status_html}{closing_html}", with_line_separator=False)
         self._log_line("")
 
     def report_error(self, description):
@@ -104,11 +106,22 @@ class HtmlOutput(BaseOutput):
     @staticmethod
     def _build_html_head():
         css_rules = '''
-            .sectionLbl {
+            body {
+                background-color: white;
                 color: black;
             }
-            .sectionLbl span {
-                color: black !important;
+
+            .sectionTitle {
+                color: darkslateblue;
+                font-weight: bold;
+            }
+            .sectionSuccessStatus {
+                color: green;
+                font-weight: bold;
+            }
+            .sectionFailedStatus {
+                color: red;
+                font-weight: bold;
             }
 
             .hide {
