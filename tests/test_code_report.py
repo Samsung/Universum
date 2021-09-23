@@ -156,7 +156,7 @@ def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected
         prelim_report = "report_file_" + str(idx)
         full_report = "${CODE_REPORT_FILE}"
         runner_with_analyzers.local.root_directory.join(prelim_report).write(tested_content)
-        config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat ./{prelim_report} >> {full_report}\"]",
+        config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat './{prelim_report}' >> '{full_report}'\"]",
                        step_config)
     log = runner_with_analyzers.run(config.finalize())
     expected_log = log_success if expected_success else log_fail
