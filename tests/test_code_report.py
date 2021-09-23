@@ -159,10 +159,8 @@ def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected
         config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat ./{prelim_report} >> {full_report}\"]",
                        step_config)
     log = runner_with_analyzers.run(config.finalize())
-    if expected_success:
-        assert re.findall(log_success, log)
-    else:
-        assert re.findall(log_fail, log)
+    expected_log = log_success if expected_success else log_fail
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
@@ -197,12 +195,11 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
-    if expected_success:
-        assert re.findall(log_success, log)
-    else:
-        assert re.findall(log_fail, log)
+    expected_log = log_success if expected_success else log_fail
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
+    if not expected_success:
         for analyzer in analyzers:  # confirm that all analyzers fail independently
-            assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log)
+            assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log), f"'{analyzer}' info is not found in '{log}'"
 
 
 def test_without_code_report_command(runner_with_analyzers):
@@ -250,8 +247,8 @@ def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expe
     source_file.write(source_code_python)
 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
-    assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log)
-    assert expected_log in log
+    assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log), f"'{analyzer}' info is not found in '{log}'"
+    assert expected_log in log, f"'{expected_log}' is not found in '{log}'"
 
 
 @pytest.mark.parametrize('extra_args, tested_content, expected_success, expected_artifact', [
@@ -278,9 +275,11 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     extra_config = "artifacts='./uncrustify/source_file.html'"
     log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_config).finalize())
 
-    assert re.findall(log_success if expected_success else log_fail, log)
-    assert re.findall(r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
-                      else r"Collecting 'source_file.html' - [^\n]*Failed", log)
+    expected_log = log_success if expected_success else log_fail
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
+    expected_log = r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact \
+        else r"Collecting 'source_file.html' - [^\n]*Failed"
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):
