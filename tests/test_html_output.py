@@ -143,6 +143,7 @@ def check_section_elements_classes(step, is_failed=False):
 def check_body_style(style):
     body_style = parse_css_block(style, "body")
     assert parse_css_property(body_style, "background-color") == "white"
+    assert parse_css_property(body_style, "color") == "black"
 
 
 def check_css_class(style, name, exp_color, exp_font):
@@ -156,7 +157,7 @@ def parse_css_block(style, block_name):
 
 
 def parse_css_property(style, css_property):
-    return re.search(fr"{css_property}: (\w+)", style).group(1)
+    return re.search(fr"\s{css_property}: (\w+)", style).group(1)
 
 
 def get_page_style(browser):
@@ -168,6 +169,8 @@ def get_page_style(browser):
 
 
 class TestElement(FirefoxWebElement):
+
+    __test__ = False # disable pytest collection for this class
 
     @staticmethod
     def create(element):
@@ -202,7 +205,7 @@ class TestElement(FirefoxWebElement):
 
     # <label for="1.">  <-- self
     #     <span class="sectionLbl">
-    #         <span style="sectionTitle">1. Section name</span>  <-- returning this element class name
+    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element class name
     #     </span>
     # </label>
     def get_section_title_class(self):
@@ -217,7 +220,7 @@ class TestElement(FirefoxWebElement):
     # </label>
     # <div>
     #     ...
-    #     <span style="sectionSuccessStatus">[Success]</span>  <-- returning this element class name
+    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element class name
     # </div>
     def get_section_status_class(self):
         body = self.get_section_body()
@@ -253,9 +256,3 @@ class TestElement(FirefoxWebElement):
     @property
     def indent(self):
         return self.location['x']
-
-    @property
-    def style(self):
-        css_style = self.get_attribute("style")
-        assert css_style
-        return css_style

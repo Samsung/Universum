@@ -108,6 +108,7 @@ class HtmlOutput(BaseOutput):
         css_rules = '''
             body {
                 background-color: white;
+                color: black;
             }
 
             .sectionTitle {
