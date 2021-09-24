@@ -1,6 +1,7 @@
 # pylint: disable = redefined-outer-name
 
 import os
+import re
 import pytest
 
 from selenium import webdriver
@@ -69,6 +70,7 @@ def check_html_log(artifact_dir, browser):
     steps_section.click()
     check_step_not_collapsed(steps_section, steps_body)
     check_sections_indentation(steps_section)
+    check_text_coloring(get_page_style(browser), steps_section)
     steps_section.click()
     check_step_collapsed(steps_section, steps_body)
 
@@ -86,6 +88,36 @@ def check_sections_indentation(steps_section):
     assert step_lvl2_first.indent == step_lvl2_second.indent
 
     assert steps_section.indent < step_lvl1_first.indent < step_lvl2_first.indent
+    step_lvl1_second.click() # restore sections state
+
+
+def check_text_coloring(page_style, steps_section):
+    check_styles(page_style)
+    check_elements_classes(steps_section)
+
+
+def check_styles(page_style):
+    check_body_style(page_style)
+    check_css_class(page_style, name="sectionTitle", exp_color="darkslateblue", exp_font="bold")
+    check_css_class(page_style, name="sectionSuccessStatus", exp_color="green", exp_font="bold")
+    check_css_class(page_style, name="sectionFailedStatus", exp_color="red", exp_font="bold")
+
+
+def check_elements_classes(steps_section):
+    steps_body = steps_section.get_section_body()
+
+    check_section_elements_classes(steps_body.get_section_by_name("Success step"))
+    check_section_elements_classes(steps_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_elements_classes(steps_body.get_section_by_name("Partially success step"))
+
+    composite_step = steps_body.get_section_by_name("Partially success step")
+    composite_step.click()
+    composite_step_body = composite_step.get_section_body()
+
+    check_section_elements_classes(composite_step_body.get_section_by_name("Success step"))
+    check_section_elements_classes(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
+
+    composite_step.click() # restore sections state
 
 
 def check_step_collapsed(section, body):
@@ -100,7 +132,45 @@ def check_step_not_collapsed(section, body):
     assert body.is_displayed()
 
 
+def check_section_elements_classes(step, is_failed=False):
+    assert step.get_section_title_class() == "sectionTitle"
+    step.click() # open section body
+    exp_status = "Failed" if is_failed else "Success"
+    assert step.get_section_status_class() == f"section{exp_status}Status"
+    step.click() # close section body
+
+
+def check_body_style(style):
+    body_style = parse_css_block(style, "body")
+    assert parse_css_property(body_style, "background-color") == "white"
+    assert parse_css_property(body_style, "color") == "black"
+
+
+def check_css_class(style, name, exp_color, exp_font):
+    class_style = parse_css_block(style, f".{name}")
+    assert parse_css_property(class_style, "color") == exp_color
+    assert parse_css_property(class_style, "font-weight") == exp_font
+
+
+def parse_css_block(style, block_name):
+    return re.search(block_name + r" \{(.*?)\}", style, re.DOTALL).group(1)
+
+
+def parse_css_property(style, css_property):
+    return re.search(fr"\s{css_property}: (\w+)", style).group(1)
+
+
+def get_page_style(browser):
+    head = browser.find_element_by_tag_name("head")
+    assert head
+    style = head.find_element_by_tag_name("style")
+    assert style
+    return style.get_attribute("innerHTML")
+
+
 class TestElement(FirefoxWebElement):
+
+    __test__ = False # disable pytest collection for this class
 
     @staticmethod
     def create(element):
@@ -108,11 +178,13 @@ class TestElement(FirefoxWebElement):
         element.__class__ = TestElement
         return element
 
-    # <input type="checkbox" id="1." class="hide">
-    # <label for="1.">  <-- returning this element
-    #     <span class="sectionLbl">1. Section name</span>  <-- Searching for this element
-    # </label>
-    # <div>Section body</div>
+    # <any_tag>  <-- self
+    #     <input type="checkbox" id="1." class="hide">
+    #     <label for="1.">  <-- returning this element
+    #         <span class="sectionLbl">1. Section name</span>  <-- Searching for this element
+    #     </label>
+    #     <div>Section body</div>
+    # </any_tag>
     def get_section_by_name(self, section_name):
         span_elements = self.find_elements_by_class_name("sectionLbl")
         result = None
@@ -121,10 +193,40 @@ class TestElement(FirefoxWebElement):
                 result = el.find_element_by_xpath("..")
         return TestElement.create(result)
 
+    # <input type="checkbox" id="1." class="hide">
+    # <label for="1.">  <-- self
+    #     <span class="sectionLbl">1. Section name</span>
+    # </label>
+    # <div>Section body</div>  <-- returning this element
     def get_section_body(self):
         body = TestElement.create(self.find_element_by_xpath("./following-sibling::*[1]"))
         assert body.tag_name == "div"
         return body
+
+    # <label for="1.">  <-- self
+    #     <span class="sectionLbl">
+    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element class name
+    #     </span>
+    # </label>
+    def get_section_title_class(self):
+        label_span = self.find_element_by_class_name("sectionLbl")
+        assert label_span
+        title_span = label_span.find_element_by_tag_name("span")
+        assert title_span
+        return title_span.get_attribute("class")
+
+    # <label for="1.">  <-- self
+    #     ...
+    # </label>
+    # <div>
+    #     ...
+    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element class name
+    # </div>
+    def get_section_status_class(self):
+        body = self.get_section_body()
+        status_element = TestElement.create(body.find_elements_by_tag_name("span")[-1])
+        assert status_element.text in ("[Success]", "[Failed]")
+        return status_element.get_attribute("class")
 
     @property
     def is_body_collapsed(self):

@@ -74,14 +74,14 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
             super().__init__(*args, **kwargs)
 
             if not getattr(self.settings, "type", None):
-                self.error("""
+                self.error(f"""
                     The repository (VCS) type is not set.
                      
                     The repository type defines the version control system that is used for
                     performing the requested action. For example, Universum needs to get project
                     source codes for performing Continuous Integration (CI) builds.
 
-                    The following types are supported: {}.
+                    The following types are supported: {', '.join(vcs_types)}.
                     
                     Each of these types requires supplying its own
                     configuration parameters. At the minimum, the following
@@ -95,8 +95,7 @@ def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
                     
                     Please specify the VCS type by using '--vcs-type' ('-vt') command-line option or
                     VCS_TYPE environment variable.
-                    """.
-                           format(", ".join(vcs_types)))
+                    """)
                 return
 
             if self.settings.type == "none":
