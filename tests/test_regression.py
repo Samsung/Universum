@@ -231,6 +231,4 @@ configs = Configuration([Step(name="Print file",
     settings = shelve_config(config, perforce_environment)
     settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
     assert __main__.run(settings)
-    stdout_checker.assert_has_calls_with_param(
-        "Exception encountered while trying to resolve a conflict during unshelve operation!"
-    )
+    stdout_checker.assert_has_calls_with_param("Problem during merge while resolving shelved CLs!")
