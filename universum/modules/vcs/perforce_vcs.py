@@ -461,10 +461,17 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
     @catch_p4exception(ignore_if="No file(s) to resolve")
     def p4resolve(self):
-        result = str(self.p4.run_resolve("-am"))
-        if "resolve skipped" in result:
+        result = self.p4.run_resolve("-am")
+        if "resolve skipped" in str(result):
             raise CriticalCiException(f"Problem during merge while resolving shelved CLs!\n"
                                       f"Here are the details of command execution:\n{result}")
+        self.append_repo_status(" with conflicts resolved in files:")
+        for entry in result:
+            try:
+                self.out.log(f"Resolving file '{entry['clientFile']}'...")
+                self.append_repo_status(f"\n        {entry['clientFile']}")
+            except (TypeError, KeyError):
+                pass
 
     @make_block("Unshelving")
     @catch_p4exception()
@@ -476,7 +483,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 report = self.p4unshelve("-s", cl, "-f")
                 self.map_local_path_to_depot(report)
                 self.p4report(report)
-                self.append_repo_status(" " + cl)
+                self.append_repo_status("\n    " + cl)
                 self.structure.run_in_block(self.p4resolve, f"Resolving potential conflicts for CL {cl}",
                                             pass_errors=True)
             self.append_repo_status("\n")

@@ -165,70 +165,105 @@ configs = Configuration([Step(name="Create empty CL",
     stdout_checker.assert_absent_calls_with_param(error_message)
 
 
-@pytest.fixture()
-def perforce_environment_with_file(perforce_environment):
-    p4 = perforce_environment.p4
-    file_name = utils.randomize_name("new_file") + ".txt"
-    p4_new_file = perforce_environment.vcs_cooking_dir.join(file_name)
+def create_file(name, directory, p4):
+    p4_new_file = directory.join(name)
     p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
     p4.run("add", str(p4_new_file))
 
     change = p4.run_change("-o")[0]
     change["Description"] = "Add a file for checks"
     p4.run_submit(change)
+    return p4_new_file
 
-    yield {"env": perforce_environment, "file": p4_new_file}
 
-    p4.run("delete", perforce_environment.depot + file_name)
+def delete_file(file_name, depot, p4):
+    p4.run("delete", depot + file_name)
     change = p4.run_change("-o")[0]
     change["Description"] = "Delete created file"
     p4.run_submit(change)
 
 
-def shelve_file(env, file, content):
-    p4 = env.p4
+@pytest.fixture()
+def perforce_environment_with_files(perforce_environment):
+    files = [create_file(utils.randomize_name("new_file") + ".txt",
+                         perforce_environment.vcs_cooking_dir,
+                         perforce_environment.p4)
+             for _ in range(2)]
+
+    yield {"env": perforce_environment, "files": files}
+
+    for entry in files:
+        delete_file(entry.basename, perforce_environment.depot, perforce_environment.p4)
+
+
+def create_cl(p4, description="Description"):
     change = p4.fetch_change()
-    change["Description"] = "CL for shelving"
-    shelve_cl = p4.save_change(change)[0].split()[1]
+    change["Description"] = description
+    return p4.save_change(change)[0].split()[1]
+
+
+def shelve_file(env, shelve_cl, file, content):
+    p4 = env.p4
     p4.run_edit("-c", shelve_cl, str(file))
     file.write(content)
     p4.run_shelve("-fc", shelve_cl)
     p4.run_revert("-c", shelve_cl, str(file))
-    return shelve_cl
 
 
-def test_success_p4_resolve_unshelved(perforce_environment_with_file, stdout_checker):
-    p4_new_file = perforce_environment_with_file["file"]
-    perforce_environment = perforce_environment_with_file["env"]
-    cl_1 = shelve_file(perforce_environment, p4_new_file, "This is changed line 1\nThis is unchanged line 2")
-    cl_2 = shelve_file(perforce_environment, p4_new_file, "This is unchanged line 1\nThis is changed line 2")
-
+def test_success_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+    p4_file = perforce_environment_with_files["files"][0]
+    env = perforce_environment_with_files["env"]
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file",
-                              command=["bash", "-c", "cat {str(p4_new_file.basename)}"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat {p4_file.basename}"])])
 """
-    settings = shelve_config(config, perforce_environment)
-    settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
+    settings = shelve_config(config, env)
+    cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
+    shelve_file(env, cls[0], p4_file, "This is changed line 1\nThis is unchanged line 2")
+    shelve_file(env, cls[1], p4_file, "This is unchanged line 1\nThis is changed line 2")
+    settings.PerforceMainVcs.shelve_cls.extend(cls)
+
     assert not __main__.run(settings)
     stdout_checker.assert_has_calls_with_param("This is changed line 1")
     stdout_checker.assert_has_calls_with_param("This is changed line 2")
 
 
-def test_fail_p4_resolve_unshelved(perforce_environment_with_file, stdout_checker):
-    p4_new_file = perforce_environment_with_file["file"]
-    perforce_environment = perforce_environment_with_file["env"]
-    cl_1 = shelve_file(perforce_environment, p4_new_file, "This is changed line 1\nThis is unchanged line 2")
-    cl_2 = shelve_file(perforce_environment, p4_new_file, "This is a different line 1\nThis is changed line 2")
-
+def test_fail_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+    p4_file = perforce_environment_with_files["files"][0]
+    env = perforce_environment_with_files["env"]
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file",
-                              command=["bash", "-c", "cat {str(p4_new_file.basename)}"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat {p4_file.basename}"])])
 """
-    settings = shelve_config(config, perforce_environment)
-    settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
+    settings = shelve_config(config, env)
+    cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
+    shelve_file(env, cls[0], p4_file, "This is changed line 1\nThis is unchanged line 2")
+    shelve_file(env, cls[1], p4_file, "This is a different line 1\nThis is changed line 2")
+    settings.PerforceMainVcs.shelve_cls.extend(cls)
+
     assert __main__.run(settings)
     stdout_checker.assert_has_calls_with_param("Problem during merge while resolving shelved CLs!")
+
+
+def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files):
+    p4_files = perforce_environment_with_files["files"]
+    env = perforce_environment_with_files["env"]
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
+"""
+    settings = shelve_config(config, env)
+    cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
+    shelve_file(env, cls[0], p4_files[0], "This is changed line 1\nThis is unchanged line 2")
+    shelve_file(env, cls[0], p4_files[1], "This is changed line 1\nThis is unchanged line 2")
+    shelve_file(env, cls[1], p4_files[0], "This is unchanged line 1\nThis is changed line 2")
+    shelve_file(env, cls[1], p4_files[1], "This is unchanged line 1\nThis is changed line 2")
+    settings.PerforceMainVcs.shelve_cls.extend(cls)
+
+    assert not __main__.run(settings)
+    repo_state = env.artifact_dir.join('REPOSITORY_STATE.txt').read()
+    assert p4_files[0].basename in repo_state
+    assert p4_files[1].basename in repo_state
