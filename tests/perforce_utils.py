@@ -295,3 +295,31 @@ class P4Environment(utils.TestEnvironment):
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
         settings.Launcher.config_path = self.repo_file.basename
         return settings
+
+    def create_file(self, name):
+        p4_new_file = self.vcs_cooking_dir.join(name)
+        p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
+        self.p4.run("add", str(p4_new_file))
+
+        change = self.p4.run_change("-o")[0]
+        change["Description"] = "Add a file for checks"
+        self.p4.run_submit(change)
+        return p4_new_file
+
+    def delete_file(self, file_name):
+        self.p4.run("delete", self.depot + file_name)
+        change = self.p4.run_change("-o")[0]
+        change["Description"] = "Delete created file"
+        self.p4.run_submit(change)
+
+    def shelve_file(self, file, content, shelve_cl=None):
+        if not shelve_cl:
+            change = self.p4.fetch_change()
+            change["Description"] = "This is a shelved CL"
+            shelve_cl = self.p4.save_change(change)[0].split()[1]
+
+        self.p4.run_edit("-c", shelve_cl, str(file))
+        file.write(content)
+        self.p4.run_shelve("-fc", shelve_cl)
+        self.p4.run_revert("-c", shelve_cl, str(file))
+        return shelve_cl
