@@ -57,20 +57,20 @@ def browser():
 
 
 def test_success(environment_main_and_nonci, browser):
-    assert __main__.run(environment_main_and_nonci.settings) == 0
+    assert not __main__.run(environment_main_and_nonci.settings)
     check_html_log(environment_main_and_nonci.artifact_dir, browser)
 
 
 def test_success_clean_build(tmpdir, browser):
     env = create_environment("main", tmpdir)
     env.settings.Main.clean_build = True
-    assert __main__.run(env.settings) == 0
+    assert not __main__.run(env.settings)
     check_html_log(env.artifact_dir, browser)
 
 
 def test_no_html_log_requested(environment_main_and_nonci):
     environment_main_and_nonci.settings.Output.html_log = False
-    assert __main__.run(environment_main_and_nonci.settings) == 0
+    assert not __main__.run(environment_main_and_nonci.settings)
     log_path = os.path.join(environment_main_and_nonci.artifact_dir, "log.html")
     assert not os.path.exists(log_path)
 
