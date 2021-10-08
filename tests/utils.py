@@ -110,7 +110,7 @@ class TestEnvironment:
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = str(self.vcs_cooking_dir)
-        elif test_type == "main" or test_type == "nonci":
+        elif test_type in ('main', 'nonci'):
             self.configs_file = self.temp_dir.join("configs.py")
             self.configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
