@@ -6,7 +6,7 @@ import P4
 from universum import __main__
 from . import utils
 from .utils import python
-from .perforce_utils import P4Environment, shelve_config
+from .perforce_utils import P4Environment
 
 
 def test_which_universum_is_tested(docker_main, pytestconfig):
@@ -105,7 +105,7 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
 """
-    settings = shelve_config(config, perforce_environment)
+    settings = perforce_environment.shelve_config(config)
     result = __main__.run(settings)
 
     assert result == 0
@@ -135,7 +135,7 @@ from universum.configuration_support import Step, Configuration
 configs = Configuration([Step(name="{step_name}", artifacts="output.json",
                               command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
     """
-    settings = shelve_config(config, perforce_environment)
+    settings = perforce_environment.shelve_config(config)
     settings.Launcher.output = "file"
 
     assert not __main__.run(settings)
@@ -159,7 +159,7 @@ configs = Configuration([Step(name="Create empty CL",
                                               "P4USER": "{perforce_environment.p4.user}",
                                               "P4PASSWD": "{perforce_environment.p4.password}"}})])
 """
-    settings = shelve_config(config, perforce_environment)
+    settings = perforce_environment.shelve_config(config)
     assert not __main__.run(settings)
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)
@@ -218,7 +218,7 @@ from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
 """
-    settings = shelve_config(config, env)
+    settings = env.shelve_config(config)
     cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
     shelve_file(env, cls[0], p4_file, "This is changed line 1\nThis is unchanged line 2")
     shelve_file(env, cls[1], p4_file, "This is unchanged line 1\nThis is changed line 2")
@@ -237,7 +237,7 @@ from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
 """
-    settings = shelve_config(config, env)
+    settings = env.shelve_config(config)
     cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
     shelve_file(env, cls[0], p4_file, "This is changed line 1\nThis is unchanged line 2")
     shelve_file(env, cls[1], p4_file, "This is a different line 1\nThis is changed line 2")
@@ -255,7 +255,7 @@ from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
 """
-    settings = shelve_config(config, env)
+    settings = env.shelve_config(config)
     cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
     shelve_file(env, cls[0], p4_files[0], "This is changed line 1\nThis is unchanged line 2")
     shelve_file(env, cls[0], p4_files[1], "This is changed line 1\nThis is unchanged line 2")

@@ -4,7 +4,7 @@ import pytest
 import sh
 
 from universum import __main__
-from .perforce_utils import P4Environment, shelve_config
+from .perforce_utils import P4Environment
 
 
 @pytest.fixture()
@@ -22,7 +22,7 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
                          dict(name="Check", command=["ls", "-la"])])
 """
 
-    settings = shelve_config(config, perforce_environment)
+    settings = perforce_environment.shelve_config(config)
     result = __main__.run(settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
     perforce_environment.temp_dir.chmod(0o0777, rec=1)
@@ -121,7 +121,7 @@ from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Step", command=["ls"])])
 """
-    settings = shelve_config(config, perforce_environment)
+    settings = perforce_environment.shelve_config(config)
     assert __main__.run(settings)
     stdout_checker.assert_has_calls_with_param("This is error text")
     # Without the fixes all error messages go to stderr instead of stdout
