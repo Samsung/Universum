@@ -216,7 +216,7 @@ def test_success_p4_resolve_unshelved(perforce_environment_with_files, stdout_ch
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat {p4_file.basename}"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
 """
     settings = shelve_config(config, env)
     cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
@@ -235,7 +235,7 @@ def test_fail_p4_resolve_unshelved(perforce_environment_with_files, stdout_check
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat {p4_file.basename}"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
 """
     settings = shelve_config(config, env)
     cls = [create_cl(env.p4, "CL for shelving") for _ in range(2)]
@@ -250,7 +250,7 @@ configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat {p4
 def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files):
     p4_files = perforce_environment_with_files["files"]
     env = perforce_environment_with_files["env"]
-    config = f"""
+    config = """
 from universum.configuration_support import Step, Configuration
 
 configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
