@@ -97,7 +97,6 @@ class TeamcityServer(BaseServerForHostingBuild, BaseServerForTrigger, HasErrorSt
                self.settings.build_id + ":id/" + item
 
     def add_build_tag(self, tag: str) -> Response:
-        return requests.post("%s/httpAuth/app/rest/builds/id:%s/tags" %
-                             (self.settings.server_url, self.settings.build_id),
+        return requests.post(f"{self.settings.server_url}/httpAuth/app/rest/builds/id:{self.settings.build_id}/tags",
                              auth=(self.settings.user_id, self.settings.passwd),
                              data=tag, headers={'Content-Type': 'text/plain'}, verify=False)

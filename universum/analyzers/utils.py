@@ -132,7 +132,8 @@ def add_python_version_argument(parser: argparse.ArgumentParser) -> None:
 def report_to_file(issues: List[ReportData], json_file: str = None) -> None:
     issues_json = json.dumps(issues, indent=4)
     if json_file:
-        open(json_file, "w").write(issues_json)
+        with open(json_file, "w", encoding="utf-8") as f:
+            f.write(issues_json)
     else:
         sys.stdout.write(issues_json)
 

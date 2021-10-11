@@ -1,10 +1,11 @@
 import glob
 import json
 import os
+import urllib.parse
 from copy import deepcopy
-from typing import cast, Dict, List, Optional, TextIO, Tuple
+from typing import Dict, List, Optional, TextIO, Tuple
 
-from ..configuration_support import Configuration, Step
+from ..configuration_support import Configuration
 from .output import HasOutput
 from .project_directory import ProjectDirectory
 from . import artifact_collector, reporter
@@ -28,6 +29,8 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
     def prepare_environment(self, project_config: Configuration) -> Configuration:
         afterall_steps: Configuration = Configuration()
         for item in project_config.configs:
+            if item.children:
+                afterall_steps += self.prepare_environment(item.children)
             if not item.code_report:
                 continue
             if not self.report_path:
@@ -37,15 +40,53 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             temp_filename: str = "${CODE_REPORT_FILE}"
             name: str = utils.calculate_file_absolute_path(self.report_path, item.name) + ".json"
             actual_filename: str = os.path.join(self.report_path, name)
+
             item.replace_string(temp_filename, actual_filename)
             afterall_steps += [deepcopy(item)]
         return afterall_steps
+
+    def _report_as_pylint_json(self, report) -> int:
+        for result in report:
+            text = result["symbol"] + ": " + result["message"]
+            path = result["path"]
+            message: reporter.ReportMessage = {"message": text, "line": int(result["line"])}
+            self.reporter.code_report(path, message)
+        return len(report)
+
+    def _report_as_sarif_json(self, report) -> int:
+        version: str = report.get('version', '')
+        if version != '2.1.0':
+            raise ValueError(f"Version {version} is not supported")
+        issue_count: int = 0
+        for run in report.get('runs', []):
+            analyzer_data: Dict[str, str] = run.get('tool').get('driver')  # non-optional per definition
+            who: str = f"{analyzer_data.get('name')} [{analyzer_data.get('version', '?')}]"
+            for issue in run.get('results', []):
+                issue_count += 1
+                what: str = issue.get('message')
+                for location in issue.get('locations', []):
+                    location_data: Dict[str, Dict[str, str]] = location.get('physicalLocation')
+                    if not location_data:
+                        continue
+                    artifact_data = location_data.get('artifactLocation')
+                    if not artifact_data:
+                        if location_data.get('address'):
+                            continue  # binary artifact can't be processed
+                        raise ValueError("Unexpected lack of artifactLocation tag")
+                    path: str = urllib.parse.unquote(artifact_data.get('uri', ''))
+                    region_data = location_data.get('region')
+                    if not region_data:
+                        continue  # TODO: cover this case as comment to the file as a whole
+                    message: reporter.ReportMessage = {"message": f"{who} : {what}",
+                                                       "line": int(region_data.get('startLine', '0'))}
+                    self.reporter.code_report(path, message)
+        return issue_count
 
     @make_block("Processing code report results")
     def report_code_report_results(self) -> None:
         reports: List[str] = glob.glob(self.report_path + "/*.json")
         for report_file in reports:
-            with open(report_file, "r") as f:
+            with open(report_file, "r", encoding="utf-8") as f:
                 text: str = f.read()
                 report: Optional[List[Dict[str, str]]] = None
                 if text:
@@ -54,16 +95,23 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             json_file: TextIO = self.artifacts.create_text_file("Static_analysis_report.json")
             json_file.write(json.dumps(report, indent=4))
 
-            if report:
-                for result in report:
-                    text = result["symbol"] + ": " + result["message"]
-                    self.reporter.code_report(result["path"], {"message": text, "line": result["line"]})
+            issue_count: int = 0
+            if report or report == []:
+                try:
+                    issue_count = self._report_as_sarif_json(report)
+                except (KeyError, AttributeError, ValueError):
+                    try:
+                        issue_count = self._report_as_pylint_json(report)
+                    except (KeyError, AttributeError, ValueError):
+                        self.out.log_stderr("Could not parse report file. Something went wrong.")
+                        continue
+            else:
+                self.out.log_stderr("There are no results in code report file. Something went wrong.")
+                continue
 
-            if report:
-                text = str(len(report)) + " issues"
+            if issue_count != 0:
+                text = str(issue_count) + " issues"
                 self.out.log_stderr("Found " + text)
                 self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
-            elif report == []:
+            else:
                 self.out.log("Issues not found.")
-            else:  # if nothing was written to file
-                self.out.log_stderr("There are no results in code report file. Something went wrong.")

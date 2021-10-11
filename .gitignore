@@ -18,5 +18,7 @@ temp_config.py
 .mypy_cache
 .devcontainer
 .venv*
+*.swp
 build
 Universum.egg-info
+geckodriver.log

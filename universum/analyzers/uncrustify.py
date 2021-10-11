@@ -60,7 +60,7 @@ class HtmlDiffFileWriter:
     def __call__(self, file: Path, src: List[str], target: List[str]) -> None:
         file_relative = file.relative_to(Path.cwd())
         out_file_name: str = str(file_relative).replace('/', '_') + '.html'
-        with open(self.target_folder.joinpath(out_file_name), 'w') as out_file:
+        with open(self.target_folder.joinpath(out_file_name), 'w', encoding="utf-8") as out_file:
             out_file.write(self.differ.make_file(src, target, context=False))
 
 
@@ -69,9 +69,9 @@ def uncrustify_output_parser(files: List[Tuple[Path, Path]],
                              ) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
-        with open(src_file) as src:
+        with open(src_file, encoding="utf-8") as src:
             src_lines = src.readlines()
-        with open(uncrustify_file) as fixed:
+        with open(uncrustify_file, encoding="utf-8") as fixed:
             fixed_lines = fixed.readlines()
 
         issues = _get_issues_from_diff(src_file, src_lines, fixed_lines)
@@ -82,7 +82,7 @@ def uncrustify_output_parser(files: List[Tuple[Path, Path]],
 
 
 def _get_wrapcolumn_tabsize(cfg_file: str) -> Tuple[int, int]:
-    with open(cfg_file) as config:
+    with open(cfg_file, encoding="utf-8") as config:
         for line in config.readlines():
             if line.startswith("code_width"):
                 wrapcolumn = int(line.split()[2])
@@ -150,7 +150,7 @@ def _get_text_for_block(start: int, end: int, lines: List[str]) -> str:
 
 
 def _replace_invisible_symbols(line: str) -> str:
-    for old_str, new_str in zip([u" ", u"\t", u"\n"], [u"\u00b7", u"\u2192\u2192\u2192\u2192", u"\u2193\u000a"]):
+    for old_str, new_str in zip([" ", "\t", "\n"], ["\u00b7", "\u2192\u2192\u2192\u2192", "\u2193\u000a"]):
         line = line.replace(old_str, new_str)
     return line
 

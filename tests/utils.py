@@ -5,7 +5,7 @@ import socket
 import string
 import sys
 
-from universum import submit, poll, main, github_handler
+from universum import submit, poll, main, github_handler, nonci
 from universum.lib import gravity
 from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
@@ -14,7 +14,7 @@ __all__ = [
     "python",
     "python_version",
     "Params",
-    "is_pycharm",
+    "reuse_docker_containers",
     "randomize_name",
     "get_open_port",
     "python_time_from_rfc3339_time",
@@ -41,8 +41,8 @@ class Params:
             setattr(self, key, value)
 
 
-def is_pycharm():
-    return "PYCHARM_HOSTED" in os.environ
+def reuse_docker_containers():
+    return ("PYCHARM_HOSTED" in os.environ) or ("REUSE_DOCKER_CONTAINERS" in os.environ)
 
 
 def randomize_name(name):
@@ -78,8 +78,10 @@ def create_empty_settings(test_type):
         main_class = github_handler.GithubHandler
     elif test_type == "main":
         main_class = main.Main
+    elif test_type == "nonci":
+        main_class = nonci.Nonci
     else:
-        assert False, "create_empty_settings expects test_type parameter to be poll, submit or main"
+        assert False, "create_empty_settings expects test_type parameter to be poll, submit, main or nonci"
     argument_parser = default_args.ArgParserWithDefault()
     argument_parser.set_defaults(main_class=main_class)
     gravity.define_arguments_recursive(main_class, argument_parser)
@@ -108,7 +110,7 @@ class TestEnvironment:
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = str(self.vcs_cooking_dir)
-        elif test_type == "main":
+        elif test_type in ('main', 'nonci'):
             self.configs_file = self.temp_dir.join("configs.py")
             self.configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
@@ -116,6 +118,8 @@ class TestEnvironment:
             self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
+            if test_type == "nonci":
+                self.temp_dir.mkdir("project_root")
             self.settings.Launcher.output = "console"
             self.settings.AutomationServer.type = "local"
 

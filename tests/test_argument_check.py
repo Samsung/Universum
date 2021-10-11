@@ -102,7 +102,6 @@ missing_params = []
 
 def param(test_type: str, module: str, field: str,
           vcs_type: Union[str, List[str]] = "*", error_match: str = None) -> None:
-    global missing_params
 
     if isinstance(vcs_type, list):
         for specific_vcs_type in vcs_type:

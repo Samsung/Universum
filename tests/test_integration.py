@@ -194,20 +194,32 @@ configs += Configuration([dict(name="Additional step", command=["echo", "This sh
     assert "This should be in log - 3" in log
 
 
+def test_empty_steps(docker_main_and_nonci):
+    log = docker_main_and_nonci.run("""
+from universum.configuration_support import Configuration, Step
+
+configs = Configuration([Step(name="Step one"),
+                         Step(name="Step two", critical=True),
+                         Step(name="Step three", background=True)])
+""")
+    assert "'RunningStep' object has no attribute 'process'" not in log
+    assert "Nothing was executed: this background step had no command" in log
+
+
 def test_minimal_git(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
-from universum.configuration_support import Configuration
+from universum.configuration_support import Configuration, Step
 
-configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([Step(name="Test step", command=["ls", "-la"])])
 """, vcs_type="git")
     assert docker_main_with_vcs.git.repo_file.basename in log
 
 
 def test_minimal_p4(docker_main_with_vcs):
     log = docker_main_with_vcs.run("""
-from universum.configuration_support import Configuration
+from universum.configuration_support import Configuration, Step
 
-configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
+configs = Configuration([Step(name="Test step", command=["ls", "-la"])])
 """, vcs_type="p4")
     assert docker_main_with_vcs.perforce.repo_file.basename in log
 
@@ -215,11 +227,11 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 def test_p4_params(docker_main_with_vcs):
     p4 = docker_main_with_vcs.perforce.p4
     p4_file = docker_main_with_vcs.perforce.repo_file
-    config = """
-from universum.configuration_support import Configuration
+    config = f"""
+from universum.configuration_support import Configuration, Step
 
-configs = Configuration([dict(name="Test configuration", command=["cat", "{}"])])
-""".format(p4_file.basename)
+configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.basename}"])])
+"""
 
     # Prepare SYNC_CHANGELIST
     sync_cl = p4.run_changes("-s", "submitted", "-m1", docker_main_with_vcs.perforce.depot)[0]["change"]

@@ -33,7 +33,7 @@ class ExecutionEnvironment:
         self._image_name = image_name
         self._image = self._client.images.get(image_name)
         self._container_id = utils.randomize_name("ci_test_" + image_name)
-        if utils.is_pycharm() and not self._force_clean:
+        if utils.reuse_docker_containers() and not self._force_clean:
             self._container_id = self.request.config.cache.get("ci_test/" + self._image_name, self._container_id)
 
     def add_bind_dirs(self, directories):
@@ -105,7 +105,7 @@ class ExecutionEnvironment:
             name = f"'{name}'"
         else:
             module_name = name
-        if not utils.is_pycharm() or self._force_clean:
+        if not utils.reuse_docker_containers() or self._force_clean:
             self.assert_unsuccessful_execution("pip show " + module_name)
         # in PyCharm modules are already installed and therefore should be updated
         cmd = "pip --default-timeout=1200 install -U " + name
@@ -117,7 +117,7 @@ class ExecutionEnvironment:
             user_id = getpwnam(getpass.getuser()).pw_uid
             for path in self._volumes:
                 self._container.exec_run(f"chown -R {user_id} {path}")
-            if utils.is_pycharm() and not self._force_clean:
+            if utils.reuse_docker_containers() and not self._force_clean:
                 self.request.config.cache.set("ci_test/" + self._image_name, self._container_id)
             else:
                 try:
@@ -154,7 +154,7 @@ def clean_execution_environment(request):
 
 @pytest.fixture()
 def local_sources(tmpdir):
-    if utils.is_pycharm():
+    if utils.reuse_docker_containers():
         source_dir = py.path.local(".work")
         try:
             source_dir.remove(rec=1, ignore_errors=True)
@@ -213,16 +213,16 @@ class UniversumRunner:
         if vcs_type == "git":
             return f" -vt git -gr '{self.git.server.url}' -grs '{self.git.server.target_branch}'"
 
-        return " -vt p4 --p4-force-clean -p4p '{}' -p4u '{}' -p4P '{}' -p4d '{}' -p4c {}" \
-            .format(self.perforce.p4.port,
-                    self.perforce.p4.user,
-                    self.perforce.p4.password,
-                    self.perforce.depot,
-                    "my_disposable_p4_client")
+        return f" -vt p4 --p4-force-clean" \
+               f" -p4p '{self.perforce.p4.port}'" \
+               f" -p4u '{self.perforce.p4.user}'" \
+               f" -p4P '{self.perforce.p4.password}'" \
+               f" -p4d '{self.perforce.depot}'" \
+               f" -p4c 'my_disposable_p4_client'"
 
     def _create_temp_config(self, config: str):
         file_path = os.path.join(self.working_dir, "temp_config.py")
-        with open(file_path, 'w+') as f:
+        with open(file_path, 'w+', encoding="utf-8") as f:
             f.write(config)
         return file_path
 
@@ -238,7 +238,7 @@ class UniversumRunner:
 
         if force_installed:
             cmd = f"{python()} -I -m universum"
-        elif utils.is_pycharm() or workdir:
+        elif utils.reuse_docker_containers() or workdir:
             cmd = f"{python()} -m universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"

@@ -6,6 +6,11 @@ Project configuration
 In order to use the `Universum`, the project should provide a configuration file.
 This file is a regular python script with specific interface, which is recognized by the `Universum`.
 
+.. note::
+
+    This file is expected to be in UTF-8 (Unicode) encoding. Please note, that any encoding specifications,
+    such as BOM and PEP263 headers, will be ignored.
+
 By default, configuration file is called ``.universum.py`` and is located in the project root directory.
 To create one automatically, execute ``{python} -m universum init`` in the project root directory. To use another
 file name or file path, use ``--config`` / ``-cfg`` `command-line parameter <args.html#Configuration\ execution>`__

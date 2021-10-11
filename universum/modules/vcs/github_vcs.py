@@ -33,7 +33,8 @@ class GithubToken(HasErrorState):
         parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
                             help="GitHub App private key for obtaining installation authentication token. "
                                  "Pass raw key data via environment variable or pass a file path to read the key from "
-                                 "by starting the value string with '@'. File path can be either absolute or relative")
+                                 "by starting the value string with '@'. File path can be either absolute or relative. "
+                                 "Please note, that when passing a file, it is expected to be in UTF-8 encoding")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,6 +66,7 @@ class GithubToken(HasErrorState):
             directly via command line. If you start the parameter with '@', the rest should be
             the path to a file containing the key. The path can be absolute or relative to the 
             project root. You can also store the key in GITHUB_PRIVATE_KEY environment variable.
+            Please note, that when passing a file, it's expected to be in UTF-8 encoding")
             """)
 
         global github
@@ -171,7 +173,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
             from the webhook payload and passed via GITHUB_CHECK_ID environment variable.
             """)
 
-        self.request = dict()
+        self.request = {}
         self.request["status"] = "in_progress"
         self.request["output"] = {
             "title": self.settings.check_name,
@@ -181,7 +183,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
     def _clone(self, history_depth, destination_directory, clone_url):
         parsed_repo = urllib.parse.urlsplit(clone_url)
         if parsed_repo.scheme == "https" and not parsed_repo.username:
-            new_netloc = "x-access-token:{}@{}".format(self.get_token(), parsed_repo.netloc)
+            new_netloc = f"x-access-token:{self.get_token()}@{parsed_repo.netloc}"
             parsed_repo = (parsed_repo.scheme, new_netloc, parsed_repo.path, parsed_repo.query, parsed_repo.fragment)
         clone_url = urllib.parse.urlunsplit(parsed_repo)
         super()._clone(history_depth, destination_directory, clone_url)

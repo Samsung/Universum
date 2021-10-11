@@ -20,7 +20,7 @@ class ConfigCreator(Module):
         self.out.log(f"Creating an example configuration file '{config_name}'")
 
         config = Path(config_name)
-        config.write_text("""#!/usr/bin/env {}
+        config.write_text(f"""#!/usr/bin/env {PYTHON_VERSION}
 
 from universum.configuration_support import Configuration, Step
 
@@ -29,7 +29,7 @@ configs = Configuration([Step(name='Show directory contents', command=['ls', '-l
 
 if __name__ == '__main__':
     print(configs.dump())
-""".format(PYTHON_VERSION))
+""", encoding="utf-8")
         self.out.log(f"To run with Universum, execute the following command:\n$ {PYTHON_VERSION} -m universum run")
 
     def finalize(self) -> None:

@@ -17,6 +17,8 @@ from .output import HasOutput
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import HasStructure
+from .output.html_output import HtmlOutput
+
 
 __all__ = [
     "ArtifactCollector"
@@ -59,6 +61,7 @@ def make_big_archive(target, source):
 class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServerForHostingBuild)
+    html_output_factory = Dependency(HtmlOutput)
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -90,6 +93,10 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             self.artifact_dir = os.path.join(os.getcwd(), "artifacts")
         if not os.path.exists(self.artifact_dir):
             os.makedirs(self.artifact_dir)
+
+        self.html_output = self.html_output_factory()
+        self.html_output.set_artifact_dir(self.artifact_dir)
+        self.html_output.artifact_dir_ready = False
 
     def make_file_name(self, name):
         return utils.calculate_file_absolute_path(self.artifact_dir, name)
@@ -132,11 +139,12 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                             if "Is a directory" not in e.strerror:
                                 raise
                             shutil.rmtree(matching_path)
+                        self.out.log(f"Cleaned up '{matching_path}'")
                 elif not ignore_already_existing:
                     text = "Build artifacts, such as"
                     for matching_path in matches:
-                        text += "\n * '" + os.path.basename(matching_path) + "'"
-                    text += "\nalready exist in '" + os.path.dirname(item["path"]) + "' directory."
+                        text += f"\n * '{os.path.basename(matching_path)}'"
+                    text += f"\nalready exist in '{os.path.dirname(item['path'])}' directory."
                     text += "\nPossible reason of this error: previous build results in working directory"
                     raise CriticalCiException(text)
 
@@ -144,7 +152,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             path_to_check1 = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
             path_to_check2 = os.path.join(path_to_check1 + ".zip")
             if os.path.exists(path_to_check1) or os.path.exists(path_to_check2):
-                text = "Build artifact '" + os.path.basename(item["path"]) + "' already present in artifact directory."
+                text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
                 text += "\nPossible reason of this error: previous build results in working directory"
                 raise CriticalCiException(text)
 
@@ -155,6 +163,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
+        self.html_output.artifact_dir_ready = True
         artifact_list = []
         report_artifact_list = []
         for configuration in project_configs.all():
@@ -228,3 +237,4 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         except OSError:
             pass
         os.makedirs(self.artifact_dir)
+        self.html_output.artifact_dir_ready = True

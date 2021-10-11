@@ -25,7 +25,7 @@ configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))
         ["!", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"],
          []],))
 def test_steps_filter(docker_main_and_nonci, filters, expected_logs, unexpected_logs):
-    console_out_log = docker_main_and_nonci.run(config, additional_parameters="-o console -f='{}'".format(filters))
+    console_out_log = docker_main_and_nonci.run(config, additional_parameters=f"-o console -f='{filters}'")
     for log_str in expected_logs:
         assert log_str in console_out_log
 

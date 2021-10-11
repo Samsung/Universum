@@ -163,13 +163,15 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         # TODO: cover 'not file_path.startswith("/")' case with tests
         if not file_path.startswith("/"):
             file_path = workspace_root + "/" + file_path
+        if not file_path.endswith("/") and os.path.isdir(file_path):
+            file_path += "/"
         if file_path.endswith("/"):
             file_path += "..."
         if edit_only:
             reconcile_result = self.p4reconcile("-c", change_id, "-e", convert_to_str(file_path))
             if not reconcile_result:
                 self.out.log(
-                    "The file was not edited. Skipping '{}'...".format(os.path.relpath(file_path, workspace_root)))
+                    f"The file was not edited. Skipping '{os.path.relpath(file_path, workspace_root)}'...")
         else:
             reconcile_result = self.p4reconcile("-c", change_id, convert_to_str(file_path))
 
@@ -199,6 +201,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
         change["Files"] = []
         change["Description"] = description
         change_id = self.p4.save_change(change)[0].split()[1]
+        self.out.log(f"Created empty CL {change_id} for reconciling")
 
         try:
             for file_path in file_list:
@@ -208,12 +211,18 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             # If no changes were reconciled, there will be no file records in CL dictionary
             if "Files" not in current_cl:
                 self.p4.run_change("-d", change_id)
+                self.out.log(f"Deleted empty CL {change_id}")
                 return 0
 
+            text = "The changes in following files are going to be submitted:"
+            for line in current_cl["Files"]:
+                text+= "\n\t" + line
+            self.out.log(text)
             self.p4.run_submit(current_cl, "-f", "revertunchanged")
         except Exception as e:
             self.p4.run_revert("-k", "-c", change_id, "//...")
             self.p4.run_change("-d", change_id)
+            self.out.log(f"Reverted and deleted CL {change_id}")
             raise CriticalCiException(str(e)) from e
 
         return change_id
@@ -421,7 +430,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
 
             line = depot["path"] + '@' + depot["cl"]
             # Set environment variable for each mapping in order of there definition
-            os.environ["SYNC_CL_{}".format(idx)] = depot["cl"]
+            os.environ[f"SYNC_CL_{idx}"] = depot["cl"]
 
             self.out.log("Downloading " + line)
             try:
@@ -473,10 +482,10 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
             for line in e.stderr.splitlines():
-                if not (line.startswith("Librarian checkout")
-                        or line.startswith("Error opening librarian file")
-                        or line.startswith("Transfer of librarian file")
-                        or line.endswith(".gz: No such file or directory")):
+                if not (line.startswith(b"Librarian checkout")
+                        or line.startswith(b"Error opening librarian file")
+                        or line.startswith(b"Transfer of librarian file")
+                        or line.endswith(b".gz: No such file or directory")):
                     raise CriticalCiException(utils.trim_and_convert_to_unicode(e.stderr)) from e
             result = utils.trim_and_convert_to_unicode(e.stdout)
         return result
@@ -616,7 +625,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             self.p4.delete_client(self.client_name)
             self.out.log(f"Client '{self.client_name}' deleted")
         except P4Exception as e:
-            if "Client '{}' unknown".format(self.client_name) in e.value:
+            if f"Client '{self.client_name}' unknown" in e.value:
                 self.out.log("No client to delete")
             else:
                 self.structure.fail_current_block(e.value)

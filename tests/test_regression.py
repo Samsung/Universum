@@ -2,6 +2,7 @@
 
 import pytest
 import P4
+import sh
 
 from universum import __main__
 from . import utils
@@ -30,7 +31,7 @@ __version__ = "{test_line}"
     docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
     docker_main.run(config, vcs_type="none")  # not expected to fail
-    if utils.is_pycharm():
+    if utils.reuse_docker_containers():
         docker_main.environment.install_python_module(docker_main.working_dir)
 
 
@@ -55,11 +56,12 @@ def test_clean_sources_exceptions(tmpdir):
 
     # Check failure with temp dir deleted by the launched project
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
-    env.configs_file.write("""
+    env.configs_file.write(f"""
 from universum.configuration_support import Configuration
 
-configs = Configuration([dict(name="Test configuration", command=["bash", "-c", "rm -rf {}"])])
-""".format(env.settings.ProjectDirectory.project_root))
+configs = Configuration([dict(name="Test configuration",
+                              command=["bash", "-c", "rm -rf {env.settings.ProjectDirectory.project_root}"])])
+""")
 
     __main__.run(env.settings)
     # the log output is automatically checked by the 'detect_fails' fixture
@@ -177,3 +179,25 @@ configs = Configuration([Step(name="Create empty CL",
     assert not __main__.run(settings)
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)
+
+
+@pytest.fixture()
+def mock_diff(monkeypatch):
+    def mocking_function(*args, **kwargs):
+        raise sh.ErrorReturnCode(stderr=b"This is error text\n F\xc3\xb8\xc3\xb6\xbbB\xc3\xa5r",
+                                 stdout=b"This is text'",
+                                 full_cmd="any shell call with any params")
+
+    monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
+
+
+def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
+    config = """
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Step", command=["ls"])])
+"""
+    settings = shelve_config(config, perforce_environment)
+    assert __main__.run(settings)
+    stdout_checker.assert_has_calls_with_param("This is error text")
+    # Without the fixes all error messages go to stderr instead of stdout

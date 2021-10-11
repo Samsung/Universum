@@ -14,7 +14,6 @@ def add_report_line(text):
 
 
 def send_report():
-    global report
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat = os.getenv("TELEGRAM_CHAT_ID")
     requests.post(url=f"https://api.telegram.org/bot{token}/sendMessage",
@@ -25,7 +24,7 @@ def send_report():
 def test(session):
     try:
         session.run("make", "rebuild", silent=True, external=True)
-        session.install("universum[test]")
+        session.install(".[test]")
         session.run("make", "test", external=True)
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
