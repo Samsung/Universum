@@ -45,7 +45,7 @@ def test_teardown_fixture_output_verification(print_text_on_teardown):
 
 
 def test_clean_sources_exceptions(tmpdir):
-    env = utils.TestEnvironment(tmpdir, "main")
+    env = utils.TestEnvironment(None, tmpdir, "main", "")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir / 'nonexisting_dir')
 
@@ -95,7 +95,7 @@ def perforce_environment(perforce_workspace, tmpdir):
 
 def test_p4_multiple_spaces_in_mappings(perforce_environment):
     perforce_environment.settings.PerforceWithMappings.project_depot_path = None
-    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.workspace.depot}   /..."]
+    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.client.depot}   /..."]
     assert not __main__.run(perforce_environment.settings)
 
 
@@ -155,9 +155,9 @@ configs = Configuration([Step(name="Create empty CL",
                               command=["bash", "-c",
                               "p4 --field 'Description=My pending change' --field 'Files=' change -o | p4 change -i"],
                               environment = {{"P4CLIENT": "{perforce_environment.client_name}",
-                                              "P4PORT": "{perforce_environment.workspace.p4.port}",
-                                              "P4USER": "{perforce_environment.workspace.p4.user}",
-                                              "P4PASSWD": "{perforce_environment.workspace.p4.password}"}})])
+                                              "P4PORT": "{perforce_environment.client.p4.port}",
+                                              "P4USER": "{perforce_environment.client.p4.user}",
+                                              "P4PASSWD": "{perforce_environment.client.p4.password}"}})])
 """
     perforce_environment.shelve_config(config)
     assert not __main__.run(perforce_environment.settings)

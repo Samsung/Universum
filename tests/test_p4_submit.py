@@ -11,7 +11,7 @@ def p4_submit_environment(perforce_workspace, tmpdir):
 
 
 def test_fail_changing_non_checked_out_file(p4_submit_environment):
-    target_file = p4_submit_environment.workspace.nonwritable_file
+    target_file = p4_submit_environment.client.nonwritable_file
     text = utils.randomize_name("This is change ")
     with pytest.raises(IOError) as excinfo:
         with open(str(target_file), "w", encoding="utf-8") as tmpfile:
@@ -21,15 +21,15 @@ def test_fail_changing_non_checked_out_file(p4_submit_environment):
 
 
 def test_success_changing_checked_out_file(p4_submit_environment):
-    target_file = p4_submit_environment.workspace.nonwritable_file
+    target_file = p4_submit_environment.client.nonwritable_file
 
-    p4_submit_environment.workspace.p4.run("edit", str(target_file))
+    p4_submit_environment.client.p4.run("edit", str(target_file))
 
     text = utils.randomize_name("This is change ")
     target_file.write(text + "\n")
 
-    change = p4_submit_environment.workspace.p4.run_change("-o")[0]
+    change = p4_submit_environment.client.p4.run_change("-o")[0]
     change["Description"] = "Test submit"
-    p4_submit_environment.workspace.p4.run_submit(change)
+    p4_submit_environment.client.p4.run_submit(change)
 
-    assert p4_submit_environment.file_present(str(target_file))
+    assert p4_submit_environment.client.file_present(str(target_file))

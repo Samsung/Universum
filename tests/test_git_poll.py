@@ -42,7 +42,7 @@ def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
     # ACT
     # make changes in polled branch
     allowed_commits_number = git_poll_environment.settings.Poll.max_number
-    changes_to_polled = [git_poll_environment.server.commit_new_file() for _ in range(allowed_commits_number + 1)]
+    changes_to_polled = [git_poll_environment.client.server.commit_new_file() for _ in range(allowed_commits_number + 1)]
 
     # ASSERT
     # run poll again and trigger the url twice

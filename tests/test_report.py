@@ -8,8 +8,8 @@ from . import utils
 
 
 class ReportEnvironment(utils.TestEnvironment):
-    def __init__(self, directory, client):
-        super().__init__(directory, "main")
+    def __init__(self, client, directory):
+        super().__init__(client, directory, "main", "")
 
         self.settings.Vcs.type = "github"
         self.settings.MainVcs.report_to_review = True
@@ -29,8 +29,8 @@ class ReportEnvironment(utils.TestEnvironment):
 
 
 @pytest.fixture()
-def report_environment(tmpdir, git_client):
-    yield ReportEnvironment(tmpdir, git_client)
+def report_environment(git_client, tmpdir):
+    yield ReportEnvironment(git_client, tmpdir)
 
 
 def test_github_run(http_check, report_environment, monkeypatch):

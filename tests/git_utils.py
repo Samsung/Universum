@@ -112,55 +112,54 @@ def git_server(tmpdir):
         server.exit()
 
 
-@pytest.fixture()
-def git_client(tmpdir, git_server):
-    workdir = tmpdir.mkdir("client")
-    repo = git.Repo.clone_from(git_server.url, workdir)
+class GitClient(utils.EnvironmentClient):
+    def __init__(self, git_server, directory):
+        super().__init__()
 
-    class Progress(RemoteProgress):
-        def line_dropped(self, line):
-            print(line)
+        class Progress(RemoteProgress):
+            def line_dropped(self, line):
+                print(line)
 
-    yield utils.Params(server=git_server,
-                       logger=Progress(),
-                       repo=repo,
-                       root_directory=workdir,
-                       repo_file=workdir.join(git_server.target_file))
-
-
-class GitEnvironment(utils.TestEnvironment):
-    def __init__(self, client, directory, test_type):
-        db_file = directory.join("gitpoll.json")
-        self.db_file = str(db_file)
-        self.vcs_cooking_dir = client.root_directory
-
-        super().__init__(directory, test_type)
-
-        self.server = client.server
-        self.repo = client.repo
-        self.repo.git.checkout(self.server.target_branch)
-        self.repo_file = client.repo_file
-
-        self.settings.Vcs.type = "git"
-        self.settings.GitVcs.repo = client.server.url
-        self.settings.GitVcs.refspec = client.server.target_branch
-        try:
-            self.settings.GitSubmitVcs.user = "Testing User"
-            self.settings.GitSubmitVcs.email = "some@email.com"
-        except AttributeError:
-            pass
+        self.server = git_server
+        self.logger = Progress()
+        self.root_directory = directory.mkdir("client")
+        self.repo = git.Repo.clone_from(git_server.url, self.root_directory)
+        self.repo_file = self.root_directory.join(git_server.target_file)
 
     def get_last_change(self):
         changes = self.repo.git.log("origin/" + self.server.target_branch, pretty="oneline", max_count=1)
         return changes.split(" ")[0]
 
     def file_present(self, file_path):
-        relative_path = os.path.relpath(file_path, str(self.vcs_cooking_dir))
+        relative_path = os.path.relpath(file_path, str(self.root_directory))
         return relative_path in self.repo.git.ls_files(file_path)
 
     def text_in_file(self, text, file_path):
-        relative_path = os.path.relpath(file_path, str(self.vcs_cooking_dir))
+        relative_path = os.path.relpath(file_path, str(self.root_directory))
         return text in self.repo.git.show("HEAD:" + relative_path)
 
     def make_a_change(self):
         return self.server.make_a_change()
+
+
+@pytest.fixture()
+def git_client(git_server, tmpdir):
+    yield GitClient(git_server, tmpdir)
+
+
+class GitEnvironment(utils.TestEnvironment):
+    def __init__(self, client, directory, test_type):
+        db_file = directory.join("gitpoll.json")
+        super().__init__(client, directory, test_type, str(db_file))
+
+        self.server = self.client.server
+        self.client.repo.git.checkout(self.client.server.target_branch)
+
+        self.settings.Vcs.type = "git"
+        self.settings.GitVcs.repo = self.client.server.url
+        self.settings.GitVcs.refspec = self.client.server.target_branch
+        try:
+            self.settings.GitSubmitVcs.user = "Testing User"
+            self.settings.GitSubmitVcs.email = "some@email.com"
+        except AttributeError:
+            pass

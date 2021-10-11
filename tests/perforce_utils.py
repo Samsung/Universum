@@ -162,8 +162,10 @@ def perforce_connection(request, docker_perforce):
     p4.disconnect()
 
 
-class PerforceWorkspace:
+class PerforceWorkspace(utils.EnvironmentClient):
     def __init__(self, connection, directory):
+        super().__init__()
+
         self.client_created = False
 
         self.client_name = "test_workspace"
@@ -288,14 +290,9 @@ def perforce_workspace(request, perforce_connection, tmpdir):
 class P4Environment(utils.TestEnvironment):
     def __init__(self, perforce_workspace, directory, test_type):
         db_file = directory.join("p4poll.json")
-        self.db_file = str(db_file)
-        self.vcs_cooking_dir = perforce_workspace.root_directory
-        self.repo_file = perforce_workspace.repo_file
+        super().__init__(perforce_workspace, directory, test_type, str(db_file))
 
-        self.workspace = perforce_workspace
         self.client_name = "p4_disposable_workspace"
-        super().__init__(directory, test_type)
-
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
@@ -314,20 +311,8 @@ class P4Environment(utils.TestEnvironment):
         except AttributeError:
             pass
 
-    def get_last_change(self):
-        return self.workspace.get_last_change()
-
-    def file_present(self, file_path):
-        return self.workspace.file_present(file_path)
-
-    def text_in_file(self, text, file_path):
-        return self.workspace.text_in_file(text, file_path)
-
-    def make_a_change(self):
-        return self.workspace.make_a_change()
-
     def shelve_config(self, config):
-        shelve_cl = self.workspace.shelve_file(self.repo_file, config)
+        shelve_cl = self.client.shelve_file(self.client.repo_file, config)
         settings = self.settings
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-        settings.Launcher.config_path = self.repo_file.basename
+        settings.Launcher.config_path = self.client.repo_file.basename

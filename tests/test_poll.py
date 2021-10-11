@@ -67,7 +67,7 @@ class PollerParameters:
         self.environment = environment
 
     def make_a_change(self):
-        return self.environment.make_a_change()
+        return self.environment.client.make_a_change()
 
 
 @pytest.fixture()

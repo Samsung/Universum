@@ -94,32 +94,9 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 """
 
 
-class TestEnvironment:
-    def __init__(self, temp_dir, test_type):
-        self.temp_dir = temp_dir
-        self.settings = create_empty_settings(test_type)
-        if test_type == "poll":
-            self.settings.Poll.db_file = self.db_file
-            self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
-            self.settings.AutomationServer.type = "jenkins"
-            self.settings.ProjectDirectory.project_root = str(self.temp_dir.mkdir("project_root"))
-        elif test_type == "submit":
-            self.settings.Submit.commit_message = "Test CL"
-            # For submitter, the main working dir (project_root) should be the root
-            # of the VCS workspace/client
-            self.settings.ProjectDirectory.project_root = str(self.vcs_cooking_dir)
-        elif test_type == "main":
-            self.configs_file = self.temp_dir.join("configs.py")
-            self.configs_file.write(simple_test_config)
-            self.settings.Launcher.config_path = str(self.configs_file)
-            self.artifact_dir = self.temp_dir.mkdir("artifacts")
-            self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
-            # The project_root directory must not exist before launching main
-            self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
-            self.settings.Launcher.output = "console"
-            self.settings.AutomationServer.type = "local"
-
-        self.settings.Output.type = "term"
+class EnvironmentClient:
+    def __init__(self):
+        pass
 
     def get_last_change(self):
         raise NotImplementedError()
@@ -132,3 +109,32 @@ class TestEnvironment:
 
     def make_a_change(self):
         raise NotImplementedError()
+
+
+class TestEnvironment:
+    def __init__(self, client, directory, test_type, db_file):
+        self.temp_dir = directory
+        self.client = client
+        self.settings = create_empty_settings(test_type)
+        if test_type == "poll":
+            self.settings.Poll.db_file = db_file
+            self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
+            self.settings.AutomationServer.type = "jenkins"
+            self.settings.ProjectDirectory.project_root = str(self.temp_dir.mkdir("project_root"))
+        elif test_type == "submit":
+            self.settings.Submit.commit_message = "Test CL"
+            # For submitter, the main working dir (project_root) should be the root
+            # of the VCS workspace/client
+            self.settings.ProjectDirectory.project_root = str(self.client.root_directory)
+        elif test_type == "main":
+            self.configs_file = self.temp_dir.join("configs.py")
+            self.configs_file.write(simple_test_config)
+            self.settings.Launcher.config_path = str(self.configs_file)
+            self.artifact_dir = self.temp_dir.mkdir("artifacts")
+            self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
+            # The project_root directory must not exist before launching main
+            self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
+            self.settings.Launcher.output = "console"
+            self.settings.AutomationServer.type = "local"
+
+        self.settings.Output.type = "term"
