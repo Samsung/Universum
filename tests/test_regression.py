@@ -95,7 +95,7 @@ def perforce_environment(perforce_workspace, tmpdir):
 
 def test_p4_multiple_spaces_in_mappings(perforce_environment):
     perforce_environment.settings.PerforceWithMappings.project_depot_path = None
-    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.depot}   /..."]
+    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.workspace.depot}   /..."]
     assert not __main__.run(perforce_environment.settings)
 
 

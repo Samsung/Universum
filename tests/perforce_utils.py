@@ -162,130 +162,54 @@ def perforce_connection(request, docker_perforce):
     p4.disconnect()
 
 
-@pytest.fixture()
-def perforce_workspace(request, perforce_connection, tmpdir):
-    client_name = "test_workspace"
-    p4 = perforce_connection
-    client_created = False
-    depot = "//depot/..."
+class PerforceWorkspace:
+    def __init__(self, connection, directory):
+        self.client_created = False
 
-    try:
-        root = tmpdir.mkdir("workspace")
+        self.client_name = "test_workspace"
+        self.depot = "//depot/..."
+        self.p4 = connection
+        self.root_directory = directory.mkdir("workspace")
+        self.repo_file = self.root_directory.join("writeable_file.txt")
+        self.nonwritable_file = self.root_directory.join("usual_file.txt")
 
-        client = p4.fetch_client(client_name)
-        client["Root"] = str(root)
-        client["View"] = [depot + " //" + client_name + "/..."]
-        p4.save_client(client)
-        client_created = True
-        p4.client = client_name
+    def connect(self):
+        client = self.p4.fetch_client(self.client_name)
+        client["Root"] = str(self.root_directory)
+        client["View"] = [self.depot + " //" + self.client_name + "/..."]
+        self.p4.save_client(client)
+        self.client_created = True
+        self.p4.client = self.client_name
 
-        ignore_p4_exception("no such file(s).", p4.run_sync, "//depot/...")
+        ignore_p4_exception("no such file(s).", self.p4.run_sync, "//depot/...")
 
-        usual_file = root.join("usual_file.txt")
-        p4.run("add", str(usual_file))
-        p4.run("edit", str(usual_file))
-        usual_file.write("File " + str(usual_file) + " has no special modifiers")
+        self.p4.run("add", str(self.nonwritable_file))
+        self.p4.run("edit", str(self.nonwritable_file))
+        self.nonwritable_file.write("File " + str(self.nonwritable_file) + " has no special modifiers")
 
-        writeable_file = root.join("writeable_file.txt")
-        p4.run("add", "-t", "+w", str(writeable_file))
-        writeable_file.write("File " + str(writeable_file) + " is always writable")
+        self.p4.run("add", "-t", "+w", str(self.repo_file))
+        self.repo_file.write("File " + str(self.repo_file) + " is always writable")
 
-        change = p4.run_change("-o")[0]
+        change = self.p4.run_change("-o")[0]
         change["Description"] = "Test submit"
-        p4.run_submit(change)
+        self.p4.run_submit(change)
 
-        permissions = p4.fetch_protect()
+        permissions = self.p4.fetch_protect()
         permissions['Protections'] = [
             'write user * * //...',
             'list user * * -//spec/...',
             'super user p4user * //...',                         # first three rows are default
             '=write user p4user * -//depot/write-protected/...'  # prohibit p4user to submit changes to this branch
         ]
-        p4.save_protect(permissions)
+        self.p4.save_protect(permissions)
 
         triggers = {'Triggers': [
             'test.check change-submit //depot/trigger-protected/... "false"' # trigger to prevent any submits to this branch
         ]}
-        p4.save_triggers(triggers)
-
-        yield utils.Params(p4=p4,
-                           client_name=client_name,
-                           depot=depot,
-                           root_directory=root,
-                           repo_file=writeable_file,
-                           nonwritable_file=usual_file)
-
-    finally:
-        if client_created:
-            remaining_shelves = p4.run_changes("-s", "shelved")
-            for item in remaining_shelves:
-                p4.run_shelve("-dfc", item["change"])
-            p4.delete_client("-f", client_name)
-
-
-class P4Environment(utils.TestEnvironment):
-    def __init__(self, perforce_workspace, directory, test_type):
-        db_file = directory.join("p4poll.json")
-        self.db_file = str(db_file)
-        self.vcs_cooking_dir = perforce_workspace.root_directory
-        self.repo_file = perforce_workspace.repo_file
-        self.nonwritable_file = perforce_workspace.nonwritable_file
-        self.p4 = perforce_workspace.p4
-        self.depot = perforce_workspace.depot
-        self.client_name = "p4_disposable_workspace"
-        super().__init__(directory, test_type)
-
-        self.settings.Vcs.type = "p4"
-        self.settings.PerforceVcs.port = perforce_workspace.p4.port
-        self.settings.PerforceVcs.user = perforce_workspace.p4.user
-        self.settings.PerforceVcs.password = perforce_workspace.p4.password
-        try:
-            self.settings.PerforceMainVcs.client = self.client_name
-            self.settings.PerforceMainVcs.force_clean = True
-        except AttributeError:
-            pass
-        try:
-            self.settings.PerforceWithMappings.project_depot_path = perforce_workspace.depot
-        except AttributeError:
-            pass
-        try:
-            self.settings.PerforceSubmitVcs.client = perforce_workspace.client_name
-        except AttributeError:
-            pass
-
-    def get_last_change(self):
-        changes = self.p4.run_changes("-s", "submitted", "-m1", self.depot)
-        return changes[0]["change"]
-
-    def file_present(self, file_path):
-        try:
-            self.p4.run_files("-e", file_path)
-            return True
-        except P4Exception as e:
-            if not e.warnings:
-                raise
-            if "no such file(s)" not in e.warnings[0]:
-                raise
-            return False
-
-    def text_in_file(self, text, file_path):
-        return text in self.p4.run_print(file_path)[-1]
-
-    def make_a_change(self):
-        tmpfile = self.repo_file
-        self.p4.run("edit", str(tmpfile))
-        tmpfile.write("Change #1 " + str(tmpfile))
-
-        change = self.p4.run_change("-o")[0]
-        change["Description"] = "Test submit #1"
-
-        committed_change = self.p4.run_submit(change)
-
-        cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
-        return cl
+        self.p4.save_triggers(triggers)
 
     def create_file(self, name):
-        p4_new_file = self.vcs_cooking_dir.join(name)
+        p4_new_file = self.root_directory.join(name)
         p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
         self.p4.run("add", str(p4_new_file))
 
@@ -312,8 +236,86 @@ class P4Environment(utils.TestEnvironment):
         self.p4.run_revert("-c", shelve_cl, str(file))
         return shelve_cl
 
+    def cleanup(self):
+        if self.client_created:
+            remaining_shelves = self.p4.run_changes("-s", "shelved")
+            for item in remaining_shelves:
+                self.p4.run_shelve("-dfc", item["change"])
+            self.p4.delete_client("-f", self.client_name)
+
+
+@pytest.fixture()
+def perforce_workspace(request, perforce_connection, tmpdir):
+    workspace = PerforceWorkspace(perforce_connection, tmpdir)
+    try:
+        workspace.connect()
+        yield workspace
+    finally:
+        workspace.cleanup()
+
+
+class P4Environment(utils.TestEnvironment):
+    def __init__(self, perforce_workspace, directory, test_type):
+        db_file = directory.join("p4poll.json")
+        self.db_file = str(db_file)
+        self.vcs_cooking_dir = perforce_workspace.root_directory
+        self.repo_file = perforce_workspace.repo_file
+
+        self.workspace = perforce_workspace
+        self.client_name = "p4_disposable_workspace"
+        super().__init__(directory, test_type)
+
+        self.settings.Vcs.type = "p4"
+        self.settings.PerforceVcs.port = perforce_workspace.p4.port
+        self.settings.PerforceVcs.user = perforce_workspace.p4.user
+        self.settings.PerforceVcs.password = perforce_workspace.p4.password
+        try:
+            self.settings.PerforceMainVcs.client = self.client_name
+            self.settings.PerforceMainVcs.force_clean = True
+        except AttributeError:
+            pass
+        try:
+            self.settings.PerforceWithMappings.project_depot_path = perforce_workspace.depot
+        except AttributeError:
+            pass
+        try:
+            self.settings.PerforceSubmitVcs.client = perforce_workspace.client_name
+        except AttributeError:
+            pass
+
+    def get_last_change(self):
+        changes = self.workspace.p4.run_changes("-s", "submitted", "-m1", self.workspace.depot)
+        return changes[0]["change"]
+
+    def file_present(self, file_path):
+        try:
+            self.workspace.p4.run_files("-e", file_path)
+            return True
+        except P4Exception as e:
+            if not e.warnings:
+                raise
+            if "no such file(s)" not in e.warnings[0]:
+                raise
+            return False
+
+    def text_in_file(self, text, file_path):
+        return text in self.workspace.p4.run_print(file_path)[-1]
+
+    def make_a_change(self):
+        tmpfile = self.repo_file
+        self.workspace.p4.run("edit", str(tmpfile))
+        tmpfile.write("Change #1 " + str(tmpfile))
+
+        change = self.workspace.p4.run_change("-o")[0]
+        change["Description"] = "Test submit #1"
+
+        committed_change = self.workspace.p4.run_submit(change)
+
+        cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
+        return cl
+
     def shelve_config(self, config):
-        shelve_cl = self.shelve_file(self.repo_file, config)
+        shelve_cl = self.workspace.shelve_file(self.repo_file, config)
         settings = self.settings
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
         settings.Launcher.config_path = self.repo_file.basename
