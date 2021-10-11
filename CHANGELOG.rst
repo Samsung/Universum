@@ -14,10 +14,10 @@ Bug fixes
 
 * **p4:** byte strings returned by sh command for 'librarian checkout' bug fix
 * **artifacts:** add logs on removing artifacts
-* **submit:** add transparency on CL operations
-* **code_report:** make config processing recursive
-* **launcher:** do not expect execution of Steps without command
-* **p4:** normalize filepath
+* **submit:** add comments on CL creation/deletion
+* **code_report:** apply code report settings to embedded steps
+* **launcher:** do not fail if step has no command
+* **p4:** add '/' to the end of directory paths for Perforce to process them correctly
 
 
 0.19.8 (2021-06-15)
