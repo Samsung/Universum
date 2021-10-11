@@ -105,8 +105,8 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
 """
-    settings = perforce_environment.shelve_config(config)
-    result = __main__.run(settings)
+    perforce_environment.shelve_config(config)
+    result = __main__.run(perforce_environment.settings)
 
     assert result == 0
     diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
@@ -135,10 +135,10 @@ from universum.configuration_support import Step, Configuration
 configs = Configuration([Step(name="{step_name}", artifacts="output.json",
                               command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
     """
-    settings = perforce_environment.shelve_config(config)
-    settings.Launcher.output = "file"
+    perforce_environment.shelve_config(config)
+    perforce_environment.settings.Launcher.output = "file"
 
-    assert not __main__.run(settings)
+    assert not __main__.run(perforce_environment.settings)
     log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
@@ -159,7 +159,7 @@ configs = Configuration([Step(name="Create empty CL",
                                               "P4USER": "{perforce_environment.p4.user}",
                                               "P4PASSWD": "{perforce_environment.p4.password}"}})])
 """
-    settings = perforce_environment.shelve_config(config)
-    assert not __main__.run(settings)
+    perforce_environment.shelve_config(config)
+    assert not __main__.run(perforce_environment.settings)
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)

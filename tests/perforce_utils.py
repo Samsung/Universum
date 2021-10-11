@@ -284,18 +284,6 @@ class P4Environment(utils.TestEnvironment):
         cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
         return cl
 
-    def shelve_config(self, config):
-        self.p4.run_edit(str(self.repo_file))
-        self.repo_file.write(config)
-        change = self.p4.fetch_change()
-        change["Description"] = "CL for shelving"
-        shelve_cl = self.p4.save_change(change)[0].split()[1]
-        self.p4.run_shelve("-fc", shelve_cl)
-        settings = self.settings
-        settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-        settings.Launcher.config_path = self.repo_file.basename
-        return settings
-
     def create_file(self, name):
         p4_new_file = self.vcs_cooking_dir.join(name)
         p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
@@ -323,3 +311,9 @@ class P4Environment(utils.TestEnvironment):
         self.p4.run_shelve("-fc", shelve_cl)
         self.p4.run_revert("-c", shelve_cl, str(file))
         return shelve_cl
+
+    def shelve_config(self, config):
+        shelve_cl = self.shelve_file(self.repo_file, config)
+        settings = self.settings
+        settings.PerforceMainVcs.shelve_cls = [shelve_cl]
+        settings.Launcher.config_path = self.repo_file.basename
