@@ -23,7 +23,7 @@ def test_fail_changing_non_checked_out_file(p4_submit_environment):
 def test_success_changing_checked_out_file(p4_submit_environment):
     target_file = p4_submit_environment.workspace.nonwritable_file
 
-    p4_submit_environment.p4.run("edit", str(target_file))
+    p4_submit_environment.workspace.p4.run("edit", str(target_file))
 
     text = utils.randomize_name("This is change ")
     target_file.write(text + "\n")
