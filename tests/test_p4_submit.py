@@ -28,8 +28,8 @@ def test_success_changing_checked_out_file(p4_submit_environment):
     text = utils.randomize_name("This is change ")
     target_file.write(text + "\n")
 
-    change = p4_submit_environment.p4.run_change("-o")[0]
+    change = p4_submit_environment.workspace.p4.run_change("-o")[0]
     change["Description"] = "Test submit"
-    p4_submit_environment.p4.run_submit(change)
+    p4_submit_environment.workspace.p4.run_submit(change)
 
     assert p4_submit_environment.file_present(str(target_file))

@@ -173,7 +173,7 @@ class PerforceWorkspace:
         self.repo_file = self.root_directory.join("writeable_file.txt")
         self.nonwritable_file = self.root_directory.join("usual_file.txt")
 
-    def connect(self):
+    def setup(self):
         client = self.p4.fetch_client(self.client_name)
         client["Root"] = str(self.root_directory)
         client["View"] = [self.depot + " //" + self.client_name + "/..."]
@@ -236,6 +236,37 @@ class PerforceWorkspace:
         self.p4.run_revert("-c", shelve_cl, str(file))
         return shelve_cl
 
+    def get_last_change(self):
+        changes = self.p4.run_changes("-s", "submitted", "-m1", self.depot)
+        return changes[0]["change"]
+
+    def text_in_file(self, text, file_path):
+        return text in self.p4.run_print(file_path)[-1]
+
+    def file_present(self, file_path):
+        try:
+            self.p4.run_files("-e", file_path)
+            return True
+        except P4Exception as e:
+            if not e.warnings:
+                raise
+            if "no such file(s)" not in e.warnings[0]:
+                raise
+            return False
+
+    def make_a_change(self):
+        tmpfile = self.repo_file
+        self.p4.run("edit", str(tmpfile))
+        tmpfile.write("Change #1 " + str(tmpfile))
+
+        change = self.p4.run_change("-o")[0]
+        change["Description"] = "Test submit #1"
+
+        committed_change = self.p4.run_submit(change)
+
+        cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
+        return cl
+
     def cleanup(self):
         if self.client_created:
             remaining_shelves = self.p4.run_changes("-s", "shelved")
@@ -248,7 +279,7 @@ class PerforceWorkspace:
 def perforce_workspace(request, perforce_connection, tmpdir):
     workspace = PerforceWorkspace(perforce_connection, tmpdir)
     try:
-        workspace.connect()
+        workspace.setup()
         yield workspace
     finally:
         workspace.cleanup()
@@ -284,35 +315,16 @@ class P4Environment(utils.TestEnvironment):
             pass
 
     def get_last_change(self):
-        changes = self.workspace.p4.run_changes("-s", "submitted", "-m1", self.workspace.depot)
-        return changes[0]["change"]
+        return self.workspace.get_last_change()
 
     def file_present(self, file_path):
-        try:
-            self.workspace.p4.run_files("-e", file_path)
-            return True
-        except P4Exception as e:
-            if not e.warnings:
-                raise
-            if "no such file(s)" not in e.warnings[0]:
-                raise
-            return False
+        return self.workspace.file_present(file_path)
 
     def text_in_file(self, text, file_path):
-        return text in self.workspace.p4.run_print(file_path)[-1]
+        return self.workspace.text_in_file(text, file_path)
 
     def make_a_change(self):
-        tmpfile = self.repo_file
-        self.workspace.p4.run("edit", str(tmpfile))
-        tmpfile.write("Change #1 " + str(tmpfile))
-
-        change = self.workspace.p4.run_change("-o")[0]
-        change["Description"] = "Test submit #1"
-
-        committed_change = self.workspace.p4.run_submit(change)
-
-        cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
-        return cl
+        return self.workspace.make_a_change()
 
     def shelve_config(self, config):
         shelve_cl = self.workspace.shelve_file(self.repo_file, config)

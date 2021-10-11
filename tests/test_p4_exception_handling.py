@@ -22,8 +22,8 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
                          dict(name="Check", command=["ls", "-la"])])
 """
 
-    settings = perforce_environment.shelve_config(config)
-    result = __main__.run(settings)
+    perforce_environment.shelve_config(config)
+    result = __main__.run(perforce_environment.settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
     perforce_environment.temp_dir.chmod(0o0777, rec=1)
     perforce_environment.temp_dir.remove(rec=1)

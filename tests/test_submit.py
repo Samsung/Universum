@@ -38,7 +38,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
 
     assert __main__.run(settings)
 
-    p4 = p4_submit_environment.p4
+    p4 = p4_submit_environment.workspace.p4
     # make sure submitter didn't leave any pending CLs in the workspace
     assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
     # make sure submitter didn't leave any pending changes in default CL
@@ -47,7 +47,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
 
 def test_p4_success_files_in_default(p4_submit_environment):
     # This file should not be submitted, it should remain unchanged in default CL
-    p4 = p4_submit_environment.p4
+    p4 = p4_submit_environment.workspace.p4
     p4_file = p4_submit_environment.repo_file
     p4.run_edit(str(p4_file))
     text = "This text should be in file"
@@ -67,7 +67,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
 
 def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     # This file should not be submitted, it should remain unchanged in default CL
-    p4 = p4_submit_environment.p4
+    p4 = p4_submit_environment.workspace.p4
     p4_file = p4_submit_environment.repo_file
     p4.run_edit(str(p4_file))
     text_default = "This text should be in file"

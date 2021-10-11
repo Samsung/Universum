@@ -155,9 +155,9 @@ configs = Configuration([Step(name="Create empty CL",
                               command=["bash", "-c",
                               "p4 --field 'Description=My pending change' --field 'Files=' change -o | p4 change -i"],
                               environment = {{"P4CLIENT": "{perforce_environment.client_name}",
-                                              "P4PORT": "{perforce_environment.p4.port}",
-                                              "P4USER": "{perforce_environment.p4.user}",
-                                              "P4PASSWD": "{perforce_environment.p4.password}"}})])
+                                              "P4PORT": "{perforce_environment.workspace.p4.port}",
+                                              "P4USER": "{perforce_environment.workspace.p4.user}",
+                                              "P4PASSWD": "{perforce_environment.workspace.p4.password}"}})])
 """
     perforce_environment.shelve_config(config)
     assert not __main__.run(perforce_environment.settings)
