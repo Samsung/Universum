@@ -1,15 +1,34 @@
 Change log
 ==========
 
+0.19.9 (2021-10-11)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **analyzers** add SARIF report
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** byte strings returned by sh command for 'librarian checkout' bug fix
+* **artifacts:** add logs on removing artifacts
+* **submit:** add transparency on CL operations
+* **code_report:** make config processing recursive
+* **launcher:** do not expect execution of Steps without command
+* **p4:** normalize filepath
+
+
 0.19.8 (2021-06-15)
 -------------------
 
 Bug fixes
 ~~~~~~~~~
 
-* **perforce:** when encountering ``p4 opened`` bug, only print warning instead of block failing
+* **p4:** when encountering ``p4 opened`` bug, only print warning instead of block failing
 * **submit:** file arguments (such as ``-rl`` and ``-cm``) are now parsed correctly
-* **perforce:** empty CLs are now deleted correctly when force cleaning workspace
+* **p4:** empty CLs are now deleted correctly when force cleaning workspace
 
 
 0.19.7 (2021-05-19)
