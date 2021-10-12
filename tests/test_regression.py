@@ -10,11 +10,6 @@ from .perforce_utils import P4Environment
 
 
 def test_which_universum_is_tested(docker_main, pytestconfig):
-    config = """
-from universum.configuration_support import Step, Configuration
-
-configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
-"""
     # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
     init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
     backup = init_file.read_bytes()
@@ -22,14 +17,14 @@ configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
     init_file.write_text(f"""__title__ = "Universum"
 __version__ = "{test_line}"
 """)
-    output = docker_main.run(config, vcs_type="none")
+    output = docker_main.run(utils.simple_test_config, vcs_type="none")
     init_file.write_bytes(backup)
     assert test_line in output
 
     docker_main.environment.assert_successful_execution("pip uninstall -y universum")
-    docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
+    docker_main.run(utils.simple_test_config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
-    docker_main.run(config, vcs_type="none")  # not expected to fail
+    docker_main.run(utils.simple_test_config, vcs_type="none")  # not expected to fail
     if utils.reuse_docker_containers():
         docker_main.environment.install_python_module(docker_main.working_dir)
 

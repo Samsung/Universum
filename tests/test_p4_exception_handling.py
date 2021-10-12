@@ -5,6 +5,7 @@ import sh
 
 from universum import __main__
 from .perforce_utils import P4Environment
+from .utils import simple_test_config
 
 
 @pytest.fixture()
@@ -116,12 +117,7 @@ def mock_diff(monkeypatch):
 
 
 def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
-    config = """
-from universum.configuration_support import Step, Configuration
-
-configs = Configuration([Step(name="Step", command=["ls"])])
-"""
-    perforce_environment.shelve_config(config)
+    perforce_environment.shelve_config(simple_test_config)
     assert __main__.run(perforce_environment.settings)
     stdout_checker.assert_has_calls_with_param("This is error text")
     # Without the fixes all error messages go to stderr instead of stdout

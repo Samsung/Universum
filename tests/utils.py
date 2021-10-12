@@ -20,7 +20,9 @@ __all__ = [
     "python_time_from_rfc3339_time",
     "is_container_outdated",
     "create_empty_settings",
-    "TestEnvironment"
+    "simple_test_config",
+    "TestEnvironment",
+    "EnvironmentClient"
 ]
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"

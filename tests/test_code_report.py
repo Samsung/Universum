@@ -167,11 +167,7 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
 
 
 def test_without_code_report_command(runner_with_analyzers):
-    log = runner_with_analyzers.run("""
-from universum.configuration_support import Configuration
-
-configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
-    """)
+    log = runner_with_analyzers.run(utils.simple_test_config)
     pattern = re.compile(f"({log_fail}|{log_success})")
     assert not pattern.findall(log)
 
