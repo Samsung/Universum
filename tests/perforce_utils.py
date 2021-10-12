@@ -162,7 +162,7 @@ def perforce_connection(request, docker_perforce):
     p4.disconnect()
 
 
-class PerforceWorkspace(utils.EnvironmentClient):
+class PerforceWorkspace(utils.VcsClient):
     def __init__(self, connection, directory):
         super().__init__()
 

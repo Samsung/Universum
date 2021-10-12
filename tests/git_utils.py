@@ -112,7 +112,7 @@ def git_server(tmpdir):
         server.exit()
 
 
-class GitClient(utils.EnvironmentClient):
+class GitClient(utils.VcsClient):
     def __init__(self, git_server, directory):
         super().__init__()
 

@@ -22,7 +22,7 @@ __all__ = [
     "create_empty_settings",
     "simple_test_config",
     "TestEnvironment",
-    "EnvironmentClient"
+    "VcsClient"
 ]
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -98,7 +98,7 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 """
 
 
-class EnvironmentClient:
+class VcsClient:
     def __init__(self):
         pass
 
