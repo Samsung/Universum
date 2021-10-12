@@ -67,7 +67,7 @@ class PollerParameters:
         self.environment = environment
 
     def make_a_change(self):
-        return self.environment.client.make_a_change()
+        return self.environment.vcs_client.make_a_change()
 
 
 @pytest.fixture()
@@ -81,9 +81,9 @@ def poll_parameters(log_exception_checker, stdout_checker, http_check):
 @pytest.fixture(params=["git", "p4"])
 def poll_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
-        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="poll")
+        yield git_utils.GitTestEnvironment(git_client, tmpdir, test_type="poll")
     else:
-        yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="poll")
+        yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="poll")
 
 
 def test_error_one_change(poll_parameters, poll_environment):

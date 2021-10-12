@@ -112,7 +112,7 @@ def git_server(tmpdir):
         server.exit()
 
 
-class GitClient(utils.VcsClient):
+class GitClient(utils.BaseVcsClient):
     def __init__(self, git_server, directory):
         super().__init__()
 
@@ -147,17 +147,17 @@ def git_client(git_server, tmpdir):
     yield GitClient(git_server, tmpdir)
 
 
-class GitEnvironment(utils.TestEnvironment):
+class GitTestEnvironment(utils.BaseTestEnvironment):
     def __init__(self, client, directory, test_type):
         db_file = directory.join("gitpoll.json")
         super().__init__(client, directory, test_type, str(db_file))
 
-        self.server = self.client.server
-        self.client.repo.git.checkout(self.client.server.target_branch)
+        self.server = self.vcs_client.server
+        self.vcs_client.repo.git.checkout(self.vcs_client.server.target_branch)
 
         self.settings.Vcs.type = "git"
-        self.settings.GitVcs.repo = self.client.server.url
-        self.settings.GitVcs.refspec = self.client.server.target_branch
+        self.settings.GitVcs.repo = self.vcs_client.server.url
+        self.settings.GitVcs.refspec = self.vcs_client.server.target_branch
         try:
             self.settings.GitSubmitVcs.user = "Testing User"
             self.settings.GitSubmitVcs.email = "some@email.com"

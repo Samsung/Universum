@@ -7,7 +7,7 @@ from universum.modules.vcs.github_vcs import GithubToken
 from . import utils
 
 
-class ReportEnvironment(utils.TestEnvironment):
+class ReportEnvironment(utils.BaseTestEnvironment):
     def __init__(self, client, directory):
         super().__init__(client, directory, "main", "")
 

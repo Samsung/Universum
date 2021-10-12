@@ -279,7 +279,7 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):
-    env = utils.TestEnvironment(None, tmpdir, "main", "")
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
 
@@ -304,7 +304,7 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
 
 
 def test_code_report_extended_arg_search_embedded(tmpdir, stdout_checker):
-    env = utils.TestEnvironment(None, tmpdir, "main", "")
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
 

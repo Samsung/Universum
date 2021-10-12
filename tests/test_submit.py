@@ -16,19 +16,19 @@ def test_error_no_repo(submit_environment, stdout_checker):
         __main__.run(settings)
         stdout_checker.assert_has_calls_with_param("No such directory")
     else:
-        settings.PerforceSubmitVcs.client = "non_existing_client"
+        settings.PerforceSubmitVcs.vcs_client = "non_existing_client"
         __main__.run(settings)
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
 
 @pytest.fixture()
 def p4_submit_environment(perforce_workspace, tmpdir):
-    yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
+    yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
 
 
 @pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
 def test_p4_error_forbidden_branch(p4_submit_environment, branch):
-    protected_dir = p4_submit_environment.client.root_directory.mkdir(branch)
+    protected_dir = p4_submit_environment.vcs_client.root_directory.mkdir(branch)
     file_to_add = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
@@ -38,7 +38,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
 
     assert __main__.run(settings)
 
-    p4 = p4_submit_environment.client.p4
+    p4 = p4_submit_environment.vcs_client.p4
     # make sure submitter didn't leave any pending CLs in the workspace
     assert not p4.run_changes("-c", p4_submit_environment.client_name, "-s", "pending")
     # make sure submitter didn't leave any pending changes in default CL
@@ -47,15 +47,15 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
 
 def test_p4_success_files_in_default(p4_submit_environment):
     # This file should not be submitted, it should remain unchanged in default CL
-    p4 = p4_submit_environment.client.p4
-    p4_file = p4_submit_environment.client.repo_file
+    p4 = p4_submit_environment.vcs_client.p4
+    p4_file = p4_submit_environment.vcs_client.repo_file
     p4.run_edit(str(p4_file))
     text = "This text should be in file"
     p4_file.write(text + "\n")
 
     # This file should be successfully submitted
     file_name = utils.randomize_name("new_file") + ".txt"
-    new_file = p4_submit_environment.client.root_directory.join(file_name)
+    new_file = p4_submit_environment.vcs_client.root_directory.join(file_name)
     new_file.write("This is a new file" + "\n")
 
     settings = copy.deepcopy(p4_submit_environment.settings)
@@ -67,14 +67,14 @@ def test_p4_success_files_in_default(p4_submit_environment):
 
 def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     # This file should not be submitted, it should remain unchanged in default CL
-    p4 = p4_submit_environment.client.p4
-    p4_file = p4_submit_environment.client.repo_file
+    p4 = p4_submit_environment.vcs_client.p4
+    p4_file = p4_submit_environment.vcs_client.repo_file
     p4.run_edit(str(p4_file))
     text_default = "This text should be in file"
     p4_file.write(text_default + "\n")
 
     # This file must fail submit and remain unchanged while not checked out any more
-    protected_dir = p4_submit_environment.client.root_directory.mkdir("write-protected")
+    protected_dir = p4_submit_environment.vcs_client.root_directory.mkdir("write-protected")
     new_file = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text_new = "This is a new line in the file"
     new_file.write(text_new + "\n")
@@ -107,14 +107,14 @@ class SubmitterParameters:
         result = self.submit_path_list(path_list, **kwargs)
         assert result == 0
 
-        last_cl = self.environment.client.get_last_change()
+        last_cl = self.environment.vcs_client.get_last_change()
         self.stdout_checker.assert_has_calls_with_param("==> Change " + last_cl + " submitted")
 
     def file_present(self, file_path):
-        return self.environment.client.file_present(file_path)
+        return self.environment.vcs_client.file_present(file_path)
 
     def text_in_file(self, text, file_path):
-        return self.environment.client.text_in_file(text, file_path)
+        return self.environment.vcs_client.text_in_file(text, file_path)
 
 
 @pytest.fixture()
@@ -127,9 +127,9 @@ def submit_parameters(stdout_checker):
 @pytest.fixture(params=["git", "p4"])
 def submit_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
-        yield git_utils.GitEnvironment(git_client, tmpdir, test_type="submit")
+        yield git_utils.GitTestEnvironment(git_client, tmpdir, test_type="submit")
     else:
-        yield perforce_utils.P4Environment(perforce_workspace, tmpdir, test_type="submit")
+        yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
 
 
 def test_success_no_changes(submit_parameters, submit_environment):
@@ -141,7 +141,7 @@ def test_success_commit_add_modify_remove_one_file(submit_parameters, submit_env
     parameters = submit_parameters(submit_environment)
 
     file_name = utils.randomize_name("new_file") + ".txt"
-    temp_file = parameters.environment.client.root_directory.join(file_name)
+    temp_file = parameters.environment.vcs_client.root_directory.join(file_name)
     file_path = str(temp_file)
 
     # Add a file
@@ -165,9 +165,9 @@ def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submi
     parameters = submit_parameters(submit_environment)
 
     new_file_name = utils.randomize_name("new_file") + ".txt"
-    temp_file = parameters.environment.client.root_directory.join(new_file_name)
+    temp_file = parameters.environment.vcs_client.root_directory.join(new_file_name)
     temp_file.write("This is a new temp file" + "\n")
-    deleted_file_path = str(parameters.environment.client.repo_file)
+    deleted_file_path = str(parameters.environment.vcs_client.repo_file)
     deleted_file_name = os.path.basename(deleted_file_path)
     os.remove(deleted_file_path)
 
@@ -184,7 +184,7 @@ def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submi
 def test_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
-    target_file = parameters.environment.client.repo_file
+    target_file = parameters.environment.vcs_client.repo_file
     text = utils.randomize_name("This is change ")
     target_file.write(text + "\n")
 
@@ -195,7 +195,7 @@ def test_success_commit_modified_while_edit_only(submit_parameters, submit_envir
 def test_error_review(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
 
-    target_file = parameters.environment.client.repo_file
+    target_file = parameters.environment.vcs_client.repo_file
     target_file.write("This is some change")
 
     result = parameters.submit_path_list([str(target_file)], review=True)
@@ -209,7 +209,7 @@ def test_success_reconcile_directory(submit_parameters, submit_environment):
     dir_name = utils.randomize_name("new_directory")
 
     # Create and reconcile new directory
-    tmp_dir = parameters.environment.client.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(dir_name)
     for i in range(0, 9):
         tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
@@ -252,7 +252,7 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     dir_name = utils.randomize_name("new_directory")
 
     # Create embedded directories, partially reconcile
-    tmp_dir = parameters.environment.client.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(dir_name)
     inner_dir = tmp_dir.mkdir("inner_directory")
     text = "This is some file" + "\n"
     for i in range(0, 9):
@@ -277,12 +277,12 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
 
     # Create one more directory
     other_dir_name = utils.randomize_name("new_directory")
-    other_tmp_dir = parameters.environment.client.root_directory.mkdir(other_dir_name)
+    other_tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(other_dir_name)
     for i in range(0, 9):
         tmp_file = other_tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
 
-    parameters.assert_submit_success([str(parameters.environment.client.root_directory) + "/new_directory*/"])
+    parameters.assert_submit_success([str(parameters.environment.vcs_client.root_directory) + "/new_directory*/"])
 
     for i in range(0, 9):
         file_name = f"new_file{i}.txt"
@@ -357,7 +357,7 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     # Clean up the repo
     shutil.rmtree(str(tmp_dir))
     shutil.rmtree(str(other_tmp_dir))
-    parameters.assert_submit_success([str(parameters.environment.client.root_directory) + "/*"])
+    parameters.assert_submit_success([str(parameters.environment.vcs_client.root_directory) + "/*"])
     assert not parameters.file_present(str(tmp_dir))
     assert not parameters.file_present(str(other_tmp_dir))
 
@@ -368,7 +368,7 @@ def test_success_reconcile_partial(submit_parameters, submit_environment):
 
     parameters = submit_parameters(submit_environment)
     dir_name = utils.randomize_name("new_directory")
-    tmp_dir = parameters.environment.client.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(dir_name)
     for i in range(0, 9):
         tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")

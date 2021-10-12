@@ -4,17 +4,17 @@ import pytest
 import sh
 
 from universum import __main__
-from .perforce_utils import P4Environment
+from .perforce_utils import P4TestEnvironment
 from .utils import simple_test_config
 
 
 @pytest.fixture()
 def perforce_environment(perforce_workspace, tmpdir):
-    yield P4Environment(perforce_workspace, tmpdir, test_type="main")
+    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
 
 
 def test_p4_forbidden_local_revert(perforce_environment, stdout_checker):
-    p4 = perforce_environment.client.p4
+    p4 = perforce_environment.vcs_client.p4
 
     config = """
 from universum.configuration_support import Configuration
@@ -40,7 +40,7 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
 
 
 def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
-    p4 = perforce_environment.client.p4
+    p4 = perforce_environment.vcs_client.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
     p4.save_client(client)
@@ -59,7 +59,7 @@ def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
 
 
 def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
-    p4 = perforce_environment.client.p4
+    p4 = perforce_environment.vcs_client.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
     p4.save_client(client)
@@ -93,7 +93,7 @@ def test_p4_print_exception_in_sync(perforce_environment, stdout_checker, cl_lis
 
 
 def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
-    cl = perforce_environment.client.make_a_change()
+    cl = perforce_environment.vcs_client.make_a_change()
 
     settings = perforce_environment.settings
     settings.PerforceMainVcs.shelve_cls = [cl]

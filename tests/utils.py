@@ -21,8 +21,9 @@ __all__ = [
     "is_container_outdated",
     "create_empty_settings",
     "simple_test_config",
-    "TestEnvironment",
-    "VcsClient"
+    "BaseVcsClient",
+    "BaseTestEnvironment",
+    "LocalTestEnvironment"
 ]
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -98,7 +99,7 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 """
 
 
-class VcsClient:
+class BaseVcsClient:
     def __init__(self):
         pass
 
@@ -115,10 +116,10 @@ class VcsClient:
         raise NotImplementedError()
 
 
-class TestEnvironment:
+class BaseTestEnvironment:
     def __init__(self, client, directory, test_type, db_file):
         self.temp_dir = directory
-        self.client = client
+        self.vcs_client = client
         self.settings = create_empty_settings(test_type)
         if test_type == "poll":
             self.settings.Poll.db_file = db_file
@@ -130,7 +131,7 @@ class TestEnvironment:
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
 
-            self.settings.ProjectDirectory.project_root = str(self.client.root_directory)
+            self.settings.ProjectDirectory.project_root = str(self.vcs_client.root_directory)
         elif test_type in ("main", "nonci"):
             self.configs_file = self.temp_dir.join("configs.py")
             self.configs_file.write(simple_test_config)
@@ -145,3 +146,8 @@ class TestEnvironment:
             self.settings.AutomationServer.type = "local"
 
         self.settings.Output.type = "term"
+
+
+class LocalTestEnvironment(BaseTestEnvironment):
+    def __init__(self, directory, test_type):
+        super().__init__(None, directory, test_type, "")

@@ -31,7 +31,7 @@ configs = \
 
 
 def create_environment(test_type, tmpdir):
-    env = utils.TestEnvironment(None, tmpdir, test_type, "")
+    env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
     env.settings.Output.html_log = True
 

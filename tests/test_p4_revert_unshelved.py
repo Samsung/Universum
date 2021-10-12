@@ -27,7 +27,7 @@ class DiffParameters:
         settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory + "/../new_workspace")
         settings.PerforceWithMappings.mappings = [self.perforce_workspace.depot + " /..."]
         settings.PerforceMainVcs.force_clean = True
-        settings.PerforceMainVcs.client = "new_client"
+        settings.PerforceMainVcs.vcs_client = "new_client"
 
         self.perforce = construct_component(perforce_vcs.PerforceMainVcs, settings)
 

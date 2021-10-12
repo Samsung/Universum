@@ -3,12 +3,12 @@
 import pytest
 
 from universum import __main__
-from .git_utils import GitEnvironment
+from .git_utils import GitTestEnvironment
 
 
 @pytest.fixture()
 def git_poll_environment(git_client, tmpdir):
-    yield GitEnvironment(git_client, tmpdir, test_type="poll")
+    yield GitTestEnvironment(git_client, tmpdir, test_type="poll")
 
 
 def make_branch_with_changes(git_server, branch_name, commits_number, branch_from=None):

@@ -162,7 +162,7 @@ def perforce_connection(request, docker_perforce):
     p4.disconnect()
 
 
-class PerforceWorkspace(utils.VcsClient):
+class PerforceWorkspace(utils.BaseVcsClient):
     def __init__(self, connection, directory):
         super().__init__()
 
@@ -287,7 +287,7 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         workspace.cleanup()
 
 
-class P4Environment(utils.TestEnvironment):
+class P4TestEnvironment(utils.BaseTestEnvironment):
     def __init__(self, perforce_workspace, directory, test_type):
         db_file = directory.join("p4poll.json")
         super().__init__(perforce_workspace, directory, test_type, str(db_file))
@@ -312,7 +312,7 @@ class P4Environment(utils.TestEnvironment):
             pass
 
     def shelve_config(self, config):
-        shelve_cl = self.client.shelve_file(self.client.repo_file, config)
+        shelve_cl = self.vcs_client.shelve_file(self.vcs_client.repo_file, config)
         settings = self.settings
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-        settings.Launcher.config_path = self.client.repo_file.basename
+        settings.Launcher.config_path = self.vcs_client.repo_file.basename
