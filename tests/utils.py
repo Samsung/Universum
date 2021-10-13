@@ -5,7 +5,7 @@ import socket
 import string
 import sys
 
-from universum import submit, poll, main, github_handler, nonci
+from universum import submit, poll, main, github_handler, nonci, __main__
 from universum.lib import gravity
 from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
@@ -130,7 +130,6 @@ class BaseTestEnvironment:
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
-
             self.settings.ProjectDirectory.project_root = str(self.vcs_client.root_directory)
         elif test_type in ("main", "nonci"):
             self.configs_file = self.temp_dir.join("configs.py")
@@ -144,8 +143,13 @@ class BaseTestEnvironment:
                 self.temp_dir.mkdir("project_root")
             self.settings.Launcher.output = "console"
             self.settings.AutomationServer.type = "local"
-
         self.settings.Output.type = "term"
+
+    def run(self, expect_failure=False):
+        if expect_failure:
+            assert __main__.run(self.settings)
+        else:
+            assert not __main__.run(self.settings)
 
 
 class LocalTestEnvironment(BaseTestEnvironment):

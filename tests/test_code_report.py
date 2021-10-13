@@ -296,9 +296,7 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
 
     env.configs_file.write(config)
 
-    res = __main__.run(env.settings)
-
-    assert res == 0
+    env.run()
     stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
 
@@ -323,7 +321,5 @@ configs = Configuration([Step(critical=True)]) * Configuration([
 
     env.configs_file.write(config)
 
-    res = __main__.run(env.settings)
-
-    assert res == 0
+    env.run()
     stdout_checker.assert_absent_calls_with_param("${CODE_REPORT_FILE}")

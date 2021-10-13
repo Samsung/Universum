@@ -3,7 +3,6 @@
 import pytest
 import P4
 
-from universum import __main__
 from . import utils
 from .utils import python
 from .perforce_utils import P4TestEnvironment
@@ -45,7 +44,7 @@ def test_clean_sources_exceptions(tmpdir):
     env.settings.LocalMainVcs.source_dir = str(tmpdir / 'nonexisting_dir')
 
     # Check failure with non-existing temp dir
-    __main__.run(env.settings)
+    env.run()
     # the log output is automatically checked by the 'detect_fails' fixture
 
     # Check failure with temp dir deleted by the launched project
@@ -57,7 +56,7 @@ configs = Configuration([dict(name="Test configuration",
                               command=["bash", "-c", "rm -rf {env.settings.ProjectDirectory.project_root}"])])
 """)
 
-    __main__.run(env.settings)
+    env.run()
     # the log output is automatically checked by the 'detect_fails' fixture
 
 
@@ -91,7 +90,7 @@ def perforce_environment(perforce_workspace, tmpdir):
 def test_p4_multiple_spaces_in_mappings(perforce_environment):
     perforce_environment.settings.PerforceWithMappings.project_depot_path = None
     perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.vcs_client.depot}   /..."]
-    assert not __main__.run(perforce_environment.settings)
+    perforce_environment.run()
 
 
 def test_p4_repository_difference_format(perforce_environment):
@@ -101,9 +100,7 @@ from universum.configuration_support import Configuration
 configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
 """
     perforce_environment.shelve_config(config)
-    result = __main__.run(perforce_environment.settings)
-
-    assert result == 0
+    perforce_environment.run()
     diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
@@ -118,7 +115,7 @@ def mock_opened(monkeypatch):
 
 
 def test_p4_failed_opened(perforce_environment, mock_opened):
-    assert not __main__.run(perforce_environment.settings)
+    perforce_environment.run()
 
 
 # TODO: move this test to 'test_api.py' after test refactoring and Docker use reduction
@@ -133,7 +130,7 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     perforce_environment.shelve_config(config)
     perforce_environment.settings.Launcher.output = "file"
 
-    assert not __main__.run(perforce_environment.settings)
+    perforce_environment.run()
     log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
@@ -155,6 +152,6 @@ configs = Configuration([Step(name="Create empty CL",
                                               "P4PASSWD": "{perforce_environment.vcs_client.p4.password}"}})])
 """
     perforce_environment.shelve_config(config)
-    assert not __main__.run(perforce_environment.settings)
+    perforce_environment.run()
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)

@@ -83,24 +83,18 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
                                      ["//depot/...,//depot2/..."], ["132", "456"], ["@123", "4@456"],
                                      ["//depot/...@", "//depot2/...@"], ["//depot/...", "//depot2/..."]])
 def test_p4_print_exception_in_sync(perforce_environment, stdout_checker, cl_list):
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.sync_cls = cl_list
-    result = __main__.run(settings)
-
-    assert result == 1
+    perforce_environment.settings.PerforceMainVcs.sync_cls = cl_list
+    perforce_environment.run(expect_failure=True)
     text = f"Something went wrong when processing sync CL parameter ('{str(cl_list)}')"
     stdout_checker.assert_has_calls_with_param(text)
 
 
 def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
     cl = perforce_environment.vcs_client.make_a_change()
-
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.shelve_cls = [cl]
-    result = __main__.run(settings)
+    perforce_environment.settings.PerforceMainVcs.shelve_cls = [cl]
 
     # This is not the 'already committed' case of Swarm review, so it actually should fail
-    assert result == 1
+    perforce_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param(
         f"Errors during command execution( \"p4 unshelve -s {cl} -f\" )")
     stdout_checker.assert_has_calls_with_param(f"[Error]: 'Change {cl} is already committed.'")
@@ -118,6 +112,6 @@ def mock_diff(monkeypatch):
 
 def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
     perforce_environment.shelve_config(simple_test_config)
-    assert __main__.run(perforce_environment.settings)
+    perforce_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("This is error text")
     # Without the fixes all error messages go to stderr instead of stdout
