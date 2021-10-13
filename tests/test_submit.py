@@ -16,7 +16,7 @@ def test_error_no_repo(submit_environment, stdout_checker):
         __main__.run(settings)
         stdout_checker.assert_has_calls_with_param("No such directory")
     else:
-        settings.PerforceSubmitVcs.vcs_client = "non_existing_client"
+        settings.PerforceSubmitVcs.client = "non_existing_client"
         __main__.run(settings)
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
