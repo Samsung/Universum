@@ -38,17 +38,14 @@ def test_teardown_fixture_output_verification(print_text_on_teardown):
     pass
 
 
-def test_clean_sources_exceptions(tmpdir):
+@pytest.mark.parametrize("should_not_execute", [True, False], ids=['no-sources', 'deleted-sources'])
+def test_clean_sources_exception(tmpdir, stdout_checker, should_not_execute):
     env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
-    env.settings.LocalMainVcs.source_dir = str(tmpdir / 'nonexisting_dir')
-
-    # Check failure with non-existing temp dir
-    env.run()
-    # the log output is automatically checked by the 'detect_fails' fixture
-
-    # Check failure with temp dir deleted by the launched project
-    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+    source_directory = tmpdir
+    if should_not_execute:
+        source_directory = source_directory / 'nonexisting_dir'
+    env.settings.LocalMainVcs.source_dir = str(source_directory)
     env.configs_file.write(f"""
 from universum.configuration_support import Configuration
 
@@ -56,8 +53,9 @@ configs = Configuration([dict(name="Test configuration",
                               command=["bash", "-c", "rm -rf {env.settings.ProjectDirectory.project_root}"])])
 """)
 
-    env.run()
-    # the log output is automatically checked by the 'detect_fails' fixture
+    env.run(expect_failure=should_not_execute)
+    error_message = f"[Errno 2] No such file or directory: '{env.settings.ProjectDirectory.project_root}'"
+    stdout_checker.assert_has_calls_with_param(error_message)
 
 
 def test_non_utf8_environment(docker_main):
