@@ -49,10 +49,10 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
         parser.add_argument("--swarm-review-versn", "-srv", dest="review_version", metavar="REVIEW_VERSION",
                             help="Swarm review version; is sent by Swarm triggering link as '{version}'")
 
-    def __init__(self, user, get_ticket, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
-        self.get_ticket = get_ticket
+        self.user = None
+        self.ticket = None
         self.review_version = None
         if self.settings.review_version:
             self.review_version = self.settings.review_version
@@ -112,7 +112,7 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
 
         result = utils.make_request(self.settings.server_url + "/api/v2/reviews/" + str(self.settings.review_id),
                                     critical=False, data={"id": self.settings.review_id},
-                                    auth=(self.user, self.get_ticket()))
+                                    auth=(self.user, self.ticket))
         try:
             versions = result.json()["review"]["versions"]
         except (KeyError, ValueError) as e:
@@ -172,7 +172,7 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
                 request["silenceNotification"] = "true"
 
         utils.make_request(self.settings.server_url + "/api/v9/comments", request_method="POST", critical=False,
-                           data=request, auth=(self.user, self.get_ticket()))
+                           data=request, auth=(self.user, self.ticket))
 
     def vote_review(self, result, version=None):
         request = {}
@@ -184,7 +184,7 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
             request["vote[version]"] = version
 
         utils.make_request(self.settings.server_url + "/api/v6/reviews/" + self.settings.review_id, critical=False,
-                           request_method="PATCH", data=request, auth=(self.user, self.get_ticket()))
+                           request_method="PATCH", data=request, auth=(self.user, self.ticket))
 
     def report_start(self, report_text):
         self.update_review_version()
