@@ -55,7 +55,7 @@ setup(
             'coverage',
             'mypy',
             'types-requests',
-            'selenium'
+            'selenium==3.141'
         ]
     }
 )
