@@ -328,8 +328,12 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.unshelved_files: List[Dict[str, str]] = []
         self.diff_in_files: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []
 
+    def get_ticket(self):
+        self.connect()
+        return self.p4.run_login("-p")[0]
+
     def code_review(self):
-        self.swarm = self.swarm_factory(self.settings.user, self.settings.password)
+        self.swarm = self.swarm_factory(self.settings.user, self.get_ticket)
         return self.swarm
 
     def get_related_cls(self, cl_number):
