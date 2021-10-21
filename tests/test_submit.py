@@ -4,7 +4,6 @@ import os
 import shutil
 import pytest
 
-from universum import __main__
 from . import git_utils, perforce_utils, utils
 
 
