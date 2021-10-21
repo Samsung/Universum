@@ -2,7 +2,6 @@
 
 import pytest
 
-from universum import __main__
 from universum.modules.vcs.github_vcs import GithubToken
 from . import utils
 
@@ -36,7 +35,7 @@ def report_environment(git_client, tmpdir):
 def test_github_run(http_check, report_environment, monkeypatch):
     monkeypatch.setattr(GithubToken, 'get_token', lambda *args, **kwargs: "this is token")
 
-    http_check.assert_success_and_collect(__main__.run, report_environment.settings,
+    http_check.assert_success_and_collect(report_environment.run, params=None, result=None,
                                           url=report_environment.path, method="PATCH")
     http_check.assert_request_body_contained("status", "in_progress")
     http_check.assert_request_body_contained("status", "completed")

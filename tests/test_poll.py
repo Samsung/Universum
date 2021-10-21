@@ -6,6 +6,17 @@ from universum import __main__
 from . import git_utils, perforce_utils, utils
 
 
+def test_poll_local_vcs(tmpdir):
+    settings = utils.create_empty_settings("poll")
+    settings.Vcs.type = "none"
+    settings.Poll.db_file = tmpdir / "poll.json"
+    settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
+    settings.AutomationServer.type = "jenkins"
+    settings.ProjectDirectory.project_root = str(tmpdir.mkdir("project_root"))
+
+    assert __main__.run(settings) == 0
+
+
 def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):
     db_file = tmpdir.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
@@ -90,13 +101,13 @@ def test_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     # make change in workspace
     change = parameters.make_a_change()
 
     # run poll again and fail triggering url because there is no server
-    assert __main__.run(parameters.poll_settings) != 0
+    parameters.environment.run(expect_failure=True)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -108,12 +119,12 @@ def test_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     # make change in workspace
     change = parameters.make_a_change()
 
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
     parameters.http_check.assert_request_was_made({"cl": [change]})
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -122,14 +133,14 @@ def test_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll again and trigger the url twice
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -142,14 +153,14 @@ def test_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll and trigger the urls
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -163,7 +174,7 @@ def test_changes_several_times(poll_parameters, poll_environment):
     change4 = parameters.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    parameters.http_check.assert_success_and_collect(__main__.run, parameters.poll_settings)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
@@ -174,14 +185,3 @@ def test_changes_several_times(poll_parameters, poll_environment):
     parameters.http_check.assert_request_was_made({"cl": [change4]})
     parameters.http_check.assert_request_was_not_made({"cl": [change1]})
     parameters.http_check.assert_request_was_not_made({"cl": [change2]})
-
-
-def test_poll_local_vcs(tmpdir):
-    settings = utils.create_empty_settings("poll")
-    settings.Vcs.type = "none"
-    settings.Poll.db_file = tmpdir / "poll.json"
-    settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
-    settings.AutomationServer.type = "jenkins"
-    settings.ProjectDirectory.project_root = str(tmpdir.mkdir("project_root"))
-
-    assert __main__.run(settings) == 0

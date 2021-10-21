@@ -2,7 +2,6 @@
 
 import pytest
 
-from universum import __main__
 from .git_utils import GitTestEnvironment
 
 
@@ -37,7 +36,7 @@ def assert_polled_commits(commits, stdout_checker, http_check):
 
 def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make changes in polled branch
@@ -46,7 +45,7 @@ def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits(changes_to_polled[1:],
                           stdout_checker,
                           http_check)
@@ -56,7 +55,7 @@ def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
 
 def test_merge_one_branch_ff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make changes in polled branch
@@ -68,7 +67,7 @@ def test_merge_one_branch_ff(stdout_checker, http_check, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits([change_to_polled] + changes_to_branch,
                           stdout_checker,
                           http_check)
@@ -76,7 +75,7 @@ def test_merge_one_branch_ff(stdout_checker, http_check, git_poll_environment):
 
 def test_merge_one_branch_noff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make changes in polled branch
@@ -89,7 +88,7 @@ def test_merge_one_branch_noff(stdout_checker, http_check, git_poll_environment)
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           http_check)
@@ -99,7 +98,7 @@ def test_merge_one_branch_noff(stdout_checker, http_check, git_poll_environment)
 
 def test_merge_two_subsequent_branches_noff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make changes in polled branch
@@ -114,7 +113,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, http_check, git_poll
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           http_check)
@@ -124,7 +123,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, http_check, git_poll
 
 def test_merge_two_subsequent_branches_ff(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make changes in polled branch
@@ -139,7 +138,7 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, http_check, git_poll_e
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits([change_to_polled] + changes_to_first_branch + changes_to_second_branch,
                           stdout_checker,
                           http_check)
@@ -147,7 +146,7 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, http_check, git_poll_e
 
 def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make a branch from polled
@@ -165,7 +164,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_check, git_p
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits([change_to_polled, merge_commit_id],
                           stdout_checker,
                           http_check)
@@ -175,7 +174,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_check, git_p
 @pytest.mark.xfail
 def test_merge_ff_commit_merged_from_polled(stdout_checker, http_check, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
 
     # ACT
     # make a branch from polled
@@ -196,7 +195,7 @@ def test_merge_ff_commit_merged_from_polled(stdout_checker, http_check, git_poll
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(__main__.run, git_poll_environment.settings)
+    http_check.assert_success_and_collect(git_poll_environment.run, params=None, result=None)
     assert_polled_commits([change_to_polled, change_to_branch],
                           stdout_checker,
                           http_check)

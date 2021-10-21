@@ -1,12 +1,8 @@
 # pylint: disable = redefined-outer-name
 
-import os
-import subprocess
-
 from universum.lib.gravity import construct_component
 from universum.lib.module_arguments import ModuleArgumentParser
 from universum.modules.error_state import HasErrorState
-from .utils import python
 
 text = "This is text\nwith some line breaks\n"
 error_message = "This is some missing argument error message"

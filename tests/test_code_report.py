@@ -5,7 +5,6 @@ from typing import List
 
 import pytest
 
-from universum import __main__
 from . import utils
 from .utils import python, python_version
 
