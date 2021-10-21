@@ -62,6 +62,7 @@ class Main(HasOutput):
             self.out.log("Execution skipped because of '--finalize-only' option")
             return
 
+        self.vcs.login()
         self.reporter.report_review_link()
         if self.settings.build_only_latest:
             if not self.vcs.is_latest_review_version():

@@ -160,6 +160,9 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
                 '--vcs-type' ('-vt') command-line option or VCS_TYPE environment variable
                 """)
 
+    def login(self):
+        self.driver.login()
+
     def is_latest_review_version(self):
         if self.settings.report_to_review:
             return self.code_review.is_latest_version()
