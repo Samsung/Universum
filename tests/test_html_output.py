@@ -163,15 +163,15 @@ def check_section_coloring(step, is_failed=False):
 
 
 def check_title_coloring(title):
-    blue_color_rgb = "rgb(72, 61, 139)"
-    assert title.color == blue_color_rgb
+    blue_rgb = "rgb(72, 61, 139)"
+    assert title.color == blue_rgb
     check_text_is_bold(title)
 
 
 def check_status_coloring(status, is_failed):
-    green_color_rgb = "rgb(0, 128, 0)"
-    red_color_rgb = "rgb(255, 0, 0)"
-    exp_color = red_color_rgb if is_failed else green_color_rgb
+    green_rgb = "rgb(0, 128, 0)"
+    red_rgb = "rgb(255, 0, 0)"
+    exp_color = red_rgb if is_failed else green_rgb
     assert status.color == exp_color
     check_text_is_bold(status)
 
