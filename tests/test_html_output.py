@@ -80,7 +80,7 @@ def check_html_log(artifact_dir, browser):
     assert os.path.exists(log_path)
 
     browser.get(f"file://{log_path}")
-    html_body = browser.find_element_by_tag_name("body")
+    html_body = TestElement.create(browser.find_element_by_tag_name("body"))
     body_elements = html_body.find_elements_by_xpath("./*")
     assert len(body_elements) == 1
     assert body_elements[0].tag_name == "pre"
@@ -93,7 +93,7 @@ def check_html_log(artifact_dir, browser):
     steps_section.click()
     check_step_not_collapsed(steps_section, steps_body)
     check_sections_indentation(steps_section)
-    check_text_coloring(get_page_style(browser), steps_section)
+    check_coloring(html_body, steps_section)
     steps_section.click()
     check_step_collapsed(steps_section, steps_body)
 
@@ -114,31 +114,31 @@ def check_sections_indentation(steps_section):
     step_lvl1_second.click() # restore sections state
 
 
-def check_text_coloring(page_style, steps_section):
-    check_styles(page_style)
-    check_elements_classes(steps_section)
+def check_coloring(body_element, steps_section):
+    check_body_coloring(body_element)
+    check_text_coloring(steps_section)
 
 
-def check_styles(page_style):
-    check_body_style(page_style)
-    check_css_class(page_style, name="sectionTitle", exp_color="darkslateblue", exp_font="bold")
-    check_css_class(page_style, name="sectionSuccessStatus", exp_color="green", exp_font="bold")
-    check_css_class(page_style, name="sectionFailedStatus", exp_color="red", exp_font="bold")
+def check_body_coloring(body_element):
+    black_rgb = "rgb(0, 0, 0)"
+    assert body_element.color == black_rgb
+    white_rgb = "rgb(255, 255, 255)"
+    assert body_element.background_color == white_rgb
 
 
-def check_elements_classes(steps_section):
+def check_text_coloring(steps_section):
     steps_body = steps_section.get_section_body()
 
-    check_section_elements_classes(steps_body.get_section_by_name("Success step"))
-    check_section_elements_classes(steps_body.get_section_by_name("Failed step"), is_failed=True)
-    check_section_elements_classes(steps_body.get_section_by_name("Partially success step"))
+    check_section_coloring(steps_body.get_section_by_name("Success step"))
+    check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_coloring(steps_body.get_section_by_name("Partially success step"))
 
     composite_step = steps_body.get_section_by_name("Partially success step")
     composite_step.click()
     composite_step_body = composite_step.get_section_body()
 
-    check_section_elements_classes(composite_step_body.get_section_by_name("Success step"))
-    check_section_elements_classes(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_coloring(composite_step_body.get_section_by_name("Success step"))
+    check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
     composite_step.click() # restore sections state
 
@@ -155,40 +155,31 @@ def check_step_not_collapsed(section, body):
     assert body.is_displayed()
 
 
-def check_section_elements_classes(step, is_failed=False):
-    assert step.get_section_title_class() == "sectionTitle"
+def check_section_coloring(step, is_failed=False):
+    check_title_coloring(step.get_section_title())
     step.click() # open section body
-    exp_status = "Failed" if is_failed else "Success"
-    assert step.get_section_status_class() == f"section{exp_status}Status"
+    check_status_coloring(step.get_section_status(), is_failed)
     step.click() # close section body
 
 
-def check_body_style(style):
-    body_style = parse_css_block(style, "body")
-    assert parse_css_property(body_style, "background-color") == "white"
-    assert parse_css_property(body_style, "color") == "black"
+def check_title_coloring(title):
+    blue_rgb = "rgb(72, 61, 139)"
+    assert title.color == blue_rgb
+    check_text_is_bold(title)
 
 
-def check_css_class(style, name, exp_color, exp_font):
-    class_style = parse_css_block(style, f".{name}")
-    assert parse_css_property(class_style, "color") == exp_color
-    assert parse_css_property(class_style, "font-weight") == exp_font
+def check_status_coloring(status, is_failed):
+    green_rgb = "rgb(0, 128, 0)"
+    red_rgb = "rgb(255, 0, 0)"
+    exp_color = red_rgb if is_failed else green_rgb
+    assert status.color == exp_color
+    check_text_is_bold(status)
 
 
-def parse_css_block(style, block_name):
-    return re.search(block_name + r" \{(.*?)\}", style, re.DOTALL).group(1)
+def check_text_is_bold(element):
+    font_weight_bold = "700"
+    assert element.font_weight == font_weight_bold
 
-
-def parse_css_property(style, css_property):
-    return re.search(fr"\s{css_property}: (\w+)", style).group(1)
-
-
-def get_page_style(browser):
-    head = browser.find_element_by_tag_name("head")
-    assert head
-    style = head.find_element_by_tag_name("style")
-    assert style
-    return style.get_attribute("innerHTML")
 
 
 class TestElement(FirefoxWebElement):
@@ -228,28 +219,27 @@ class TestElement(FirefoxWebElement):
 
     # <label for="1.">  <-- self
     #     <span class="sectionLbl">
-    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element class name
+    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element
     #     </span>
     # </label>
-    def get_section_title_class(self):
+    def get_section_title(self):
         label_span = self.find_element_by_class_name("sectionLbl")
         assert label_span
         title_span = label_span.find_element_by_tag_name("span")
-        assert title_span
-        return title_span.get_attribute("class")
+        return TestElement.create(title_span)
 
     # <label for="1.">  <-- self
     #     ...
     # </label>
     # <div>
     #     ...
-    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element class name
+    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element
     # </div>
-    def get_section_status_class(self):
+    def get_section_status(self):
         body = self.get_section_body()
         status_element = TestElement.create(body.find_elements_by_tag_name("span")[-1])
         assert status_element.text in ("[Success]", "[Failed]")
-        return status_element.get_attribute("class")
+        return TestElement.create(status_element)
 
     @property
     def is_body_collapsed(self):
@@ -279,3 +269,15 @@ class TestElement(FirefoxWebElement):
     @property
     def indent(self):
         return self.location['x']
+
+    @property
+    def color(self):
+        return self.value_of_css_property("color")
+
+    @property
+    def font_weight(self):
+        return self.value_of_css_property("font-weight")
+
+    @property
+    def background_color(self):
+        return self.value_of_css_property("background-color")
