@@ -1,3 +1,4 @@
+import copy
 import datetime
 import os
 import random
@@ -146,10 +147,11 @@ class BaseTestEnvironment:
         self.settings.Output.type = "term"
 
     def run(self, expect_failure=False):
+        settings = copy.deepcopy(self.settings)
         if expect_failure:
-            assert __main__.run(self.settings)
+            assert __main__.run(settings)
         else:
-            assert not __main__.run(self.settings)
+            assert not __main__.run(settings)
 
 
 class LocalTestEnvironment(BaseTestEnvironment):

@@ -1,6 +1,5 @@
 # pylint: disable = redefined-outer-name
 
-import copy
 import os
 import shutil
 import pytest
@@ -10,14 +9,13 @@ from . import git_utils, perforce_utils, utils
 
 
 def test_error_no_repo(submit_environment, stdout_checker):
-    settings = copy.deepcopy(submit_environment.settings)
-    if settings.Vcs.type == "git":
-        settings.ProjectDirectory.project_root = "non_existing_repo"
-        __main__.run(settings)
+    if submit_environment.settings.Vcs.type == "git":
+        submit_environment.settings.ProjectDirectory.project_root = "non_existing_repo"
+        submit_environment.run(expect_failure=True)
         stdout_checker.assert_has_calls_with_param("No such directory")
     else:
-        settings.PerforceSubmitVcs.client = "non_existing_client"
-        __main__.run(settings)
+        submit_environment.settings.PerforceSubmitVcs.client = "non_existing_client"
+        submit_environment.run(expect_failure=True)
         stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
 
 
@@ -33,10 +31,9 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
 
-    settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", str(file_to_add))
+    p4_submit_environment.settings.Submit.reconcile_list = str(file_to_add)
 
-    assert __main__.run(settings)
+    p4_submit_environment.run(expect_failure=True)
 
     p4 = p4_submit_environment.vcs_client.p4
     # make sure submitter didn't leave any pending CLs in the workspace
@@ -58,10 +55,9 @@ def test_p4_success_files_in_default(p4_submit_environment):
     new_file = p4_submit_environment.vcs_client.root_directory.join(file_name)
     new_file.write("This is a new file" + "\n")
 
-    settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", str(new_file))
+    p4_submit_environment.settings.Submit.reconcile_list = str(new_file)
 
-    assert not __main__.run(settings)
+    p4_submit_environment.run()
     assert text in p4_file.read()
 
 
@@ -79,10 +75,9 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
     text_new = "This is a new line in the file"
     new_file.write(text_new + "\n")
 
-    settings = copy.deepcopy(p4_submit_environment.settings)
-    setattr(settings.Submit, "reconcile_list", str(new_file))
+    p4_submit_environment.settings.Submit.reconcile_list = str(new_file)
 
-    assert __main__.run(settings)
+    p4_submit_environment.run(expect_failure=True)
     assert text_default in p4_file.read()
     assert text_new in new_file.read()
 
@@ -93,19 +88,17 @@ class SubmitterParameters:
         self.submit_settings = environment.settings
         self.environment = environment
 
-    def submit_path_list(self, path_list, **kwargs):
-        settings = copy.deepcopy(self.submit_settings)
-        setattr(settings.Submit, "reconcile_list", ",".join(path_list))
+    def submit_path_list(self, path_list, expect_failure=False, **kwargs):
+        self.environment.settings.Submit.reconcile_list = ",".join(path_list)
 
         if kwargs:
             for key, value in kwargs.items():
-                setattr(settings.Submit, key, value)
+                setattr(self.environment.settings.Submit, key, value)
 
-        return __main__.run(settings)
+        self.environment.run(expect_failure=expect_failure)
 
     def assert_submit_success(self, path_list, **kwargs):
-        result = self.submit_path_list(path_list, **kwargs)
-        assert result == 0
+        self.submit_path_list(path_list, **kwargs)
 
         last_cl = self.environment.vcs_client.get_last_change()
         self.stdout_checker.assert_has_calls_with_param("==> Change " + last_cl + " submitted")
@@ -134,7 +127,7 @@ def submit_environment(request, perforce_workspace, git_client, tmpdir):
 
 def test_success_no_changes(submit_parameters, submit_environment):
     parameters = submit_parameters(submit_environment)
-    assert parameters.submit_path_list([]) == 0
+    parameters.submit_path_list([])
 
 
 def test_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
@@ -171,8 +164,7 @@ def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submi
     deleted_file_name = os.path.basename(deleted_file_path)
     os.remove(deleted_file_path)
 
-    result = parameters.submit_path_list([str(temp_file), deleted_file_path], edit_only=True)
-    assert result == 0
+    parameters.submit_path_list([str(temp_file), deleted_file_path], edit_only=True)
 
     parameters.stdout_checker.assert_has_calls_with_param(f"Skipping '{new_file_name}'")
     parameters.stdout_checker.assert_has_calls_with_param(f"Skipping '{deleted_file_name}'")
@@ -198,8 +190,7 @@ def test_error_review(submit_parameters, submit_environment):
     target_file = parameters.environment.vcs_client.repo_file
     target_file.write("This is some change")
 
-    result = parameters.submit_path_list([str(target_file)], review=True)
-    assert result != 0
+    parameters.submit_path_list([str(target_file)], review=True, expect_failure=True)
     parameters.stdout_checker.assert_has_calls_with_param("not supported")
 
 
@@ -239,6 +230,7 @@ def test_success_reconcile_directory(submit_parameters, submit_environment):
     for i in range(0, 9, 2):
         file_path = tmp_dir.join(f"/new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
+    parameters.environment.settings.Submit.edit_only = False
 
     # Delete a directory
     shutil.rmtree(tmp_dir)
@@ -353,6 +345,7 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
         assert not parameters.text_in_file(text, str(file_path))
         file_path = tmp_dir.join(f"another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
+    parameters.environment.settings.Submit.edit_only = False
 
     # Clean up the repo
     shutil.rmtree(str(tmp_dir))
