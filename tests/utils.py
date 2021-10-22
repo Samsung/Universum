@@ -5,6 +5,10 @@ import random
 import socket
 import string
 import sys
+from typing import Type, Optional
+
+import py
+from universum.lib.module_arguments import ModuleNamespace
 
 from universum import submit, poll, main, github_handler, nonci, __main__
 from universum.lib import gravity
@@ -102,26 +106,28 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 class BaseVcsClient:
     def __init__(self):
-        pass
+        self.root_directory: Optional[py.path.local] = None
+        self.repo_file: Optional[py.path.local] = None
 
     def get_last_change(self):
         raise NotImplementedError()
 
-    def file_present(self, file_path):
+    def file_present(self, file_path: str) -> bool:
         raise NotImplementedError()
 
-    def text_in_file(self, text, file_path):
+    def text_in_file(self, text: str, file_path: str) -> bool:
         raise NotImplementedError()
 
-    def make_a_change(self):
+    def make_a_change(self) -> str:
         raise NotImplementedError()
 
 
 class BaseTestEnvironment:
-    def __init__(self, client, directory, test_type, db_file):
-        self.temp_dir = directory
-        self.vcs_client = client
-        self.settings = create_empty_settings(test_type)
+    def __init__(self, client: Optional[Type[BaseVcsClient]], directory: py.path.local, test_type: str, db_file: str):
+        self.temp_dir: py.path.local = directory
+        self.vcs_client: Optional[Type[BaseVcsClient]] = client
+        self.settings: ModuleNamespace = create_empty_settings(test_type)
+
         if test_type == "poll":
             self.settings.Poll.db_file = db_file
             self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
@@ -146,7 +152,7 @@ class BaseTestEnvironment:
             self.settings.AutomationServer.type = "local"
         self.settings.Output.type = "term"
 
-    def run(self, expect_failure=False):
+    def run(self, expect_failure=False) -> None:
         settings = copy.deepcopy(self.settings)
         if expect_failure:
             assert __main__.run(settings)

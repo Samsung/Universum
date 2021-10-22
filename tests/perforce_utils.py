@@ -4,6 +4,7 @@ import time
 import pytest
 import docker
 
+import py
 from P4 import P4, P4Exception
 from requests.exceptions import ReadTimeout
 
@@ -163,19 +164,19 @@ def perforce_connection(request, docker_perforce):
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection, directory):
+    def __init__(self, connection: P4, directory: py.path.local):
         super().__init__()
-
-        self.client_created = False
-
-        self.client_name = "test_workspace"
-        self.depot = "//depot/..."
-        self.p4 = connection
         self.root_directory = directory.mkdir("workspace")
         self.repo_file = self.root_directory.join("writeable_file.txt")
-        self.nonwritable_file = self.root_directory.join("usual_file.txt")
 
-    def setup(self):
+        self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")
+
+        self.client_created: bool = False
+        self.client_name: str = "test_workspace"
+        self.depot: str = "//depot/..."
+        self.p4: P4 = connection
+
+    def setup(self) -> None:
         client = self.p4.fetch_client(self.client_name)
         client["Root"] = str(self.root_directory)
         client["View"] = [self.depot + " //" + self.client_name + "/..."]
@@ -210,8 +211,8 @@ class PerforceWorkspace(utils.BaseVcsClient):
         ]}
         self.p4.save_triggers(triggers)
 
-    def create_file(self, name):
-        p4_new_file = self.root_directory.join(name)
+    def create_file(self, file_name: str) -> py.path.local:
+        p4_new_file = self.root_directory.join(file_name)
         p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
         self.p4.run("add", str(p4_new_file))
 
@@ -220,13 +221,13 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.p4.run_submit(change)
         return p4_new_file
 
-    def delete_file(self, file_name):
+    def delete_file(self, file_name: str) -> None:
         self.p4.run("delete", self.depot + file_name)
         change = self.p4.run_change("-o")[0]
         change["Description"] = "Delete created file"
         self.p4.run_submit(change)
 
-    def shelve_file(self, file, content, shelve_cl=None):
+    def shelve_file(self, file: py.path.local, content: str, shelve_cl=None) -> str:
         if not shelve_cl:
             change = self.p4.fetch_change()
             change["Description"] = "This is a shelved CL"
@@ -238,14 +239,14 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.p4.run_revert("-c", shelve_cl, str(file))
         return shelve_cl
 
-    def get_last_change(self):
+    def get_last_change(self) -> str:
         changes = self.p4.run_changes("-s", "submitted", "-m1", self.depot)
         return changes[0]["change"]
 
-    def text_in_file(self, text, file_path):
+    def text_in_file(self, text: str, file_path: str) -> bool:
         return text in self.p4.run_print(file_path)[-1]
 
-    def file_present(self, file_path):
+    def file_present(self, file_path: str) -> bool:
         try:
             self.p4.run_files("-e", file_path)
             return True
@@ -256,7 +257,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
                 raise
             return False
 
-    def make_a_change(self):
+    def make_a_change(self) -> str:
         tmpfile = self.repo_file
         self.p4.run("edit", str(tmpfile))
         tmpfile.write("Change #1 " + str(tmpfile))
@@ -269,7 +270,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
         cl = next((x["submittedChange"] for x in committed_change if "submittedChange" in x))
         return cl
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         if self.client_created:
             remaining_shelves = self.p4.run_changes("-s", "shelved")
             for item in remaining_shelves:
@@ -288,11 +289,12 @@ def perforce_workspace(request, perforce_connection, tmpdir):
 
 
 class P4TestEnvironment(utils.BaseTestEnvironment):
-    def __init__(self, perforce_workspace, directory, test_type):
+    def __init__(self, perforce_workspace: PerforceWorkspace, directory: py.path.local, test_type: str):
         db_file = directory.join("p4poll.json")
         super().__init__(perforce_workspace, directory, test_type, str(db_file))
 
-        self.client_name = "p4_disposable_workspace"
+        self.client_name: str = "p4_disposable_workspace"
+
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
@@ -311,7 +313,7 @@ class P4TestEnvironment(utils.BaseTestEnvironment):
         except AttributeError:
             pass
 
-    def shelve_config(self, config):
+    def shelve_config(self, config: str) -> None:
         shelve_cl = self.vcs_client.shelve_file(self.vcs_client.repo_file, config)
         settings = self.settings
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
