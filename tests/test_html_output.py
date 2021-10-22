@@ -89,13 +89,13 @@ def check_html_log(artifact_dir, browser):
     steps_section = pre_element.get_section_by_name("Executing build steps")
     steps_body = steps_section.get_section_body()
 
-    check_step_collapsed(steps_section, steps_body)
+    assert not steps_body.is_displayed()
     steps_section.click()
-    check_step_not_collapsed(steps_section, steps_body)
+    assert steps_body.is_displayed()
     check_sections_indentation(steps_section)
     check_coloring(html_body, steps_section)
     steps_section.click()
-    check_step_collapsed(steps_section, steps_body)
+    assert not steps_body.is_displayed()
 
 
 def check_sections_indentation(steps_section):
@@ -141,18 +141,6 @@ def check_text_coloring(steps_section):
     check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
     composite_step.click() # restore sections state
-
-
-def check_step_collapsed(section, body):
-    assert section.is_section_collapsed
-    assert body.is_body_collapsed
-    assert not body.is_displayed()
-
-
-def check_step_not_collapsed(section, body):
-    assert not section.is_section_collapsed
-    assert not body.is_body_collapsed
-    assert body.is_displayed()
 
 
 def check_section_coloring(step, is_failed=False):
@@ -240,31 +228,6 @@ class TestElement(FirefoxWebElement):
         status_element = TestElement.create(body.find_elements_by_tag_name("span")[-1])
         assert status_element.text in ("[Success]", "[Failed]")
         return TestElement.create(status_element)
-
-    @property
-    def is_body_collapsed(self):
-        display_state = self.value_of_css_property("display")
-        collapsed_state = "none"
-        not_collapsed_state = "block"
-        if display_state not in (collapsed_state, not_collapsed_state):
-            raise RuntimeError(f"Unexpected element display state: '{display_state}'")
-
-        collapsed = (display_state == collapsed_state)
-        collapsed &= (not self.text)
-        return collapsed
-
-    @property
-    def is_section_collapsed(self):
-        label_span = self.find_element_by_tag_name("span")
-        assert label_span
-        script = "return window.getComputedStyle(arguments[0],':before').getPropertyValue('content')"
-        section_state = self.parent.execute_script(script, label_span).replace('"', "").replace(" ", "")
-        collapsed_state = "[+]"
-        not_collapsed_state = "[-]"
-        if section_state not in (collapsed_state, not_collapsed_state):
-            raise RuntimeError(f"Unexpected section collapsed state: '{section_state}'")
-
-        return section_state == collapsed_state
 
     @property
     def indent(self):
