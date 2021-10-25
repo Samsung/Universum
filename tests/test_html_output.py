@@ -2,8 +2,8 @@
 
 import os
 import re
-import pytest
 from enum import Enum, auto
+import pytest
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -230,33 +230,32 @@ class TestElement(FirefoxWebElement):
 
     @property
     def color(self):
-        return self._get_primary_color(self.value_of_css_property("color"))
+        return _get_primary_color(self.value_of_css_property("color"))
 
     @property
     def background_color(self):
-        return self._get_primary_color(self.value_of_css_property("background-color"))
+        return _get_primary_color(self.value_of_css_property("background-color"))
 
     @property
     def font_weight(self):
         return self.value_of_css_property("font-weight")
 
-    def _get_primary_color(self, rgb_str):
+    @staticmethod
+    def _get_primary_color(rgb_str):
         re_result = re.match(r"^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$", rgb_str)
         assert re_result
         red, green, blue = int(re_result.group(1)), int(re_result.group(2)), int(re_result.group(3))
         primary_color = max(red, green, blue)
-        if red == 0 and green == 0 and blue == 0:
+        if red <= 100 and green <= 100 and blue <= 100:
             return Color.BLACK
-        elif red == 255 and green == 255 and blue == 255:
+        elif red >= 245 and green >= 245 and blue >= 245:
             return Color.WHITE
         elif primary_color == red:
             return Color.RED
         elif primary_color == green:
             return Color.GREEN
-        elif primary_color == blue:
-            return Color.BLUE
         else:
-            assert False, "Should not occur"
+            return Color.BLUE
 
 
 class Color(Enum):
