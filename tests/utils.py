@@ -161,4 +161,4 @@ class BaseTestEnvironment:
 
 class LocalTestEnvironment(BaseTestEnvironment):
     def __init__(self, directory, test_type):
-        super().__init__(BaseVcsClient(), directory, test_type, "")
+        super().__init__(None, directory, test_type, "")
