@@ -225,7 +225,7 @@ class TestElement(FirefoxWebElement):
     # </div>
     def get_section_status(self):
         body = self.get_section_body()
-        xpath_selector = "./*[contains(text(), 'Success') or contains(text(), 'Failed')]"
+        xpath_selector = "./*[contains(text(), '[Success]') or contains(text(), '[Failed]')]"
         return TestElement.create(body.find_elements_by_xpath(xpath_selector)[-1])
 
     @property
