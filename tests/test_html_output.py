@@ -225,9 +225,8 @@ class TestElement(FirefoxWebElement):
     # </div>
     def get_section_status(self):
         body = self.get_section_body()
-        status_element = TestElement.create(body.find_elements_by_tag_name("span")[-1])
-        assert status_element.text in ("[Success]", "[Failed]")
-        return TestElement.create(status_element)
+        xpath_selector = "./*[contains(text(), '[Success]') or contains(text(), '[Failed]')]"
+        return TestElement.create(body.find_elements_by_xpath(xpath_selector)[-1])
 
     @property
     def indent(self):
