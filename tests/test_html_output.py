@@ -2,6 +2,7 @@
 
 import os
 import re
+from enum import Enum, auto
 import pytest
 
 from selenium import webdriver
@@ -120,10 +121,8 @@ def check_coloring(body_element, steps_section):
 
 
 def check_body_coloring(body_element):
-    black_rgb = "rgb(0, 0, 0)"
-    assert body_element.color == black_rgb
-    white_rgb = "rgb(255, 255, 255)"
-    assert body_element.background_color == white_rgb
+    assert body_element.color == Color.BLACK
+    assert body_element.background_color == Color.WHITE
 
 
 def check_text_coloring(steps_section):
@@ -151,15 +150,12 @@ def check_section_coloring(step, is_failed=False):
 
 
 def check_title_coloring(title):
-    blue_rgb = "rgb(72, 61, 139)"
-    assert title.color == blue_rgb
+    assert title.color == Color.BLUE
     check_text_is_bold(title)
 
 
 def check_status_coloring(status, is_failed):
-    green_rgb = "rgb(0, 128, 0)"
-    red_rgb = "rgb(255, 0, 0)"
-    exp_color = red_rgb if is_failed else green_rgb
+    exp_color = Color.RED if is_failed else Color.GREEN
     assert status.color == exp_color
     check_text_is_bold(status)
 
@@ -234,12 +230,38 @@ class TestElement(FirefoxWebElement):
 
     @property
     def color(self):
-        return self.value_of_css_property("color")
+        return self._get_primary_color(self.value_of_css_property("color"))
+
+    @property
+    def background_color(self):
+        return self._get_primary_color(self.value_of_css_property("background-color"))
 
     @property
     def font_weight(self):
         return self.value_of_css_property("font-weight")
 
-    @property
-    def background_color(self):
-        return self.value_of_css_property("background-color")
+    @staticmethod
+    def _get_primary_color(rgb_str):
+        re_result = re.match(r"^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$", rgb_str)
+        assert re_result
+        red, green, blue = int(re_result.group(1)), int(re_result.group(2)), int(re_result.group(3))
+        primary_color = max(red, green, blue)
+        if red <= 100 and green <= 100 and blue <= 100:
+            return Color.BLACK
+        if red >= 245 and green >= 245 and blue >= 245:
+            return Color.WHITE
+        if primary_color == red:
+            return Color.RED
+        if primary_color == green:
+            return Color.GREEN
+        if primary_color == blue:
+            return Color.BLUE
+        return None
+
+
+class Color(Enum):
+    BLACK = auto()
+    WHITE = auto()
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
