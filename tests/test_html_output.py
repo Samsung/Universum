@@ -230,11 +230,11 @@ class TestElement(FirefoxWebElement):
 
     @property
     def color(self):
-        return _get_primary_color(self.value_of_css_property("color"))
+        return self._get_primary_color(self.value_of_css_property("color"))
 
     @property
     def background_color(self):
-        return _get_primary_color(self.value_of_css_property("background-color"))
+        return self._get_primary_color(self.value_of_css_property("background-color"))
 
     @property
     def font_weight(self):
@@ -248,14 +248,15 @@ class TestElement(FirefoxWebElement):
         primary_color = max(red, green, blue)
         if red <= 100 and green <= 100 and blue <= 100:
             return Color.BLACK
-        elif red >= 245 and green >= 245 and blue >= 245:
+        if red >= 245 and green >= 245 and blue >= 245:
             return Color.WHITE
-        elif primary_color == red:
+        if primary_color == red:
             return Color.RED
-        elif primary_color == green:
+        if primary_color == green:
             return Color.GREEN
-        else:
+        if primary_color == blue:
             return Color.BLUE
+        return None
 
 
 class Color(Enum):
