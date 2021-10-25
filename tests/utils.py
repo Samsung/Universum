@@ -5,7 +5,6 @@ import random
 import socket
 import string
 import sys
-from typing import Type, Optional
 
 import py
 from universum.lib.module_arguments import ModuleNamespace
@@ -106,8 +105,8 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 class BaseVcsClient:
     def __init__(self):
-        self.root_directory: Optional[py.path.local] = None
-        self.repo_file: Optional[py.path.local] = None
+        self.root_directory: py.path.local
+        self.repo_file: py.path.local
 
     def get_last_change(self):
         raise NotImplementedError()
@@ -123,9 +122,9 @@ class BaseVcsClient:
 
 
 class BaseTestEnvironment:
-    def __init__(self, client: Optional[Type[BaseVcsClient]], directory: py.path.local, test_type: str, db_file: str):
+    def __init__(self, client, directory: py.path.local, test_type: str, db_file: str):
         self.temp_dir: py.path.local = directory
-        self.vcs_client: Optional[Type[BaseVcsClient]] = client
+        self.vcs_client = client
         self.settings: ModuleNamespace = create_empty_settings(test_type)
 
         if test_type == "poll":
@@ -162,4 +161,4 @@ class BaseTestEnvironment:
 
 class LocalTestEnvironment(BaseTestEnvironment):
     def __init__(self, directory, test_type):
-        super().__init__(None, directory, test_type, "")
+        super().__init__(BaseVcsClient(), directory, test_type, "")

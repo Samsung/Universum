@@ -2,6 +2,7 @@
 
 import time
 import pytest
+from typing import TypeVar
 import docker
 
 import py
@@ -288,8 +289,12 @@ def perforce_workspace(request, perforce_connection, tmpdir):
         workspace.cleanup()
 
 
+WorkspaceObject = TypeVar('WorkspaceObject', bound=PerforceWorkspace)
+
+
 class P4TestEnvironment(utils.BaseTestEnvironment):
     def __init__(self, perforce_workspace: PerforceWorkspace, directory: py.path.local, test_type: str):
+        self.vcs_client: PerforceWorkspace
         db_file = directory.join("p4poll.json")
         super().__init__(perforce_workspace, directory, test_type, str(db_file))
 

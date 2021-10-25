@@ -2,6 +2,7 @@
 
 import os
 from time import sleep
+from typing import TypeVar
 
 import git
 from git.remote import RemoteProgress
@@ -95,7 +96,7 @@ class GitServer:
     def get_last_commit(self) -> str:
         return self._repo.git.log('-n1', pretty='format:"%H"').replace('"', '')
 
-    def exit(self) -> str:
+    def exit(self) -> None:
         try:
             self._daemon.terminate()
             self._daemon.wait()
@@ -148,8 +149,12 @@ def git_client(git_server, tmpdir):
     yield GitClient(git_server, tmpdir)
 
 
+GitClientObject = TypeVar('GitClientObject', bound=GitClient)
+
+
 class GitTestEnvironment(utils.BaseTestEnvironment):
-    def __init__(self, client: GitClient, directory: py.path.local, test_type: str):
+    def __init__(self, client: GitClientObject, directory: py.path.local, test_type: str):
+        self.vcs_client: GitClientObject
         db_file = directory.join("gitpoll.json")
         super().__init__(client, directory, test_type, str(db_file))
 

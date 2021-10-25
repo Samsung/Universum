@@ -29,7 +29,7 @@ pylint:
 	python -m pylint --rcfile=pylintrc *.py universum/ tests/
 
 mypy:
-	python -m mypy universum/ --ignore-missing-imports
+	python -m mypy universum/ tests/ --exclude tests/thirdparty --follow-imports skip --ignore-missing-imports
 
 
 
