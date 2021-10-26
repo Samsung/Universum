@@ -122,7 +122,7 @@ class BaseVcsClient:
 
 
 class BaseTestEnvironment:
-    def __init__(self, client, directory: py.path.local, test_type: str, db_file: str):
+    def __init__(self, client: BaseVcsClient, directory: py.path.local, test_type: str, db_file: str):
         self.temp_dir: py.path.local = directory
         self.vcs_client = client
         self.settings: ModuleNamespace = create_empty_settings(test_type)
@@ -161,4 +161,4 @@ class BaseTestEnvironment:
 
 class LocalTestEnvironment(BaseTestEnvironment):
     def __init__(self, directory, test_type):
-        super().__init__(None, directory, test_type, "")
+        super().__init__(BaseVcsClient(), directory, test_type, "")

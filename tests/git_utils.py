@@ -2,7 +2,6 @@
 
 import os
 from time import sleep
-from typing import TypeVar
 
 import git
 from git.remote import RemoteProgress
@@ -149,14 +148,11 @@ def git_client(git_server, tmpdir):
     yield GitClient(git_server, tmpdir)
 
 
-GitClientObject = TypeVar('GitClientObject', bound=GitClient)
-
-
 class GitTestEnvironment(utils.BaseTestEnvironment):
-    def __init__(self, client: GitClientObject, directory: py.path.local, test_type: str):
-        self.vcs_client: GitClientObject
+    def __init__(self, client: GitClient, directory: py.path.local, test_type: str):
         db_file = directory.join("gitpoll.json")
         super().__init__(client, directory, test_type, str(db_file))
+        self.vcs_client: GitClient
 
         self.server: GitServer = self.vcs_client.server
         self.vcs_client.repo.git.checkout(self.vcs_client.server.target_branch)
