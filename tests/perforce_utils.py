@@ -211,22 +211,6 @@ class PerforceWorkspace(utils.BaseVcsClient):
         ]}
         self.p4.save_triggers(triggers)
 
-    def create_file(self, file_name: str) -> py.path.local:
-        p4_new_file = self.root_directory.join(file_name)
-        p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
-        self.p4.run("add", str(p4_new_file))
-
-        change = self.p4.run_change("-o")[0]
-        change["Description"] = "Add a file for checks"
-        self.p4.run_submit(change)
-        return p4_new_file
-
-    def delete_file(self, file_name: str) -> None:
-        self.p4.run("delete", self.depot + file_name)
-        change = self.p4.run_change("-o")[0]
-        change["Description"] = "Delete created file"
-        self.p4.run_submit(change)
-
     def shelve_file(self, file: py.path.local, content: str, shelve_cl=None) -> str:
         if not shelve_cl:
             change = self.p4.fetch_change()
