@@ -125,7 +125,7 @@ class HttpChecker:
         HttpChecker.assert_request_contained(key, value, "body field")
 
     @staticmethod
-    def assert_and_collect(function, params, url, method, result, status):
+    def assert_and_collect(function, url, method, status):
         httpretty.reset()
         httpretty.enable()
         if method == "GET":
@@ -137,24 +137,17 @@ class HttpChecker:
         httpretty.register_uri(hmethod, url, status=status)
 
         try:
-            if result and params:
-                assert function(params) == result
-            elif result and not params:
-                assert function() == result
-            elif not result and params:
-                function(params)
-            else:
-                function()
+            function()
         finally:
             httpretty.disable()
 
     @staticmethod
-    def assert_success_and_collect(function, params, url="https://localhost/", method="GET", result=0):
-        HttpChecker.assert_and_collect(function, params, url, method, result, status='200')
+    def assert_success_and_collect(function, url="https://localhost/", method="GET"):
+        HttpChecker.assert_and_collect(function, url, method, status='200')
 
     @staticmethod
-    def assert_404_and_collect(function, params, url="https://localhost/", method="GET", result=1):
-        HttpChecker.assert_and_collect(function, params, url, method, result, status='404')
+    def assert_404_and_collect(function, url="https://localhost/", method="GET"):
+        HttpChecker.assert_and_collect(function, url, method, status='404')
 
 
 @pytest.fixture()

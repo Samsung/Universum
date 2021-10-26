@@ -101,7 +101,7 @@ def test_error_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
 
     # make change in workspace
     change = parameters.make_a_change()
@@ -119,12 +119,12 @@ def test_success_one_change(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
 
     # make change in workspace
     change = parameters.make_a_change()
 
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
     parameters.http_check.assert_request_was_made({"cl": [change]})
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
@@ -133,14 +133,14 @@ def test_success_two_changes(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run, result=None)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll again and trigger the url twice
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -153,14 +153,14 @@ def test_changes_several_times(poll_parameters, poll_environment):
     parameters = poll_parameters(poll_environment)
 
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
 
     # make changes in workspace
     change1 = parameters.make_a_change()
     change2 = parameters.make_a_change()
 
     # run poll and trigger the urls
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
@@ -174,7 +174,7 @@ def test_changes_several_times(poll_parameters, poll_environment):
     change4 = parameters.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, params=None, result=None)
+    parameters.http_check.assert_success_and_collect(parameters.environment.run)
 
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
     parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
