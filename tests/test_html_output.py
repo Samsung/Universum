@@ -21,13 +21,15 @@ failed_step = Configuration([dict(name="Failed step", command=["./non_existing_s
 partially_success_step = Configuration([dict(name="Partially success step: ")])
 all_success_step = Configuration([dict(name="All success step: ")])
 all_failed_step = Configuration([dict(name="All failed step: ")])
+failed_critical_step = Configuration([dict(name="Failed step", command=["./non_existing_script.sh"], critical=True)])
 
 configs = \
     success_step + \
     failed_step + \
     partially_success_step * (success_step + failed_step) + \
     all_success_step * (success_step + success_step) + \
-    all_failed_step * (failed_step + failed_step)
+    all_failed_step * (failed_step + failed_step) + \
+    failed_critical_step + success_step
 """
 
 
@@ -117,7 +119,8 @@ def check_sections_indentation(steps_section):
 
 def check_coloring(body_element, steps_section):
     check_body_coloring(body_element)
-    check_text_coloring(steps_section)
+    check_title_and_status_coloring(steps_section)
+    check_skipped_steps_coloring(steps_section)
 
 
 def check_body_coloring(body_element):
@@ -125,7 +128,7 @@ def check_body_coloring(body_element):
     assert body_element.background_color == Color.WHITE
 
 
-def check_text_coloring(steps_section):
+def check_title_and_status_coloring(steps_section):
     steps_body = steps_section.get_section_body()
 
     check_section_coloring(steps_body.get_section_by_name("Success step"))
@@ -140,6 +143,15 @@ def check_text_coloring(steps_section):
     check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
     composite_step.click() # restore sections state
+
+
+def check_skipped_steps_coloring(steps_section):
+    steps_body = steps_section.get_section_body()
+    skipped_steps = steps_body.find_elements_by_class_name("skipped")
+    assert skipped_steps
+    skipped_steps = [TestElement.create(step) for step in skipped_steps]
+    for step in skipped_steps:
+        assert step.color == Color.GREEN_AND_BLUE
 
 
 def check_section_coloring(step, is_failed=False):
@@ -250,6 +262,12 @@ class TestElement(FirefoxWebElement):
             return Color.BLACK
         if red >= 245 and green >= 245 and blue >= 245:
             return Color.WHITE
+        if red == green and primary_color in (red, green):
+            return Color.RED_AND_GREEN
+        if red == blue and primary_color in (red, blue):
+            return Color.RED_AND_BLUE
+        if green == blue and primary_color in (green, blue):
+            return Color.GREEN_AND_BLUE
         if primary_color == red:
             return Color.RED
         if primary_color == green:
@@ -265,3 +283,6 @@ class Color(Enum):
     RED = auto()
     GREEN = auto()
     BLUE = auto()
+    RED_AND_GREEN = auto()
+    RED_AND_BLUE = auto()
+    GREEN_AND_BLUE = auto()
