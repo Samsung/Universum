@@ -19,8 +19,6 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     if settings.config_file:
         cmd.append(f'--config-file={settings.config_file}')
     cmd.extend(settings.file_list)
-    # TODO: move all additional params outside of analyzer
-    cmd.extend(['--ignore-missing-imports', '--exclude', 'thirdparty', '--follow-imports', 'skip'])
     output, _ = utils.run_for_output(cmd)
     return mypy_output_parser(output)
 
