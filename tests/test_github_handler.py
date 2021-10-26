@@ -161,6 +161,5 @@ def test_error_github_handler_404(stdout_checker, github_handler_environment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     url = github_handler_environment.check_run_url
-    print(url)
     github_handler_environment.run_with_http_server(expect_failure=True, url=url, status='404')
     stdout_checker.assert_has_calls_with_param(f"404 Client Error: Not Found for url: {url}")
