@@ -28,15 +28,15 @@ def make_branch_with_changes(git_server, branch_name, commits_number, branch_fro
     return commits
 
 
-def assert_polled_commits(commits, stdout_checker, http_check):
+def assert_polled_commits(commits, stdout_checker, collected_http):
     for commit in commits:
         stdout_checker.assert_has_calls_with_param("==> Detected commit " + commit)
-        http_check.assert_request_was_made({"cl": [commit]})
+        collected_http.assert_request_was_made({"cl": [commit]})
 
 
-def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
+def test_max_number_commits(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make changes in polled branch
@@ -45,17 +45,17 @@ def test_max_number_commits(stdout_checker, http_check, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits(changes_to_polled[1:],
                           stdout_checker,
-                          http_check)
+                          collected_http)
     # Ensure that oldest commit is beyond "allowed_commits_number" and is not polled
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_polled[0])
 
 
-def test_merge_one_branch_ff(stdout_checker, http_check, git_poll_environment):
+def test_merge_one_branch_ff(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make changes in polled branch
@@ -67,15 +67,15 @@ def test_merge_one_branch_ff(stdout_checker, http_check, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + changes_to_branch,
                           stdout_checker,
-                          http_check)
+                          collected_http)
 
 
-def test_merge_one_branch_noff(stdout_checker, http_check, git_poll_environment):
+def test_merge_one_branch_noff(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make changes in polled branch
@@ -88,17 +88,17 @@ def test_merge_one_branch_noff(stdout_checker, http_check, git_poll_environment)
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
-                          http_check)
+                          collected_http)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch[0])
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch[1])
 
 
-def test_merge_two_subsequent_branches_noff(stdout_checker, http_check, git_poll_environment):
+def test_merge_two_subsequent_branches_noff(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make changes in polled branch
@@ -113,17 +113,17 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, http_check, git_poll
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
-                          http_check)
+                          collected_http)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_first_branch[0])
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_second_branch[0])
 
 
-def test_merge_two_subsequent_branches_ff(stdout_checker, http_check, git_poll_environment):
+def test_merge_two_subsequent_branches_ff(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make changes in polled branch
@@ -138,15 +138,15 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, http_check, git_poll_e
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + changes_to_first_branch + changes_to_second_branch,
                           stdout_checker,
-                          http_check)
+                          collected_http)
 
 
-def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_check, git_poll_environment):
+def test_merge_one_branch_noff_1_commit_behind(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make a branch from polled
@@ -164,17 +164,17 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, http_check, git_p
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled, merge_commit_id],
                           stdout_checker,
-                          http_check)
+                          collected_http)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch)
 
 
 @pytest.mark.xfail
-def test_merge_ff_commit_merged_from_polled(stdout_checker, http_check, git_poll_environment):
+def test_merge_ff_commit_merged_from_polled(stdout_checker, git_poll_environment):
     # initialize working directory with initial data
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    git_poll_environment.run_with_http_server()
 
     # ACT
     # make a branch from polled
@@ -195,8 +195,8 @@ def test_merge_ff_commit_merged_from_polled(stdout_checker, http_check, git_poll
 
     # ASSERT
     # run poll again and trigger the url twice
-    http_check.assert_success_and_collect(git_poll_environment.run)
+    collected_http = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled, change_to_branch],
                           stdout_checker,
-                          http_check)
+                          collected_http)
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + merge_commit_to_branch)

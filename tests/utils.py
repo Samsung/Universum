@@ -6,11 +6,13 @@ import socket
 import string
 import sys
 
+import httpretty
 import py
-from universum.lib.module_arguments import ModuleNamespace
 
 from universum import submit, poll, main, github_handler, nonci, __main__
 from universum.lib import gravity
+from universum.lib.module_arguments import ModuleNamespace
+
 from .thirdparty.pyfeed.rfc3339 import tf_from_timestamp
 from . import default_args
 
@@ -121,6 +123,70 @@ class BaseVcsClient:
         raise NotImplementedError()
 
 
+class HttpChecker:
+    @staticmethod
+    def assert_request_with_query(query, ensure):
+        queries = []
+        for request in httpretty.httpretty.latest_requests:
+            if request.querystring == query:
+                if ensure:
+                    return
+                assert False, f"Query string was found in calls to http server.\n" \
+                              f"Expected: {query}\nActual:{str(queries)}"
+            queries.append(request.querystring)
+
+        if ensure:
+            assert False, f"Query string is not found in calls to http server.\n" \
+                          f"Expected: {query}\nActual:{str(queries)}"
+
+    @staticmethod
+    def assert_request_was_made(query):
+        HttpChecker.assert_request_with_query(query, ensure=True)
+
+    @staticmethod
+    def assert_request_was_not_made(query):
+        HttpChecker.assert_request_with_query(query, ensure=False)
+
+    @staticmethod
+    def assert_request_contained(key, value, target):
+        results = []
+        for request in httpretty.httpretty.latest_requests:
+            if target == "query param":
+                check_target = request.querystring
+            elif target == "header":
+                check_target = request.headers
+            elif target == "body field":
+                check_target = request.parsed_body
+            else:
+                assert False, f"This type of check ('{target}') is not implemented"
+
+            if key in check_target:
+                if (target == "query param") and (value in check_target[key]):
+                    return
+                if check_target[key] == value:
+                    return
+                results.append(check_target[key])
+
+        if not results:
+            text = f"No requests with {target} '{key}' found in calls to http server"
+        else:
+            text = f"No requests with {target} '{key}' set to '{value}' found in calls to http server.\n"
+            text += f"However, requests with following values were made: {results}"
+        assert False, text
+
+    @staticmethod
+    def assert_request_query_contained(key, value):
+        HttpChecker.assert_request_contained(key, value, "query param")
+
+    @staticmethod
+    def assert_request_headers_contained(key, value):
+        HttpChecker.assert_request_contained(key, value, "header")
+
+    @staticmethod
+    def assert_request_body_contained(key, value):
+        HttpChecker.assert_request_contained(key, value, "body field")
+
+
 class BaseTestEnvironment:
     def __init__(self, client: BaseVcsClient, directory: py.path.local, test_type: str, db_file: str):
         self.temp_dir: py.path.local = directory
@@ -151,12 +217,34 @@ class BaseTestEnvironment:
             self.settings.AutomationServer.type = "local"
         self.settings.Output.type = "term"
 
-    def run(self, expect_failure=False) -> None:
+    def run(self, expect_failure: bool = False) -> None:
         settings = copy.deepcopy(self.settings)
         if expect_failure:
             assert __main__.run(settings)
         else:
             assert not __main__.run(settings)
+
+    def run_with_http_server(self,
+                             expect_failure: bool = False,
+                             url: str = "https://localhost/",
+                             method: str = "GET",
+                             status: str = "200") -> HttpChecker:
+        httpretty.reset()
+        httpretty.enable()
+        if method == "GET":
+            hmethod = httpretty.GET
+        elif method == "POST":
+            hmethod = httpretty.POST
+        else:
+            hmethod = httpretty.PATCH
+        httpretty.register_uri(hmethod, url, status=status)
+
+        try:
+            self.run(expect_failure)
+        finally:
+            httpretty.disable()
+
+        return HttpChecker()
 
 
 class LocalTestEnvironment(BaseTestEnvironment):

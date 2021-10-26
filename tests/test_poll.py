@@ -69,26 +69,6 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
     stdout_checker.assert_has_calls_with_param("Cmd('git') failed due to: exit code(128)")
 
 
-class PollerParameters:
-    def __init__(self, log_exception_checker, stdout_checker, http_check, environment):
-        self.log_exception_checker = log_exception_checker
-        self.stdout_checker = stdout_checker
-        self.http_check = http_check
-        self.poll_settings = environment.settings
-        self.environment = environment
-
-    def make_a_change(self):
-        return self.environment.vcs_client.make_a_change()
-
-
-@pytest.fixture()
-def poll_parameters(log_exception_checker, stdout_checker, http_check):
-    def inner(environment):
-        return PollerParameters(log_exception_checker, stdout_checker, http_check, environment)
-
-    yield inner
-
-
 @pytest.fixture(params=["git", "p4"])
 def poll_environment(request, perforce_workspace, git_client, tmpdir):
     if request.param == "git":
@@ -97,91 +77,83 @@ def poll_environment(request, perforce_workspace, git_client, tmpdir):
         yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="poll")
 
 
-def test_error_one_change(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
+def test_error_one_change(stdout_checker, log_exception_checker, poll_environment):
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
+    poll_environment.run_with_http_server()
 
     # make change in workspace
-    change = parameters.make_a_change()
+    change = poll_environment.vcs_client.make_a_change()
 
     # run poll again and fail triggering url because there is no server
-    parameters.environment.run(expect_failure=True)
+    poll_environment.run(expect_failure=True)
 
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
     # there is no listening server
-    parameters.log_exception_checker.assert_has_calls_with_param("[Errno 111] Connection refused")
+    log_exception_checker.assert_has_calls_with_param("[Errno 111] Connection refused")
 
 
-def test_success_one_change(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
+def test_success_one_change(stdout_checker, poll_environment):
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
+    poll_environment.run_with_http_server()
 
     # make change in workspace
-    change = parameters.make_a_change()
+    change = poll_environment.vcs_client.make_a_change()
 
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
-    parameters.http_check.assert_request_was_made({"cl": [change]})
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
+    collected_http = poll_environment.run_with_http_server()
+    collected_http.assert_request_was_made({"cl": [change]})
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
 
-def test_success_two_changes(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
+def test_success_two_changes(stdout_checker, poll_environment):
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run, result=None)
+    poll_environment.run_with_http_server()
 
     # make changes in workspace
-    change1 = parameters.make_a_change()
-    change2 = parameters.make_a_change()
+    change1 = poll_environment.vcs_client.make_a_change()
+    change2 = poll_environment.vcs_client.make_a_change()
 
     # run poll again and trigger the url twice
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
+    collected_http = poll_environment.run_with_http_server()
 
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
 
-    parameters.http_check.assert_request_was_made({"cl": [change1]})
-    parameters.http_check.assert_request_was_made({"cl": [change2]})
+    collected_http.assert_request_was_made({"cl": [change1]})
+    collected_http.assert_request_was_made({"cl": [change2]})
 
 
-def test_changes_several_times(poll_parameters, poll_environment):
-    parameters = poll_parameters(poll_environment)
-
+def test_changes_several_times(stdout_checker, poll_environment):
     # initialize working directory with initial data
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
+    poll_environment.run_with_http_server()
 
     # make changes in workspace
-    change1 = parameters.make_a_change()
-    change2 = parameters.make_a_change()
+    change1 = poll_environment.vcs_client.make_a_change()
+    change2 = poll_environment.vcs_client.make_a_change()
 
     # run poll and trigger the urls
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
+    collected_http = poll_environment.run_with_http_server()
 
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change1)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change2)
 
-    parameters.http_check.assert_request_was_made({"cl": [change1]})
-    parameters.http_check.assert_request_was_made({"cl": [change2]})
+    collected_http.assert_request_was_made({"cl": [change1]})
+    collected_http.assert_request_was_made({"cl": [change2]})
 
     # make more changes in workspace
-    parameters.stdout_checker.reset()
-    change3 = parameters.make_a_change()
-    change4 = parameters.make_a_change()
+    stdout_checker.reset()
+    change3 = poll_environment.vcs_client.make_a_change()
+    change4 = poll_environment.vcs_client.make_a_change()
 
     # run poll and trigger urls for the new changes only
-    parameters.http_check.assert_success_and_collect(parameters.environment.run)
+    collected_http = poll_environment.run_with_http_server()
 
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
-    parameters.stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
-    parameters.stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change1)
-    parameters.stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change2)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change3)
+    stdout_checker.assert_has_calls_with_param("==> Detected commit " + change4)
+    stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change1)
+    stdout_checker.assert_absent_calls_with_param("==> Detected commit " + change2)
 
-    parameters.http_check.assert_request_was_made({"cl": [change3]})
-    parameters.http_check.assert_request_was_made({"cl": [change4]})
-    parameters.http_check.assert_request_was_not_made({"cl": [change1]})
-    parameters.http_check.assert_request_was_not_made({"cl": [change2]})
+    collected_http.assert_request_was_made({"cl": [change3]})
+    collected_http.assert_request_was_made({"cl": [change4]})
+    collected_http.assert_request_was_not_made({"cl": [change1]})
+    collected_http.assert_request_was_not_made({"cl": [change2]})

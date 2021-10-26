@@ -3,7 +3,6 @@
 import re
 from unittest import mock
 
-import httpretty
 import pytest
 
 pytest_plugins = ['tests.perforce_utils', 'tests.git_utils', 'tests.deployment_utils']
@@ -58,101 +57,6 @@ def log_exception_checker(request):
     with mock.patch('universum.modules.output.terminal_based_output.TerminalBasedOutput.log_exception') as logging_mock:
         result = FuzzyCallChecker(logging_mock)
         yield result
-
-
-class HttpChecker:
-
-    @staticmethod
-    def assert_request_with_query(query, ensure):
-        queries = []
-        for request in httpretty.httpretty.latest_requests:
-            if request.querystring == query:
-                if ensure:
-                    return
-                assert False, f"Query string was found in calls to http server.\n" \
-                              f"Expected: {query}\nActual:{str(queries)}"
-            queries.append(request.querystring)
-
-        if ensure:
-            assert False, f"Query string is not found in calls to http server.\n" \
-                          f"Expected: {query}\nActual:{str(queries)}"
-
-    @staticmethod
-    def assert_request_was_made(query):
-        HttpChecker.assert_request_with_query(query, ensure=True)
-
-    @staticmethod
-    def assert_request_was_not_made(query):
-        HttpChecker.assert_request_with_query(query, ensure=False)
-
-    @staticmethod
-    def assert_request_contained(key, value, target):
-        results = []
-        for request in httpretty.httpretty.latest_requests:
-            if target == "query param":
-                check_target = request.querystring
-            elif target == "header":
-                check_target = request.headers
-            elif target == "body field":
-                check_target = request.parsed_body
-            else:
-                assert False, f"This type of check ('{target}') is not implemented"
-
-            if key in check_target:
-                if (target == "query param") and (value in check_target[key]):
-                    return
-                if check_target[key] == value:
-                    return
-                results.append(check_target[key])
-
-        if not results:
-            text = f"No requests with {target} '{key}' found in calls to http server"
-        else:
-            text = f"No requests with {target} '{key}' set to '{value}' found in calls to http server.\n"
-            text += f"However, requests with following values were made: {results}"
-        assert False, text
-
-    @staticmethod
-    def assert_request_query_contained(key, value):
-        HttpChecker.assert_request_contained(key, value, "query param")
-
-    @staticmethod
-    def assert_request_headers_contained(key, value):
-        HttpChecker.assert_request_contained(key, value, "header")
-
-    @staticmethod
-    def assert_request_body_contained(key, value):
-        HttpChecker.assert_request_contained(key, value, "body field")
-
-    @staticmethod
-    def assert_and_collect(function, url, method, status):
-        httpretty.reset()
-        httpretty.enable()
-        if method == "GET":
-            hmethod = httpretty.GET
-        elif method == "POST":
-            hmethod = httpretty.POST
-        else:
-            hmethod = httpretty.PATCH
-        httpretty.register_uri(hmethod, url, status=status)
-
-        try:
-            function()
-        finally:
-            httpretty.disable()
-
-    @staticmethod
-    def assert_success_and_collect(function, url="https://localhost/", method="GET"):
-        HttpChecker.assert_and_collect(function, url, method, status='200')
-
-    @staticmethod
-    def assert_404_and_collect(function, url="https://localhost/", method="GET"):
-        HttpChecker.assert_and_collect(function, url, method, status='404')
-
-
-@pytest.fixture()
-def http_check(request):
-    yield HttpChecker()
 
 
 @pytest.fixture(autouse=True)
