@@ -7,14 +7,8 @@ from . import git_utils, perforce_utils, utils
 
 
 def test_poll_local_vcs(tmpdir):
-    settings = utils.create_empty_settings("poll")
-    settings.Vcs.type = "none"
-    settings.Poll.db_file = tmpdir / "poll.json"
-    settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
-    settings.AutomationServer.type = "jenkins"
-    settings.ProjectDirectory.project_root = str(tmpdir.mkdir("project_root"))
-
-    assert __main__.run(settings) == 0
+    env = utils.LocalTestEnvironment(tmpdir, "poll")
+    env.run()
 
 
 def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):

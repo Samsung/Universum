@@ -249,4 +249,6 @@ class BaseTestEnvironment:
 
 class LocalTestEnvironment(BaseTestEnvironment):
     def __init__(self, directory, test_type):
-        super().__init__(BaseVcsClient(), directory, test_type, "")
+        db_file = str(directory / "poll.json")
+        super().__init__(BaseVcsClient(), directory, test_type, db_file)
+        self.settings.Vcs.type = "none"
