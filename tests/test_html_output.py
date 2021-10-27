@@ -10,7 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webelement import FirefoxWebElement
 
-from universum import __main__
 from . import utils
 
 
@@ -35,14 +34,9 @@ configs = \
 
 
 def create_environment(test_type, tmpdir):
-    env = utils.TestEnvironment(tmpdir, test_type)
+    env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
     env.settings.Output.html_log = True
-
-    if test_type == "main":
-        env.settings.Vcs.type = "none"
-        env.settings.LocalMainVcs.source_dir = str(tmpdir.mkdir('work_dir'))
-
     return env
 
 
@@ -61,20 +55,20 @@ def browser():
 
 
 def test_success(environment_main_and_nonci, browser):
-    assert not __main__.run(environment_main_and_nonci.settings)
+    environment_main_and_nonci.run()
     check_html_log(environment_main_and_nonci.artifact_dir, browser)
 
 
 def test_success_clean_build(tmpdir, browser):
     env = create_environment("main", tmpdir)
     env.settings.Main.clean_build = True
-    assert not __main__.run(env.settings)
+    env.run()
     check_html_log(env.artifact_dir, browser)
 
 
 def test_no_html_log_requested(environment_main_and_nonci):
     environment_main_and_nonci.settings.Output.html_log = False
-    assert not __main__.run(environment_main_and_nonci.settings)
+    environment_main_and_nonci.run()
     log_path = os.path.join(environment_main_and_nonci.artifact_dir, "log.html")
     assert not os.path.exists(log_path)
 
@@ -143,7 +137,7 @@ def check_title_and_status_coloring(steps_section):
     check_section_coloring(composite_step_body.get_section_by_name("Success step"))
     check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
-    composite_step.click() # restore sections state
+    composite_step.click()  # restore sections state
 
 
 def check_skipped_steps_coloring(steps_section):

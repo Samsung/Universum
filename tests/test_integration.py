@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from .utils import python
+from .utils import python, simple_test_config
 
 
 def get_line_with_text(text, log):
@@ -16,11 +16,7 @@ def get_line_with_text(text, log):
 
 
 def test_minimal_execution(docker_main_and_nonci):
-    log = docker_main_and_nonci.run("""
-from universum.configuration_support import Configuration
-
-configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
-""")
+    log = docker_main_and_nonci.run(simple_test_config)
     assert docker_main_and_nonci.local.repo_file.basename in log
 
 
@@ -207,20 +203,12 @@ configs = Configuration([Step(name="Step one"),
 
 
 def test_minimal_git(docker_main_with_vcs):
-    log = docker_main_with_vcs.run("""
-from universum.configuration_support import Configuration, Step
-
-configs = Configuration([Step(name="Test step", command=["ls", "-la"])])
-""", vcs_type="git")
+    log = docker_main_with_vcs.run(simple_test_config, vcs_type="git")
     assert docker_main_with_vcs.git.repo_file.basename in log
 
 
 def test_minimal_p4(docker_main_with_vcs):
-    log = docker_main_with_vcs.run("""
-from universum.configuration_support import Configuration, Step
-
-configs = Configuration([Step(name="Test step", command=["ls", "-la"])])
-""", vcs_type="p4")
+    log = docker_main_with_vcs.run(simple_test_config, vcs_type="p4")
     assert docker_main_with_vcs.perforce.repo_file.basename in log
 
 
@@ -288,13 +276,8 @@ def empty_required_params_ids(param):
 ], ids=empty_required_params_ids)
 def test_empty_required_params(docker_main_with_vcs, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
-    config = """
-from universum.configuration_support import Configuration
 
-configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
-"""
-
-    log = docker_main_with_vcs.run(config, vcs_type="p4", expected_to_fail=True,
+    log = docker_main_with_vcs.run(simple_test_config, vcs_type="p4", expected_to_fail=True,
                                    additional_parameters=" --report-to-review" + parameters, environment=env)
     if url_error_expected:
         assert url_error in log
