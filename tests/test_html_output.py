@@ -3,6 +3,7 @@
 import os
 import re
 from enum import Enum, auto
+import colorsys
 import pytest
 
 from selenium import webdriver
@@ -151,7 +152,7 @@ def check_skipped_steps_coloring(steps_section):
     assert skipped_steps
     skipped_steps = [TestElement.create(step) for step in skipped_steps]
     for step in skipped_steps:
-        assert step.color == Color.GREEN_AND_BLUE
+        assert step.color == Color.CYAN
 
 
 def check_section_coloring(step, is_failed=False):
@@ -257,24 +258,30 @@ class TestElement(FirefoxWebElement):
         re_result = re.match(r"^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$", rgb_str)
         assert re_result
         red, green, blue = int(re_result.group(1)), int(re_result.group(2)), int(re_result.group(3))
-        primary_color = max(red, green, blue)
-        if red <= 100 and green <= 100 and blue <= 100:
-            return Color.BLACK
-        if red >= 245 and green >= 245 and blue >= 245:
-            return Color.WHITE
-        if red == green and primary_color in (red, green):
-            return Color.RED_AND_GREEN
-        if red == blue and primary_color in (red, blue):
-            return Color.RED_AND_BLUE
-        if green == blue and primary_color in (green, blue):
-            return Color.GREEN_AND_BLUE
-        if primary_color == red:
-            return Color.RED
-        if primary_color == green:
-            return Color.GREEN
-        if primary_color == blue:
-            return Color.BLUE
-        return None
+        hue, lightness, saturation = colorsys.rgb_to_hls(red/255.0, green/255.0, blue/255.0)
+        hue = 360 * hue
+        lightness = 100 * lightness
+
+        color = None
+        if lightness <= 20:
+            color = Color.BLACK
+        elif lightness >= 90:
+            color = Color.WHITE
+        elif 0 <= hue <= 30 or 330 <= hue <= 360:
+            color = Color.RED
+        elif 30 <= hue <= 80:
+            color = Color.YELLOW;
+        elif 80 <= hue <= 150:
+            color = Color.GREEN
+        elif 150 <= hue <= 190:
+            color = Color.CYAN
+        elif 190 <= hue <= 270:
+            color = Color.BLUE
+        elif 270 <= hue <= 330:
+            color = Color.PURPLE;
+        else:
+            assert False, "Should not occur"
+        return color
 
 
 class Color(Enum):
@@ -283,6 +290,6 @@ class Color(Enum):
     RED = auto()
     GREEN = auto()
     BLUE = auto()
-    RED_AND_GREEN = auto()
-    RED_AND_BLUE = auto()
-    GREEN_AND_BLUE = auto()
+    YELLOW = auto()
+    PURPLE = auto()
+    CYAN = auto()
