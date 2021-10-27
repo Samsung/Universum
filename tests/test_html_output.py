@@ -1,11 +1,16 @@
 # pylint: disable = redefined-outer-name
 
 import os
+import re
+from enum import Enum, auto
+import colorsys
 import pytest
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webelement import FirefoxWebElement
+
+from . import utils
 
 
 config = """
@@ -16,14 +21,28 @@ failed_step = Configuration([dict(name="Failed step", command=["./non_existing_s
 partially_success_step = Configuration([dict(name="Partially success step: ")])
 all_success_step = Configuration([dict(name="All success step: ")])
 all_failed_step = Configuration([dict(name="All failed step: ")])
+failed_critical_step = Configuration([dict(name="Failed step", command=["./non_existing_script.sh"], critical=True)])
 
 configs = \
     success_step + \
     failed_step + \
     partially_success_step * (success_step + failed_step) + \
     all_success_step * (success_step + success_step) + \
-    all_failed_step * (failed_step + failed_step)
+    all_failed_step * (failed_step + failed_step) + \
+    failed_critical_step + success_step
 """
+
+
+def create_environment(test_type, tmpdir):
+    env = utils.LocalTestEnvironment(tmpdir, test_type)
+    env.configs_file.write(config)
+    env.settings.Output.html_log = True
+    return env
+
+
+@pytest.fixture(params=["main", "nonci"])
+def environment_main_and_nonci(request, tmpdir):
+    yield create_environment(request.param, tmpdir)
 
 
 @pytest.fixture()
@@ -35,19 +54,22 @@ def browser():
     firefox.close()
 
 
-def test_success(docker_main_and_nonci, browser):
-    docker_main_and_nonci.run(config, additional_parameters="--html-log")
-    check_html_log(docker_main_and_nonci.artifact_dir, browser)
+def test_success(environment_main_and_nonci, browser):
+    environment_main_and_nonci.run()
+    check_html_log(environment_main_and_nonci.artifact_dir, browser)
 
 
-def test_success_clean_build(docker_main, browser):
-    docker_main.run(config, additional_parameters="--html-log --clean-build")
-    check_html_log(docker_main.artifact_dir, browser)
+def test_success_clean_build(tmpdir, browser):
+    env = create_environment("main", tmpdir)
+    env.settings.Main.clean_build = True
+    env.run()
+    check_html_log(env.artifact_dir, browser)
 
 
-def test_no_html_log_requested(docker_main_and_nonci):
-    docker_main_and_nonci.run(config)
-    log_path = os.path.join(docker_main_and_nonci.artifact_dir, "log.html")
+def test_no_html_log_requested(environment_main_and_nonci):
+    environment_main_and_nonci.settings.Output.html_log = False
+    environment_main_and_nonci.run()
+    log_path = os.path.join(environment_main_and_nonci.artifact_dir, "log.html")
     assert not os.path.exists(log_path)
 
 
@@ -56,7 +78,7 @@ def check_html_log(artifact_dir, browser):
     assert os.path.exists(log_path)
 
     browser.get(f"file://{log_path}")
-    html_body = browser.find_element_by_tag_name("body")
+    html_body = TestElement.create(browser.find_element_by_tag_name("body"))
     body_elements = html_body.find_elements_by_xpath("./*")
     assert len(body_elements) == 1
     assert body_elements[0].tag_name == "pre"
@@ -65,12 +87,13 @@ def check_html_log(artifact_dir, browser):
     steps_section = pre_element.get_section_by_name("Executing build steps")
     steps_body = steps_section.get_section_body()
 
-    check_step_collapsed(steps_section, steps_body)
+    assert not steps_body.is_displayed()
     steps_section.click()
-    check_step_not_collapsed(steps_section, steps_body)
+    assert steps_body.is_displayed()
     check_sections_indentation(steps_section)
+    check_coloring(html_body, steps_section)
     steps_section.click()
-    check_step_collapsed(steps_section, steps_body)
+    assert not steps_body.is_displayed()
 
 
 def check_sections_indentation(steps_section):
@@ -86,21 +109,73 @@ def check_sections_indentation(steps_section):
     assert step_lvl2_first.indent == step_lvl2_second.indent
 
     assert steps_section.indent < step_lvl1_first.indent < step_lvl2_first.indent
+    step_lvl1_second.click() # restore sections state
 
 
-def check_step_collapsed(section, body):
-    assert section.is_section_collapsed
-    assert body.is_body_collapsed
-    assert not body.is_displayed()
+def check_coloring(body_element, steps_section):
+    check_body_coloring(body_element)
+    check_title_and_status_coloring(steps_section)
+    check_skipped_steps_coloring(steps_section)
 
 
-def check_step_not_collapsed(section, body):
-    assert not section.is_section_collapsed
-    assert not body.is_body_collapsed
-    assert body.is_displayed()
+def check_body_coloring(body_element):
+    assert body_element.color == Color.BLACK
+    assert body_element.background_color == Color.WHITE
+
+
+def check_title_and_status_coloring(steps_section):
+    steps_body = steps_section.get_section_body()
+
+    check_section_coloring(steps_body.get_section_by_name("Success step"))
+    check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_coloring(steps_body.get_section_by_name("Partially success step"))
+
+    composite_step = steps_body.get_section_by_name("Partially success step")
+    composite_step.click()
+    composite_step_body = composite_step.get_section_body()
+
+    check_section_coloring(composite_step_body.get_section_by_name("Success step"))
+    check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
+
+    composite_step.click()  # restore sections state
+
+
+def check_skipped_steps_coloring(steps_section):
+    steps_body = steps_section.get_section_body()
+    skipped_steps = steps_body.find_elements_by_class_name("skipped")
+    assert skipped_steps
+    skipped_steps = [TestElement.create(step) for step in skipped_steps]
+    for step in skipped_steps:
+        assert step.color == Color.CYAN
+
+
+def check_section_coloring(step, is_failed=False):
+    check_title_coloring(step.get_section_title())
+    step.click() # open section body
+    check_status_coloring(step.get_section_status(), is_failed)
+    step.click() # close section body
+
+
+def check_title_coloring(title):
+    assert title.color == Color.BLUE
+    check_text_is_bold(title)
+
+
+def check_status_coloring(status, is_failed):
+    exp_color = Color.RED if is_failed else Color.GREEN
+    assert status.color == exp_color
+    check_text_is_bold(status)
+
+
+def check_text_is_bold(element):
+    font_weight_bold = "700"
+    assert element.font_weight == font_weight_bold
+
 
 
 class TestElement(FirefoxWebElement):
+
+    __test__ = False # disable pytest collection for this class
 
     @staticmethod
     def create(element):
@@ -108,11 +183,13 @@ class TestElement(FirefoxWebElement):
         element.__class__ = TestElement
         return element
 
-    # <input type="checkbox" id="1." class="hide">
-    # <label for="1.">  <-- returning this element
-    #     <span class="sectionLbl">1. Section name</span>  <-- Searching for this element
-    # </label>
-    # <div>Section body</div>
+    # <any_tag>  <-- self
+    #     <input type="checkbox" id="1." class="hide">
+    #     <label for="1.">  <-- returning this element
+    #         <span class="sectionLbl">1. Section name</span>  <-- Searching for this element
+    #     </label>
+    #     <div>Section body</div>
+    # </any_tag>
     def get_section_by_name(self, section_name):
         span_elements = self.find_elements_by_class_name("sectionLbl")
         result = None
@@ -121,36 +198,92 @@ class TestElement(FirefoxWebElement):
                 result = el.find_element_by_xpath("..")
         return TestElement.create(result)
 
+    # <input type="checkbox" id="1." class="hide">
+    # <label for="1.">  <-- self
+    #     <span class="sectionLbl">1. Section name</span>
+    # </label>
+    # <div>Section body</div>  <-- returning this element
     def get_section_body(self):
         body = TestElement.create(self.find_element_by_xpath("./following-sibling::*[1]"))
         assert body.tag_name == "div"
         return body
 
-    @property
-    def is_body_collapsed(self):
-        display_state = self.value_of_css_property("display")
-        collapsed_state = "none"
-        not_collapsed_state = "block"
-        if display_state not in (collapsed_state, not_collapsed_state):
-            raise RuntimeError(f"Unexpected element display state: '{display_state}'")
-
-        collapsed = (display_state == collapsed_state)
-        collapsed &= (not self.text)
-        return collapsed
-
-    @property
-    def is_section_collapsed(self):
-        label_span = self.find_element_by_tag_name("span")
+    # <label for="1.">  <-- self
+    #     <span class="sectionLbl">
+    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element
+    #     </span>
+    # </label>
+    def get_section_title(self):
+        label_span = self.find_element_by_class_name("sectionLbl")
         assert label_span
-        script = "return window.getComputedStyle(arguments[0],':before').getPropertyValue('content')"
-        section_state = self.parent.execute_script(script, label_span).replace('"', "").replace(" ", "")
-        collapsed_state = "[+]"
-        not_collapsed_state = "[-]"
-        if section_state not in (collapsed_state, not_collapsed_state):
-            raise RuntimeError(f"Unexpected section collapsed state: '{section_state}'")
+        title_span = label_span.find_element_by_tag_name("span")
+        return TestElement.create(title_span)
 
-        return section_state == collapsed_state
+    # <label for="1.">  <-- self
+    #     ...
+    # </label>
+    # <div>
+    #     ...
+    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element
+    # </div>
+    def get_section_status(self):
+        body = self.get_section_body()
+        xpath_selector = "./*[contains(text(), '[Success]') or contains(text(), '[Failed]')]"
+        return TestElement.create(body.find_elements_by_xpath(xpath_selector)[-1])
 
     @property
     def indent(self):
         return self.location['x']
+
+    @property
+    def color(self):
+        return self._get_primary_color(self.value_of_css_property("color"))
+
+    @property
+    def background_color(self):
+        return self._get_primary_color(self.value_of_css_property("background-color"))
+
+    @property
+    def font_weight(self):
+        return self.value_of_css_property("font-weight")
+
+    @staticmethod
+    def _get_primary_color(rgb_str):
+        re_result = re.match(r"^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$", rgb_str)
+        assert re_result
+        red, green, blue = int(re_result.group(1)), int(re_result.group(2)), int(re_result.group(3))
+        hue, lightness, _ = colorsys.rgb_to_hls(red/255.0, green/255.0, blue/255.0)
+        hue = 360 * hue
+        lightness = 100 * lightness
+
+        color = None
+        if lightness <= 20:
+            color = Color.BLACK
+        elif lightness >= 90:
+            color = Color.WHITE
+        elif 0 <= hue <= 30 or 330 <= hue <= 360:
+            color = Color.RED
+        elif 30 <= hue <= 80:
+            color = Color.YELLOW
+        elif 80 <= hue <= 150:
+            color = Color.GREEN
+        elif 150 <= hue <= 190:
+            color = Color.CYAN
+        elif 190 <= hue <= 270:
+            color = Color.BLUE
+        elif 270 <= hue <= 330:
+            color = Color.PURPLE
+        else:
+            assert False, "Should not occur"
+        return color
+
+
+class Color(Enum):
+    BLACK = auto()
+    WHITE = auto()
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
+    YELLOW = auto()
+    PURPLE = auto()
+    CYAN = auto()

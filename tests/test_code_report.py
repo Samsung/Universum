@@ -5,7 +5,6 @@ from typing import List
 
 import pytest
 
-from universum import __main__
 from . import utils
 from .utils import python, python_version
 
@@ -23,12 +22,19 @@ class ConfigData:
         self.text = "from universum.configuration_support import Configuration, Step\n"
         self.text += "configs = Configuration()\n"
 
-    def add_analyzer(self, analyzer: str, arguments: List[str], extra_cfg: str = '') -> 'ConfigData':
+    def add_cmd(self, name: str, cmd: str, step_config: str = '') -> 'ConfigData':
+        step_config = ', ' + step_config if step_config else ''
+        self.text +=\
+            f"configs += Configuration([Step(name='{name}', command={cmd}{step_config})])\n"
+        return self
+
+    def add_analyzer(self, analyzer: str, arguments: List[str], step_config: str = '') -> 'ConfigData':
+        name = f"Run {analyzer}"
         args = [f", '{arg}'" for arg in arguments]
         cmd = f"['{python()}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
-        self.text +=\
-            f"configs += Configuration([Step(name='Run {analyzer}', {extra_cfg} code_report=True, command={cmd})])\n"
-        return self
+        step_config = ', ' + step_config if step_config else ''
+        step_config = 'code_report=True' + step_config
+        return self.add_cmd(name, cmd, step_config)
 
     def finalize(self) -> str:
         return inspect.cleandoc(self.text)
@@ -47,14 +53,19 @@ int main() {
 }
 """
 
-scan_build_html_report = """
-<html><head></head><body>
-<!-- REPORTHEADER -->
-<h3>Bug Summary</h3>
-<table class="simpletable">
-<tr><td class="rowname">File:</td><td>my_path/my_file.c</td></tr>
-<tr><td class="rowname">Warning:</td><td><a href="#EndPath">line 1, column 1</a><br />Error!</td></tr>
-</table></body></html>
+json_report_minimal = """
+[]
+"""
+
+json_report = """
+[
+    {
+        "path": "my_path/my_file",
+        "message": "Error!",
+        "symbol": "testSymbol",
+        "line": 1
+    }
+]
 """
 
 sarif_report_minimal = """
@@ -109,7 +120,7 @@ sarif_report = """
 }
 """
 
-cfg_uncrustify = """
+config_uncrustify = """
 code_width = 120
 input_tab_size = 2
 """
@@ -118,11 +129,40 @@ log_fail = r'Found [0-9]+ issues'
 log_success = r'Issues not found'
 
 
+@pytest.mark.parametrize('tested_contents, expected_success', [
+    [[json_report_minimal], True],
+    [[json_report], False],
+    [[sarif_report_minimal], True],
+    [[sarif_report], False],
+    [[json_report_minimal, sarif_report_minimal], True],
+    [[json_report, sarif_report], False],
+    [[json_report_minimal, sarif_report], False],
+    [[json_report, sarif_report_minimal], False],
+], ids=[
+    'json_no_issues',
+    'json_issues_found',
+    'sarif_no_issues',
+    'sarif_issues_found',
+    'both_tested_no_issues',
+    'both_tested_issues_in_both',
+    'both_tested_issues_in_sarif',
+    'both_tested_issues_in_json',
+])
+def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected_success):
+    config = ConfigData()
+    step_config = "code_report=True"
+    for idx, tested_content in enumerate(tested_contents):
+        prelim_report = "report_file_" + str(idx)
+        full_report = "${CODE_REPORT_FILE}"
+        runner_with_analyzers.local.root_directory.join(prelim_report).write(tested_content)
+        config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat './{prelim_report}' >> '{full_report}'\"]",
+                       step_config)
+    log = runner_with_analyzers.run(config.finalize())
+    expected_log = log_success if expected_success else log_fail
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
+
+
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
-    [['sarif_report'], [], sarif_report_minimal, True],
-    [['sarif_report'], [], sarif_report, False],
-    [['scan_build_report'], [], "<html></html>", True],
-    [['scan_build_report'], [], scan_build_html_report, False],
     [['uncrustify'], [], source_code_c, True],
     [['uncrustify'], [], source_code_c.replace('\t', ' '), False],
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python, True],
@@ -132,10 +172,6 @@ log_success = r'Issues not found'
     # TODO: add test with rcfile
     # TODO: parametrize test for different versions of python
 ], ids=[
-    'sarif_no_issues',
-    'sarif_issues_found',
-    'scan_build_no_issues',
-    'scan_build_issues_found',
     'uncrustify_no_issues',
     'uncrustify_found_issues',
     'pylint_and_mypy_both_no_issues',
@@ -154,29 +190,24 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
         args = common_args + extra_args
         if analyzer == 'uncrustify':
             args += ["--cfg-file", "cfg"]
-            runner_with_analyzers.local.root_directory.join("cfg").write(cfg_uncrustify)
+            runner_with_analyzers.local.root_directory.join("cfg").write(config_uncrustify)
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
-    if expected_success:
-        assert re.findall(log_success, log)
-    else:
-        assert re.findall(log_fail, log)
+    expected_log = log_success if expected_success else log_fail
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
+    if not expected_success:
         for analyzer in analyzers:  # confirm that all analyzers fail independently
-            assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log)
+            assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log), f"'{analyzer}' info is not found in '{log}'"
 
 
 def test_without_code_report_command(runner_with_analyzers):
-    log = runner_with_analyzers.run("""
-from universum.configuration_support import Configuration
-
-configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
-    """)
+    log = runner_with_analyzers.run(utils.simple_test_config)
     pattern = re.compile(f"({log_fail}|{log_success})")
     assert not pattern.findall(log)
 
 
-@pytest.mark.parametrize('analyzer', ['sarif_report', 'scan_build_report', 'pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('analyzer', ['pylint', 'mypy', 'uncrustify'])
 @pytest.mark.parametrize('arg_set, expected_log', [
     [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
     [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],
@@ -211,8 +242,8 @@ def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expe
     source_file.write(source_code_python)
 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
-    assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log)
-    assert expected_log in log
+    assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log), f"'{analyzer}' info is not found in '{log}'"
+    assert expected_log in log, f"'{expected_log}' is not found in '{log}'"
 
 
 @pytest.mark.parametrize('extra_args, tested_content, expected_success, expected_artifact', [
@@ -228,7 +259,7 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     root = runner_with_analyzers.local.root_directory
     source_file = root.join("source_file")
     source_file.write(tested_content)
-    root.join("cfg").write(cfg_uncrustify)
+    root.join("cfg").write(config_uncrustify)
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
         "--files", "source_file",
@@ -236,16 +267,18 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     ]
 
     args = common_args + extra_args
-    extra_cfg = "artifacts='./uncrustify/source_file.html',"
-    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_cfg).finalize())
+    extra_config = "artifacts='./uncrustify/source_file.html'"
+    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_config).finalize())
 
-    assert re.findall(log_success if expected_success else log_fail, log)
-    assert re.findall(r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact
-                      else r"Collecting 'source_file.html' - [^\n]*Failed", log)
+    expected_log = log_success if expected_success else log_fail
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
+    expected_log = r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact \
+        else r"Collecting 'source_file.html' - [^\n]*Failed"
+    assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):
-    env = utils.TestEnvironment(tmpdir, "main")
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
 
@@ -262,15 +295,13 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
 
     env.configs_file.write(config)
 
-    res = __main__.run(env.settings)
-
-    assert res == 0
+    env.run()
     stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
 
 
 def test_code_report_extended_arg_search_embedded(tmpdir, stdout_checker):
-    env = utils.TestEnvironment(tmpdir, "main")
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
 
@@ -289,7 +320,5 @@ configs = Configuration([Step(critical=True)]) * Configuration([
 
     env.configs_file.write(config)
 
-    res = __main__.run(env.settings)
-
-    assert res == 0
+    env.run()
     stdout_checker.assert_absent_calls_with_param("${CODE_REPORT_FILE}")

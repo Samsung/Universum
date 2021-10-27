@@ -1,6 +1,8 @@
 from collections import defaultdict
+from typing import Dict, List, Optional, TextIO, Tuple
+from typing_extensions import TypedDict
 
-from ..lib.gravity import Module, Dependency
+from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from . import automation_server
 from .output import HasOutput
@@ -10,6 +12,8 @@ __all__ = [
     "ReportObserver",
     "Reporter"
 ]
+
+ReportMessage = TypedDict('ReportMessage', {'message': str, 'line': int})
 
 
 class ReportObserver:
@@ -26,7 +30,7 @@ class ReportObserver:
     def report_result(self, result, report_text=None, no_vote=False):
         raise NotImplementedError
 
-    def code_report_to_review(self, report):
+    def code_report_to_review(self, report: Dict[str, List[ReportMessage]]) -> None:
         raise NotImplementedError
 
 
@@ -53,7 +57,7 @@ class Reporter(HasOutput, HasStructure):
         self.report_initialized = False
         self.blocks_to_report = []
         self.artifacts_to_report = []
-        self.code_report_comments = defaultdict(list)
+        self.code_report_comments: Dict[str, List[ReportMessage]] = defaultdict(list)
 
         self.automation_server = self.automation_server_factory()
 
@@ -88,7 +92,7 @@ class Reporter(HasOutput, HasStructure):
     def report_artifacts(self, artifact_list):
         self.artifacts_to_report.extend(artifact_list)
 
-    def code_report(self, path, message):
+    def code_report(self, path: str, message: ReportMessage) -> None:
         self.code_report_comments[path].append(message)
 
     @make_block("Reporting build result", pass_errors=False)

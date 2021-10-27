@@ -4,16 +4,17 @@ import pytest
 import sh
 
 from universum import __main__
-from .perforce_utils import P4Environment
+from .perforce_utils import P4TestEnvironment
+from .utils import simple_test_config
 
 
 @pytest.fixture()
 def perforce_environment(perforce_workspace, tmpdir):
-    yield P4Environment(perforce_workspace, tmpdir, test_type="main")
+    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
 
 
 def test_p4_forbidden_local_revert(perforce_environment, stdout_checker):
-    p4 = perforce_environment.p4
+    p4 = perforce_environment.vcs_client.p4
 
     config = """
 from universum.configuration_support import Configuration
@@ -22,8 +23,8 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
                          dict(name="Check", command=["ls", "-la"])])
 """
 
-    settings = perforce_environment.shelve_config(config)
-    result = __main__.run(settings)
+    perforce_environment.shelve_config(config)
+    result = __main__.run(perforce_environment.settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
     perforce_environment.temp_dir.chmod(0o0777, rec=1)
     perforce_environment.temp_dir.remove(rec=1)
@@ -39,7 +40,7 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
 
 
 def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
-    p4 = perforce_environment.p4
+    p4 = perforce_environment.vcs_client.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
     p4.save_client(client)
@@ -58,7 +59,7 @@ def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
 
 
 def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
-    p4 = perforce_environment.p4
+    p4 = perforce_environment.vcs_client.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
     p4.save_client(client)
@@ -82,24 +83,18 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
                                      ["//depot/...,//depot2/..."], ["132", "456"], ["@123", "4@456"],
                                      ["//depot/...@", "//depot2/...@"], ["//depot/...", "//depot2/..."]])
 def test_p4_print_exception_in_sync(perforce_environment, stdout_checker, cl_list):
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.sync_cls = cl_list
-    result = __main__.run(settings)
-
-    assert result == 1
+    perforce_environment.settings.PerforceMainVcs.sync_cls = cl_list
+    perforce_environment.run(expect_failure=True)
     text = f"Something went wrong when processing sync CL parameter ('{str(cl_list)}')"
     stdout_checker.assert_has_calls_with_param(text)
 
 
 def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
-    cl = perforce_environment.make_a_change()
-
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.shelve_cls = [cl]
-    result = __main__.run(settings)
+    cl = perforce_environment.vcs_client.make_a_change()
+    perforce_environment.settings.PerforceMainVcs.shelve_cls = [cl]
 
     # This is not the 'already committed' case of Swarm review, so it actually should fail
-    assert result == 1
+    perforce_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param(
         f"Errors during command execution( \"p4 unshelve -s {cl} -f\" )")
     stdout_checker.assert_has_calls_with_param(f"[Error]: 'Change {cl} is already committed.'")
@@ -116,12 +111,7 @@ def mock_diff(monkeypatch):
 
 
 def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
-    config = """
-from universum.configuration_support import Step, Configuration
-
-configs = Configuration([Step(name="Step", command=["ls"])])
-"""
-    settings = perforce_environment.shelve_config(config)
-    assert __main__.run(settings)
+    perforce_environment.shelve_config(simple_test_config)
+    perforce_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("This is error text")
     # Without the fixes all error messages go to stderr instead of stdout
