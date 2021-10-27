@@ -251,4 +251,7 @@ class LocalTestEnvironment(BaseTestEnvironment):
     def __init__(self, directory, test_type):
         db_file = str(directory / "poll.json")
         super().__init__(BaseVcsClient(), directory, test_type, db_file)
-        self.settings.Vcs.type = "none"
+        if test_type != "nonci":
+            self.settings.Vcs.type = "none"
+        if test_type == "main":
+            self.settings.LocalMainVcs.source_dir = str(directory.ensure_dir('project_sources'))

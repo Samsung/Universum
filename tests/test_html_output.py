@@ -37,11 +37,6 @@ def create_environment(test_type, tmpdir):
     env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
     env.settings.Output.html_log = True
-
-    if test_type == "main":
-        env.settings.Vcs.type = "none"
-        env.settings.LocalMainVcs.source_dir = str(tmpdir.mkdir('work_dir'))
-
     return env
 
 
