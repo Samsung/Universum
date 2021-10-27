@@ -258,7 +258,7 @@ class TestElement(FirefoxWebElement):
         re_result = re.match(r"^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$", rgb_str)
         assert re_result
         red, green, blue = int(re_result.group(1)), int(re_result.group(2)), int(re_result.group(3))
-        hue, lightness, saturation = colorsys.rgb_to_hls(red/255.0, green/255.0, blue/255.0)
+        hue, lightness, _ = colorsys.rgb_to_hls(red/255.0, green/255.0, blue/255.0)
         hue = 360 * hue
         lightness = 100 * lightness
 
@@ -270,7 +270,7 @@ class TestElement(FirefoxWebElement):
         elif 0 <= hue <= 30 or 330 <= hue <= 360:
             color = Color.RED
         elif 30 <= hue <= 80:
-            color = Color.YELLOW;
+            color = Color.YELLOW
         elif 80 <= hue <= 150:
             color = Color.GREEN
         elif 150 <= hue <= 190:
@@ -278,7 +278,7 @@ class TestElement(FirefoxWebElement):
         elif 190 <= hue <= 270:
             color = Color.BLUE
         elif 270 <= hue <= 330:
-            color = Color.PURPLE;
+            color = Color.PURPLE
         else:
             assert False, "Should not occur"
         return color
