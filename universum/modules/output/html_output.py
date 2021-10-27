@@ -40,7 +40,7 @@ class HtmlOutput(BaseOutput):
         pass
 
     def report_skipped(self, message):
-        self._log_line(message)
+        self._log_line(f'<span class="skipped">{message}</span>')
 
     def report_step(self, message, status):
         self.log(message)
@@ -122,6 +122,9 @@ class HtmlOutput(BaseOutput):
             .sectionFailedStatus {
                 color: red;
                 font-weight: bold;
+            }
+            .skipped {
+                color: darkcyan;
             }
 
             .hide {
