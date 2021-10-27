@@ -108,6 +108,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
         self.p4.password = self.settings.password
 
         self.p4.connect()
+        self.p4.run_login()
         self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     @make_block("Disconnecting")
