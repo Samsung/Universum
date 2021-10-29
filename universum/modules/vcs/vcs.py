@@ -178,7 +178,7 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
             status_file.write(self.driver.get_repo_status())
             try:
                 sources_list = utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root))
-                status_file.write(f"\nFile list:\n\n{sources_list}\n")
+                status_file.write(f"\n\nFile list:\n{sources_list}\n")
             except sh.ErrorReturnCode_2 as e:
                 if "No such file or directory" not in str(e):
                     raise
