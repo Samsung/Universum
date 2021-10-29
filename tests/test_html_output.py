@@ -83,15 +83,15 @@ def check_html_log(artifact_dir, browser):
     assert len(body_elements) == 1
     assert body_elements[0].tag_name == "pre"
 
-    pre_element = TestElement.create(body_elements[0])
-    steps_section = pre_element.get_section_by_name("Executing build steps")
+    universum_log_element = TestElement.create(body_elements[0])
+    steps_section = universum_log_element.get_section_by_name("Executing build steps")
     steps_body = steps_section.get_section_body()
 
     assert not steps_body.is_displayed()
     steps_section.click()
     assert steps_body.is_displayed()
     check_sections_indentation(steps_section)
-    check_coloring(html_body, steps_section)
+    check_coloring(html_body, universum_log_element, steps_section)
     steps_section.click()
     assert not steps_body.is_displayed()
 
@@ -112,10 +112,11 @@ def check_sections_indentation(steps_section):
     step_lvl1_second.click() # restore sections state
 
 
-def check_coloring(body_element, steps_section):
+def check_coloring(body_element, universum_log_element, steps_section):
     check_body_coloring(body_element)
     check_title_and_status_coloring(steps_section)
     check_skipped_steps_coloring(steps_section)
+    check_steps_report_coloring(universum_log_element)
 
 
 def check_body_coloring(body_element):
@@ -147,6 +148,25 @@ def check_skipped_steps_coloring(steps_section):
     skipped_steps = [TestElement.create(step) for step in skipped_steps]
     for step in skipped_steps:
         assert step.color == Color.CYAN
+
+
+def check_steps_report_coloring(universum_log_element):
+    report_section = universum_log_element.get_section_by_name("Reporting build result")
+    report_section.click()
+    report_section_body = report_section.get_section_body()
+
+    xpath_selector = "./*[text() = 'Success' or text() = 'Failed' or text() = 'Skipped']"
+    elements = [TestElement.create(el) for el in report_section_body.find_elements_by_xpath(xpath_selector)]
+    assert elements
+    for el in elements:
+        if el.text == "Success":
+            assert el.color == Color.GREEN
+        elif el.text in ("Failed", "Skipped"):
+            assert el.color == Color.RED
+        else:
+            assert False, f"Unexpected element text: '{el.text}'"
+
+    report_section.click() # restore section state
 
 
 def check_section_coloring(step, is_failed=False):

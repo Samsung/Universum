@@ -32,7 +32,7 @@ class HtmlOutput(BaseOutput):
         self._block_level -= 1
         indent = "  " * self._block_level
         closing_html = '</div><span class="nl"></span>'
-        status_html = f'<span class="section{status}Status">[{status}]</span>'
+        status_html = f'<span class="{status.lower()}Status">[{status}]</span>'
         self._log_line(f"{indent} \u2514 {status_html}{closing_html}", with_line_separator=False)
         self._log_line("")
 
@@ -43,6 +43,9 @@ class HtmlOutput(BaseOutput):
         self._log_line(f'<span class="skipped">{message}</span>')
 
     def report_step(self, message, status):
+        if message.endswith(status):
+            message = message[:-len(status)]
+            message += f'<span class="{status.lower()}Status">{status}</span>'
         self.log(message)
 
     def change_status(self, message):
@@ -115,11 +118,15 @@ class HtmlOutput(BaseOutput):
                 color: darkslateblue;
                 font-weight: bold;
             }
-            .sectionSuccessStatus {
+            .successStatus {
                 color: green;
                 font-weight: bold;
             }
-            .sectionFailedStatus {
+            .failedStatus {
+                color: red;
+                font-weight: bold;
+            }
+            .skippedStatus {
                 color: red;
                 font-weight: bold;
             }
