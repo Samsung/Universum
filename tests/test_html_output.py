@@ -79,9 +79,8 @@ def check_html_log(artifact_dir, browser):
 
     browser.get(f"file://{log_path}")
     html_body = TestElement.create(browser.find_element_by_tag_name("body"))
-    body_elements = html_body.find_elements_by_xpath("./*")
+    body_elements = html_body.find_elements_by_xpath("./pre")
     assert len(body_elements) == 1
-    assert body_elements[0].tag_name == "pre"
 
     universum_log_element = TestElement.create(body_elements[0])
     steps_section = universum_log_element.get_section_by_name("Executing build steps")
@@ -94,6 +93,7 @@ def check_html_log(artifact_dir, browser):
     check_coloring(html_body, universum_log_element, steps_section)
     steps_section.click()
     assert not steps_body.is_displayed()
+    check_dark_mode(html_body, universum_log_element)
 
 
 def check_sections_indentation(steps_section):
@@ -192,6 +192,14 @@ def check_text_is_bold(element):
     assert element.font_weight == font_weight_bold
 
 
+def check_dark_mode(body_element, universum_log_element):
+    dark_mode_switch = TestElement.create(body_element.find_elements_by_xpath("./label")[0])
+    dark_mode_switch.click()
+    assert universum_log_element.color == Color.WHITE
+    assert universum_log_element.background_color == Color.BLACK
+    dark_mode_switch.click()
+    assert universum_log_element.color == Color.BLACK
+
 
 class TestElement(FirefoxWebElement):
 
@@ -279,7 +287,7 @@ class TestElement(FirefoxWebElement):
         color = None
         if lightness <= 20:
             color = Color.BLACK
-        elif lightness >= 90:
+        elif lightness >= 80:
             color = Color.WHITE
         elif 0 <= hue <= 30 or 330 <= hue <= 360:
             color = Color.RED
