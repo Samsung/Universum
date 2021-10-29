@@ -153,3 +153,71 @@ configs = Configuration([Step(name="Create empty CL",
     perforce_environment.run()
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)
+
+
+@pytest.fixture()
+def perforce_environment_with_files(perforce_environment):
+    files = [perforce_environment.vcs_client.create_file(utils.randomize_name("new_file") + ".txt")
+             for _ in range(2)]
+
+    yield {"env": perforce_environment, "files": files}
+
+    for entry in files:
+        perforce_environment.vcs_client.delete_file(entry.basename)
+
+
+def test_success_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+    p4_file = perforce_environment_with_files["files"][0]
+    env = perforce_environment_with_files["env"]
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+"""
+    env.shelve_config(config)
+    cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
+           env.vcs_client.shelve_file(p4_file, "This is unchanged line 1\nThis is changed line 2")]
+    env.settings.PerforceMainVcs.shelve_cls.extend(cls)
+
+    env.run()
+    stdout_checker.assert_has_calls_with_param("This is changed line 1")
+    stdout_checker.assert_has_calls_with_param("This is changed line 2")
+
+
+def test_fail_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+    p4_file = perforce_environment_with_files["files"][0]
+    env = perforce_environment_with_files["env"]
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+"""
+    env.shelve_config(config)
+    cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
+           env.vcs_client.shelve_file(p4_file, "This is a different line 1\nThis is changed line 2")]
+    env.settings.PerforceMainVcs.shelve_cls.extend(cls)
+
+    env.run(expect_failure=True)
+    stdout_checker.assert_has_calls_with_param("Problems during merge while resolving shelved CLs")
+    stdout_checker.assert_has_calls_with_param(str(p4_file.basename))
+
+
+def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files):
+    p4_files = perforce_environment_with_files["files"]
+    env = perforce_environment_with_files["env"]
+    config = """
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
+"""
+    env.shelve_config(config)
+    cl_1 = env.vcs_client.shelve_file(p4_files[0], "This is changed line 1\nThis is unchanged line 2")
+    env.vcs_client.shelve_file(p4_files[1], "This is changed line 1\nThis is unchanged line 2", shelve_cl=cl_1)
+    cl_2 = env.vcs_client.shelve_file(p4_files[0], "This is unchanged line 1\nThis is changed line 2")
+    env.vcs_client.shelve_file(p4_files[1], "This is unchanged line 1\nThis is changed line 2", shelve_cl=cl_2)
+    env.settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
+
+    env.run()
+    repo_state = env.artifact_dir.join('REPOSITORY_STATE.txt').read()
+    assert p4_files[0].basename in repo_state
+    assert p4_files[1].basename in repo_state
