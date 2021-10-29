@@ -198,7 +198,8 @@ configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p
     env.settings.PerforceMainVcs.shelve_cls.extend(cls)
 
     env.run(expect_failure=True)
-    stdout_checker.assert_has_calls_with_param("Problem during merge while resolving shelved CLs!")
+    stdout_checker.assert_has_calls_with_param("Problems during merge while resolving shelved CLs")
+    stdout_checker.assert_has_calls_with_param(str(p4_file.basename))
 
 
 def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files):

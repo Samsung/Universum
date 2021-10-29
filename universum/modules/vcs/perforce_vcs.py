@@ -470,8 +470,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def p4resolve(self):
         result = self.p4.run_resolve("-am")
         if "resolve skipped" in str(result):
-            raise CriticalCiException(f"Problem during merge while resolving shelved CLs!\n"
-                                      f"Here are the details of command execution:\n{result}")
+            raise CriticalCiException(f"Problems during merge while resolving shelved CLs in file '{result[0]['clientFile']}'")
         self.append_repo_status(" with conflicts resolved in files:")
         for entry in result:
             try:
