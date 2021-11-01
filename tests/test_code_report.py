@@ -5,7 +5,6 @@ from typing import List
 
 import pytest
 
-from universum import __main__
 from . import utils
 from .utils import python, python_version
 
@@ -203,11 +202,7 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
 
 
 def test_without_code_report_command(runner_with_analyzers):
-    log = runner_with_analyzers.run("""
-from universum.configuration_support import Configuration
-
-configs = Configuration([dict(name="Run usual command", command=["ls", "-la"])])
-    """)
+    log = runner_with_analyzers.run(utils.simple_test_config)
     pattern = re.compile(f"({log_fail}|{log_success})")
     assert not pattern.findall(log)
 
@@ -283,7 +278,7 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
 
 
 def test_code_report_extended_arg_search(tmpdir, stdout_checker):
-    env = utils.TestEnvironment(tmpdir, "main")
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
 
@@ -300,15 +295,13 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
 
     env.configs_file.write(config)
 
-    res = __main__.run(env.settings)
-
-    assert res == 0
+    env.run()
     stdout_checker.assert_has_calls_with_param(log_fail, is_regexp=True)
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
 
 
 def test_code_report_extended_arg_search_embedded(tmpdir, stdout_checker):
-    env = utils.TestEnvironment(tmpdir, "main")
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
 
@@ -327,7 +320,5 @@ configs = Configuration([Step(critical=True)]) * Configuration([
 
     env.configs_file.write(config)
 
-    res = __main__.run(env.settings)
-
-    assert res == 0
+    env.run()
     stdout_checker.assert_absent_calls_with_param("${CODE_REPORT_FILE}")

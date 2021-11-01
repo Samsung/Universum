@@ -10,7 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webelement import FirefoxWebElement
 
-from universum import __main__
 from . import utils
 
 
@@ -35,14 +34,9 @@ configs = \
 
 
 def create_environment(test_type, tmpdir):
-    env = utils.TestEnvironment(tmpdir, test_type)
+    env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
     env.settings.Output.html_log = True
-
-    if test_type == "main":
-        env.settings.Vcs.type = "none"
-        env.settings.LocalMainVcs.source_dir = str(tmpdir.mkdir('work_dir'))
-
     return env
 
 
@@ -61,20 +55,20 @@ def browser():
 
 
 def test_success(environment_main_and_nonci, browser):
-    assert not __main__.run(environment_main_and_nonci.settings)
+    environment_main_and_nonci.run()
     check_html_log(environment_main_and_nonci.artifact_dir, browser)
 
 
 def test_success_clean_build(tmpdir, browser):
     env = create_environment("main", tmpdir)
     env.settings.Main.clean_build = True
-    assert not __main__.run(env.settings)
+    env.run()
     check_html_log(env.artifact_dir, browser)
 
 
 def test_no_html_log_requested(environment_main_and_nonci):
     environment_main_and_nonci.settings.Output.html_log = False
-    assert not __main__.run(environment_main_and_nonci.settings)
+    environment_main_and_nonci.run()
     log_path = os.path.join(environment_main_and_nonci.artifact_dir, "log.html")
     assert not os.path.exists(log_path)
 
@@ -85,21 +79,21 @@ def check_html_log(artifact_dir, browser):
 
     browser.get(f"file://{log_path}")
     html_body = TestElement.create(browser.find_element_by_tag_name("body"))
-    body_elements = html_body.find_elements_by_xpath("./*")
+    body_elements = html_body.find_elements_by_xpath("./pre")
     assert len(body_elements) == 1
-    assert body_elements[0].tag_name == "pre"
 
-    pre_element = TestElement.create(body_elements[0])
-    steps_section = pre_element.get_section_by_name("Executing build steps")
+    universum_log_element = TestElement.create(body_elements[0])
+    steps_section = universum_log_element.get_section_by_name("Executing build steps")
     steps_body = steps_section.get_section_body()
 
     assert not steps_body.is_displayed()
     steps_section.click()
     assert steps_body.is_displayed()
     check_sections_indentation(steps_section)
-    check_coloring(html_body, steps_section)
+    check_coloring(html_body, universum_log_element, steps_section)
     steps_section.click()
     assert not steps_body.is_displayed()
+    check_dark_mode(html_body, universum_log_element)
 
 
 def check_sections_indentation(steps_section):
@@ -118,10 +112,11 @@ def check_sections_indentation(steps_section):
     step_lvl1_second.click() # restore sections state
 
 
-def check_coloring(body_element, steps_section):
+def check_coloring(body_element, universum_log_element, steps_section):
     check_body_coloring(body_element)
     check_title_and_status_coloring(steps_section)
     check_skipped_steps_coloring(steps_section)
+    check_steps_report_coloring(universum_log_element)
 
 
 def check_body_coloring(body_element):
@@ -143,7 +138,7 @@ def check_title_and_status_coloring(steps_section):
     check_section_coloring(composite_step_body.get_section_by_name("Success step"))
     check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
-    composite_step.click() # restore sections state
+    composite_step.click()  # restore sections state
 
 
 def check_skipped_steps_coloring(steps_section):
@@ -153,6 +148,25 @@ def check_skipped_steps_coloring(steps_section):
     skipped_steps = [TestElement.create(step) for step in skipped_steps]
     for step in skipped_steps:
         assert step.color == Color.CYAN
+
+
+def check_steps_report_coloring(universum_log_element):
+    report_section = universum_log_element.get_section_by_name("Reporting build result")
+    report_section.click()
+    report_section_body = report_section.get_section_body()
+
+    xpath_selector = "./*[text() = 'Success' or text() = 'Failed' or text() = 'Skipped']"
+    elements = [TestElement.create(el) for el in report_section_body.find_elements_by_xpath(xpath_selector)]
+    assert elements
+    for el in elements:
+        if el.text == "Success":
+            assert el.color == Color.GREEN
+        elif el.text in ("Failed", "Skipped"):
+            assert el.color == Color.RED
+        else:
+            assert False, f"Unexpected element text: '{el.text}'"
+
+    report_section.click() # restore section state
 
 
 def check_section_coloring(step, is_failed=False):
@@ -177,6 +191,14 @@ def check_text_is_bold(element):
     font_weight_bold = "700"
     assert element.font_weight == font_weight_bold
 
+
+def check_dark_mode(body_element, universum_log_element):
+    dark_mode_switch = TestElement.create(body_element.find_elements_by_xpath("./label")[0])
+    dark_mode_switch.click()
+    assert universum_log_element.color == Color.WHITE
+    assert universum_log_element.background_color == Color.BLACK
+    dark_mode_switch.click()
+    assert universum_log_element.color == Color.BLACK
 
 
 class TestElement(FirefoxWebElement):
@@ -265,7 +287,7 @@ class TestElement(FirefoxWebElement):
         color = None
         if lightness <= 20:
             color = Color.BLACK
-        elif lightness >= 90:
+        elif lightness >= 80:
             color = Color.WHITE
         elif 0 <= hue <= 30 or 330 <= hue <= 360:
             color = Color.RED

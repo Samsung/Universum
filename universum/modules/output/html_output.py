@@ -32,7 +32,7 @@ class HtmlOutput(BaseOutput):
         self._block_level -= 1
         indent = "  " * self._block_level
         closing_html = '</div><span class="nl"></span>'
-        status_html = f'<span class="section{status}Status">[{status}]</span>'
+        status_html = f'<span class="{status.lower()}Status">[{status}]</span>'
         self._log_line(f"{indent} \u2514 {status_html}{closing_html}", with_line_separator=False)
         self._log_line("")
 
@@ -43,6 +43,9 @@ class HtmlOutput(BaseOutput):
         self._log_line(f'<span class="skipped">{message}</span>')
 
     def report_step(self, message, status):
+        if message.endswith(status):
+            message = message[:-len(status)]
+            message += f'<span class="{status.lower()}Status">{status}</span>'
         self.log(message)
 
     def change_status(self, message):
@@ -65,7 +68,8 @@ class HtmlOutput(BaseOutput):
 
     def log_execution_start(self, title, version):
         head_content = self._build_html_head()
-        html_header = f"<!DOCTYPE html><html><head>{head_content}</head><body><pre>"
+        html_header = f"<!DOCTYPE html><html><head>{head_content}</head><body>"
+        html_header += '<input type="checkbox" id="dark-checkbox"><label for="dark-checkbox"></label><pre>'
         self._log_line(html_header)
         self.log(self._build_execution_start_msg(title, version))
 
@@ -109,17 +113,25 @@ class HtmlOutput(BaseOutput):
             body {
                 background-color: white;
                 color: black;
+                margin: 0;
+                height: 100%;
+                min-height: 100vh;
+                display: flex;
             }
 
             .sectionTitle {
                 color: darkslateblue;
                 font-weight: bold;
             }
-            .sectionSuccessStatus {
+            .successStatus {
                 color: green;
                 font-weight: bold;
             }
-            .sectionFailedStatus {
+            .failedStatus {
+                color: red;
+                font-weight: bold;
+            }
+            .skippedStatus {
                 color: red;
                 font-weight: bold;
             }
@@ -134,7 +146,7 @@ class HtmlOutput(BaseOutput):
                 display: none;
             }
             .hide + label {
-                color: black;
+
                 cursor: pointer;
                 display: inline-block;
             }
@@ -155,6 +167,74 @@ class HtmlOutput(BaseOutput):
             .hide:checked + label .sectionLbl::before {
                 content: "[-] ";
             }
+
+            #dark-checkbox {
+                display: none;
+            }
+    
+            pre {
+                padding: 20px 20px 65px 20px;
+                margin: 0;
+                width: 100%;
+            }
+    
+            #dark-checkbox:checked+label+pre {
+                background-color: black;
+                color: rgb(219, 198, 198);
+            }
+    
+            #dark-checkbox:checked+label+pre .sectionTitle {
+                color: #2b7cdf;
+            }
+            
+            #dark-checkbox+label {
+                position: fixed;
+                right: 15px;
+                bottom: 15px;
+                width: 95px;
+                height: 30px;
+                border-radius: 20px;
+                background-color: white;
+                color: gray;
+                border: gray 1px solid;
+                font: 12px sans;
+                cursor: pointer;
+            }
+    
+            #dark-checkbox:checked+label {
+                background-color: black;
+                color: white;
+            }
+    
+            #dark-checkbox+label::before {
+                position: absolute;
+                content: "";
+                height: 22px;
+                width: 22px;
+                left: 4px;
+                bottom: 4px;
+                background-color: gray;
+                transition: .3s;
+                border-radius: 50%;
+            }
+    
+            #dark-checkbox:checked+label::before {
+                background-color: white;
+                transform: translateX(65px);
+            }
+    
+            #dark-checkbox+label::after {
+                content: 'Light';
+                display: block;
+                position: absolute;
+                transform: translate(-50%, -50%);
+                top: 50%;
+                left: 50%;
+            }
+    
+            #dark-checkbox:checked+label::after {
+                content: 'Dark';
+            }    
         '''
         head = []
         head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')

@@ -172,13 +172,18 @@ class MainVcs(create_vcs()):  # type: ignore  # https://github.com/python/mypy/i
     def prepare_repository(self) -> None:
         status_file: TextIO = self.artifacts.create_text_file("REPOSITORY_STATE.txt")
 
-        self.driver.prepare_repository()
+        try:
+            self.driver.prepare_repository()
+        finally:
+            status_file.write(self.driver.get_repo_status())
+            try:
+                sources_list = utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root))
+                status_file.write(f"\n\nFile list:\n{sources_list}\n")
+            except sh.ErrorReturnCode_2 as e:
+                if "No such file or directory" not in str(e):
+                    raise
+            status_file.close()
 
-        status_file.write(self.driver.get_repo_status())
-
-        status_file.write("\nFile list:\n\n")
-        status_file.write(utils.trim_and_convert_to_unicode(sh.ls("-lR", self.settings.project_root)) + "\n")
-        status_file.close()
         self.calculate_diff_for_api()
 
     @make_block("Registering file diff for API")
