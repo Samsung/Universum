@@ -18,7 +18,7 @@ def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, 
                             "-f", str(db_file),
                             "-p4p", perforce_workspace.p4.port,
                             "-p4u", perforce_workspace.p4.user,
-                            "-p4P", perforce_workspace.p4.password,
+                            "-p4P", perforce_workspace.non_token_password,
                             "-p4d", "//depot/...",
                             "-jtu", "https://localhost/?%s"])
     assert result == 0
@@ -44,7 +44,7 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
                             "-f", str(db_file),
                             "-p4p", "127.0.0.1:1024",
                             "-p4u", perforce_workspace.p4.user,
-                            "-p4P", perforce_workspace.p4.password,
+                            "-p4P", perforce_workspace.non_token_password,
                             "-p4d", "//depot/...",
                             "-jtu", "https://localhost/?%s"])
     assert result != 0

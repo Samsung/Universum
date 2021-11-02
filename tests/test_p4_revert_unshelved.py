@@ -22,7 +22,7 @@ class DiffParameters:
         settings = utils.create_empty_settings("main")
         settings.PerforceVcs.port = perforce_workspace.p4.port
         settings.PerforceVcs.user = perforce_workspace.p4.user
-        settings.PerforceVcs.password = perforce_workspace.p4.password
+        settings.PerforceVcs.password = perforce_workspace.non_token_password
         settings.Output.type = "term"
         settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory + "/../new_workspace")
         settings.PerforceWithMappings.mappings = [self.perforce_workspace.depot + " /..."]

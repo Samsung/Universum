@@ -108,7 +108,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
         self.p4.password = self.settings.password
 
         self.p4.connect()
-        self.p4.run_login()
+        self.p4.run_login(password=self.settings.password)
         self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     @make_block("Disconnecting")
@@ -338,7 +338,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.connect()
         if self.swarm:
             self.swarm.user = self.settings.user
-            self.swarm.ticket = self.p4.run_login("-p")[0]
+            self.swarm.ticket = self.p4.run_login("-p", password=self.settings.password)[0]
 
     def get_related_cls(self, cl_number):
         cl_list = [cl_number]

@@ -159,12 +159,12 @@ def perforce_connection(request, docker_perforce):
     p4.password = docker_perforce.password
     p4.connect()
     p4.run_login()
-    yield p4
+    yield utils.Params(p4=p4, password=docker_perforce.password)
     p4.disconnect()
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection: P4, directory: py.path.local):
+    def __init__(self, connection: P4, password: str, directory: py.path.local):
         super().__init__()
         self.root_directory = directory.mkdir("workspace")
         self.repo_file = self.root_directory.join("writeable_file.txt")
@@ -175,6 +175,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.client_name: str = "test_workspace"
         self.depot: str = "//depot/..."
         self.p4: P4 = connection
+        self.non_token_password: str = password
 
     def setup(self) -> None:
         client = self.p4.fetch_client(self.client_name)
@@ -207,7 +208,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.p4.save_protect(permissions)
 
         triggers = {'Triggers': [
-            'test.check change-submit //depot/trigger-protected/... "false"' # trigger to prevent any submits to this branch
+            'test.check change-submit //depot/trigger-protected/... "false"'  # trigger to prevent any submits to this branch
         ]}
         self.p4.save_triggers(triggers)
 
@@ -280,7 +281,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
 @pytest.fixture()
 def perforce_workspace(request, perforce_connection, tmpdir):
-    workspace = PerforceWorkspace(perforce_connection, tmpdir)
+    workspace = PerforceWorkspace(perforce_connection.p4, perforce_connection.password, tmpdir)
     try:
         workspace.setup()
         yield workspace
@@ -299,7 +300,7 @@ class P4TestEnvironment(utils.BaseTestEnvironment):
         self.settings.Vcs.type = "p4"
         self.settings.PerforceVcs.port = perforce_workspace.p4.port
         self.settings.PerforceVcs.user = perforce_workspace.p4.user
-        self.settings.PerforceVcs.password = perforce_workspace.p4.password
+        self.settings.PerforceVcs.password = perforce_workspace.non_token_password
         try:
             self.settings.PerforceMainVcs.client = self.client_name
             self.settings.PerforceMainVcs.force_clean = True

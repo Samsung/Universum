@@ -216,7 +216,7 @@ class UniversumRunner:
         return f" -vt p4 --p4-force-clean" \
                f" -p4p '{self.perforce.p4.port}'" \
                f" -p4u '{self.perforce.p4.user}'" \
-               f" -p4P '{self.perforce.p4.password}'" \
+               f" -p4P '{self.perforce.non_token_password}'" \
                f" -p4d '{self.perforce.depot}'" \
                f" -p4c 'my_disposable_p4_client'"
 
