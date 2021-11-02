@@ -90,7 +90,7 @@ def check_html_log(artifact_dir, browser):
     steps_section.click()
     assert steps_body.is_displayed()
     check_sections_indentation(steps_section)
-    check_coloring(html_body, universum_log_element, steps_section)
+    check_coloring(html_body, universum_log_element, steps_body)
     steps_section.click()
     assert not steps_body.is_displayed()
     check_dark_mode(html_body, universum_log_element)
@@ -112,11 +112,12 @@ def check_sections_indentation(steps_section):
     step_lvl1_second.click() # restore sections state
 
 
-def check_coloring(body_element, universum_log_element, steps_section):
+def check_coloring(body_element, universum_log_element, steps_body):
     check_body_coloring(body_element)
-    check_title_and_status_coloring(steps_section)
-    check_skipped_steps_coloring(steps_section)
+    check_title_and_status_coloring(steps_body)
+    check_skipped_steps_coloring(steps_body)
     check_steps_report_coloring(universum_log_element)
+    check_exception_tag_coloring(steps_body)
 
 
 def check_body_coloring(body_element):
@@ -124,9 +125,7 @@ def check_body_coloring(body_element):
     assert body_element.background_color == Color.WHITE
 
 
-def check_title_and_status_coloring(steps_section):
-    steps_body = steps_section.get_section_body()
-
+def check_title_and_status_coloring(steps_body):
     check_section_coloring(steps_body.get_section_by_name("Success step"))
     check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
     check_section_coloring(steps_body.get_section_by_name("Partially success step"))
@@ -141,8 +140,7 @@ def check_title_and_status_coloring(steps_section):
     composite_step.click()  # restore sections state
 
 
-def check_skipped_steps_coloring(steps_section):
-    steps_body = steps_section.get_section_body()
+def check_skipped_steps_coloring(steps_body):
     skipped_steps = steps_body.find_elements_by_class_name("skipped")
     assert skipped_steps
     skipped_steps = [TestElement.create(step) for step in skipped_steps]
@@ -167,6 +165,16 @@ def check_steps_report_coloring(universum_log_element):
             assert False, f"Unexpected element text: '{el.text}'"
 
     report_section.click() # restore section state
+
+
+def check_exception_tag_coloring(steps_body):
+    step = steps_body.get_section_by_name("Failed step")
+    step_body = step.get_section_body()
+    step.click()
+    xpath_selector = "./*[text() = 'Error:']"
+    exception_tag = TestElement.create(step_body.find_element_by_xpath(xpath_selector))
+    assert exception_tag.color == Color.RED
+    step.click()
 
 
 def check_section_coloring(step, is_failed=False):

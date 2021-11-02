@@ -52,7 +52,7 @@ class HtmlOutput(BaseOutput):
         pass
 
     def log_exception(self, line):
-        self._log_line(f"Error: {line}")
+        self._log_line(f'<span class="exceptionTag">Error:</span> {line}')
 
     def log_stderr(self, line):
         self._log_line(f"stderr: {line}")
@@ -138,6 +138,9 @@ class HtmlOutput(BaseOutput):
             .skipped {
                 color: darkcyan;
             }
+            .exceptionTag {
+                color: darkred;
+            }
 
             .hide {
                 display: none;
@@ -171,22 +174,22 @@ class HtmlOutput(BaseOutput):
             #dark-checkbox {
                 display: none;
             }
-    
+
             pre {
                 padding: 20px 20px 65px 20px;
                 margin: 0;
                 width: 100%;
             }
-    
+
             #dark-checkbox:checked+label+pre {
                 background-color: black;
                 color: rgb(219, 198, 198);
             }
-    
+
             #dark-checkbox:checked+label+pre .sectionTitle {
                 color: #2b7cdf;
             }
-            
+
             #dark-checkbox+label {
                 position: fixed;
                 right: 15px;
@@ -200,12 +203,12 @@ class HtmlOutput(BaseOutput):
                 font: 12px sans;
                 cursor: pointer;
             }
-    
+
             #dark-checkbox:checked+label {
                 background-color: black;
                 color: white;
             }
-    
+
             #dark-checkbox+label::before {
                 position: absolute;
                 content: "";
@@ -217,12 +220,12 @@ class HtmlOutput(BaseOutput):
                 transition: .3s;
                 border-radius: 50%;
             }
-    
+
             #dark-checkbox:checked+label::before {
                 background-color: white;
                 transform: translateX(65px);
             }
-    
+
             #dark-checkbox+label::after {
                 content: 'Light';
                 display: block;
@@ -231,10 +234,10 @@ class HtmlOutput(BaseOutput):
                 top: 50%;
                 left: 50%;
             }
-    
+
             #dark-checkbox:checked+label::after {
                 content: 'Dark';
-            }    
+            }
         '''
         head = []
         head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
