@@ -82,6 +82,9 @@ class Output(Module):
         self.driver.log_stderr(line)
         self.html_driver.log_stderr(line)
 
+    def log_stderr_html_only(self, line: str) -> None:
+        self.html_driver.log_stderr(line)
+
     def log_shell_output(self, line: str) -> None:
         self.driver.log_shell_output(line)
         self.html_driver.log_shell_output(line)
