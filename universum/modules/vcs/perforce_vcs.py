@@ -499,8 +499,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def check_diff_for_depot(self, depot: str) -> str:
         try:
             p4cmd = sh.Command("p4")
-            diff_result = p4cmd("-c", self.settings.client, "-u", self.settings.user,
-                                "-P", self.settings.password, "-p", self.settings.port,
+            diff_result = p4cmd("-c", self.p4.client, "-u", self.p4.user,
+                                "-P", self.p4.password, "-p", self.p4.port,
                                 "diff", depot)
             result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
