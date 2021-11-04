@@ -16,10 +16,10 @@ def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, 
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
                             "-f", str(db_file),
-                            "-p4p", perforce_workspace.p4.port,
-                            "-p4u", perforce_workspace.p4.user,
-                            "-p4P", perforce_workspace.non_token_password,
-                            "-p4d", "//depot/...",
+                            "-p4p", perforce_workspace.server.port,
+                            "-p4u", perforce_workspace.server.user,
+                            "-p4P", perforce_workspace.server.password,
+                            "-p4d", perforce_workspace.depot,
                             "-jtu", "https://localhost/?%s"])
     assert result == 0
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
@@ -43,9 +43,9 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
                             "-vt", "p4",
                             "-f", str(db_file),
                             "-p4p", "127.0.0.1:1024",
-                            "-p4u", perforce_workspace.p4.user,
-                            "-p4P", perforce_workspace.non_token_password,
-                            "-p4d", "//depot/...",
+                            "-p4u", perforce_workspace.server.user,
+                            "-p4P", perforce_workspace.server.password,
+                            "-p4d", perforce_workspace.depot,
                             "-jtu", "https://localhost/?%s"])
     assert result != 0
     stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
