@@ -1,6 +1,8 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 import time
+from typing import Any
+
 import pytest
 import docker
 
@@ -159,22 +161,23 @@ def perforce_connection(request, docker_perforce):
     p4.password = docker_perforce.password
     p4.connect()
     p4.run_login()
-    yield p4
+    yield utils.Params(p4=p4, server=docker_perforce)
     p4.disconnect()
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection: P4, directory: py.path.local):
+    def __init__(self, connection: Any, directory: py.path.local):
         super().__init__()
         self.root_directory = directory.mkdir("workspace")
         self.repo_file = self.root_directory.join("writeable_file.txt")
 
         self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")
 
+        self.server: Any = connection.server
         self.client_created: bool = False
         self.client_name: str = "test_workspace"
         self.depot: str = "//depot/..."
-        self.p4: P4 = connection
+        self.p4: P4 = connection.p4
 
     def setup(self) -> None:
         client = self.p4.fetch_client(self.client_name)
@@ -184,7 +187,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.client_created = True
         self.p4.client = self.client_name
 
-        ignore_p4_exception("no such file(s).", self.p4.run_sync, "//depot/...")
+        ignore_p4_exception("no such file(s).", self.p4.run_sync, self.depot)
 
         self.p4.run("add", str(self.nonwritable_file))
         self.p4.run("edit", str(self.nonwritable_file))
@@ -207,7 +210,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.p4.save_protect(permissions)
 
         triggers = {'Triggers': [
-            'test.check change-submit //depot/trigger-protected/... "false"' # trigger to prevent any submits to this branch
+            'test.check change-submit //depot/trigger-protected/... "false"'  # trigger to prevent any submits to this branch
         ]}
         self.p4.save_triggers(triggers)
 
@@ -297,9 +300,9 @@ class P4TestEnvironment(utils.BaseTestEnvironment):
         self.client_name: str = "p4_disposable_workspace"
 
         self.settings.Vcs.type = "p4"
-        self.settings.PerforceVcs.port = perforce_workspace.p4.port
-        self.settings.PerforceVcs.user = perforce_workspace.p4.user
-        self.settings.PerforceVcs.password = perforce_workspace.p4.password
+        self.settings.PerforceVcs.port = perforce_workspace.server.port
+        self.settings.PerforceVcs.user = perforce_workspace.server.user
+        self.settings.PerforceVcs.password = perforce_workspace.server.password
         try:
             self.settings.PerforceMainVcs.client = self.client_name
             self.settings.PerforceMainVcs.force_clean = True

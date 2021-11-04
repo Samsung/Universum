@@ -59,7 +59,8 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
 
         parser.add_argument("--p4-port", "-p4p", dest="port", help="P4 port (e.g. 'myhost.net:1666')", metavar="P4PORT")
         parser.add_argument("--p4-user", "-p4u", dest="user", help="P4 user name", metavar="P4USER")
-        parser.add_argument("--p4-password", "-p4P", dest="password", help="P4 password", metavar="P4PASSWD")
+        parser.add_argument("--p4-password", "-p4P", dest="password", metavar="P4PASSWD",
+                            help="P4 password (please note, this should be exactly password, not the ticket)")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -108,6 +109,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
         self.p4.password = self.settings.password
 
         self.p4.connect()
+        self.p4.run_login(password=self.settings.password)
         self.append_repo_status("Perforce server: " + self.settings.port + "\n\n")
 
     @make_block("Disconnecting")
@@ -337,7 +339,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.connect()
         if self.swarm:
             self.swarm.user = self.settings.user
-            self.swarm.ticket = self.p4.run_login("-p")[0]
+            self.swarm.ticket = self.p4.run_login("-p", password=self.settings.password)[0]
 
     def get_related_cls(self, cl_number):
         cl_list = [cl_number]
@@ -498,8 +500,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def check_diff_for_depot(self, depot: str) -> str:
         try:
             p4cmd = sh.Command("p4")
-            diff_result = p4cmd("-c", self.settings.client, "-u", self.settings.user,
-                                "-P", self.settings.password, "-p", self.settings.port,
+            diff_result = p4cmd("-c", self.p4.client, "-u", self.p4.user,
+                                "-P", self.p4.password, "-p", self.p4.port,
                                 "diff", depot)
             result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
         except sh.ErrorReturnCode as e:
