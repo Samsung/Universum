@@ -1,9 +1,10 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 import time
+from typing import Any
+
 import pytest
 import docker
-from typing import Any
 
 import py
 from P4 import P4, P4Exception
