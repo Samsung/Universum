@@ -3,6 +3,7 @@
 import time
 import pytest
 import docker
+from typing import Any
 
 import py
 from P4 import P4, P4Exception
@@ -164,14 +165,14 @@ def perforce_connection(request, docker_perforce):
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection: utils.Params, directory: py.path.local):
+    def __init__(self, connection: Any, directory: py.path.local):
         super().__init__()
         self.root_directory = directory.mkdir("workspace")
         self.repo_file = self.root_directory.join("writeable_file.txt")
 
         self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")
 
-        self.server: utils.Params = connection.server
+        self.server: Any = connection.server
         self.client_created: bool = False
         self.client_name: str = "test_workspace"
         self.depot: str = "//depot/..."
