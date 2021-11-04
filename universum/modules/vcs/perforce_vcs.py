@@ -59,7 +59,8 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
 
         parser.add_argument("--p4-port", "-p4p", dest="port", help="P4 port (e.g. 'myhost.net:1666')", metavar="P4PORT")
         parser.add_argument("--p4-user", "-p4u", dest="user", help="P4 user name", metavar="P4USER")
-        parser.add_argument("--p4-password", "-p4P", dest="password", help="P4 password", metavar="P4PASSWD")
+        parser.add_argument("--p4-password", "-p4P", dest="password", metavar="P4PASSWD",
+                            help="P4 password (please note, this should be exactly password, not the ticket)")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
