@@ -1,6 +1,16 @@
 Change log
 ==========
 
+0.19.10 (2021-11-05)
+-------------------
+
+New features
+~~~~~~~~~~~~
+
+* **p4:** add resolving unshelved files instead of silent rewriting
+* **p4:** add explicit login to work with servers of security level 3 and higher
+
+
 0.19.9 (2021-10-11)
 -------------------
 
