@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from .base_output import BaseOutput
 
@@ -70,7 +71,7 @@ class HtmlOutput(BaseOutput):
         head_content = self._build_html_head()
         html_header = f"<!DOCTYPE html><html><head>{head_content}</head><body>"
         html_header += '<input type="checkbox" id="dark-checkbox"><label for="dark-checkbox"></label><pre>'
-        self._log_line(html_header)
+        self._log_buffered(html_header)
         self.log(self._build_execution_start_msg(title, version))
 
     def log_execution_finish(self, title, version):
@@ -81,6 +82,9 @@ class HtmlOutput(BaseOutput):
     def _log_line(self, line, with_line_separator=True):
         if with_line_separator and not line.endswith(os.linesep):
             line += os.linesep
+        self._log_buffered(self._build_time_stamp() + self._build_indent() + line)
+
+    def _log_buffered(self, line):
         if not self._filename:
             raise RuntimeError("Artifact directory was not set")
         if not self.artifact_dir_ready:
@@ -97,7 +101,6 @@ class HtmlOutput(BaseOutput):
 
     def _write_to_file(self, line):
         with open(self._filename, "a", encoding="utf-8") as file:
-            file.write(self._build_indent())
             file.write(line)
 
     def _build_indent(self):
@@ -106,6 +109,10 @@ class HtmlOutput(BaseOutput):
             indent_str.append("  " * x)
             indent_str.append(" |   ")
         return "".join(indent_str)
+
+    @staticmethod
+    def _build_time_stamp():
+        return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S (%Z)")
 
     @staticmethod
     def _build_html_head():
