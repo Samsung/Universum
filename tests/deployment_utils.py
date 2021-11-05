@@ -152,6 +152,13 @@ def clean_execution_environment(request):
             runner.exit()
 
 
+class LocalSources(utils.BaseVcsClient):
+    def __init__(self, root_directory: py.path.local, repo_file: py.path.local):
+        super().__init__()
+        self.root_directory = root_directory
+        self.repo_file = repo_file
+
+
 @pytest.fixture()
 def local_sources(tmpdir):
     if utils.reuse_docker_containers():
@@ -167,7 +174,7 @@ def local_sources(tmpdir):
     local_file = source_dir.join("readme.txt")
     local_file.write("This is a an empty file")
 
-    yield utils.Params(root_directory=source_dir, repo_file=local_file)
+    yield LocalSources(root_directory=source_dir, repo_file=local_file)
 
 
 class UniversumRunner:

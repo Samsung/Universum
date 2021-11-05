@@ -19,7 +19,6 @@ from . import default_args
 __all__ = [
     "python",
     "python_version",
-    "Params",
     "reuse_docker_containers",
     "randomize_name",
     "get_open_port",
@@ -42,12 +41,6 @@ def python():
 
 def python_version():
     return PYTHON_VERSION
-
-
-class Params:
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
 
 def reuse_docker_containers():
@@ -111,16 +104,16 @@ class BaseVcsClient:
         self.repo_file: py.path.local
 
     def get_last_change(self):
-        raise NotImplementedError()
+        pass
 
     def file_present(self, file_path: str) -> bool:
-        raise NotImplementedError()
+        pass
 
     def text_in_file(self, text: str, file_path: str) -> bool:
-        raise NotImplementedError()
+        pass
 
     def make_a_change(self) -> str:
-        raise NotImplementedError()
+        pass
 
 
 class HttpChecker:
