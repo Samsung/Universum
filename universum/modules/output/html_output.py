@@ -55,7 +55,7 @@ class HtmlOutput(BaseOutput):
         self._log_line(f'<span class="exceptionTag">Error:</span> {line}')
 
     def log_stderr(self, line):
-        self._log_line(f"stderr: {line}")
+        self._log_line(f'<span class="stderrTag">stderr:</span> {line}')
 
     def log(self, line):
         self._log_line(f"==> {line}")
@@ -141,6 +141,9 @@ class HtmlOutput(BaseOutput):
             .exceptionTag {
                 color: darkred;
             }
+            .stderrTag {
+                color: orange;
+            }
 
             .hide {
                 display: none;
@@ -149,7 +152,6 @@ class HtmlOutput(BaseOutput):
                 display: none;
             }
             .hide + label {
-
                 cursor: pointer;
                 display: inline-block;
             }

@@ -16,12 +16,14 @@ from . import utils
 config = """
 from universum.configuration_support import Configuration
 
+failed_step_cmd = ["bash", "-c", '1>&2 echo "error"; exit 1']
+
 success_step = Configuration([dict(name="Success step", command=["echo", "success"])])
-failed_step = Configuration([dict(name="Failed step", command=["./non_existing_script.sh"])])
+failed_step = Configuration([dict(name="Failed step", command=failed_step_cmd)])
 partially_success_step = Configuration([dict(name="Partially success step: ")])
 all_success_step = Configuration([dict(name="All success step: ")])
 all_failed_step = Configuration([dict(name="All failed step: ")])
-failed_critical_step = Configuration([dict(name="Failed step", command=["./non_existing_script.sh"], critical=True)])
+failed_critical_step = Configuration([dict(name="Failed step", command=failed_step_cmd, critical=True)])
 
 configs = \
     success_step + \
@@ -117,7 +119,7 @@ def check_coloring(body_element, universum_log_element, steps_body):
     check_title_and_status_coloring(steps_body)
     check_skipped_steps_coloring(steps_body)
     check_steps_report_coloring(universum_log_element)
-    check_exception_tag_coloring(steps_body)
+    check_errors_tags_coloring(steps_body)
 
 
 def check_body_coloring(body_element):
@@ -167,13 +169,17 @@ def check_steps_report_coloring(universum_log_element):
     report_section.click() # restore section state
 
 
-def check_exception_tag_coloring(steps_body):
+def check_errors_tags_coloring(steps_body):
     step = steps_body.get_section_by_name("Failed step")
     step_body = step.get_section_body()
     step.click()
-    xpath_selector = "./*[text() = 'Error:']"
-    exception_tag = TestElement.create(step_body.find_element_by_xpath(xpath_selector))
+
+    exception_tag = step_body.get_child_by_text("Error:")
     assert exception_tag.color == Color.RED
+
+    stderr_tag = step_body.get_child_by_text("stderr:")
+    assert stderr_tag.color == Color.YELLOW
+
     step.click()
 
 
@@ -266,6 +272,10 @@ class TestElement(FirefoxWebElement):
         body = self.get_section_body()
         xpath_selector = "./*[contains(text(), '[Success]') or contains(text(), '[Failed]')]"
         return TestElement.create(body.find_elements_by_xpath(xpath_selector)[-1])
+
+    def get_child_by_text(self, text):
+        xpath_selector = f"./*[text() = '{text}']"
+        return TestElement.create(self.find_element_by_xpath(xpath_selector))
 
     @property
     def indent(self):
