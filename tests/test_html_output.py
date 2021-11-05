@@ -2,13 +2,14 @@
 
 import os
 import re
+from enum import Enum, auto
+import colorsys
 import pytest
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webelement import FirefoxWebElement
 
-from universum import __main__
 from . import utils
 
 
@@ -20,25 +21,22 @@ failed_step = Configuration([dict(name="Failed step", command=["./non_existing_s
 partially_success_step = Configuration([dict(name="Partially success step: ")])
 all_success_step = Configuration([dict(name="All success step: ")])
 all_failed_step = Configuration([dict(name="All failed step: ")])
+failed_critical_step = Configuration([dict(name="Failed step", command=["./non_existing_script.sh"], critical=True)])
 
 configs = \
     success_step + \
     failed_step + \
     partially_success_step * (success_step + failed_step) + \
     all_success_step * (success_step + success_step) + \
-    all_failed_step * (failed_step + failed_step)
+    all_failed_step * (failed_step + failed_step) + \
+    failed_critical_step + success_step
 """
 
 
 def create_environment(test_type, tmpdir):
-    env = utils.TestEnvironment(tmpdir, test_type)
+    env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
     env.settings.Output.html_log = True
-
-    if test_type == "main":
-        env.settings.Vcs.type = "none"
-        env.settings.LocalMainVcs.source_dir = str(tmpdir.mkdir('work_dir'))
-
     return env
 
 
@@ -57,20 +55,20 @@ def browser():
 
 
 def test_success(environment_main_and_nonci, browser):
-    assert not __main__.run(environment_main_and_nonci.settings)
+    environment_main_and_nonci.run()
     check_html_log(environment_main_and_nonci.artifact_dir, browser)
 
 
 def test_success_clean_build(tmpdir, browser):
     env = create_environment("main", tmpdir)
     env.settings.Main.clean_build = True
-    assert not __main__.run(env.settings)
+    env.run()
     check_html_log(env.artifact_dir, browser)
 
 
 def test_no_html_log_requested(environment_main_and_nonci):
     environment_main_and_nonci.settings.Output.html_log = False
-    assert not __main__.run(environment_main_and_nonci.settings)
+    environment_main_and_nonci.run()
     log_path = os.path.join(environment_main_and_nonci.artifact_dir, "log.html")
     assert not os.path.exists(log_path)
 
@@ -80,22 +78,22 @@ def check_html_log(artifact_dir, browser):
     assert os.path.exists(log_path)
 
     browser.get(f"file://{log_path}")
-    html_body = browser.find_element_by_tag_name("body")
-    body_elements = html_body.find_elements_by_xpath("./*")
+    html_body = TestElement.create(browser.find_element_by_tag_name("body"))
+    body_elements = html_body.find_elements_by_xpath("./pre")
     assert len(body_elements) == 1
-    assert body_elements[0].tag_name == "pre"
 
-    pre_element = TestElement.create(body_elements[0])
-    steps_section = pre_element.get_section_by_name("Executing build steps")
+    universum_log_element = TestElement.create(body_elements[0])
+    steps_section = universum_log_element.get_section_by_name("Executing build steps")
     steps_body = steps_section.get_section_body()
 
-    check_step_collapsed(steps_section, steps_body)
+    assert not steps_body.is_displayed()
     steps_section.click()
-    check_step_not_collapsed(steps_section, steps_body)
+    assert steps_body.is_displayed()
     check_sections_indentation(steps_section)
-    check_text_coloring(get_page_style(browser), steps_section)
+    check_coloring(html_body, universum_log_element, steps_body)
     steps_section.click()
-    check_step_collapsed(steps_section, steps_body)
+    assert not steps_body.is_displayed()
+    check_dark_mode(html_body, universum_log_element)
 
 
 def check_sections_indentation(steps_section):
@@ -114,81 +112,101 @@ def check_sections_indentation(steps_section):
     step_lvl1_second.click() # restore sections state
 
 
-def check_text_coloring(page_style, steps_section):
-    check_styles(page_style)
-    check_elements_classes(steps_section)
+def check_coloring(body_element, universum_log_element, steps_body):
+    check_body_coloring(body_element)
+    check_title_and_status_coloring(steps_body)
+    check_skipped_steps_coloring(steps_body)
+    check_steps_report_coloring(universum_log_element)
+    check_exception_tag_coloring(steps_body)
 
 
-def check_styles(page_style):
-    check_body_style(page_style)
-    check_css_class(page_style, name="sectionTitle", exp_color="darkslateblue", exp_font="bold")
-    check_css_class(page_style, name="sectionSuccessStatus", exp_color="green", exp_font="bold")
-    check_css_class(page_style, name="sectionFailedStatus", exp_color="red", exp_font="bold")
+def check_body_coloring(body_element):
+    assert body_element.color == Color.BLACK
+    assert body_element.background_color == Color.WHITE
 
 
-def check_elements_classes(steps_section):
-    steps_body = steps_section.get_section_body()
-
-    check_section_elements_classes(steps_body.get_section_by_name("Success step"))
-    check_section_elements_classes(steps_body.get_section_by_name("Failed step"), is_failed=True)
-    check_section_elements_classes(steps_body.get_section_by_name("Partially success step"))
+def check_title_and_status_coloring(steps_body):
+    check_section_coloring(steps_body.get_section_by_name("Success step"))
+    check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_coloring(steps_body.get_section_by_name("Partially success step"))
 
     composite_step = steps_body.get_section_by_name("Partially success step")
     composite_step.click()
     composite_step_body = composite_step.get_section_body()
 
-    check_section_elements_classes(composite_step_body.get_section_by_name("Success step"))
-    check_section_elements_classes(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
+    check_section_coloring(composite_step_body.get_section_by_name("Success step"))
+    check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
-    composite_step.click() # restore sections state
-
-
-def check_step_collapsed(section, body):
-    assert section.is_section_collapsed
-    assert body.is_body_collapsed
-    assert not body.is_displayed()
+    composite_step.click()  # restore sections state
 
 
-def check_step_not_collapsed(section, body):
-    assert not section.is_section_collapsed
-    assert not body.is_body_collapsed
-    assert body.is_displayed()
+def check_skipped_steps_coloring(steps_body):
+    skipped_steps = steps_body.find_elements_by_class_name("skipped")
+    assert skipped_steps
+    skipped_steps = [TestElement.create(step) for step in skipped_steps]
+    for step in skipped_steps:
+        assert step.color == Color.CYAN
 
 
-def check_section_elements_classes(step, is_failed=False):
-    assert step.get_section_title_class() == "sectionTitle"
+def check_steps_report_coloring(universum_log_element):
+    report_section = universum_log_element.get_section_by_name("Reporting build result")
+    report_section.click()
+    report_section_body = report_section.get_section_body()
+
+    xpath_selector = "./*[text() = 'Success' or text() = 'Failed' or text() = 'Skipped']"
+    elements = [TestElement.create(el) for el in report_section_body.find_elements_by_xpath(xpath_selector)]
+    assert elements
+    for el in elements:
+        if el.text == "Success":
+            assert el.color == Color.GREEN
+        elif el.text in ("Failed", "Skipped"):
+            assert el.color == Color.RED
+        else:
+            assert False, f"Unexpected element text: '{el.text}'"
+
+    report_section.click() # restore section state
+
+
+def check_exception_tag_coloring(steps_body):
+    step = steps_body.get_section_by_name("Failed step")
+    step_body = step.get_section_body()
+    step.click()
+    xpath_selector = "./*[text() = 'Error:']"
+    exception_tag = TestElement.create(step_body.find_element_by_xpath(xpath_selector))
+    assert exception_tag.color == Color.RED
+    step.click()
+
+
+def check_section_coloring(step, is_failed=False):
+    check_title_coloring(step.get_section_title())
     step.click() # open section body
-    exp_status = "Failed" if is_failed else "Success"
-    assert step.get_section_status_class() == f"section{exp_status}Status"
+    check_status_coloring(step.get_section_status(), is_failed)
     step.click() # close section body
 
 
-def check_body_style(style):
-    body_style = parse_css_block(style, "body")
-    assert parse_css_property(body_style, "background-color") == "white"
-    assert parse_css_property(body_style, "color") == "black"
+def check_title_coloring(title):
+    assert title.color == Color.BLUE
+    check_text_is_bold(title)
 
 
-def check_css_class(style, name, exp_color, exp_font):
-    class_style = parse_css_block(style, f".{name}")
-    assert parse_css_property(class_style, "color") == exp_color
-    assert parse_css_property(class_style, "font-weight") == exp_font
+def check_status_coloring(status, is_failed):
+    exp_color = Color.RED if is_failed else Color.GREEN
+    assert status.color == exp_color
+    check_text_is_bold(status)
 
 
-def parse_css_block(style, block_name):
-    return re.search(block_name + r" \{(.*?)\}", style, re.DOTALL).group(1)
+def check_text_is_bold(element):
+    font_weight_bold = "700"
+    assert element.font_weight == font_weight_bold
 
 
-def parse_css_property(style, css_property):
-    return re.search(fr"\s{css_property}: (\w+)", style).group(1)
-
-
-def get_page_style(browser):
-    head = browser.find_element_by_tag_name("head")
-    assert head
-    style = head.find_element_by_tag_name("style")
-    assert style
-    return style.get_attribute("innerHTML")
+def check_dark_mode(body_element, universum_log_element):
+    dark_mode_switch = TestElement.create(body_element.find_elements_by_xpath("./label")[0])
+    dark_mode_switch.click()
+    assert universum_log_element.color == Color.WHITE
+    assert universum_log_element.background_color == Color.BLACK
+    dark_mode_switch.click()
+    assert universum_log_element.color == Color.BLACK
 
 
 class TestElement(FirefoxWebElement):
@@ -228,54 +246,80 @@ class TestElement(FirefoxWebElement):
 
     # <label for="1.">  <-- self
     #     <span class="sectionLbl">
-    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element class name
+    #         <span class="sectionTitle">1. Section name</span>  <-- returning this element
     #     </span>
     # </label>
-    def get_section_title_class(self):
+    def get_section_title(self):
         label_span = self.find_element_by_class_name("sectionLbl")
         assert label_span
         title_span = label_span.find_element_by_tag_name("span")
-        assert title_span
-        return title_span.get_attribute("class")
+        return TestElement.create(title_span)
 
     # <label for="1.">  <-- self
     #     ...
     # </label>
     # <div>
     #     ...
-    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element class name
+    #     <span class="sectionSuccessStatus">[Success]</span>  <-- returning this element
     # </div>
-    def get_section_status_class(self):
+    def get_section_status(self):
         body = self.get_section_body()
-        status_element = TestElement.create(body.find_elements_by_tag_name("span")[-1])
-        assert status_element.text in ("[Success]", "[Failed]")
-        return status_element.get_attribute("class")
-
-    @property
-    def is_body_collapsed(self):
-        display_state = self.value_of_css_property("display")
-        collapsed_state = "none"
-        not_collapsed_state = "block"
-        if display_state not in (collapsed_state, not_collapsed_state):
-            raise RuntimeError(f"Unexpected element display state: '{display_state}'")
-
-        collapsed = (display_state == collapsed_state)
-        collapsed &= (not self.text)
-        return collapsed
-
-    @property
-    def is_section_collapsed(self):
-        label_span = self.find_element_by_tag_name("span")
-        assert label_span
-        script = "return window.getComputedStyle(arguments[0],':before').getPropertyValue('content')"
-        section_state = self.parent.execute_script(script, label_span).replace('"', "").replace(" ", "")
-        collapsed_state = "[+]"
-        not_collapsed_state = "[-]"
-        if section_state not in (collapsed_state, not_collapsed_state):
-            raise RuntimeError(f"Unexpected section collapsed state: '{section_state}'")
-
-        return section_state == collapsed_state
+        xpath_selector = "./*[contains(text(), '[Success]') or contains(text(), '[Failed]')]"
+        return TestElement.create(body.find_elements_by_xpath(xpath_selector)[-1])
 
     @property
     def indent(self):
         return self.location['x']
+
+    @property
+    def color(self):
+        return self._get_primary_color(self.value_of_css_property("color"))
+
+    @property
+    def background_color(self):
+        return self._get_primary_color(self.value_of_css_property("background-color"))
+
+    @property
+    def font_weight(self):
+        return self.value_of_css_property("font-weight")
+
+    @staticmethod
+    def _get_primary_color(rgb_str):
+        re_result = re.match(r"^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$", rgb_str)
+        assert re_result
+        red, green, blue = int(re_result.group(1)), int(re_result.group(2)), int(re_result.group(3))
+        hue, lightness, _ = colorsys.rgb_to_hls(red/255.0, green/255.0, blue/255.0)
+        hue = 360 * hue
+        lightness = 100 * lightness
+
+        color = None
+        if lightness <= 20:
+            color = Color.BLACK
+        elif lightness >= 80:
+            color = Color.WHITE
+        elif 0 <= hue <= 30 or 330 <= hue <= 360:
+            color = Color.RED
+        elif 30 <= hue <= 80:
+            color = Color.YELLOW
+        elif 80 <= hue <= 150:
+            color = Color.GREEN
+        elif 150 <= hue <= 190:
+            color = Color.CYAN
+        elif 190 <= hue <= 270:
+            color = Color.BLUE
+        elif 270 <= hue <= 330:
+            color = Color.PURPLE
+        else:
+            assert False, "Should not occur"
+        return color
+
+
+class Color(Enum):
+    BLACK = auto()
+    WHITE = auto()
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
+    YELLOW = auto()
+    PURPLE = auto()
+    CYAN = auto()

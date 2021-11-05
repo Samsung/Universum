@@ -2,20 +2,13 @@
 
 import pytest
 import P4
-import sh
 
-from universum import __main__
 from . import utils
 from .utils import python
-from .perforce_utils import P4Environment
+from .perforce_utils import P4TestEnvironment
 
 
 def test_which_universum_is_tested(docker_main, pytestconfig):
-    config = """
-from universum.configuration_support import Step, Configuration
-
-configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
-"""
     # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
     init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
     backup = init_file.read_bytes()
@@ -23,14 +16,14 @@ configs = Configuration([Step(name="Check python", command=["ls", "-la"])])
     init_file.write_text(f"""__title__ = "Universum"
 __version__ = "{test_line}"
 """)
-    output = docker_main.run(config, vcs_type="none")
+    output = docker_main.run(utils.simple_test_config, vcs_type="none")
     init_file.write_bytes(backup)
     assert test_line in output
 
     docker_main.environment.assert_successful_execution("pip uninstall -y universum")
-    docker_main.run(config, vcs_type="none", force_installed=True, expected_to_fail=True)
+    docker_main.run(utils.simple_test_config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
-    docker_main.run(config, vcs_type="none")  # not expected to fail
+    docker_main.run(utils.simple_test_config, vcs_type="none")  # not expected to fail
     if utils.reuse_docker_containers():
         docker_main.environment.install_python_module(docker_main.working_dir)
 
@@ -45,17 +38,14 @@ def test_teardown_fixture_output_verification(print_text_on_teardown):
     pass
 
 
-def test_clean_sources_exceptions(tmpdir):
-    env = utils.TestEnvironment(tmpdir, "main")
+@pytest.mark.parametrize("should_not_execute", [True, False], ids=['no-sources', 'deleted-sources'])
+def test_clean_sources_exception(tmpdir, stdout_checker, should_not_execute):
+    env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
-    env.settings.LocalMainVcs.source_dir = str(tmpdir / 'nonexisting_dir')
-
-    # Check failure with non-existing temp dir
-    __main__.run(env.settings)
-    # the log output is automatically checked by the 'detect_fails' fixture
-
-    # Check failure with temp dir deleted by the launched project
-    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+    source_directory = tmpdir
+    if should_not_execute:
+        source_directory = source_directory / 'nonexisting_dir'
+    env.settings.LocalMainVcs.source_dir = str(source_directory)
     env.configs_file.write(f"""
 from universum.configuration_support import Configuration
 
@@ -63,8 +53,9 @@ configs = Configuration([dict(name="Test configuration",
                               command=["bash", "-c", "rm -rf {env.settings.ProjectDirectory.project_root}"])])
 """)
 
-    __main__.run(env.settings)
-    # the log output is automatically checked by the 'detect_fails' fixture
+    env.run(expect_failure=should_not_execute)
+    error_message = f"[Errno 2] No such file or directory: '{env.settings.ProjectDirectory.project_root}'"
+    stdout_checker.assert_has_calls_with_param(error_message)
 
 
 def test_non_utf8_environment(docker_main):
@@ -91,28 +82,13 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 @pytest.fixture()
 def perforce_environment(perforce_workspace, tmpdir):
-    yield P4Environment(perforce_workspace, tmpdir, test_type="main")
+    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
 
 
 def test_p4_multiple_spaces_in_mappings(perforce_environment):
     perforce_environment.settings.PerforceWithMappings.project_depot_path = None
-    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.depot}   /..."]
-    assert not __main__.run(perforce_environment.settings)
-
-
-def shelve_config(config, perforce_environment):
-    p4 = perforce_environment.p4
-    p4_file = perforce_environment.repo_file
-    p4.run_edit(perforce_environment.depot)
-    p4_file.write(config)
-    change = p4.fetch_change()
-    change["Description"] = "CL for shelving"
-    shelve_cl = p4.save_change(change)[0].split()[1]
-    p4.run_shelve("-fc", shelve_cl)
-    settings = perforce_environment.settings
-    settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-    settings.Launcher.config_path = p4_file.basename
-    return settings
+    perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.vcs_client.depot}   /..."]
+    perforce_environment.run()
 
 
 def test_p4_repository_difference_format(perforce_environment):
@@ -121,10 +97,8 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="This is a changed step name", command=["ls", "-la"])])
 """
-    settings = shelve_config(config, perforce_environment)
-    result = __main__.run(settings)
-
-    assert result == 0
+    perforce_environment.shelve_config(config)
+    perforce_environment.run()
     diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
@@ -139,7 +113,7 @@ def mock_opened(monkeypatch):
 
 
 def test_p4_failed_opened(perforce_environment, mock_opened):
-    assert not __main__.run(perforce_environment.settings)
+    perforce_environment.run()
 
 
 # TODO: move this test to 'test_api.py' after test refactoring and Docker use reduction
@@ -151,10 +125,10 @@ from universum.configuration_support import Step, Configuration
 configs = Configuration([Step(name="{step_name}", artifacts="output.json",
                               command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
     """
-    settings = shelve_config(config, perforce_environment)
-    settings.Launcher.output = "file"
+    perforce_environment.shelve_config(config)
+    perforce_environment.settings.Launcher.output = "file"
 
-    assert not __main__.run(settings)
+    perforce_environment.run()
     log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
@@ -171,33 +145,79 @@ configs = Configuration([Step(name="Create empty CL",
                               command=["bash", "-c",
                               "p4 --field 'Description=My pending change' --field 'Files=' change -o | p4 change -i"],
                               environment = {{"P4CLIENT": "{perforce_environment.client_name}",
-                                              "P4PORT": "{perforce_environment.p4.port}",
-                                              "P4USER": "{perforce_environment.p4.user}",
-                                              "P4PASSWD": "{perforce_environment.p4.password}"}})])
+                                              "P4PORT": "{perforce_environment.vcs_client.p4.port}",
+                                              "P4USER": "{perforce_environment.vcs_client.p4.user}",
+                                              "P4PASSWD": "{perforce_environment.vcs_client.p4.password}"}})])
 """
-    settings = shelve_config(config, perforce_environment)
-    assert not __main__.run(settings)
+    perforce_environment.shelve_config(config)
+    perforce_environment.run()
     error_message = f"""[Error]: "Client '{perforce_environment.client_name}' has pending changes."""
     stdout_checker.assert_absent_calls_with_param(error_message)
 
 
 @pytest.fixture()
-def mock_diff(monkeypatch):
-    def mocking_function(*args, **kwargs):
-        raise sh.ErrorReturnCode(stderr=b"This is error text\n F\xc3\xb8\xc3\xb6\xbbB\xc3\xa5r",
-                                 stdout=b"This is text'",
-                                 full_cmd="any shell call with any params")
+def perforce_environment_with_files(perforce_environment):
+    files = [perforce_environment.vcs_client.create_file(utils.randomize_name("new_file") + ".txt")
+             for _ in range(2)]
 
-    monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
+    yield {"env": perforce_environment, "files": files}
+
+    for entry in files:
+        perforce_environment.vcs_client.delete_file(entry.basename)
 
 
-def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
+def test_success_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+    p4_file = perforce_environment_with_files["files"][0]
+    env = perforce_environment_with_files["env"]
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+"""
+    env.shelve_config(config)
+    cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
+           env.vcs_client.shelve_file(p4_file, "This is unchanged line 1\nThis is changed line 2")]
+    env.settings.PerforceMainVcs.shelve_cls.extend(cls)
+
+    env.run()
+    stdout_checker.assert_has_calls_with_param("This is changed line 1")
+    stdout_checker.assert_has_calls_with_param("This is changed line 2")
+
+
+def test_fail_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+    p4_file = perforce_environment_with_files["files"][0]
+    env = perforce_environment_with_files["env"]
+    config = f"""
+from universum.configuration_support import Step, Configuration
+
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+"""
+    env.shelve_config(config)
+    cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
+           env.vcs_client.shelve_file(p4_file, "This is a different line 1\nThis is changed line 2")]
+    env.settings.PerforceMainVcs.shelve_cls.extend(cls)
+
+    env.run(expect_failure=True)
+    stdout_checker.assert_has_calls_with_param("Problems during merge while resolving shelved CLs")
+    stdout_checker.assert_has_calls_with_param(str(p4_file.basename))
+
+
+def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files):
+    p4_files = perforce_environment_with_files["files"]
+    env = perforce_environment_with_files["env"]
     config = """
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Step", command=["ls"])])
+configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
 """
-    settings = shelve_config(config, perforce_environment)
-    assert __main__.run(settings)
-    stdout_checker.assert_has_calls_with_param("This is error text")
-    # Without the fixes all error messages go to stderr instead of stdout
+    env.shelve_config(config)
+    cl_1 = env.vcs_client.shelve_file(p4_files[0], "This is changed line 1\nThis is unchanged line 2")
+    env.vcs_client.shelve_file(p4_files[1], "This is changed line 1\nThis is unchanged line 2", shelve_cl=cl_1)
+    cl_2 = env.vcs_client.shelve_file(p4_files[0], "This is unchanged line 1\nThis is changed line 2")
+    env.vcs_client.shelve_file(p4_files[1], "This is unchanged line 1\nThis is changed line 2", shelve_cl=cl_2)
+    env.settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
+
+    env.run()
+    repo_state = env.artifact_dir.join('REPOSITORY_STATE.txt').read()
+    assert p4_files[0].basename in repo_state
+    assert p4_files[1].basename in repo_state

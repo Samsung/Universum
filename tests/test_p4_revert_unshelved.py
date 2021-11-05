@@ -20,9 +20,9 @@ class DiffParameters:
 
         # TODO: move this block to utils
         settings = utils.create_empty_settings("main")
-        settings.PerforceVcs.port = perforce_workspace.p4.port
-        settings.PerforceVcs.user = perforce_workspace.p4.user
-        settings.PerforceVcs.password = perforce_workspace.p4.password
+        settings.PerforceVcs.port = perforce_workspace.server.port
+        settings.PerforceVcs.user = perforce_workspace.server.user
+        settings.PerforceVcs.password = perforce_workspace.server.password
         settings.Output.type = "term"
         settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory + "/../new_workspace")
         settings.PerforceWithMappings.mappings = [self.perforce_workspace.depot + " /..."]

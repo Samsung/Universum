@@ -53,6 +53,9 @@ class BaseDownloadVcs(BaseVcs, HasErrorState):
     def code_review(self):  # pylint: disable=no-self-use
         return None
 
+    def login(self):
+        pass
+
     def prepare_repository(self):
         raise NotImplementedError
 

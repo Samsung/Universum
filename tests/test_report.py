@@ -1,15 +1,16 @@
 # pylint: disable = redefined-outer-name, abstract-method
 
 import pytest
+import py
 
-from universum import __main__
 from universum.modules.vcs.github_vcs import GithubToken
 from . import utils
+from .git_utils import GitClient
 
 
-class ReportEnvironment(utils.TestEnvironment):
-    def __init__(self, directory, client):
-        super().__init__(directory, "main")
+class ReportEnvironment(utils.BaseTestEnvironment):
+    def __init__(self, client: GitClient, directory: py.path.local):
+        super().__init__(client, directory, "main", "")
 
         self.settings.Vcs.type = "github"
         self.settings.MainVcs.report_to_review = True
@@ -25,19 +26,18 @@ class ReportEnvironment(utils.TestEnvironment):
         self.settings.Reporter.report_success = True
 
         repo_name = str(client.root_directory).rsplit("client", 1)[0]
-        self.path = "http://localhost/repos" + repo_name + "server/check-runs/123"
+        self.path: str = "http://localhost/repos" + repo_name + "server/check-runs/123"
 
 
 @pytest.fixture()
-def report_environment(tmpdir, git_client):
-    yield ReportEnvironment(tmpdir, git_client)
+def report_environment(git_client, tmpdir):
+    yield ReportEnvironment(git_client, tmpdir)
 
 
-def test_github_run(http_check, report_environment, monkeypatch):
+def test_github_run(report_environment, monkeypatch):
     monkeypatch.setattr(GithubToken, 'get_token', lambda *args, **kwargs: "this is token")
 
-    http_check.assert_success_and_collect(__main__.run, report_environment.settings,
-                                          url=report_environment.path, method="PATCH")
-    http_check.assert_request_body_contained("status", "in_progress")
-    http_check.assert_request_body_contained("status", "completed")
-    http_check.assert_request_body_contained("conclusion", "success")
+    collected_http = report_environment.run_with_http_server(url=report_environment.path, method="PATCH")
+    collected_http.assert_request_body_contained("status", "in_progress")
+    collected_http.assert_request_body_contained("status", "completed")
+    collected_http.assert_request_body_contained("conclusion", "success")
