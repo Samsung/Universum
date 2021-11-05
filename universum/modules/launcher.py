@@ -237,7 +237,6 @@ class RunningStep:
         line = utils.trim_and_convert_to_unicode(line)
         if self.file:
             self.file.write("stderr: " + line + "\n")
-            self.out.log_stderr_html_only(line)
         elif self._is_background:
             self._postponed_out.append((self.out.log_stderr, line))
         else:
