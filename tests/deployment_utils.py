@@ -11,6 +11,8 @@ import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
+from .git_utils import GitClient
+from .perforce_utils import PerforceWorkspace
 from .utils import python
 
 
@@ -178,24 +180,27 @@ def local_sources(tmpdir):
 
 
 class UniversumRunner:
-    def __init__(self, perforce_workspace, git_client, local_sources, nonci):
-        self.perforce = perforce_workspace
-        self.git = git_client
-        self.local = local_sources
-        self.nonci = nonci
+    def __init__(self, perforce_workspace: PerforceWorkspace,
+                 git_client: GitClient,
+                 local_sources: LocalSources,
+                 nonci: bool):
+        self.perforce: PerforceWorkspace = perforce_workspace
+        self.git: GitClient = git_client
+        self.local: LocalSources = local_sources
+        self.nonci: bool = nonci
 
         # Need to be initialized in 'set_environment'
-        self.environment = None
-        self.working_dir: str = None
-        self.project_root = None
-        self.artifact_dir = None
+        self.environment: ExecutionEnvironment = None  # type: ignore
+        self.working_dir: str = None  # type: ignore
+        self.project_root: str = None  # type: ignore
+        self.artifact_dir: str = None  # type: ignore
 
-    def set_environment(self, execution_environment):
+    def set_environment(self, execution_environment: ExecutionEnvironment) -> None:
         self.environment = execution_environment
         self.working_dir = self.environment.get_working_directory()
         self.project_root = os.path.join(self.working_dir, "temp")
         if self.nonci:
-            self.project_root = self.local.root_directory
+            self.project_root = str(self.local.root_directory)
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
@@ -207,13 +212,13 @@ class UniversumRunner:
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
-    def _mandatory_args(self, config_file):
+    def _mandatory_args(self, config_file: str) -> str:
         result = f" -lcp '{config_file}' -ad '{self.artifact_dir}'"
         if self.project_root:
             result += f" -pr '{self.project_root}'"
         return result
 
-    def _vcs_args(self, vcs_type):
+    def _vcs_args(self, vcs_type: str) -> str:
         if vcs_type == "none":
             return f" -vt none -fsd '{self.local.root_directory}'"
 
@@ -227,14 +232,14 @@ class UniversumRunner:
                f" -p4d '{self.perforce.depot}'" \
                f" -p4c 'my_disposable_p4_client'"
 
-    def _create_temp_config(self, config: str):
+    def _create_temp_config(self, config: str) -> str:
         file_path = os.path.join(self.working_dir, "temp_config.py")
         with open(file_path, 'w+', encoding="utf-8") as f:
             f.write(config)
         return file_path
 
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
-            additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
+            additional_parameters="", environment=None, expected_to_fail=False, workdir=None) -> str:
         """
         `force_installed` launches python with '-I' option, that ensures the non-installed universum sources
         will not be used instead of those installed into system. Without '-I' option `python -m` will first
@@ -270,7 +275,7 @@ class UniversumRunner:
         os.remove(config_file)
         return result
 
-    def clean_artifacts(self):
+    def clean_artifacts(self) -> None:
         self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
 
 
