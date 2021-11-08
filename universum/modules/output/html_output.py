@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from .base_output import BaseOutput
 
@@ -69,8 +70,11 @@ class HtmlOutput(BaseOutput):
     def log_execution_start(self, title, version):
         head_content = self._build_html_head()
         html_header = f"<!DOCTYPE html><html><head>{head_content}</head><body>"
-        html_header += '<input type="checkbox" id="dark-checkbox"><label for="dark-checkbox"></label><pre>'
-        self._log_line(html_header)
+        html_header += '<input type="checkbox" id="dark-checkbox"><label for="dark-checkbox"></label>'
+        html_header += '<input type="checkbox" id="time-checkbox"><label for="time-checkbox"></label>'
+        html_header += '<pre>'
+
+        self._log_buffered(html_header)
         self.log(self._build_execution_start_msg(title, version))
 
     def log_execution_finish(self, title, version):
@@ -81,6 +85,9 @@ class HtmlOutput(BaseOutput):
     def _log_line(self, line, with_line_separator=True):
         if with_line_separator and not line.endswith(os.linesep):
             line += os.linesep
+        self._log_buffered(self._build_time_stamp() + self._build_indent() + line)
+
+    def _log_buffered(self, line):
         if not self._filename:
             raise RuntimeError("Artifact directory was not set")
         if not self.artifact_dir_ready:
@@ -97,7 +104,6 @@ class HtmlOutput(BaseOutput):
 
     def _write_to_file(self, line):
         with open(self._filename, "a", encoding="utf-8") as file:
-            file.write(self._build_indent())
             file.write(line)
 
     def _build_indent(self):
@@ -106,6 +112,11 @@ class HtmlOutput(BaseOutput):
             indent_str.append("  " * x)
             indent_str.append(" |   ")
         return "".join(indent_str)
+
+    @staticmethod
+    def _build_time_stamp():
+        now = datetime.now()
+        return now.astimezone().strftime('<span class="time" title="%Z (UTC%z)">%Y-%m-%d %H:%M:%S</span> ')
 
     @staticmethod
     def _build_html_head():
@@ -118,7 +129,11 @@ class HtmlOutput(BaseOutput):
                 min-height: 100vh;
                 display: flex;
             }
-
+            
+            .time {
+                color: rgba(128, 128, 128, 0.7);
+                display: none;
+            }
             .sectionTitle {
                 color: darkslateblue;
                 font-weight: bold;
@@ -177,18 +192,21 @@ class HtmlOutput(BaseOutput):
                 display: none;
             }
 
+            #time-checkbox {
+                display: none;
+            }
             pre {
                 padding: 20px 20px 65px 20px;
                 margin: 0;
                 width: 100%;
             }
 
-            #dark-checkbox:checked+label+pre {
+            #dark-checkbox:checked~pre {
                 background-color: black;
                 color: rgb(219, 198, 198);
             }
-
-            #dark-checkbox:checked+label+pre .sectionTitle {
+    
+            #dark-checkbox:checked~pre .sectionTitle {
                 color: #2b7cdf;
             }
 
@@ -239,6 +257,64 @@ class HtmlOutput(BaseOutput):
 
             #dark-checkbox:checked+label::after {
                 content: 'Dark';
+            }
+
+            #time-checkbox:checked+label~pre .time {
+                display: inline-block;
+            }
+    
+            #time-checkbox+label {
+                position: fixed;
+                right: 125px;
+                bottom: 15px;
+                width: 95px;
+                height: 30px;
+                border-radius: 20px;
+                background-color: white;
+                color: gray;
+                border: gray 1px solid;
+                font: 12px sans;
+                cursor: pointer;
+            }
+    
+            #dark-checkbox:checked~#time-checkbox+label {
+                background-color: black;
+                color: white;
+            }
+    
+            #dark-checkbox:checked~#time-checkbox+label::before {
+                background-color: white;
+            }
+    
+            #time-checkbox:checked+label {
+                background-color: rgb(24, 61, 16) !important;
+                color: white;
+            }
+    
+            #time-checkbox+label::before {
+                position: absolute;
+                content: "";
+                height: 22px;
+                width: 22px;
+                left: 4px;
+                bottom: 4px;
+                background-color: gray;
+                transition: .3s;
+                border-radius: 50%;
+            }
+    
+            #time-checkbox:checked+label::before {
+                background-color: white;
+                transform: translateX(65px);
+            }
+    
+            #time-checkbox+label::after {
+                content: 'Time';
+                display: block;
+                position: absolute;
+                transform: translate(-50%, -50%);
+                top: 50%;
+                left: 50%;
             }
         '''
         head = []

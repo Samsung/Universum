@@ -2,6 +2,7 @@
 
 import os
 import re
+from datetime import datetime
 from enum import Enum, auto
 import colorsys
 import pytest
@@ -96,6 +97,7 @@ def check_html_log(artifact_dir, browser):
     steps_section.click()
     assert not steps_body.is_displayed()
     check_dark_mode(html_body, universum_log_element)
+    check_timestamps(html_body, universum_log_element)
 
 
 def check_sections_indentation(steps_section):
@@ -207,12 +209,27 @@ def check_text_is_bold(element):
 
 
 def check_dark_mode(body_element, universum_log_element):
-    dark_mode_switch = TestElement.create(body_element.find_elements_by_xpath("./label")[0])
+    dark_mode_switch = TestElement.create(body_element.find_element_by_xpath("./label[@for='dark-checkbox']"))
     dark_mode_switch.click()
     assert universum_log_element.color == Color.WHITE
     assert universum_log_element.background_color == Color.BLACK
     dark_mode_switch.click()
     assert universum_log_element.color == Color.BLACK
+
+
+def check_timestamps(body_element, universum_log_element):
+    timestamp_element = universum_log_element.find_element_by_xpath("./*[@class='time']")
+    assert not timestamp_element.is_displayed()
+
+    time_switch = TestElement.create(body_element.find_element_by_xpath("./label[@for='time-checkbox']"))
+    time_switch.click()
+    assert timestamp_element.is_displayed()
+
+    timestamp = datetime.strptime(timestamp_element.text, "%Y-%m-%d %H:%M:%S")
+    delta = abs(datetime.now() - timestamp)
+    assert delta.days == 0
+    assert delta.seconds <= 60
+
 
 
 class TestElement(FirefoxWebElement):
