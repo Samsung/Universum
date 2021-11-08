@@ -144,7 +144,7 @@ def execution_environment(request) -> Generator[ExecutionEnvironment, None, None
 
 
 @pytest.fixture()
-def clean_execution_environment(request):
+def clean_execution_environment(request) -> Generator[ExecutionEnvironment, None, None]:
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd(), force_clean=True)
@@ -162,7 +162,7 @@ class LocalSources(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def local_sources(tmpdir):
+def local_sources(tmpdir: py.path.local) -> Generator[LocalSources, None, None]:
     if utils.reuse_docker_containers():
         source_dir = py.path.local(".work")
         try:
@@ -287,14 +287,14 @@ def runner_without_environment(perforce_workspace, git_client, local_sources) ->
 
 
 @pytest.fixture()
-def docker_main_with_vcs(execution_environment, runner_without_environment):
+def docker_main_with_vcs(execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     execution_environment.set_image("universum_test_env_" + python())
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
 
 
-def docker_fixture_template(request, execution_environment, local_sources):
-    runner = UniversumRunner(None, None, local_sources, nonci=request.param)
+def docker_fixture_template(request, execution_environment: ExecutionEnvironment, local_sources: LocalSources):
+    runner = UniversumRunner(None, None, local_sources, nonci=request.param)  # type: ignore
     execution_environment.set_image("universum_test_env_" + python())
     runner.set_environment(execution_environment)
     yield runner
@@ -307,21 +307,21 @@ docker_main_and_nonci = pytest.fixture(params=[False, True], ids=["main", "nonci
 
 
 @pytest.fixture()
-def clean_docker_main(clean_execution_environment, runner_without_environment):
+def clean_docker_main(clean_execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     clean_execution_environment.set_image("universum_test_env_" + python())
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_docker_main_no_p4(clean_execution_environment, runner_without_environment):
+def clean_docker_main_no_p4(clean_execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     clean_execution_environment.set_image("universum_test_env_no_p4_" + python())
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_docker_main_no_vcs(clean_execution_environment, runner_without_environment):
+def clean_docker_main_no_vcs(clean_execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     clean_execution_environment.set_image("universum_test_env_no_vcs_" + python())
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment

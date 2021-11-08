@@ -2,6 +2,7 @@
 
 import os
 from time import sleep
+from typing import Generator
 
 import git
 from git.remote import RemoteProgress
@@ -104,7 +105,7 @@ class GitServer:
 
 
 @pytest.fixture()
-def git_server(tmpdir):
+def git_server(tmpdir: py.path.local) -> Generator[GitServer, None, None]:
     directory = tmpdir.mkdir("server")
     server = GitServer(directory, "testing")
     try:
@@ -144,7 +145,7 @@ class GitClient(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def git_client(git_server, tmpdir):
+def git_client(git_server: GitServer, tmpdir: py.path.local) -> Generator[GitClient, None, None]:
     yield GitClient(git_server, tmpdir)
 
 

@@ -5,7 +5,9 @@ import random
 import socket
 import string
 import sys
+from typing import Type
 
+from docker.models.containers import Container
 import httpretty
 import py
 
@@ -35,23 +37,23 @@ PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 PYTHON = "python" + PYTHON_VERSION
 
 
-def python():
+def python() -> str:
     return PYTHON
 
 
-def python_version():
+def python_version() -> str:
     return PYTHON_VERSION
 
 
-def reuse_docker_containers():
+def reuse_docker_containers() -> bool:
     return ("PYCHARM_HOSTED" in os.environ) or ("REUSE_DOCKER_CONTAINERS" in os.environ)
 
 
-def randomize_name(name):
+def randomize_name(name: str) -> str:
     return name + "-" + "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
 
-def get_open_port():
+def get_open_port() -> str:
     temp = socket.socket()
     temp.bind(("", 0))
     result = temp.getsockname()[1]
@@ -59,11 +61,11 @@ def get_open_port():
     return result
 
 
-def python_time_from_rfc3339_time(rfc3339_time):
+def python_time_from_rfc3339_time(rfc3339_time: str) -> float:
     return tf_from_timestamp(rfc3339_time)
 
 
-def is_container_outdated(container):
+def is_container_outdated(container: Container) -> bool:
     created = python_time_from_rfc3339_time(container.attrs["Created"])
     delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(created)
     if abs(delta).days > 7:
@@ -71,7 +73,8 @@ def is_container_outdated(container):
     return False
 
 
-def create_empty_settings(test_type):
+def create_empty_settings(test_type: str) -> ModuleNamespace:
+    main_class: Type[gravity.Module]
     if test_type == "poll":
         main_class = poll.Poll
     elif test_type == "submit":
@@ -91,7 +94,7 @@ def create_empty_settings(test_type):
     return settings
 
 
-simple_test_config = """
+simple_test_config: str = """
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])])
