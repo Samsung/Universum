@@ -213,7 +213,7 @@ def check_dark_mode(body_element, universum_log_element):
 
 def check_timestamps(body_element, universum_log_element):
     timestamp_element = universum_log_element.find_element_by_xpath("./*[@class='time']")
-    assert timestamp_element.is_displayed() is False
+    assert not timestamp_element.is_displayed()
 
     time_switch = TestElement.create(body_element.find_element_by_xpath("./label[@for='time-checkbox']"))
     time_switch.click()
