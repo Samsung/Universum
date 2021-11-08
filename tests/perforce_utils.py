@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 import time
-from typing import Any
 
 import pytest
 import docker
@@ -167,7 +166,7 @@ class PerforceConnection:
 
 
 @pytest.fixture()
-def perforce_connection(request, docker_perforce):
+def perforce_connection(request, docker_perforce: PerfoceDockerContainer):
     p4 = P4()
     p4.port = docker_perforce.port
     p4.user = docker_perforce.user
@@ -179,14 +178,14 @@ def perforce_connection(request, docker_perforce):
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection: Any, directory: py.path.local):
+    def __init__(self, connection: PerforceConnection, directory: py.path.local):
         super().__init__()
         self.root_directory = directory.mkdir("workspace")
         self.repo_file = self.root_directory.join("writeable_file.txt")
 
         self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")
 
-        self.server: Any = connection.server
+        self.server: PerfoceDockerContainer = connection.server
         self.client_created: bool = False
         self.client_name: str = "test_workspace"
         self.depot: str = "//depot/..."
@@ -295,7 +294,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def perforce_workspace(request, perforce_connection, tmpdir):
+def perforce_workspace(request, perforce_connection: PerforceConnection, tmpdir: py.path.local):
     workspace = PerforceWorkspace(perforce_connection, tmpdir)
     try:
         workspace.setup()
