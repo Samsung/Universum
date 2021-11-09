@@ -89,15 +89,39 @@ def check_html_log(artifact_dir, browser):
     steps_section = universum_log_element.get_section_by_name("Executing build steps")
     steps_body = steps_section.get_section_body()
 
-    assert not steps_body.is_displayed()
-    steps_section.click()
-    assert steps_body.is_displayed()
+    check_initial_sections_display_state(universum_log_element, steps_body)
+    check_manual_section_expanding(steps_body)
     check_sections_indentation(steps_section)
     check_coloring(html_body, universum_log_element, steps_body)
-    steps_section.click()
-    assert not steps_body.is_displayed()
     check_dark_mode(html_body, universum_log_element)
     check_timestamps(html_body, universum_log_element)
+
+
+def check_initial_sections_display_state(universum_log_element, steps_body):
+    assert steps_body.is_displayed()
+    sections_expanded_state = {
+        "Success step": False,
+        "Failed step": True,
+        "Partially success step": True,
+        "Partially success step: Success step": False,
+        "Partially success step: Failed step": True,
+        "All success step": False,
+        "All failed step": True,
+        "All failed step: Failed step": True
+    }
+    for section_name, expanded_state in sections_expanded_state.items():
+        assert steps_body.get_section_body_by_name(section_name).is_displayed() == expanded_state
+    assert universum_log_element.get_section_body_by_name("Reporting build result").is_displayed()
+
+
+def check_manual_section_expanding(steps_body):
+    success_step = steps_body.get_section_by_name("Success step")
+    success_step_body = success_step.get_section_body()
+    assert not success_step_body.is_displayed()
+    success_step.click()
+    assert success_step_body.is_displayed()
+    success_step.click()
+    assert not success_step_body.is_displayed()
 
 
 def check_sections_indentation(steps_section):
@@ -106,14 +130,12 @@ def check_sections_indentation(steps_section):
     step_lvl1_second = steps_body.get_section_by_name("Partially success step")
     assert step_lvl1_first.indent == step_lvl1_second.indent
 
-    step_lvl1_second.click()
     step_lvl1_body = step_lvl1_second.get_section_body()
     step_lvl2_first = step_lvl1_body.get_section_by_name("Success step")
     step_lvl2_second = step_lvl1_body.get_section_by_name("Failed step")
     assert step_lvl2_first.indent == step_lvl2_second.indent
 
     assert steps_section.indent < step_lvl1_first.indent < step_lvl2_first.indent
-    step_lvl1_second.click() # restore sections state
 
 
 def check_coloring(body_element, universum_log_element, steps_body):
@@ -132,16 +154,11 @@ def check_body_coloring(body_element):
 def check_title_and_status_coloring(steps_body):
     check_section_coloring(steps_body.get_section_by_name("Success step"))
     check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
-    check_section_coloring(steps_body.get_section_by_name("Partially success step"))
+    check_section_coloring(steps_body.get_section_by_name("Partially success step"), has_inner_fail=True)
 
-    composite_step = steps_body.get_section_by_name("Partially success step")
-    composite_step.click()
-    composite_step_body = composite_step.get_section_body()
-
+    composite_step_body = steps_body.get_section_body_by_name("Partially success step")
     check_section_coloring(composite_step_body.get_section_by_name("Success step"))
     check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
-
-    composite_step.click()  # restore sections state
 
 
 def check_skipped_steps_coloring(steps_body):
@@ -153,10 +170,7 @@ def check_skipped_steps_coloring(steps_body):
 
 
 def check_steps_report_coloring(universum_log_element):
-    report_section = universum_log_element.get_section_by_name("Reporting build result")
-    report_section.click()
-    report_section_body = report_section.get_section_body()
-
+    report_section_body = universum_log_element.get_section_body_by_name("Reporting build result")
     xpath_selector = "./*[text() = 'Success' or text() = 'Failed' or text() = 'Skipped']"
     elements = [TestElement.create(el) for el in report_section_body.find_elements_by_xpath(xpath_selector)]
     assert elements
@@ -168,39 +182,29 @@ def check_steps_report_coloring(universum_log_element):
         else:
             assert False, f"Unexpected element text: '{el.text}'"
 
-    report_section.click() # restore section state
-
 
 def check_errors_tags_coloring(steps_body):
-    step = steps_body.get_section_by_name("Failed step")
-    step_body = step.get_section_body()
-    step.click()
-
+    step_body = steps_body.get_section_body_by_name("Failed step")
     exception_tag = step_body.get_child_by_text("Error:")
     assert exception_tag.color == Color.RED
-
     stderr_tag = step_body.get_child_by_text("stderr:")
     assert stderr_tag.color == Color.YELLOW
 
-    step.click()
+
+def check_section_coloring(step, is_failed=False, has_inner_fail=False):
+    is_section_failed = is_failed or has_inner_fail
+    check_text_item_style(step.get_section_title(), is_section_failed, normal_color=Color.BLUE);
+    if not is_section_failed:
+        step.click() # open section body
+    check_text_item_style(step.get_section_status(), is_failed, normal_color=Color.GREEN);
+    if not is_section_failed:
+        step.click() # close section body
 
 
-def check_section_coloring(step, is_failed=False):
-    check_title_coloring(step.get_section_title())
-    step.click() # open section body
-    check_status_coloring(step.get_section_status(), is_failed)
-    step.click() # close section body
-
-
-def check_title_coloring(title):
-    assert title.color == Color.BLUE
-    check_text_is_bold(title)
-
-
-def check_status_coloring(status, is_failed):
-    exp_color = Color.RED if is_failed else Color.GREEN
-    assert status.color == exp_color
-    check_text_is_bold(status)
+def check_text_item_style(item, is_failed, normal_color):
+    exp_color = Color.RED if is_failed else normal_color
+    assert item.color == exp_color
+    check_text_is_bold(item)
 
 
 def check_text_is_bold(element):
@@ -242,6 +246,9 @@ class TestElement(FirefoxWebElement):
         element.__class__ = TestElement
         return element
 
+    def get_section_body_by_name(self, section_name):
+        return self.get_section_by_name(section_name).get_section_body()
+
     # <any_tag>  <-- self
     #     <input type="checkbox" id="1." class="hide">
     #     <label for="1.">  <-- returning this element
@@ -254,7 +261,7 @@ class TestElement(FirefoxWebElement):
         result = None
         for el in span_elements:
             if section_name in el.text:
-                result = el.find_element_by_xpath("..")
+                return TestElement.create(el.find_element_by_xpath(".."))
         return TestElement.create(result)
 
     # <input type="checkbox" id="1." class="hide">
