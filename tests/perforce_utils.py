@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 import time
-from typing import Generator
 
 import docker
 import pytest
@@ -117,7 +116,7 @@ class PerfoceDockerContainer:
 
 
 @pytest.fixture(scope="session")
-def docker_perforce(request) -> Generator[PerfoceDockerContainer, None, None]:
+def docker_perforce(request):
     container = None
     client = docker.from_env()
 
@@ -167,7 +166,7 @@ class PerforceConnection:
 
 
 @pytest.fixture()
-def perforce_connection(request, docker_perforce: PerfoceDockerContainer) -> Generator[PerforceConnection, None, None]:
+def perforce_connection(request, docker_perforce: PerfoceDockerContainer):
     p4 = P4()
     p4.port = docker_perforce.port
     p4.user = docker_perforce.user
@@ -295,8 +294,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def perforce_workspace(request, perforce_connection: PerforceConnection,
-                       tmpdir: py.path.local) -> Generator[PerforceWorkspace, None, None]:
+def perforce_workspace(request, perforce_connection: PerforceConnection, tmpdir: py.path.local):
     workspace = PerforceWorkspace(perforce_connection, tmpdir)
     try:
         workspace.setup()

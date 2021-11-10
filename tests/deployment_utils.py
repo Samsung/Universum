@@ -4,7 +4,6 @@ import getpass
 import os
 from pwd import getpwnam
 
-from typing import Generator
 import docker
 import py
 import pytest
@@ -133,7 +132,7 @@ class ExecutionEnvironment:
 
 
 @pytest.fixture()
-def execution_environment(request) -> Generator[ExecutionEnvironment, None, None]:
+def execution_environment(request):
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd())
@@ -144,7 +143,7 @@ def execution_environment(request) -> Generator[ExecutionEnvironment, None, None
 
 
 @pytest.fixture()
-def clean_execution_environment(request) -> Generator[ExecutionEnvironment, None, None]:
+def clean_execution_environment(request):
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd(), force_clean=True)
@@ -162,7 +161,7 @@ class LocalSources(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def local_sources(tmpdir: py.path.local) -> Generator[LocalSources, None, None]:
+def local_sources(tmpdir: py.path.local):
     if utils.reuse_docker_containers():
         source_dir = py.path.local(".work")
         try:
@@ -280,7 +279,7 @@ class UniversumRunner:
 
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources) -> Generator[UniversumRunner, None, None]:
+def runner_without_environment(perforce_workspace, git_client, local_sources):
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
     runner.clean_artifacts()
