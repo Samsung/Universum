@@ -279,7 +279,7 @@ class UniversumRunner:
 
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources):
+def runner_without_environment(perforce_workspace: PerforceWorkspace, git_client: GitClient, local_sources: LocalSources):
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
     runner.clean_artifacts()
