@@ -4,6 +4,7 @@ import pytest
 import py
 
 from universum.modules.vcs.github_vcs import GithubToken
+from .conftest import FuzzyCallChecker
 from .utils import BaseTestEnvironment, BaseVcsClient
 
 
@@ -56,12 +57,12 @@ class GithubHandlerEnvironment(BaseTestEnvironment):
 
 
 @pytest.fixture()
-def github_handler_environment(tmpdir):
+def github_handler_environment(tmpdir: py.path.local):
     yield GithubHandlerEnvironment(tmpdir)
 
 
 @pytest.fixture(autouse=True)
-def mock_token(monkeypatch):
+def mock_token(monkeypatch: pytest.MonkeyPatch):
     def mocking_function(token_handler, parsed_id):
         assert parsed_id == 'installation_id'
         return "TOKEN_STRING"
@@ -69,7 +70,7 @@ def mock_token(monkeypatch):
     monkeypatch.setattr(GithubToken, 'get_token', mocking_function)
 
 
-def test_success_github_handler_check_suite(github_handler_environment):
+def test_success_github_handler_check_suite(github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_suite"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_suite_payload
     collected_http = github_handler_environment.run_with_http_server(url=github_handler_environment.check_suite_url,
@@ -78,7 +79,7 @@ def test_success_github_handler_check_suite(github_handler_environment):
     collected_http.assert_request_body_contained("head_sha", "check_suite_head_sha")
 
 
-def test_success_github_handler_check_run(github_handler_environment):
+def test_success_github_handler_check_run(github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     collected_http = github_handler_environment.run_with_http_server(url=github_handler_environment.check_run_url)
@@ -89,31 +90,36 @@ def test_success_github_handler_check_run(github_handler_environment):
     collected_http.assert_request_query_contained("GITHUB_INSTALLATION_ID", "installation_id")
 
 
-def test_error_github_handler_not_a_json(stdout_checker, github_handler_environment):
+def test_error_github_handler_not_a_json(stdout_checker: FuzzyCallChecker,
+                                         github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.payload = "not a JSON"
     github_handler_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Provided payload value could not been parsed as JSON")
 
 
-def test_error_github_handler_wrong_json_syntax(stdout_checker, github_handler_environment):
+def test_error_github_handler_wrong_json_syntax(stdout_checker: FuzzyCallChecker,
+                                                github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.payload = "{'key': 'value'}"
     github_handler_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Provided payload value could not been parsed as JSON")
 
 
-def test_error_github_handler_multiple_payloads(stdout_checker, github_handler_environment):
+def test_error_github_handler_multiple_payloads(stdout_checker: FuzzyCallChecker,
+                                                github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.payload = "[{},{}]"
     github_handler_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Parsed payload JSON does not correspond to expected format")
 
 
-def test_error_github_handler_empty_json(stdout_checker, github_handler_environment):
+def test_error_github_handler_empty_json(stdout_checker: FuzzyCallChecker,
+                                         github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.payload = "{}"
     github_handler_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Could not find key 'action' in provided payload")
 
 
-def test_error_github_handler_json_missing_key(stdout_checker, github_handler_environment):
+def test_error_github_handler_json_missing_key(stdout_checker: FuzzyCallChecker,
+                                               github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     fixed_payload = github_handler_environment.check_run_payload.replace('"id": "installation_id"', '')
     github_handler_environment.settings.GithubHandler.payload = fixed_payload
@@ -121,13 +127,15 @@ def test_error_github_handler_json_missing_key(stdout_checker, github_handler_en
     stdout_checker.assert_has_calls_with_param("Could not find key 'id' in provided payload")
 
 
-def test_error_github_handler_wrong_event(stdout_checker, github_handler_environment):
+def test_error_github_handler_wrong_event(stdout_checker: FuzzyCallChecker,
+                                          github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "unhandled_event"
     github_handler_environment.run()
     stdout_checker.assert_has_calls_with_param("Unhandled event, skipping...")
 
 
-def test_error_github_handler_wrong_app(stdout_checker, github_handler_environment):
+def test_error_github_handler_wrong_app(stdout_checker: FuzzyCallChecker,
+                                        github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     fixed_payload = github_handler_environment.check_run_payload.replace('"id": "INTEGRATION_ID"', '"id": "wrong_id"')
     github_handler_environment.settings.GithubHandler.payload = fixed_payload
@@ -135,21 +143,24 @@ def test_error_github_handler_wrong_app(stdout_checker, github_handler_environme
     stdout_checker.assert_has_calls_with_param("Unhandled event, skipping...")
 
 
-def test_error_github_handler_no_github_server(stdout_checker, github_handler_environment):
+def test_error_github_handler_no_github_server(stdout_checker: FuzzyCallChecker,
+                                               github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_suite"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_suite_payload
     github_handler_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")
 
 
-def test_error_github_handler_no_jenkins_server(stdout_checker, github_handler_environment):
+def test_error_github_handler_no_jenkins_server(stdout_checker: FuzzyCallChecker,
+                                                github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     github_handler_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Failed to establish a new connection: [Errno 111] Connection refused")
 
 
-def test_error_github_handler_wrong_schema(stdout_checker, github_handler_environment):
+def test_error_github_handler_wrong_schema(stdout_checker: FuzzyCallChecker,
+                                           github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     github_handler_environment.settings.GithubHandler.trigger_url = "htttttp://localhost"
@@ -157,7 +168,7 @@ def test_error_github_handler_wrong_schema(stdout_checker, github_handler_enviro
     stdout_checker.assert_has_calls_with_param("No connection adapters were found for 'htttttp://localhost'")
 
 
-def test_error_github_handler_404(stdout_checker, github_handler_environment):
+def test_error_github_handler_404(stdout_checker: FuzzyCallChecker, github_handler_environment: GithubHandlerEnvironment):
     github_handler_environment.settings.GithubHandler.event = "check_run"
     github_handler_environment.settings.GithubHandler.payload = github_handler_environment.check_run_payload
     url = github_handler_environment.check_run_url

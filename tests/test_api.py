@@ -1,6 +1,7 @@
 import json
 from os import path
 
+from .deployment_utils import UniversumRunner
 from .utils import python
 
 config = f"""
@@ -11,13 +12,13 @@ configs = Configuration([dict(name="Run script", artifacts="output.json",
 """
 
 
-def test_error_wrong_environment(docker_main_and_nonci):
+def test_error_wrong_environment(docker_main_and_nonci: UniversumRunner):
     cmd = f"{python()} -m universum api file-diff"
     log = docker_main_and_nonci.environment.assert_unsuccessful_execution(cmd)
     assert "Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment" in log
 
 
-def test_p4_file_diff(docker_main_with_vcs):
+def test_p4_file_diff(docker_main_with_vcs: UniversumRunner):
     p4 = docker_main_with_vcs.perforce.p4
     p4_directory = docker_main_with_vcs.perforce.root_directory
     p4_file = docker_main_with_vcs.perforce.repo_file
@@ -43,7 +44,7 @@ def test_p4_file_diff(docker_main_with_vcs):
     assert result[1]["repo_path"] == "//depot/writeable_file.txt"
 
 
-def test_multiple_p4_file_diff(docker_main_with_vcs):
+def test_multiple_p4_file_diff(docker_main_with_vcs: UniversumRunner):
     p4 = docker_main_with_vcs.perforce.p4
     p4_directory = docker_main_with_vcs.perforce.root_directory
 

@@ -34,7 +34,7 @@ def report_environment(git_client, tmpdir):
     yield ReportEnvironment(git_client, tmpdir)
 
 
-def test_github_run(report_environment, monkeypatch):
+def test_github_run(report_environment: ReportEnvironment, monkeypatch):
     monkeypatch.setattr(GithubToken, 'get_token', lambda *args, **kwargs: "this is token")
 
     collected_http = report_environment.run_with_http_server(url=report_environment.path, method="PATCH")

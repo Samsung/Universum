@@ -1,19 +1,21 @@
 # pylint: disable = redefined-outer-name
 
+import py
 import pytest
 import sh
 
 from universum import __main__
-from .perforce_utils import P4TestEnvironment
+from .conftest import FuzzyCallChecker
+from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 from .utils import simple_test_config
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace, tmpdir):
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
     yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
 
 
-def test_p4_forbidden_local_revert(perforce_environment, stdout_checker):
+def test_p4_forbidden_local_revert(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
     p4 = perforce_environment.vcs_client.p4
 
     config = """
@@ -39,7 +41,7 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
     assert not p4.run_opened("-C", perforce_environment.client_name)
 
 
-def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
+def test_p4_print_exception_before_run(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
     p4 = perforce_environment.vcs_client.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
@@ -58,7 +60,7 @@ def test_p4_print_exception_before_run(perforce_environment, stdout_checker):
         f"Errors during command execution( \"p4 client -d {perforce_environment.client_name}\" )")
 
 
-def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
+def test_p4_print_exception_in_finalize(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
     p4 = perforce_environment.vcs_client.p4
     client = p4.fetch_client(perforce_environment.client_name)
     client["Options"] = "noallwrite noclobber nocompress locked nomodtime normdir"
@@ -82,14 +84,14 @@ def test_p4_print_exception_in_finalize(perforce_environment, stdout_checker):
 @pytest.mark.parametrize('cl_list', [["132,456"], ["@123,@456"], ["//depot/...@,//depot2/...@"],
                                      ["//depot/...,//depot2/..."], ["132", "456"], ["@123", "4@456"],
                                      ["//depot/...@", "//depot2/...@"], ["//depot/...", "//depot2/..."]])
-def test_p4_print_exception_in_sync(perforce_environment, stdout_checker, cl_list):
+def test_p4_print_exception_in_sync(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker, cl_list):
     perforce_environment.settings.PerforceMainVcs.sync_cls = cl_list
     perforce_environment.run(expect_failure=True)
     text = f"Something went wrong when processing sync CL parameter ('{str(cl_list)}')"
     stdout_checker.assert_has_calls_with_param(text)
 
 
-def test_p4_print_exception_wrong_shelve(perforce_environment, stdout_checker):
+def test_p4_print_exception_wrong_shelve(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
     cl = perforce_environment.vcs_client.make_a_change()
     perforce_environment.settings.PerforceMainVcs.shelve_cls = [cl]
 
@@ -110,7 +112,7 @@ def mock_diff(monkeypatch):
     monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
 
 
-def test_p4_diff_exception_handling(perforce_environment, mock_diff, stdout_checker):
+def test_p4_diff_exception_handling(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker, mock_diff):
     perforce_environment.shelve_config(simple_test_config)
     perforce_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("This is error text")

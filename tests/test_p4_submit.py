@@ -1,16 +1,18 @@
 # pylint: disable = redefined-outer-name
 
+import py
 import pytest
 
-from . import perforce_utils, utils
+from . import utils
+from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def p4_submit_environment(perforce_workspace, tmpdir):
-    yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
+    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
 
 
-def test_fail_changing_non_checked_out_file(p4_submit_environment):
+def test_fail_changing_non_checked_out_file(p4_submit_environment: P4TestEnvironment):
     target_file = p4_submit_environment.vcs_client.nonwritable_file
     text = utils.randomize_name("This is change ")
     with pytest.raises(IOError) as excinfo:
@@ -20,7 +22,7 @@ def test_fail_changing_non_checked_out_file(p4_submit_environment):
     assert "Permission denied" in str(excinfo.value)
 
 
-def test_success_changing_checked_out_file(p4_submit_environment):
+def test_success_changing_checked_out_file(p4_submit_environment: P4TestEnvironment):
     target_file = p4_submit_environment.vcs_client.nonwritable_file
 
     p4_submit_environment.vcs_client.p4.run("edit", str(target_file))
