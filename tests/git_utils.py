@@ -104,7 +104,7 @@ class GitServer:
 
 
 @pytest.fixture()
-def git_server(tmpdir):
+def git_server(tmpdir: py.path.local):
     directory = tmpdir.mkdir("server")
     server = GitServer(directory, "testing")
     try:
@@ -144,7 +144,7 @@ class GitClient(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def git_client(git_server, tmpdir):
+def git_client(git_server: GitServer, tmpdir: py.path.local):
     yield GitClient(git_server, tmpdir)
 
 
