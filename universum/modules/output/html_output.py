@@ -17,7 +17,7 @@ class HtmlOutput(BaseOutput):
         self.artifact_dir_ready = False
         self._log_buffer = []
         self._block_level = 0
-        self.current_dir = os.path.dirname(os.path.realpath(__file__))
+        self.module_dir = os.path.dirname(os.path.realpath(__file__))
 
     def set_artifact_dir(self, artifact_dir):
         self._filename = os.path.join(artifact_dir, "log.html")
@@ -81,7 +81,7 @@ class HtmlOutput(BaseOutput):
     def log_execution_finish(self, title, version):
         self.log(self._build_execution_finish_msg(title, version))
         html_footer = "</pre>"
-        with open(os.path.join(self.current_dir, "html_output.js"), encoding="utf-8") as js_file:
+        with open(os.path.join(self.module_dir, "html_output.js"), encoding="utf-8") as js_file:
             html_footer += f"<script>{js_file.read()}</script>"
         html_footer += "</body></html>"
         self._log_line(html_footer)
@@ -121,7 +121,7 @@ class HtmlOutput(BaseOutput):
         head = []
         head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
         head.append('<meta content="utf-8" http-equiv="encoding">')
-        with open(os.path.join(self.current_dir, "html_output.css"), encoding="utf-8") as css_file:
+        with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
 
