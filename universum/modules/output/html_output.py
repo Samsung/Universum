@@ -17,6 +17,7 @@ class HtmlOutput(BaseOutput):
         self.artifact_dir_ready = False
         self._log_buffer = []
         self._block_level = 0
+        self.module_dir = os.path.dirname(os.path.realpath(__file__))
 
     def set_artifact_dir(self, artifact_dir):
         self._filename = os.path.join(artifact_dir, "log.html")
@@ -79,7 +80,10 @@ class HtmlOutput(BaseOutput):
 
     def log_execution_finish(self, title, version):
         self.log(self._build_execution_finish_msg(title, version))
-        html_footer = "</pre></body></html>"
+        html_footer = "</pre>"
+        with open(os.path.join(self.module_dir, "html_output.js"), encoding="utf-8") as js_file:
+            html_footer += f"<script>{js_file.read()}</script>"
+        html_footer += "</body></html>"
         self._log_line(html_footer)
 
     def _log_line(self, line, with_line_separator=True):
@@ -113,212 +117,15 @@ class HtmlOutput(BaseOutput):
             indent_str.append(" |   ")
         return "".join(indent_str)
 
+    def _build_html_head(self):
+        head = []
+        head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
+        head.append('<meta content="utf-8" http-equiv="encoding">')
+        with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
+            head.append(f"<style>{css_file.read()}</style>")
+        return "".join(head)
+
     @staticmethod
     def _build_time_stamp():
         now = datetime.now()
         return now.astimezone().strftime('<span class="time" title="%Z (UTC%z)">%Y-%m-%d %H:%M:%S</span> ')
-
-    @staticmethod
-    def _build_html_head():
-        css_rules = '''
-            body {
-                background-color: white;
-                color: black;
-                margin: 0;
-                height: 100%;
-                min-height: 100vh;
-                display: flex;
-            }
-            
-            .time {
-                color: rgba(128, 128, 128, 0.7);
-                display: none;
-            }
-            .sectionTitle {
-                color: darkslateblue;
-                font-weight: bold;
-            }
-            .successStatus {
-                color: green;
-                font-weight: bold;
-            }
-            .failedStatus {
-                color: red;
-                font-weight: bold;
-            }
-            .skippedStatus {
-                color: red;
-                font-weight: bold;
-            }
-            .skipped {
-                color: darkcyan;
-            }
-            .exceptionTag {
-                color: darkred;
-            }
-            .stderrTag {
-                color: orange;
-            }
-
-            .hide {
-                display: none;
-            }
-            .hide + label ~ div {
-                display: none;
-            }
-            .hide + label {
-                cursor: pointer;
-                display: inline-block;
-            }
-            .hide:checked + label + div {
-                display: block;
-            }
-
-            .hide + label + div + .nl {
-                display: block;
-            }
-            .hide:checked + label + div + .nl::after {
-                display: none;
-            }
-
-            .hide + label .sectionLbl::before {
-                content: "[+] ";
-            }
-            .hide:checked + label .sectionLbl::before {
-                content: "[-] ";
-            }
-
-            #dark-checkbox {
-                display: none;
-            }
-
-            #time-checkbox {
-                display: none;
-            }
-            pre {
-                padding: 20px 20px 65px 20px;
-                margin: 0;
-                width: 100%;
-            }
-
-            #dark-checkbox:checked~pre {
-                background-color: black;
-                color: rgb(219, 198, 198);
-            }
-    
-            #dark-checkbox:checked~pre .sectionTitle {
-                color: #2b7cdf;
-            }
-
-            #dark-checkbox+label {
-                position: fixed;
-                right: 15px;
-                bottom: 15px;
-                width: 95px;
-                height: 30px;
-                border-radius: 20px;
-                background-color: white;
-                color: gray;
-                border: gray 1px solid;
-                font: 12px sans;
-                cursor: pointer;
-            }
-
-            #dark-checkbox:checked+label {
-                background-color: black;
-                color: white;
-            }
-
-            #dark-checkbox+label::before {
-                position: absolute;
-                content: "";
-                height: 22px;
-                width: 22px;
-                left: 4px;
-                bottom: 4px;
-                background-color: gray;
-                transition: .3s;
-                border-radius: 50%;
-            }
-
-            #dark-checkbox:checked+label::before {
-                background-color: white;
-                transform: translateX(65px);
-            }
-
-            #dark-checkbox+label::after {
-                content: 'Light';
-                display: block;
-                position: absolute;
-                transform: translate(-50%, -50%);
-                top: 50%;
-                left: 50%;
-            }
-
-            #dark-checkbox:checked+label::after {
-                content: 'Dark';
-            }
-
-            #time-checkbox:checked+label~pre .time {
-                display: inline-block;
-            }
-    
-            #time-checkbox+label {
-                position: fixed;
-                right: 125px;
-                bottom: 15px;
-                width: 95px;
-                height: 30px;
-                border-radius: 20px;
-                background-color: white;
-                color: gray;
-                border: gray 1px solid;
-                font: 12px sans;
-                cursor: pointer;
-            }
-    
-            #dark-checkbox:checked~#time-checkbox+label {
-                background-color: black;
-                color: white;
-            }
-    
-            #dark-checkbox:checked~#time-checkbox+label::before {
-                background-color: white;
-            }
-    
-            #time-checkbox:checked+label {
-                background-color: rgb(24, 61, 16) !important;
-                color: white;
-            }
-    
-            #time-checkbox+label::before {
-                position: absolute;
-                content: "";
-                height: 22px;
-                width: 22px;
-                left: 4px;
-                bottom: 4px;
-                background-color: gray;
-                transition: .3s;
-                border-radius: 50%;
-            }
-    
-            #time-checkbox:checked+label::before {
-                background-color: white;
-                transform: translateX(65px);
-            }
-    
-            #time-checkbox+label::after {
-                content: 'Time';
-                display: block;
-                position: absolute;
-                transform: translate(-50%, -50%);
-                top: 50%;
-                left: 50%;
-            }
-        '''
-        head = []
-        head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
-        head.append('<meta content="utf-8" http-equiv="encoding">')
-        head.append(f"<style>{css_rules}</style>")
-        return "".join(head)

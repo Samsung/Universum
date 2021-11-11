@@ -57,7 +57,8 @@ setup(
             'types-requests',
             'selenium==3.141'
         ]
-    }
+    },
+    package_data={'': ['*.css', '*.js']}
 )
 
 
