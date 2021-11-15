@@ -29,8 +29,9 @@ class Output(Module):
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
                                  "TeamCity and Jenkins environments are detected automatically when launched on build "
                                  "agent.")
-        parser.add_argument("--html-log", "-hl", action="store_true", default=False,
-                            help="Generate self-contained HTML log in artifacts directory")
+        parser.add_argument("--html-log-name", "-hln",
+                            help="Generate self-contained HTML log in artifacts directory, "
+                                 "store in ${html_log_name}.html file")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -95,8 +96,10 @@ class Output(Module):
         self.html_driver.log_execution_finish(title, version)
 
     def _create_html_driver(self):
-        html_driver = self.html_driver_factory() if self.settings.html_log else None
-        return HtmlDriverHandler(html_driver)
+        html_driver = self.html_driver_factory() if self.settings.html_log_name else None
+        handler = HtmlDriverHandler(html_driver)
+        handler.set_log_name(self.settings.html_log_name)
+        return handler
 
 
 

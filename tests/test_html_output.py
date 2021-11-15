@@ -35,11 +35,13 @@ configs = \
     failed_critical_step + success_step
 """
 
+log_name = "universum_log"
+
 
 def create_environment(test_type, tmpdir):
     env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
-    env.settings.Output.html_log = True
+    env.settings.Output.html_log_name = log_name
     return env
 
 
@@ -70,14 +72,14 @@ def test_success_clean_build(tmpdir, browser):
 
 
 def test_no_html_log_requested(environment_main_and_nonci):
-    environment_main_and_nonci.settings.Output.html_log = False
+    environment_main_and_nonci.settings.Output.html_log_name = None
     environment_main_and_nonci.run()
-    log_path = os.path.join(environment_main_and_nonci.artifact_dir, "log.html")
-    assert not os.path.exists(log_path)
+    for file_name in os.listdir(environment_main_and_nonci.artifact_dir):
+        assert not file_name.endswith(".html")
 
 
 def check_html_log(artifact_dir, browser):
-    log_path = os.path.join(artifact_dir, "log.html")
+    log_path = os.path.join(artifact_dir, f"{log_name}.html")
     assert os.path.exists(log_path)
 
     browser.get(f"file://{log_path}")
