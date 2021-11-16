@@ -11,9 +11,11 @@ __all__ = [
 
 class HtmlOutput(BaseOutput):
 
+    default_log_name = "universum_log"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._log_name = "universum_log.html"
+        self._log_name = self.default_log_name
         self._log_path = None
         self.artifact_dir_ready = False
         self._log_buffer = []

@@ -35,7 +35,7 @@ class Output(Module):
         # `universum -hl` -> html_log == const
         # `universum -hl custom` -> html_log == custom
         parser.add_argument("--html-log", "-hl",
-                            nargs="?", const="universum_log", default=Output.html_log_disabled_arg_value,
+                            nargs="?", const=HtmlOutput.default_log_name, default=Output.html_log_disabled_arg_value,
                             help="Generate self-contained HTML log in artifacts directory. "
                                  "You may specify a file name in this parameter's value or default "
                                  "one will be used")
