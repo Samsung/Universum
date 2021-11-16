@@ -41,7 +41,7 @@ log_name = "universum_log"
 def create_environment(test_type, tmpdir):
     env = utils.LocalTestEnvironment(tmpdir, test_type)
     env.configs_file.write(config)
-    env.settings.Output.html_log_name = log_name
+    env.settings.Output.html_log = log_name
     return env
 
 
@@ -72,7 +72,8 @@ def test_success_clean_build(tmpdir, browser):
 
 
 def test_no_html_log_requested(environment_main_and_nonci):
-    environment_main_and_nonci.settings.Output.html_log_name = None
+    value_if_argument_absent = "disabled"
+    environment_main_and_nonci.settings.Output.html_log = value_if_argument_absent
     environment_main_and_nonci.run()
     for file_name in os.listdir(environment_main_and_nonci.artifact_dir):
         assert not file_name.endswith(".html")

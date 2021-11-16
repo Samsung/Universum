@@ -22,6 +22,8 @@ class Output(Module):
     terminal_driver_factory = Dependency(TerminalBasedOutput)
     html_driver_factory = Dependency(HtmlOutput)
 
+    html_log_disabled_arg_value = "disabled"
+
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
@@ -29,9 +31,14 @@ class Output(Module):
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
                                  "TeamCity and Jenkins environments are detected automatically when launched on build "
                                  "agent.")
-        parser.add_argument("--html-log-name", "-hln",
-                            help="Generate self-contained HTML log in artifacts directory, "
-                                 "store in ${html_log_name}.html file")
+        # `universum` -> html_log == default
+        # `universum -hl` -> html_log == const
+        # `universum -hl custom` -> html_log == custom
+        parser.add_argument("--html-log", "-hl",
+                            nargs="?", const="universum_log", default=Output.html_log_disabled_arg_value,
+                            help="Generate self-contained HTML log in artifacts directory. "
+                                 "You may specify a file name in this parameter's value or default "
+                                 "one will be used")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -96,9 +103,10 @@ class Output(Module):
         self.html_driver.log_execution_finish(title, version)
 
     def _create_html_driver(self):
-        html_driver = self.html_driver_factory() if self.settings.html_log_name else None
+        is_enabled = self.settings.html_log != self.html_log_disabled_arg_value
+        html_driver = self.html_driver_factory() if is_enabled else None
         handler = HtmlDriverHandler(html_driver)
-        handler.set_log_name(self.settings.html_log_name)
+        handler.set_log_name(self.settings.html_log)
         return handler
 
 
