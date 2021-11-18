@@ -11,6 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webelement import FirefoxWebElement
 
+from universum import __main__
 from . import utils
 
 
@@ -59,6 +60,23 @@ def browser():
     firefox.close()
 
 
+def test_cli_log_custom_name(tmpdir):
+    log_name = "custom_name"
+    artifact_dir = check_cli(tmpdir, ["-hl", log_name])
+    assert os.path.exists(os.path.join(artifact_dir, f"{log_name}.html"))
+
+
+def test_cli_log_default_name(tmpdir):
+    artifact_dir = check_cli(tmpdir, ["-hl"])
+    assert os.path.exists(os.path.join(artifact_dir, f"universum_log.html"))
+
+
+def test_cli_no_log_requested(tmpdir):
+    artifact_dir = check_cli(tmpdir, [])
+    for file_name in os.listdir(artifact_dir):
+        assert not file_name.endswith(".html")
+
+
 def test_success(environment_main_and_nonci, browser):
     environment_main_and_nonci.run()
     check_html_log(environment_main_and_nonci.artifact_dir, browser)
@@ -69,14 +87,6 @@ def test_success_clean_build(tmpdir, browser):
     env.settings.Main.clean_build = True
     env.run()
     check_html_log(env.artifact_dir, browser)
-
-
-def test_no_html_log_requested(environment_main_and_nonci):
-    value_if_argument_absent = "disabled"
-    environment_main_and_nonci.settings.Output.html_log = value_if_argument_absent
-    environment_main_and_nonci.run()
-    for file_name in os.listdir(environment_main_and_nonci.artifact_dir):
-        assert not file_name.endswith(".html")
 
 
 def check_html_log(artifact_dir, browser):
@@ -237,6 +247,21 @@ def check_timestamps(body_element, universum_log_element):
     assert delta.days == 0
     assert delta.seconds <= 60
 
+
+def check_cli(tmpdir, html_log_params):
+    artifact_dir = tmpdir.join("artifacts")
+    config_file = tmpdir.join("configs.py")
+    config_file.write_text(config, "utf-8")
+
+    cli_params = ["-vt", "none",
+                  "-fsd", str(tmpdir),
+                  "-cfg", str(config_file),
+                  "-ad", str(artifact_dir)]
+    html_log_params.extend(cli_params)
+    result = __main__.main(html_log_params)
+
+    assert result == 0
+    return artifact_dir
 
 
 class TestElement(FirefoxWebElement):
