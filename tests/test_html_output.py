@@ -68,7 +68,7 @@ def test_cli_log_custom_name(tmpdir):
 
 def test_cli_log_default_name(tmpdir):
     artifact_dir = check_cli(tmpdir, ["-hl"])
-    assert os.path.exists(os.path.join(artifact_dir, f"universum_log.html"))
+    assert os.path.exists(os.path.join(artifact_dir, "universum_log.html"))
 
 
 def test_cli_no_log_requested(tmpdir):
