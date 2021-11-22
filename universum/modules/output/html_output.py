@@ -11,19 +11,14 @@ __all__ = [
 
 class HtmlOutput(BaseOutput):
 
-    default_log_name = "universum_log"
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, log_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._log_name = self.default_log_name
+        self._log_name = log_name
         self._log_path = None
         self.artifact_dir_ready = False
         self._log_buffer = []
         self._block_level = 0
         self.module_dir = os.path.dirname(os.path.realpath(__file__))
-
-    def set_log_name(self, log_name):
-        self._log_name = log_name
 
     def set_artifact_dir(self, artifact_dir):
         self._log_path = os.path.join(artifact_dir, f"{self._log_name}.html")

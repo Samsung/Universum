@@ -13,7 +13,7 @@ from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from ..lib import utils
 from .automation_server import AutomationServerForHostingBuild
-from .output import HasOutput
+from .output import Output, HasOutput
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import HasStructure
@@ -94,7 +94,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         if not os.path.exists(self.artifact_dir):
             os.makedirs(self.artifact_dir)
 
-        self.html_output = self.html_output_factory()
+        self.html_output = self.html_output_factory(Output.html_log_default_name)
         self.html_output.set_artifact_dir(self.artifact_dir)
         self.html_output.artifact_dir_ready = False
 
