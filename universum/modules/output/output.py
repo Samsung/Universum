@@ -104,7 +104,7 @@ class Output(Module):
 
     def _create_html_driver(self):
         is_enabled = self.settings.html_log != self.html_log_disabled_arg_value
-        html_driver = self.html_driver_factory(self.settings.html_log) if is_enabled else None
+        html_driver = self.html_driver_factory(log_name=self.settings.html_log) if is_enabled else None
         handler = HtmlDriverHandler(html_driver)
         return handler
 
