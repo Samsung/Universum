@@ -11,7 +11,9 @@ __all__ = [
 
 class HtmlOutput(BaseOutput):
 
-    def __init__(self, log_name, *args, **kwargs):
+    default_name = "universum_log"
+
+    def __init__(self, log_name=default_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._log_name = log_name
         self._log_path = None

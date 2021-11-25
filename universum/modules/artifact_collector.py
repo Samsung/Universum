@@ -94,7 +94,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         if not os.path.exists(self.artifact_dir):
             os.makedirs(self.artifact_dir)
 
-        self.html_output = self.html_output_factory(Output.html_log_default_name)
+        self.html_output = self.html_output_factory()
         self.html_output.set_artifact_dir(self.artifact_dir)
         self.html_output.artifact_dir_ready = False
 

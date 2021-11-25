@@ -22,8 +22,7 @@ class Output(Module):
     terminal_driver_factory = Dependency(TerminalBasedOutput)
     html_driver_factory = Dependency(HtmlOutput)
 
-    html_log_default_name = "universum_log"
-    html_log_disabled_arg_value = "disabled"
+    html_log_disabled_arg_value = "__html_log_disabled_arg_value"
 
     @staticmethod
     def define_arguments(argument_parser):
@@ -36,7 +35,7 @@ class Output(Module):
         # `universum -hl` -> html_log == const
         # `universum -hl custom` -> html_log == custom
         parser.add_argument("--html-log", "-hl",
-                            nargs="?", const=Output.html_log_default_name, default=Output.html_log_disabled_arg_value,
+                            nargs="?", const=HtmlOutput.default_name, default=Output.html_log_disabled_arg_value,
                             help="Generate self-contained HTML log in artifacts directory. "
                                  "You may specify a file name in this parameter's value or default "
                                  "one will be used")
