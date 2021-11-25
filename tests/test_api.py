@@ -68,7 +68,7 @@ def test_multiple_p4_file_diff(docker_main_with_vcs: UniversumRunner):
         assert entry["action"] == "add"
 
 
-def test_git_file_diff(docker_main_with_vcs):
+def test_git_file_diff(docker_main_with_vcs: UniversumRunner):
     repo = docker_main_with_vcs.git.repo
     server = docker_main_with_vcs.git.server
     logger = docker_main_with_vcs.git.logger
@@ -94,7 +94,7 @@ def test_git_file_diff(docker_main_with_vcs):
     assert 'some_new_file_name.txt' in result[0]["local_path"]
 
 
-def test_multiple_git_file_diff(docker_main_with_vcs):
+def test_multiple_git_file_diff(docker_main_with_vcs: UniversumRunner):
     repo = docker_main_with_vcs.git.repo
     server = docker_main_with_vcs.git.server
     logger = docker_main_with_vcs.git.logger

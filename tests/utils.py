@@ -28,6 +28,7 @@ __all__ = [
     "is_container_outdated",
     "create_empty_settings",
     "simple_test_config",
+    "HttpChecker",
     "BaseVcsClient",
     "BaseTestEnvironment",
     "LocalTestEnvironment"

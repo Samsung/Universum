@@ -5,6 +5,7 @@ import pytest
 
 from .conftest import FuzzyCallChecker
 from .git_utils import GitTestEnvironment, GitClient, GitServer
+from .utils import HttpChecker
 
 
 @pytest.fixture()
@@ -30,7 +31,7 @@ def make_branch_with_changes(git_server: GitServer, branch_name: str, commits_nu
     return commits
 
 
-def assert_polled_commits(commits: list, stdout_checker, collected_http):
+def assert_polled_commits(commits: list, stdout_checker: FuzzyCallChecker, collected_http: HttpChecker) -> None:
     for commit in commits:
         stdout_checker.assert_has_calls_with_param("==> Detected commit " + commit)
         collected_http.assert_request_was_made({"cl": [commit]})
@@ -42,12 +43,12 @@ def test_max_number_commits(stdout_checker: FuzzyCallChecker, git_poll_environme
 
     # ACT
     # make changes in polled branch
-    allowed_commits_number = git_poll_environment.settings.Poll.max_number
+    allowed_commits_number: int = git_poll_environment.settings.Poll.max_number
     changes_to_polled = [git_poll_environment.server.commit_new_file() for _ in range(allowed_commits_number + 1)]
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits(changes_to_polled[1:],
                           stdout_checker,
                           collected_http)
@@ -69,7 +70,7 @@ def test_merge_one_branch_ff(stdout_checker: FuzzyCallChecker, git_poll_environm
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + changes_to_branch,
                           stdout_checker,
                           collected_http)
@@ -90,7 +91,7 @@ def test_merge_one_branch_noff(stdout_checker: FuzzyCallChecker, git_poll_enviro
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           collected_http)
@@ -115,7 +116,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker: FuzzyCallChecker, gi
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           collected_http)
@@ -140,7 +141,7 @@ def test_merge_two_subsequent_branches_ff(stdout_checker: FuzzyCallChecker, git_
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + changes_to_first_branch + changes_to_second_branch,
                           stdout_checker,
                           collected_http)
@@ -166,7 +167,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker: FuzzyCallChecker,
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled, merge_commit_id],
                           stdout_checker,
                           collected_http)
@@ -197,7 +198,7 @@ def test_merge_ff_commit_merged_from_polled(stdout_checker: FuzzyCallChecker, gi
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled, change_to_branch],
                           stdout_checker,
                           collected_http)

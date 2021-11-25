@@ -30,7 +30,7 @@ class ReportEnvironment(utils.BaseTestEnvironment):
 
 
 @pytest.fixture()
-def report_environment(git_client, tmpdir):
+def report_environment(git_client: GitClient, tmpdir: py.path.local):
     yield ReportEnvironment(git_client, tmpdir)
 
 
