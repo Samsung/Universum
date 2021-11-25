@@ -2,25 +2,28 @@ import os
 import signal
 import subprocess
 import time
+from typing import Any
 
+import py
 import pytest
 
+from .deployment_utils import UniversumRunner, LocalSources
 from .utils import python, simple_test_config
 
 
-def get_line_with_text(text, log):
+def get_line_with_text(text: str, log: str) -> str:
     for line in log.splitlines():
         if text in line:
             return line
     return ""
 
 
-def test_minimal_execution(docker_main_and_nonci):
+def test_minimal_execution(docker_main_and_nonci: UniversumRunner):
     log = docker_main_and_nonci.run(simple_test_config)
     assert docker_main_and_nonci.local.repo_file.basename in log
 
 
-def test_artifacts(docker_main):
+def test_artifacts(docker_main: UniversumRunner):
     config = """
 from universum.configuration_support import Configuration
 
@@ -50,7 +53,7 @@ configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + ar
     assert os.path.exists(os.path.join(docker_main.artifact_dir, "file.sh"))
 
 
-def test_background_steps(docker_main_and_nonci):
+def test_background_steps(docker_main_and_nonci: UniversumRunner):
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -99,7 +102,7 @@ configs = Configuration([dict(name="Bad step 1", command=["ls", "not_a_file"], b
     assert 'Failed' in get_line_with_text("Bad step 2 - ", log)
 
 
-def test_critical_steps(docker_main_and_nonci):
+def test_critical_steps(docker_main_and_nonci: UniversumRunner):
     # Test linear
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
@@ -190,7 +193,7 @@ configs += Configuration([dict(name="Additional step", command=["echo", "This sh
     assert "This should be in log - 3" in log
 
 
-def test_empty_steps(docker_main_and_nonci):
+def test_empty_steps(docker_main_and_nonci: UniversumRunner):
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration, Step
 
@@ -202,17 +205,17 @@ configs = Configuration([Step(name="Step one"),
     assert "Nothing was executed: this background step had no command" in log
 
 
-def test_minimal_git(docker_main_with_vcs):
+def test_minimal_git(docker_main_with_vcs: UniversumRunner):
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="git")
     assert docker_main_with_vcs.git.repo_file.basename in log
 
 
-def test_minimal_p4(docker_main_with_vcs):
+def test_minimal_p4(docker_main_with_vcs: UniversumRunner):
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="p4")
     assert docker_main_with_vcs.perforce.repo_file.basename in log
 
 
-def test_p4_params(docker_main_with_vcs):
+def test_p4_params(docker_main_with_vcs: UniversumRunner):
     p4 = docker_main_with_vcs.perforce.p4
     p4_file = docker_main_with_vcs.perforce.repo_file
     config = f"""
@@ -257,7 +260,7 @@ configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.basena
     assert "This line should be in file." in log
 
 
-def empty_required_params_ids(param):
+def empty_required_params_ids(param: Any) -> str:
     if isinstance(param, bool):  # url_error_expected
         return 'negative' if param else 'positive'
     return str(param)
@@ -274,7 +277,7 @@ def empty_required_params_ids(param):
     [False, "", ["SWARM_SERVER=http://swarm"]],
     [False, " --build-only-latest -ssu=http://swarm", []]
 ], ids=empty_required_params_ids)
-def test_empty_required_params(docker_main_with_vcs, url_error_expected, parameters, env):
+def test_empty_required_params(docker_main_with_vcs: UniversumRunner, url_error_expected, parameters, env):
     url_error = "URL of the Swarm server is not specified"
 
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="p4", expected_to_fail=True,
@@ -285,7 +288,7 @@ def test_empty_required_params(docker_main_with_vcs, url_error_expected, paramet
         assert url_error not in log
 
 
-def test_environment(docker_main_and_nonci):
+def test_environment(docker_main_and_nonci: UniversumRunner):
     script = docker_main_and_nonci.local.root_directory.join("script.sh")
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
@@ -314,7 +317,7 @@ configs = upper * lower
 
 
 @pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
-def test_abort(local_sources, tmpdir, terminate_type):
+def test_abort(local_sources: LocalSources, tmpdir: py.path.local, terminate_type):
     config = """
 from universum.configuration_support import Configuration
 

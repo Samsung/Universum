@@ -1,17 +1,24 @@
 # pylint: disable = redefined-outer-name
 
+from typing import Union
+import py
 import pytest
 
 from universum import __main__
-from . import git_utils, perforce_utils, utils
+from .conftest import FuzzyCallChecker
+from .git_utils import GitServer, GitClient, GitTestEnvironment
+from .perforce_utils import PerforceWorkspace, P4TestEnvironment
+from .utils import LocalTestEnvironment
 
 
-def test_poll_local_vcs(tmpdir):
-    env = utils.LocalTestEnvironment(tmpdir, "poll")
+def test_poll_local_vcs(tmpdir: py.path.local):
+    env = LocalTestEnvironment(tmpdir, "poll")
     env.run()
 
 
-def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, tmpdir):
+def test_p4_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
+                                            perforce_workspace: PerforceWorkspace,
+                                            tmpdir: py.path.local):
     db_file = tmpdir.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
@@ -25,7 +32,9 @@ def test_p4_success_command_line_no_changes(stdout_checker, perforce_workspace, 
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
-def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir):
+def test_git_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
+                                             git_server: GitServer,
+                                             tmpdir: py.path.local):
     db_file = tmpdir.join("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "git",
@@ -37,7 +46,9 @@ def test_git_success_command_line_no_changes(stdout_checker, git_server, tmpdir)
     stdout_checker.assert_has_calls_with_param("==> No changes detected")
 
 
-def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tmpdir):
+def test_p4_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
+                                          perforce_workspace: PerforceWorkspace,
+                                          tmpdir: py.path.local):
     db_file = tmpdir.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
@@ -51,7 +62,9 @@ def test_p4_error_command_line_wrong_port(stdout_checker, perforce_workspace, tm
     stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
 
 
-def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
+def test_git_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
+                                           git_server: GitServer,
+                                           tmpdir: py.path.local):
     db_file = tmpdir.join("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "git",
@@ -64,14 +77,15 @@ def test_git_error_command_line_wrong_port(stdout_checker, git_server, tmpdir):
 
 
 @pytest.fixture(params=["git", "p4"])
-def poll_environment(request, perforce_workspace, git_client, tmpdir):
+def poll_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmpdir: py.path.local):
     if request.param == "git":
-        yield git_utils.GitTestEnvironment(git_client, tmpdir, test_type="poll")
+        yield GitTestEnvironment(git_client, tmpdir, test_type="poll")
     else:
-        yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="poll")
+        yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="poll")
 
 
-def test_error_one_change(stdout_checker, log_exception_checker, poll_environment):
+def test_error_one_change(stdout_checker: FuzzyCallChecker, log_exception_checker: FuzzyCallChecker,
+                          poll_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     # initialize working directory with initial data
     poll_environment.run_with_http_server()
 
@@ -87,7 +101,7 @@ def test_error_one_change(stdout_checker, log_exception_checker, poll_environmen
     log_exception_checker.assert_has_calls_with_param("[Errno 111] Connection refused")
 
 
-def test_success_one_change(stdout_checker, poll_environment):
+def test_success_one_change(stdout_checker: FuzzyCallChecker, poll_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     # initialize working directory with initial data
     poll_environment.run_with_http_server()
 
@@ -99,7 +113,7 @@ def test_success_one_change(stdout_checker, poll_environment):
     stdout_checker.assert_has_calls_with_param("==> Detected commit " + change)
 
 
-def test_success_two_changes(stdout_checker, poll_environment):
+def test_success_two_changes(stdout_checker: FuzzyCallChecker, poll_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     # initialize working directory with initial data
     poll_environment.run_with_http_server()
 
@@ -117,7 +131,7 @@ def test_success_two_changes(stdout_checker, poll_environment):
     collected_http.assert_request_was_made({"cl": [change2]})
 
 
-def test_changes_several_times(stdout_checker, poll_environment):
+def test_changes_several_times(stdout_checker: FuzzyCallChecker, poll_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     # initialize working directory with initial data
     poll_environment.run_with_http_server()
 

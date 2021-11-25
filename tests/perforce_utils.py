@@ -3,9 +3,8 @@
 import time
 
 import docker
-import pytest
-
 import py
+import pytest
 from P4 import P4, P4Exception
 from requests.exceptions import ReadTimeout
 

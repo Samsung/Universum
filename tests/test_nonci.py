@@ -1,3 +1,5 @@
+from .deployment_utils import UniversumRunner
+
 config = """
 from universum.configuration_support import Configuration
 
@@ -11,7 +13,7 @@ configs = Configuration([dict(name="artifact check",
 """
 
 
-def test_launcher_output(docker_nonci):
+def test_launcher_output(docker_nonci: UniversumRunner):
     """
     This test verifies that nonci mode changes the behavior of the universum by checking its output to console and log
     files. Specifically, it checks the following features of the nonci mode:
@@ -29,7 +31,7 @@ def test_launcher_output(docker_nonci):
     docker_nonci.environment.assert_successful_execution(
         f"bash -c 'mkdir \"{artifacts}\"; echo \"Old artifact\" > \"{artifacts}/test_nonci.txt\"'")
 
-    docker_nonci.project_root = None
+    docker_nonci.project_root = None  # type: ignore
     console_out_log = docker_nonci.run(config.format(artifacts), workdir=cwd)
 
     # the following logs are only present in the default mode of the universum
@@ -66,6 +68,6 @@ configs = Configuration([dict(name="test_step",
     assert "Separate run" in second_run_step_log
 
 
-def test_custom_artifact_dir(docker_nonci):
+def test_custom_artifact_dir(docker_nonci: UniversumRunner):
     docker_nonci.run(config, additional_parameters='-ad ' + '/my/artifacts/')
     docker_nonci.environment.assert_successful_execution("test -f /my/artifacts/test_nonci.txt")

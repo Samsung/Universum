@@ -4,13 +4,14 @@ import os
 import pytest
 
 from universum.lib.gravity import construct_component
-from universum.modules.vcs import perforce_vcs
+from universum.modules.vcs.perforce_vcs import PerforceMainVcs
 from . import utils
+from .perforce_utils import PerforceWorkspace
 
 
 class DiffParameters:
-    def __init__(self, perforce_workspace):
-        self.perforce_workspace = perforce_workspace
+    def __init__(self, perforce_workspace: PerforceWorkspace):
+        self.perforce_workspace: PerforceWorkspace = perforce_workspace
 
         for env_var in ["P4_PATH", "P4_MAPPINGS"]:
             try:
@@ -29,7 +30,7 @@ class DiffParameters:
         settings.PerforceMainVcs.force_clean = True
         settings.PerforceMainVcs.client = "new_client"
 
-        self.perforce = construct_component(perforce_vcs.PerforceMainVcs, settings)
+        self.perforce: PerforceMainVcs = construct_component(PerforceMainVcs, settings)
 
         self.perforce.connect()
         self.perforce.create_workspace()
@@ -48,7 +49,7 @@ class DiffParameters:
 
 
 @pytest.fixture()
-def diff_parameters(perforce_workspace):
+def diff_parameters(perforce_workspace: PerforceWorkspace):
     params = None
     try:
         params = DiffParameters(perforce_workspace)
