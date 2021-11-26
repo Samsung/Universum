@@ -13,7 +13,7 @@ from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from ..lib import utils
 from .automation_server import AutomationServerForHostingBuild
-from .output import Output, HasOutput
+from .output import HasOutput
 from .project_directory import ProjectDirectory
 from .reporter import Reporter
 from .structure_handler import HasStructure

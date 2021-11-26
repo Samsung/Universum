@@ -22,7 +22,7 @@ class Output(Module):
     terminal_driver_factory = Dependency(TerminalBasedOutput)
     html_driver_factory = Dependency(HtmlOutput)
 
-    html_log_disabled_arg_value = "__html_log_disabled_arg_value"
+    html_log_disabled_arg_value = None
 
     @staticmethod
     def define_arguments(argument_parser):
