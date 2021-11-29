@@ -1,14 +1,17 @@
 # pylint: disable = redefined-outer-name
 
+import py
 import pytest
 import P4
 
 from . import utils
-from .utils import python
-from .perforce_utils import P4TestEnvironment
+from .conftest import FuzzyCallChecker
+from .deployment_utils import UniversumRunner
+from .perforce_utils import P4TestEnvironment, PerforceWorkspace
+from .utils import python, LocalTestEnvironment
 
 
-def test_which_universum_is_tested(docker_main, pytestconfig):
+def test_which_universum_is_tested(docker_main: UniversumRunner, pytestconfig):
     # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
     init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
     backup = init_file.read_bytes()
@@ -34,13 +37,13 @@ def fixture_print_text_on_teardown():
     print("TearDown fixture output must be handled by 'detect_fails' fixture")
 
 
-def test_teardown_fixture_output_verification(print_text_on_teardown):
+def test_teardown_fixture_output_verification(print_text_on_teardown: None):
     pass
 
 
 @pytest.mark.parametrize("should_not_execute", [True, False], ids=['no-sources', 'deleted-sources'])
-def test_clean_sources_exception(tmpdir, stdout_checker, should_not_execute):
-    env = utils.LocalTestEnvironment(tmpdir, "main")
+def test_clean_sources_exception(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker, should_not_execute):
+    env = LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     source_directory = tmpdir
     if should_not_execute:
@@ -58,7 +61,7 @@ configs = Configuration([dict(name="Test configuration",
     stdout_checker.assert_has_calls_with_param(error_message)
 
 
-def test_non_utf8_environment(docker_main):
+def test_non_utf8_environment(docker_main: UniversumRunner):
     # POSIX has no 'UTF-8' in it's name, but supports Unicode
     output = docker_main.run("""
 from universum.configuration_support import Configuration
@@ -81,17 +84,17 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace, tmpdir):
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
     yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
 
 
-def test_p4_multiple_spaces_in_mappings(perforce_environment):
+def test_p4_multiple_spaces_in_mappings(perforce_environment: P4TestEnvironment):
     perforce_environment.settings.PerforceWithMappings.project_depot_path = None
     perforce_environment.settings.PerforceWithMappings.mappings = [f"{perforce_environment.vcs_client.depot}   /..."]
     perforce_environment.run()
 
 
-def test_p4_repository_difference_format(perforce_environment):
+def test_p4_repository_difference_format(perforce_environment: P4TestEnvironment):
     config = """
 from universum.configuration_support import Configuration
 
@@ -112,12 +115,12 @@ def mock_opened(monkeypatch):
     monkeypatch.setattr(P4.P4, 'run_opened', mocking_function, raising=False)
 
 
-def test_p4_failed_opened(perforce_environment, mock_opened):
+def test_p4_failed_opened(perforce_environment: P4TestEnvironment, mock_opened: None):
     perforce_environment.run()
 
 
 # TODO: move this test to 'test_api.py' after test refactoring and Docker use reduction
-def test_p4_api_failed_opened(perforce_environment, mock_opened):
+def test_p4_api_failed_opened(perforce_environment: P4TestEnvironment, mock_opened: None):
     step_name = "API"
     config = f"""
 from universum.configuration_support import Step, Configuration
@@ -134,7 +137,7 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     assert "Getting file diff failed due to Perforce server internal error" in log
 
 
-def test_p4_clean_empty_cl(perforce_environment, stdout_checker):
+def test_p4_clean_empty_cl(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
     # This test creates an empty CL, triggering "file(s) not opened on this client" exception on cleanup
     # Wrong exception handling prevented further client cleanup on force clean, making final client deleting impossible
 
@@ -156,7 +159,7 @@ configs = Configuration([Step(name="Create empty CL",
 
 
 @pytest.fixture()
-def perforce_environment_with_files(perforce_environment):
+def perforce_environment_with_files(perforce_environment: P4TestEnvironment):
     files = [perforce_environment.vcs_client.create_file(utils.randomize_name("new_file") + ".txt")
              for _ in range(2)]
 
@@ -166,7 +169,7 @@ def perforce_environment_with_files(perforce_environment):
         perforce_environment.vcs_client.delete_file(entry.basename)
 
 
-def test_success_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+def test_success_p4_resolve_unshelved(perforce_environment_with_files: dict, stdout_checker: FuzzyCallChecker):
     p4_file = perforce_environment_with_files["files"][0]
     env = perforce_environment_with_files["env"]
     config = f"""
@@ -184,7 +187,7 @@ configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p
     stdout_checker.assert_has_calls_with_param("This is changed line 2")
 
 
-def test_fail_p4_resolve_unshelved(perforce_environment_with_files, stdout_checker):
+def test_fail_p4_resolve_unshelved(perforce_environment_with_files: dict, stdout_checker: FuzzyCallChecker):
     p4_file = perforce_environment_with_files["files"][0]
     env = perforce_environment_with_files["env"]
     config = f"""
@@ -202,7 +205,7 @@ configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p
     stdout_checker.assert_has_calls_with_param(str(p4_file.basename))
 
 
-def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files):
+def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files: dict):
     p4_files = perforce_environment_with_files["files"]
     env = perforce_environment_with_files["env"]
     config = """

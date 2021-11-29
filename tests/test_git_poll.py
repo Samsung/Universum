@@ -1,16 +1,19 @@
 # pylint: disable = redefined-outer-name
 
+import py
 import pytest
 
-from .git_utils import GitTestEnvironment
+from .conftest import FuzzyCallChecker
+from .git_utils import GitTestEnvironment, GitClient, GitServer
+from .utils import HttpChecker
 
 
 @pytest.fixture()
-def git_poll_environment(git_client, tmpdir):
+def git_poll_environment(git_client: GitClient, tmpdir: py.path.local):
     yield GitTestEnvironment(git_client, tmpdir, test_type="poll")
 
 
-def make_branch_with_changes(git_server, branch_name, commits_number, branch_from=None):
+def make_branch_with_changes(git_server: GitServer, branch_name: str, commits_number: int, branch_from: str = None):
     """
     Creates a branch from the current or specified (by name) and adds passed commits number.
 
@@ -28,24 +31,24 @@ def make_branch_with_changes(git_server, branch_name, commits_number, branch_fro
     return commits
 
 
-def assert_polled_commits(commits, stdout_checker, collected_http):
+def assert_polled_commits(commits: list, stdout_checker: FuzzyCallChecker, collected_http: HttpChecker) -> None:
     for commit in commits:
         stdout_checker.assert_has_calls_with_param("==> Detected commit " + commit)
         collected_http.assert_request_was_made({"cl": [commit]})
 
 
-def test_max_number_commits(stdout_checker, git_poll_environment):
+def test_max_number_commits(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
     # ACT
     # make changes in polled branch
-    allowed_commits_number = git_poll_environment.settings.Poll.max_number
+    allowed_commits_number: int = git_poll_environment.settings.Poll.max_number
     changes_to_polled = [git_poll_environment.server.commit_new_file() for _ in range(allowed_commits_number + 1)]
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits(changes_to_polled[1:],
                           stdout_checker,
                           collected_http)
@@ -53,7 +56,7 @@ def test_max_number_commits(stdout_checker, git_poll_environment):
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_polled[0])
 
 
-def test_merge_one_branch_ff(stdout_checker, git_poll_environment):
+def test_merge_one_branch_ff(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
@@ -67,13 +70,13 @@ def test_merge_one_branch_ff(stdout_checker, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + changes_to_branch,
                           stdout_checker,
                           collected_http)
 
 
-def test_merge_one_branch_noff(stdout_checker, git_poll_environment):
+def test_merge_one_branch_noff(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
@@ -88,7 +91,7 @@ def test_merge_one_branch_noff(stdout_checker, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           collected_http)
@@ -96,7 +99,7 @@ def test_merge_one_branch_noff(stdout_checker, git_poll_environment):
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_branch[1])
 
 
-def test_merge_two_subsequent_branches_noff(stdout_checker, git_poll_environment):
+def test_merge_two_subsequent_branches_noff(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
@@ -113,7 +116,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, git_poll_environment
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + [merge_commit_id],
                           stdout_checker,
                           collected_http)
@@ -121,7 +124,7 @@ def test_merge_two_subsequent_branches_noff(stdout_checker, git_poll_environment
     stdout_checker.assert_absent_calls_with_param("==> Detected commit " + changes_to_second_branch[0])
 
 
-def test_merge_two_subsequent_branches_ff(stdout_checker, git_poll_environment):
+def test_merge_two_subsequent_branches_ff(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
@@ -138,13 +141,13 @@ def test_merge_two_subsequent_branches_ff(stdout_checker, git_poll_environment):
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled] + changes_to_first_branch + changes_to_second_branch,
                           stdout_checker,
                           collected_http)
 
 
-def test_merge_one_branch_noff_1_commit_behind(stdout_checker, git_poll_environment):
+def test_merge_one_branch_noff_1_commit_behind(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
@@ -164,7 +167,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, git_poll_environm
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled, merge_commit_id],
                           stdout_checker,
                           collected_http)
@@ -172,7 +175,7 @@ def test_merge_one_branch_noff_1_commit_behind(stdout_checker, git_poll_environm
 
 
 @pytest.mark.xfail
-def test_merge_ff_commit_merged_from_polled(stdout_checker, git_poll_environment):
+def test_merge_ff_commit_merged_from_polled(stdout_checker: FuzzyCallChecker, git_poll_environment: GitTestEnvironment):
     # initialize working directory with initial data
     git_poll_environment.run_with_http_server()
 
@@ -195,7 +198,7 @@ def test_merge_ff_commit_merged_from_polled(stdout_checker, git_poll_environment
 
     # ASSERT
     # run poll again and trigger the url twice
-    collected_http = git_poll_environment.run_with_http_server()
+    collected_http: HttpChecker = git_poll_environment.run_with_http_server()
     assert_polled_commits([change_to_polled, change_to_branch],
                           stdout_checker,
                           collected_http)

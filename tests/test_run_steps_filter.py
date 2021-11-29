@@ -1,5 +1,7 @@
 import pytest
 
+from .deployment_utils import UniversumRunner
+
 config = """
 from universum.configuration_support import Configuration
 
@@ -11,7 +13,7 @@ configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))
 """
 
 
-@pytest.mark.parametrize("filters,expected_logs, unexpected_logs", (
+@pytest.mark.parametrize("filters, expected_logs, unexpected_logs", (
         ["parent 1", ["parent 1", "step 1", "step 2"], ["parent 2"]],
         ["!parent 2", ["parent 1", "step 1", "step 2"], ["parent 2"]],
         ["parent 1:parent 2", ["parent 1", "step 1", "step 2", "parent 2"], []],
@@ -24,7 +26,7 @@ configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))
         ["", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
         ["!", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"],
          []],))
-def test_steps_filter(docker_main_and_nonci, filters, expected_logs, unexpected_logs):
+def test_steps_filter(docker_main_and_nonci: UniversumRunner, filters, expected_logs, unexpected_logs):
     console_out_log = docker_main_and_nonci.run(config, additional_parameters=f"-o console -f='{filters}'")
     for log_str in expected_logs:
         assert log_str in console_out_log
@@ -33,7 +35,7 @@ def test_steps_filter(docker_main_and_nonci, filters, expected_logs, unexpected_
         assert log_str not in console_out_log
 
 
-def test_steps_filter_few_flags(docker_main_and_nonci):
+def test_steps_filter_few_flags(docker_main_and_nonci: UniversumRunner):
     console_out_log = docker_main_and_nonci.run(config,
                                                 additional_parameters="-o console -f='parent 1:parent 2' -f='!step 1'")
     for log_str in ["parent 1", "step 2", "parent 2"]:

@@ -3,14 +3,17 @@ import os
 import re
 from typing import List
 
+import py
 import pytest
 
 from . import utils
+from .conftest import FuzzyCallChecker
+from .deployment_utils import UniversumRunner
 from .utils import python, python_version
 
 
 @pytest.fixture(name='runner_with_analyzers')
-def fixture_runner_with_analyzers(docker_main):
+def fixture_runner_with_analyzers(docker_main: UniversumRunner):
     docker_main.environment.install_python_module("pylint")
     docker_main.environment.install_python_module("mypy")
     docker_main.environment.assert_successful_execution("apt install uncrustify")
@@ -148,7 +151,7 @@ log_success = r'Issues not found'
     'both_tested_issues_in_sarif',
     'both_tested_issues_in_json',
 ])
-def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected_success):
+def test_code_report_direct_log(runner_with_analyzers: UniversumRunner, tested_contents, expected_success):
     config = ConfigData()
     step_config = "code_report=True"
     for idx, tested_content in enumerate(tested_contents):
@@ -179,7 +182,7 @@ def test_code_report_direct_log(runner_with_analyzers, tested_contents, expected
     'mypy_found_issues',
     'pylint_and_mypy_found_issues_independently',
 ])
-def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_content, expected_success):
+def test_code_report_log(runner_with_analyzers: UniversumRunner, analyzers, extra_args, tested_content, expected_success):
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
         "--files", "source_file",
@@ -201,7 +204,7 @@ def test_code_report_log(runner_with_analyzers, analyzers, extra_args, tested_co
             assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log), f"'{analyzer}' info is not found in '{log}'"
 
 
-def test_without_code_report_command(runner_with_analyzers):
+def test_without_code_report_command(runner_with_analyzers: UniversumRunner):
     log = runner_with_analyzers.run(utils.simple_test_config)
     pattern = re.compile(f"({log_fail}|{log_success})")
     assert not pattern.findall(log)
@@ -214,7 +217,7 @@ def test_without_code_report_command(runner_with_analyzers):
     [["--result-file", "${CODE_REPORT_FILE}"], "error: the following arguments are required: --files"],
     [["--files", "--result-file", "${CODE_REPORT_FILE}"], "files: expected at least one argument"],
 ])
-def test_analyzer_common_params(runner_with_analyzers, analyzer, arg_set, expected_log):
+def test_analyzer_common_params(runner_with_analyzers: UniversumRunner, analyzer, arg_set, expected_log):
     test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log)
 
 
@@ -223,7 +226,7 @@ def test_analyzer_common_params(runner_with_analyzers, analyzer, arg_set, expect
     [["--python-version", "--files", "source_file.py", "--result-file", "${CODE_REPORT_FILE}"],
      "python-version: expected one argument"],
 ])
-def test_analyzer_python_version_params(runner_with_analyzers, analyzer, arg_set, expected_log):
+def test_analyzer_python_version_params(runner_with_analyzers: UniversumRunner, analyzer, arg_set, expected_log):
     test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log)
 
 
@@ -237,7 +240,7 @@ def test_analyzer_python_version_params(runner_with_analyzers, analyzer, arg_set
                     "--cfg-file", "cfg", "--output-directory", "."],
      "Target and source folders for uncrustify are not allowed to match"],
 ])
-def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expected_log):
+def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyzer, arg_set, expected_log):
     source_file = runner_with_analyzers.local.root_directory.join("source_file")
     source_file.write(source_code_python)
 
@@ -255,7 +258,8 @@ def test_analyzer_specific_params(runner_with_analyzers, analyzer, arg_set, expe
     "uncrustify_html_file_saved",
     "uncrustify_html_file_disabled",
 ])
-def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content, expected_success, expected_artifact):
+def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
+                              extra_args, tested_content, expected_success, expected_artifact):
     root = runner_with_analyzers.local.root_directory
     source_file = root.join("source_file")
     source_file.write(tested_content)
@@ -277,7 +281,7 @@ def test_uncrustify_file_diff(runner_with_analyzers, extra_args, tested_content,
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
-def test_code_report_extended_arg_search(tmpdir, stdout_checker):
+def test_code_report_extended_arg_search(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker):
     env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)
@@ -300,7 +304,7 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
 
 
-def test_code_report_extended_arg_search_embedded(tmpdir, stdout_checker):
+def test_code_report_extended_arg_search_embedded(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker):
     env = utils.LocalTestEnvironment(tmpdir, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmpdir)

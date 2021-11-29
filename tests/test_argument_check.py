@@ -2,7 +2,7 @@ from typing import Union, List
 import pytest
 
 from universum import __main__
-from universum.lib.module_arguments import IncorrectParameterError
+from universum.lib.module_arguments import IncorrectParameterError, ModuleNamespace
 from . import utils
 
 
@@ -21,7 +21,7 @@ def get_match_all(*args):
     return "(?is)" + "".join(f"(?=.*{arg})" for arg in args)
 
 
-def create_settings(test_type, vcs_type):
+def create_settings(test_type: str, vcs_type: str) -> ModuleNamespace:
     settings = utils.create_empty_settings(test_type)
     settings.Output.type = "term"
     if test_type == "github-handler":
@@ -92,7 +92,7 @@ def parametrize_unset(parameter_name="unset"):
     ], ids=["none", "empty"])
 
 
-def assert_incorrect_parameter(settings, *args):
+def assert_incorrect_parameter(settings: ModuleNamespace, *args):
     with pytest.raises(IncorrectParameterError, match=get_match_all(*args)):
         __main__.run(settings)
 

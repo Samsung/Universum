@@ -1,3 +1,4 @@
+from __future__ import annotations
 import copy
 
 from typing import Callable, ClassVar, List, Optional, TypeVar
@@ -41,7 +42,7 @@ class Block:
     True
     """
 
-    def __init__(self, name: str, parent: Optional["Block"] = None) -> None:
+    def __init__(self, name: str, parent: Optional[Block] = None) -> None:
         self.name: str = name
         self.status: str = "Success"
         self.children: List[Block] = []
