@@ -11,16 +11,19 @@ __all__ = [
 
 class HtmlOutput(BaseOutput):
 
-    def __init__(self, *args, **kwargs):
+    default_name = "universum_log"
+
+    def __init__(self, *args, log_name=default_name, **kwargs):
         super().__init__(*args, **kwargs)
-        self._filename = None
+        self._log_name = log_name
+        self._log_path = None
         self.artifact_dir_ready = False
         self._log_buffer = []
         self._block_level = 0
         self.module_dir = os.path.dirname(os.path.realpath(__file__))
 
     def set_artifact_dir(self, artifact_dir):
-        self._filename = os.path.join(artifact_dir, "log.html")
+        self._log_path = os.path.join(artifact_dir, f"{self._log_name}.html")
 
     def open_block(self, num_str, name):
         opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \
@@ -92,7 +95,7 @@ class HtmlOutput(BaseOutput):
         self._log_buffered(self._build_time_stamp() + self._build_indent() + line)
 
     def _log_buffered(self, line):
-        if not self._filename:
+        if not self._log_path:
             raise RuntimeError("Artifact directory was not set")
         if not self.artifact_dir_ready:
             self._log_buffer.append(line)
@@ -107,7 +110,7 @@ class HtmlOutput(BaseOutput):
         self._log_buffer = []
 
     def _write_to_file(self, line):
-        with open(self._filename, "a", encoding="utf-8") as file:
+        with open(self._log_path, "a", encoding="utf-8") as file:
             file.write(line)
 
     def _build_indent(self):
