@@ -90,7 +90,7 @@ def test_success_clean_build(tmpdir, browser):
 
 
 def check_html_log(artifact_dir, browser):
-    log_path = os.path.join(artifact_dir, f"{log_name}.html")
+    log_path = os.path.join(artifact_dir, log_name)
     assert os.path.exists(log_path)
 
     browser.get(f"file://{log_path}")
