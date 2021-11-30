@@ -34,5 +34,9 @@ add comments on found issues right to the selected code review system.
         | * -f='test 1:!unit test 1'    - run all steps with 'test 1' substring in their names except those
          containing 'unit test 1'
 
+    --html-log -hl : @after
+        To integrate this log into Jenkins job with ``htmlpublisher`` plugin,
+        use :doc:`the following guide <html_publisher>`
+
     {init,run,poll,submit,github-handler} : @replace
         | See detailed description of additional commands :doc:`here <additional_commands>`.

@@ -61,9 +61,9 @@ def browser():
 
 
 def test_cli_log_custom_name(tmpdir):
-    custom_log_name = "custom_name"
+    custom_log_name = "custom_name.html"
     artifact_dir = check_cli(tmpdir, ["-hl", custom_log_name])
-    assert os.path.exists(os.path.join(artifact_dir, f"{custom_log_name}.html"))
+    assert os.path.exists(os.path.join(artifact_dir, custom_log_name))
 
 
 def test_cli_log_default_name(tmpdir):
