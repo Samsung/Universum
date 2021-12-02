@@ -35,8 +35,8 @@ add comments on found issues right to the selected code review system.
          containing 'unit test 1'
 
     --html-log -hl : @after
-        To integrate this log into Jenkins job with ``htmlpublisher`` plugin,
-        use :doc:`the following guide <html_publisher>`
+        To make sure all the interactive features of such a page work right in Jenkins artifacts,
+        please refer to the following :doc:`guide <jenkins>`
 
     {init,run,poll,submit,github-handler} : @replace
         | See detailed description of additional commands :doc:`here <additional_commands>`.

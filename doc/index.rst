@@ -14,7 +14,7 @@ Project 'Universum'
     github_handler.rst
     universum_docs.rst
     teamcity.rst
-    html_publisher.rst
+    jenkins.rst
     examples.rst
     changelog_ref.rst
 
