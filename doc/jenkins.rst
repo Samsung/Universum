@@ -1,14 +1,14 @@
 Integration with Jenkins
 ========================
 
-In `Jenkins` `Universum` is usually launched via single ``{python} -m universum`` command as one long step in a
-single build stage. Because of that, the whole `Universum` log is printed as a plain text without navigation anchors.
+`Universum` is usually launched by `Jenkins` as one long step in a single build stage. Because of that,
+the whole `Universum` log is printed as a plain text without navigation anchors.
 
 .. admonition:: Compare with these:
 
     * When ran locally, all Universum build step logs are stored to separate files instead of printing their
       output to console
-    * When launched on TeamCity, `Unviersum` uses `service messages
+    * When launched by TeamCity, `Unviersum` uses `service messages
       <https://www.jetbrains.com/help/teamcity/service-messages.html>`__ to increase log readability
 
 To simplify integration and debug, we provide a user-friendly interactive log with collapsible blocks and
