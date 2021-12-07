@@ -15,13 +15,14 @@ from universum import __main__
 from . import utils
 
 
-config = """
+config = r"""
 from universum.configuration_support import Configuration
 
 failed_step_cmd = ["bash", "-c", '1>&2 echo "error"; exit 1']
 
 success_step = Configuration([dict(name="Success step",
-    command=["echo", "http://www.samsung.com/ https://www.samsung.com/ ftp://www.samsung.com file:///local_file mailto:asdf@samsung.com"])])
+    command=["echo", "http://www.samsung.com/ https://www.samsung.com/ ftp://www.samsung.com " +
+        r"file://www.samsung.com/remote_file file:///local\ file mailto:asdf@samsung.com"])])
 failed_step = Configuration([dict(name="Failed step", command=failed_step_cmd)])
 partially_success_step = Configuration([dict(name="Partially success step: ")])
 all_success_step = Configuration([dict(name="All success step: ")])
@@ -232,8 +233,13 @@ def check_links_wrapping(steps_body):
     body = step.get_section_body()
     assert not body.is_displayed()
     step.click()
-    for url_scheme in ("http", "https", "ftp", "file", "mailto"):
+    for url_scheme in ("http", "https", "ftp", "mailto"):
         assert body.find_element_by_partial_link_text(url_scheme)
+    file_links = body.find_elements_by_partial_link_text("file")
+    assert len(file_links) == 4 # `echo` parameters also counts
+    link_with_whitespace = file_links[1]
+    assert r"\ " in link_with_whitespace.text
+    assert "%20" in link_with_whitespace.get_attribute("href")
     step.click() # restore section closed state
 
 

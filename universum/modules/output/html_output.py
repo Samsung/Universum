@@ -133,7 +133,7 @@ class HtmlOutput(BaseOutput):
     @staticmethod
     def _wrap_links(line):
         position_shift = 0
-        pattern = r"(http|https|ftp|file|mailto):\S+"
+        pattern = r"(?:http|https|ftp|file|mailto):(?:\\ |\S)+"
         for match in re.finditer(pattern, line):
             link = match.group()
             wrapped_link = f'<a href="{link}">{link}</a>'
