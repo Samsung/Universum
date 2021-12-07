@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 
 from .base_output import BaseOutput
@@ -97,6 +98,7 @@ class HtmlOutput(BaseOutput):
     def _log_buffered(self, line):
         if not self._log_path:
             raise RuntimeError("Artifact directory was not set")
+        line = self._wrap_links(line)
         if not self.artifact_dir_ready:
             self._log_buffer.append(line)
             return
@@ -127,6 +129,19 @@ class HtmlOutput(BaseOutput):
         with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
+
+    @staticmethod
+    def _wrap_links(line):
+        position_shift = 0
+        pattern = r"(?:http|https|ftp|file|mailto):(?:\\ |\S)+"
+        for match in re.finditer(pattern, line):
+            link = match.group()
+            wrapped_link = f'<a href="{link}">{link}</a>'
+            link_start_pos = match.start() + position_shift
+            link_end_pos = match.end() + position_shift
+            line = line[:link_start_pos] + wrapped_link + line[link_end_pos:]
+            position_shift += len(wrapped_link) - len(link)
+        return line
 
     @staticmethod
     def _build_time_stamp():
