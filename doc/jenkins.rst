@@ -1,8 +1,9 @@
 Integration with Jenkins
 ========================
 
-`Universum` is usually launched by `Jenkins` as one long step in a single build stage. Because of that,
-the whole `Universum` log is printed as a plain text without navigation anchors.
+`Universum` requires no special integration with `Jenkins`, except for one thing. It is usually launched
+as one long step in a single build stage. Because of that, the whole `Universum` log is printed as a plain text
+without navigation anchors.
 
 Compare with these:
 
@@ -21,7 +22,7 @@ interactive log with collapsible blocks and other features.
     inaccessible when opened directly from Jenkins artifacts.
 
 
-Here's the list of steps we performed to integrate this log with Jenkins server:
+Here's the list of steps we performed to integrate the interactive log with Jenkins server:
 
 1. :ref:`Add a command line option <jenkins#add_arg>` to generate a self-contained HTML file
 2. :ref:`Add a Jenkins plugin <jenkins#plugin>` to integrate a generated log into a Jenkins job
