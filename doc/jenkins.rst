@@ -75,20 +75,31 @@ artifacts on a different domain <https://www.jenkins.io/doc/book/security/user-c
 by changing ``Resource Root URL`` in `Manage Jenkins » Configure System » Serve resource files from another domain`
 from something like ``my.jenkins.io`` to ``res.my.jenkins.io``.
 
-Note that Jenkins interaction with resource domain, located on the same host is not done via ``localhost``
-network interface. Jenkins treats ``another domain`` as an external URL when redirecting. This means that both
-``my.jenkins.io`` and ``res.my.jenkins.io`` domain names must be resolved correctly
+Note that Jenkins interaction with resource domain, resolved to the same host IP is not done via ``localhost``
+network interface. The reason for that is Jenkins requiring some interaction with itself via this domain name.
+This means that both ``my.jenkins.io`` and ``res.my.jenkins.io`` domain names must be resolved correctly, either
+globally (via DNS) or locally on both client and server machines (via ``/etc/hosts`` files).
 
 .. note::
 
     If main server domain name is not resolved using DNS, ``/etc/hosts`` or any other means, the web-interface
-    will only be accessible via IP, and not the name. As resource domain might be located at the same IP,
-    the resolving of both names is crucial
+    will only be accessible via IP, and not the name. Because of that, the mentioned above Jenkins interaction
+    with itself via domain name will fail
 
 Here are the symptoms of domain names not resolving correctly:
 
 1. Jenkins warnings when trying to save the updated settings
 2. Client inability to access said pages (timeout error)
+
+To set up domain name resolving, add following lines to server ``/ets/host`` file::
+
+    127.0.0.1       my.jenkins.io
+    <server IP>     res.my.jenkins.io
+
+And add the following lines to client ``/ets/host`` file::
+
+    <server IP>     my.jenkins.io
+    <server IP>     res.my.jenkins.io
 
 
 .. _jenkins#nginx:
