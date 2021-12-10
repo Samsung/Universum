@@ -13,7 +13,8 @@ Compare with these:
   <https://www.jetbrains.com/help/teamcity/service-messages.html>`__ to increase log readability
 
 To simplify navigating long logs and finding relevant information on build results, we provide a user-friendly
-interactive log with collapsible blocks and other features.
+interactive log with collapsible blocks and other features. This log can also be used outside of Jenkins, but
+for Jenkins users it adds the missing functionality.
 
 .. warning::
 
@@ -55,11 +56,10 @@ A `HTML Publisher <https://plugins.jenkins.io/htmlpublisher/>`__ plugin is a ver
 to a Jenkins job. To use it, you will need to:
 
 1. Install it on server (server restart might be needed to apply changes)
-2. Add ``-hl``/``--html-log``/``-hl <name>`` option to the `Universum` command line as mentioned in previous section
-3. Pass the log name to plugin configuration as described in manual (https://plugins.jenkins.io/htmlpublisher/)
+2. Pass the generated log name to plugin configuration as described in manual (https://plugins.jenkins.io/htmlpublisher/)
    via `Post-build Actions` or Pipeline
-4. Launch a configured job at least once for the log to be generated
-5. Let Jenkins render the interactive content of log (see the next section)
+3. Launch a configured job at least once for the log to be generated
+4. Let Jenkins render the interactive content of log (see the next section)
 
 
 .. _jenkins#resource_url:
@@ -69,23 +69,25 @@ Set up Resource Root URL
 
 As already mentioned above, due to `Jenkins Content-Security-Policy
 <https://www.jenkins.io/doc/book/security/configuring-content-security-policy/>`__ some features of an interactive log
-might not work properly, and its contents might be not shown or displayed incorrectly.
+might not work properly, and its contents might be displayed incorrectly.
 
 A recommended way to allow Jenkins server to render interactive user content is to `configure Jenkins to publish
 artifacts on a different domain <https://www.jenkins.io/doc/book/security/user-content/#resource-root-url>`__
 by changing ``Resource Root URL`` in `Manage Jenkins » Configure System » Serve resource files from another domain`
-from something like ``my.jenkins.io`` to ``res.my.jenkins.io``.
+from ``<main domain>`` to ``<resource domain>`` (e.g. ``my.jenkins.io`` to ``res.my.jenkins.io``).
 
 Note that Jenkins interaction with resource domain, resolved to the same host IP is not done via ``localhost``
 network interface. The reason for that is Jenkins requiring some interaction with itself via this domain name.
-This means that both ``my.jenkins.io`` and ``res.my.jenkins.io`` domain names must be resolved correctly, either
-globally (via DNS) or locally on both client and server machines (via ``/etc/hosts`` files).
+This means that both ``<main domain>`` and ``<resource domain>`` domain names must be resolved correctly, either
+globally (via DNS) or locally on both client and server machines (via ``/etc/hosts`` files). The correctness of
+name resolving is checked when saving the changes to this setting; but Jenkins will only show warning, and not
+fail if domain name is not resolved.
 
 .. note::
 
     If main server domain name is not resolved using DNS, ``/etc/hosts`` or any other means, the web-interface
-    will only be accessible via IP, and not the name. Because of that, the mentioned above Jenkins interaction
-    with itself via domain name will fail
+    will only be accessible via IP, and not the name. Because of that, the Jenkins interaction with itself
+    via domain name will fail because host name is not passed to the Jenkins server
 
 Here are the symptoms of domain names not resolving correctly:
 
@@ -94,13 +96,13 @@ Here are the symptoms of domain names not resolving correctly:
 
 To set up domain name resolving, add following lines to server ``/ets/host`` file::
 
-    127.0.0.1       my.jenkins.io
-    <server IP>     res.my.jenkins.io
+    127.0.0.1       <main domain>
+    <server IP>     <resource domain>
 
 And add the following lines to client ``/ets/host`` file::
 
-    <server IP>     my.jenkins.io
-    <server IP>     res.my.jenkins.io
+    <server IP>     <main domain>
+    <server IP>     <resource domain>
 
 
 .. _jenkins#nginx:
