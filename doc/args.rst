@@ -34,5 +34,9 @@ add comments on found issues right to the selected code review system.
         | * -f='test 1:!unit test 1'    - run all steps with 'test 1' substring in their names except those
          containing 'unit test 1'
 
+    --html-log -hl : @after
+        To make sure all the interactive features of such a page work right in Jenkins artifacts,
+        please refer to the following :doc:`guide <jenkins>`
+
     {init,run,poll,submit,github-handler} : @replace
         | See detailed description of additional commands :doc:`here <additional_commands>`.
