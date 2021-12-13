@@ -120,8 +120,7 @@ server, that returns a redirection link to acquire a said artifact.
 As `specified in docs <https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/#passing-request-headers>`__,
 without specification Nginx replaces ``Host`` header with ``$proxy_host``. In this case it changes
 ``<resource domain>`` to proxy IP specifications. The problem is that without the Host header the Jenkins server
-is not able to understand that the request is sent to the resource domain (and not the main one). Therefore it returns
-the 404 NOT FOUND error.
+is not able to understand that the request is sent to the resource domain. Therefore it returns the 404 NOT FOUND error.
 
 To pass them correctly, adjust the configuration as instructed in manual mentioned above. Add the following lines
 to Nginx configuration file::
