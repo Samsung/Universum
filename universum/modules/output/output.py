@@ -27,10 +27,15 @@ class Output(Module):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
         parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins"],
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
-                                 "TeamCity and Jenkins environments are detected automatically when launched on build "
-                                 "agent.")
-        parser.add_argument("--html-log", "-hl", action="store_true", default=False,
-                            help="Generate self-contained HTML log in artifacts directory")
+                                 "TeamCity and Jenkins environments are detected automatically "
+                                 "when launched on build agent.")
+        # `universum` -> html_log == default
+        # `universum -hl` -> html_log == const
+        # `universum -hl custom` -> html_log == custom
+        parser.add_argument("--html-log", "-hl", nargs="?", const=HtmlOutput.default_name, default=None,
+                            help=f"Generate a self-contained user-friendly HTML log. "
+                                 f"Pass a desired log name as a parameter to this option, or a default "
+                                 f"'{HtmlOutput.default_name}' will be used.")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -95,9 +100,10 @@ class Output(Module):
         self.html_driver.log_execution_finish(title, version)
 
     def _create_html_driver(self):
-        html_driver = self.html_driver_factory() if self.settings.html_log else None
-        return HtmlDriverHandler(html_driver)
-
+        is_enabled = self.settings.html_log is not None
+        html_driver = self.html_driver_factory(log_name=self.settings.html_log) if is_enabled else None
+        handler = HtmlDriverHandler(html_driver)
+        return handler
 
 
 class HasOutput(Module):

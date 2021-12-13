@@ -4,13 +4,14 @@ import getpass
 import os
 from pwd import getpwnam
 
-from typing import Generator
 import docker
 import py
 import pytest
 from requests.exceptions import ReadTimeout
 
 from . import utils
+from .git_utils import GitClient
+from .perforce_utils import PerforceWorkspace
 from .utils import python
 
 
@@ -131,7 +132,7 @@ class ExecutionEnvironment:
 
 
 @pytest.fixture()
-def execution_environment(request) -> Generator[ExecutionEnvironment, None, None]:
+def execution_environment(request):
     runner = None
     try:
         runner = ExecutionEnvironment(request, os.getcwd())
@@ -152,8 +153,15 @@ def clean_execution_environment(request):
             runner.exit()
 
 
+class LocalSources(utils.BaseVcsClient):
+    def __init__(self, root_directory: py.path.local, repo_file: py.path.local):
+        super().__init__()
+        self.root_directory = root_directory
+        self.repo_file = repo_file
+
+
 @pytest.fixture()
-def local_sources(tmpdir):
+def local_sources(tmpdir: py.path.local):
     if utils.reuse_docker_containers():
         source_dir = py.path.local(".work")
         try:
@@ -167,28 +175,31 @@ def local_sources(tmpdir):
     local_file = source_dir.join("readme.txt")
     local_file.write("This is a an empty file")
 
-    yield utils.Params(root_directory=source_dir, repo_file=local_file)
+    yield LocalSources(root_directory=source_dir, repo_file=local_file)
 
 
 class UniversumRunner:
-    def __init__(self, perforce_workspace, git_client, local_sources, nonci):
-        self.perforce = perforce_workspace
-        self.git = git_client
-        self.local = local_sources
-        self.nonci = nonci
+    def __init__(self, perforce_workspace: PerforceWorkspace,
+                 git_client: GitClient,
+                 local_sources: LocalSources,
+                 nonci: bool):
+        self.perforce: PerforceWorkspace = perforce_workspace
+        self.git: GitClient = git_client
+        self.local: LocalSources = local_sources
+        self.nonci: bool = nonci
 
         # Need to be initialized in 'set_environment'
-        self.environment = None
-        self.working_dir: str = None
-        self.project_root = None
-        self.artifact_dir = None
+        self.environment: ExecutionEnvironment = None  # type: ignore
+        self.working_dir: str = None  # type: ignore
+        self.project_root: str = None  # type: ignore
+        self.artifact_dir: str = None  # type: ignore
 
-    def set_environment(self, execution_environment):
+    def set_environment(self, execution_environment: ExecutionEnvironment) -> None:
         self.environment = execution_environment
         self.working_dir = self.environment.get_working_directory()
         self.project_root = os.path.join(self.working_dir, "temp")
         if self.nonci:
-            self.project_root = self.local.root_directory
+            self.project_root = str(self.local.root_directory)
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
@@ -200,13 +211,13 @@ class UniversumRunner:
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
-    def _mandatory_args(self, config_file):
+    def _mandatory_args(self, config_file: str) -> str:
         result = f" -lcp '{config_file}' -ad '{self.artifact_dir}'"
         if self.project_root:
             result += f" -pr '{self.project_root}'"
         return result
 
-    def _vcs_args(self, vcs_type):
+    def _vcs_args(self, vcs_type: str) -> str:
         if vcs_type == "none":
             return f" -vt none -fsd '{self.local.root_directory}'"
 
@@ -220,14 +231,14 @@ class UniversumRunner:
                f" -p4d '{self.perforce.depot}'" \
                f" -p4c 'my_disposable_p4_client'"
 
-    def _create_temp_config(self, config: str):
+    def _create_temp_config(self, config: str) -> str:
         file_path = os.path.join(self.working_dir, "temp_config.py")
         with open(file_path, 'w+', encoding="utf-8") as f:
             f.write(config)
         return file_path
 
     def run(self, config: str, force_installed: bool = False, vcs_type: str = "none",
-            additional_parameters="", environment=None, expected_to_fail=False, workdir=None):
+            additional_parameters="", environment=None, expected_to_fail=False, workdir=None) -> str:
         """
         `force_installed` launches python with '-I' option, that ensures the non-installed universum sources
         will not be used instead of those installed into system. Without '-I' option `python -m` will first
@@ -263,26 +274,26 @@ class UniversumRunner:
         os.remove(config_file)
         return result
 
-    def clean_artifacts(self):
+    def clean_artifacts(self) -> None:
         self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
 
 
 @pytest.fixture()
-def runner_without_environment(perforce_workspace, git_client, local_sources) -> Generator[UniversumRunner, None, None]:
+def runner_without_environment(perforce_workspace: PerforceWorkspace, git_client: GitClient, local_sources: LocalSources):
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
     runner.clean_artifacts()
 
 
 @pytest.fixture()
-def docker_main_with_vcs(execution_environment, runner_without_environment):
+def docker_main_with_vcs(execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     execution_environment.set_image("universum_test_env_" + python())
     runner_without_environment.set_environment(execution_environment)
     yield runner_without_environment
 
 
-def docker_fixture_template(request, execution_environment, local_sources):
-    runner = UniversumRunner(None, None, local_sources, nonci=request.param)
+def docker_fixture_template(request, execution_environment: ExecutionEnvironment, local_sources: LocalSources):
+    runner = UniversumRunner(None, None, local_sources, nonci=request.param)  # type: ignore
     execution_environment.set_image("universum_test_env_" + python())
     runner.set_environment(execution_environment)
     yield runner
@@ -295,21 +306,21 @@ docker_main_and_nonci = pytest.fixture(params=[False, True], ids=["main", "nonci
 
 
 @pytest.fixture()
-def clean_docker_main(clean_execution_environment, runner_without_environment):
+def clean_docker_main(clean_execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     clean_execution_environment.set_image("universum_test_env_" + python())
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_docker_main_no_p4(clean_execution_environment, runner_without_environment):
+def clean_docker_main_no_p4(clean_execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     clean_execution_environment.set_image("universum_test_env_no_p4_" + python())
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment
 
 
 @pytest.fixture()
-def clean_docker_main_no_vcs(clean_execution_environment, runner_without_environment):
+def clean_docker_main_no_vcs(clean_execution_environment: ExecutionEnvironment, runner_without_environment: UniversumRunner):
     clean_execution_environment.set_image("universum_test_env_no_vcs_" + python())
     runner_without_environment.set_environment(clean_execution_environment)
     yield runner_without_environment

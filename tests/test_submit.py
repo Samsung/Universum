@@ -1,30 +1,24 @@
 # pylint: disable = redefined-outer-name
 
 import os
+from typing import Callable, Union
 import shutil
+import py
 import pytest
 
-from . import git_utils, perforce_utils, utils
-
-
-def test_error_no_repo(submit_environment, stdout_checker):
-    if submit_environment.settings.Vcs.type == "git":
-        submit_environment.settings.ProjectDirectory.project_root = "non_existing_repo"
-        submit_environment.run(expect_failure=True)
-        stdout_checker.assert_has_calls_with_param("No such directory")
-    else:
-        submit_environment.settings.PerforceSubmitVcs.client = "non_existing_client"
-        submit_environment.run(expect_failure=True)
-        stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
+from . import utils
+from .conftest import FuzzyCallChecker
+from .git_utils import GitTestEnvironment, GitClient
+from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def p4_submit_environment(perforce_workspace, tmpdir):
-    yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
+    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
 
 
 @pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
-def test_p4_error_forbidden_branch(p4_submit_environment, branch):
+def test_p4_error_forbidden_branch(p4_submit_environment: P4TestEnvironment, branch: str):
     protected_dir = p4_submit_environment.vcs_client.root_directory.mkdir(branch)
     file_to_add = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text = "This is a new line in the file"
@@ -41,7 +35,7 @@ def test_p4_error_forbidden_branch(p4_submit_environment, branch):
     assert not p4.run_opened("-C", p4_submit_environment.client_name)
 
 
-def test_p4_success_files_in_default(p4_submit_environment):
+def test_p4_success_files_in_default(p4_submit_environment: P4TestEnvironment):
     # This file should not be submitted, it should remain unchanged in default CL
     p4 = p4_submit_environment.vcs_client.p4
     p4_file = p4_submit_environment.vcs_client.repo_file
@@ -60,7 +54,7 @@ def test_p4_success_files_in_default(p4_submit_environment):
     assert text in p4_file.read()
 
 
-def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
+def test_p4_error_files_in_default_and_reverted(p4_submit_environment: P4TestEnvironment):
     # This file should not be submitted, it should remain unchanged in default CL
     p4 = p4_submit_environment.vcs_client.p4
     p4_file = p4_submit_environment.vcs_client.repo_file
@@ -82,10 +76,9 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment):
 
 
 class SubmitterParameters:
-    def __init__(self, stdout_checker, environment):
-        self.stdout_checker = stdout_checker
-        self.submit_settings = environment.settings
-        self.environment = environment
+    def __init__(self, stdout_checker: FuzzyCallChecker, environment: Union[GitTestEnvironment, P4TestEnvironment]):
+        self.stdout_checker: FuzzyCallChecker = stdout_checker
+        self.environment: Union[GitTestEnvironment, P4TestEnvironment] = environment
 
     def submit_path_list(self, path_list, expect_failure=False, **kwargs):
         self.environment.settings.Submit.reconcile_list = ",".join(path_list)
@@ -110,26 +103,38 @@ class SubmitterParameters:
 
 
 @pytest.fixture()
-def submit_parameters(stdout_checker):
+def submit_parameters(stdout_checker: FuzzyCallChecker):
     def inner(environment):
         return SubmitterParameters(stdout_checker, environment)
     yield inner
 
 
 @pytest.fixture(params=["git", "p4"])
-def submit_environment(request, perforce_workspace, git_client, tmpdir):
+def submit_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmpdir: py.path.local):
     if request.param == "git":
-        yield git_utils.GitTestEnvironment(git_client, tmpdir, test_type="submit")
+        yield GitTestEnvironment(git_client, tmpdir, test_type="submit")
     else:
-        yield perforce_utils.P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+        yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
 
 
-def test_success_no_changes(submit_parameters, submit_environment):
+def test_error_no_repo(submit_environment: Union[GitTestEnvironment, P4TestEnvironment], stdout_checker: FuzzyCallChecker):
+    if submit_environment.settings.Vcs.type == "git":
+        submit_environment.settings.ProjectDirectory.project_root = "non_existing_repo"
+        submit_environment.run(expect_failure=True)
+        stdout_checker.assert_has_calls_with_param("No such directory")
+    else:
+        submit_environment.settings.PerforceSubmitVcs.client = "non_existing_client"
+        submit_environment.run(expect_failure=True)
+        stdout_checker.assert_has_calls_with_param("Workspace 'non_existing_client' doesn't exist!")
+
+
+def test_success_no_changes(submit_parameters: Callable, submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
     parameters.submit_path_list([])
 
 
-def test_success_commit_add_modify_remove_one_file(submit_parameters, submit_environment):
+def test_success_commit_add_modify_remove_one_file(submit_parameters: Callable,
+                                                   submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
 
     file_name = utils.randomize_name("new_file") + ".txt"
@@ -153,7 +158,8 @@ def test_success_commit_add_modify_remove_one_file(submit_parameters, submit_env
     assert not parameters.file_present(file_path)
 
 
-def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submit_environment):
+def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters: Callable,
+                                                        submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
 
     new_file_name = utils.randomize_name("new_file") + ".txt"
@@ -172,7 +178,8 @@ def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters, submi
     assert not parameters.file_present(str(temp_file))
 
 
-def test_success_commit_modified_while_edit_only(submit_parameters, submit_environment):
+def test_success_commit_modified_while_edit_only(submit_parameters: Callable,
+                                                 submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.vcs_client.repo_file
@@ -183,7 +190,7 @@ def test_success_commit_modified_while_edit_only(submit_parameters, submit_envir
     assert parameters.text_in_file(text, str(target_file))
 
 
-def test_error_review(submit_parameters, submit_environment):
+def test_error_review(submit_parameters: Callable, submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
 
     target_file = parameters.environment.vcs_client.repo_file
@@ -193,7 +200,8 @@ def test_error_review(submit_parameters, submit_environment):
     parameters.stdout_checker.assert_has_calls_with_param("not supported")
 
 
-def test_success_reconcile_directory(submit_parameters, submit_environment):
+def test_success_reconcile_directory(submit_parameters: Callable,
+                                     submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
 
     dir_name = utils.randomize_name("new_directory")
@@ -237,7 +245,8 @@ def test_success_reconcile_directory(submit_parameters, submit_environment):
     assert not parameters.file_present(str(tmp_dir))
 
 
-def test_success_reconcile_wildcard(submit_parameters, submit_environment):
+def test_success_reconcile_wildcard(submit_parameters: Callable,
+                                    submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     parameters = submit_parameters(submit_environment)
 
     dir_name = utils.randomize_name("new_directory")
@@ -354,7 +363,8 @@ def test_success_reconcile_wildcard(submit_parameters, submit_environment):
     assert not parameters.file_present(str(other_tmp_dir))
 
 
-def test_success_reconcile_partial(submit_parameters, submit_environment):
+def test_success_reconcile_partial(submit_parameters: Callable,
+                                   submit_environment: Union[GitTestEnvironment, P4TestEnvironment]):
     # This test was failed when a bug in univesrum.lib.utils.unify_argument_list left empty entries in processed lists
     # When reconciling "", p4 adds to CL all changes made in scope of workspace (and therefore partial reconcile fails)
 

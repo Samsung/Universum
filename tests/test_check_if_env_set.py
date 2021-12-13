@@ -23,17 +23,17 @@ def setup_env_vars(env_vars: Optional[dict]):
         os.environ[var] = val
 
 
-def check(if_env_set_key, env_vars: Optional[dict]):
+def check(if_env_set_key: str, env_vars: Optional[dict]):
     setup_env_vars(env_vars)
     if_env_set_var = Configuration([dict(if_env_set=if_env_set_key)])[0]
     return check_if_env_set(if_env_set_var)
 
 
-def assert_true(if_env_set_key, env_vars: Optional[dict] = None):
+def assert_true(if_env_set_key: str, env_vars: Optional[dict] = None):
     assert check(if_env_set_key, env_vars) is True
 
 
-def assert_false(if_env_set_key, env_vars: Optional[dict] = None):
+def assert_false(if_env_set_key: str, env_vars: Optional[dict] = None):
     assert check(if_env_set_key, env_vars) is False
 
 
@@ -175,7 +175,7 @@ def test_if_env_set_not_in_config():
 # if_env_set for multiplication
 ##########################################################################
 
-def assert_equal_multiplication(expected, env_vars: Optional[dict] = None):
+def assert_equal_multiplication(expected: list, env_vars: Optional[dict] = None):
     setup_env_vars(env_vars)
     var1 = Configuration([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
     var2 = Configuration([dict(if_env_set=" && VAR_3 == value_3")])

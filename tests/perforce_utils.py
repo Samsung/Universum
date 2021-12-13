@@ -1,12 +1,10 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 import time
-from typing import Any
 
-import pytest
 import docker
-
 import py
+import pytest
 from P4 import P4, P4Exception
 from requests.exceptions import ReadTimeout
 
@@ -108,6 +106,14 @@ def create_new_p4_container(request, client, name):
         request.raiseerror("Timeout on waiting perforce server to start.")
 
 
+class PerfoceDockerContainer:
+    def __init__(self, container_id: str, port: str, user: str, password: str):
+        self.container_id: str = container_id
+        self.port: str = port
+        self.user: str = user
+        self.password: str = password
+
+
 @pytest.fixture(scope="session")
 def docker_perforce(request):
     container = None
@@ -131,11 +137,10 @@ def docker_perforce(request):
 
         port_number = container.attrs["NetworkSettings"]["Ports"]["1666/tcp"][0]["HostPort"]
 
-        yield utils.Params(container_id=unique_id,
-                           port="127.0.0.1:" + str(port_number),
-                           user=p4_user,
-                           password=p4_password)
-
+        yield PerfoceDockerContainer(container_id=unique_id,  # We do not use this ID anywhere
+                                     port="127.0.0.1:" + str(port_number),
+                                     user=p4_user,
+                                     password=p4_password)
     except:
         if container is not None:
             container.remove(force=True)
@@ -153,27 +158,33 @@ def docker_perforce(request):
                     pass
 
 
+class PerforceConnection:
+    def __init__(self, p4: P4, server: PerfoceDockerContainer):
+        self.p4: P4 = p4
+        self.server: PerfoceDockerContainer = server
+
+
 @pytest.fixture()
-def perforce_connection(request, docker_perforce):
+def perforce_connection(request, docker_perforce: PerfoceDockerContainer):
     p4 = P4()
     p4.port = docker_perforce.port
     p4.user = docker_perforce.user
     p4.password = docker_perforce.password
     p4.connect()
     p4.run_login()
-    yield utils.Params(p4=p4, server=docker_perforce)
+    yield PerforceConnection(p4=p4, server=docker_perforce)
     p4.disconnect()
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection: Any, directory: py.path.local):
+    def __init__(self, connection: PerforceConnection, directory: py.path.local):
         super().__init__()
         self.root_directory = directory.mkdir("workspace")
         self.repo_file = self.root_directory.join("writeable_file.txt")
 
         self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")
 
-        self.server: Any = connection.server
+        self.server: PerfoceDockerContainer = connection.server
         self.client_created: bool = False
         self.client_name: str = "test_workspace"
         self.depot: str = "//depot/..."
@@ -282,7 +293,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def perforce_workspace(request, perforce_connection, tmpdir):
+def perforce_workspace(request, perforce_connection: PerforceConnection, tmpdir: py.path.local):
     workspace = PerforceWorkspace(perforce_connection, tmpdir)
     try:
         workspace.setup()

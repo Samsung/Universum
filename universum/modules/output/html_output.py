@@ -1,4 +1,6 @@
 import os
+import re
+from datetime import datetime
 
 from .base_output import BaseOutput
 
@@ -10,15 +12,19 @@ __all__ = [
 
 class HtmlOutput(BaseOutput):
 
-    def __init__(self, *args, **kwargs):
+    default_name = "universum_log.html"
+
+    def __init__(self, *args, log_name=default_name, **kwargs):
         super().__init__(*args, **kwargs)
-        self._filename = None
+        self._log_name = log_name
+        self._log_path = None
         self.artifact_dir_ready = False
         self._log_buffer = []
         self._block_level = 0
+        self.module_dir = os.path.dirname(os.path.realpath(__file__))
 
     def set_artifact_dir(self, artifact_dir):
-        self._filename = os.path.join(artifact_dir, "log.html")
+        self._log_path = os.path.join(artifact_dir, self._log_name)
 
     def open_block(self, num_str, name):
         opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \
@@ -55,7 +61,7 @@ class HtmlOutput(BaseOutput):
         self._log_line(f'<span class="exceptionTag">Error:</span> {line}')
 
     def log_stderr(self, line):
-        self._log_line(f"stderr: {line}")
+        self._log_line(f'<span class="stderrTag">stderr:</span> {line}')
 
     def log(self, line):
         self._log_line(f"==> {line}")
@@ -69,20 +75,30 @@ class HtmlOutput(BaseOutput):
     def log_execution_start(self, title, version):
         head_content = self._build_html_head()
         html_header = f"<!DOCTYPE html><html><head>{head_content}</head><body>"
-        html_header += '<input type="checkbox" id="dark-checkbox"><label for="dark-checkbox"></label><pre>'
-        self._log_line(html_header)
+        html_header += '<input type="checkbox" id="dark-checkbox"><label for="dark-checkbox"></label>'
+        html_header += '<input type="checkbox" id="time-checkbox"><label for="time-checkbox"></label>'
+        html_header += '<pre>'
+
+        self._log_buffered(html_header)
         self.log(self._build_execution_start_msg(title, version))
 
     def log_execution_finish(self, title, version):
         self.log(self._build_execution_finish_msg(title, version))
-        html_footer = "</pre></body></html>"
+        html_footer = "</pre>"
+        with open(os.path.join(self.module_dir, "html_output.js"), encoding="utf-8") as js_file:
+            html_footer += f"<script>{js_file.read()}</script>"
+        html_footer += "</body></html>"
         self._log_line(html_footer)
 
     def _log_line(self, line, with_line_separator=True):
         if with_line_separator and not line.endswith(os.linesep):
             line += os.linesep
-        if not self._filename:
+        self._log_buffered(self._build_time_stamp() + self._build_indent() + line)
+
+    def _log_buffered(self, line):
+        if not self._log_path:
             raise RuntimeError("Artifact directory was not set")
+        line = self._wrap_links(line)
         if not self.artifact_dir_ready:
             self._log_buffer.append(line)
             return
@@ -96,8 +112,7 @@ class HtmlOutput(BaseOutput):
         self._log_buffer = []
 
     def _write_to_file(self, line):
-        with open(self._filename, "a", encoding="utf-8") as file:
-            file.write(self._build_indent())
+        with open(self._log_path, "a", encoding="utf-8") as file:
             file.write(line)
 
     def _build_indent(self):
@@ -107,140 +122,28 @@ class HtmlOutput(BaseOutput):
             indent_str.append(" |   ")
         return "".join(indent_str)
 
-    @staticmethod
-    def _build_html_head():
-        css_rules = '''
-            body {
-                background-color: white;
-                color: black;
-                margin: 0;
-                height: 100%;
-                min-height: 100vh;
-                display: flex;
-            }
-
-            .sectionTitle {
-                color: darkslateblue;
-                font-weight: bold;
-            }
-            .successStatus {
-                color: green;
-                font-weight: bold;
-            }
-            .failedStatus {
-                color: red;
-                font-weight: bold;
-            }
-            .skippedStatus {
-                color: red;
-                font-weight: bold;
-            }
-            .skipped {
-                color: darkcyan;
-            }
-            .exceptionTag {
-                color: darkred;
-            }
-
-            .hide {
-                display: none;
-            }
-            .hide + label ~ div {
-                display: none;
-            }
-            .hide + label {
-
-                cursor: pointer;
-                display: inline-block;
-            }
-            .hide:checked + label + div {
-                display: block;
-            }
-
-            .hide + label + div + .nl {
-                display: block;
-            }
-            .hide:checked + label + div + .nl::after {
-                display: none;
-            }
-
-            .hide + label .sectionLbl::before {
-                content: "[+] ";
-            }
-            .hide:checked + label .sectionLbl::before {
-                content: "[-] ";
-            }
-
-            #dark-checkbox {
-                display: none;
-            }
-
-            pre {
-                padding: 20px 20px 65px 20px;
-                margin: 0;
-                width: 100%;
-            }
-
-            #dark-checkbox:checked+label+pre {
-                background-color: black;
-                color: rgb(219, 198, 198);
-            }
-
-            #dark-checkbox:checked+label+pre .sectionTitle {
-                color: #2b7cdf;
-            }
-
-            #dark-checkbox+label {
-                position: fixed;
-                right: 15px;
-                bottom: 15px;
-                width: 95px;
-                height: 30px;
-                border-radius: 20px;
-                background-color: white;
-                color: gray;
-                border: gray 1px solid;
-                font: 12px sans;
-                cursor: pointer;
-            }
-
-            #dark-checkbox:checked+label {
-                background-color: black;
-                color: white;
-            }
-
-            #dark-checkbox+label::before {
-                position: absolute;
-                content: "";
-                height: 22px;
-                width: 22px;
-                left: 4px;
-                bottom: 4px;
-                background-color: gray;
-                transition: .3s;
-                border-radius: 50%;
-            }
-
-            #dark-checkbox:checked+label::before {
-                background-color: white;
-                transform: translateX(65px);
-            }
-
-            #dark-checkbox+label::after {
-                content: 'Light';
-                display: block;
-                position: absolute;
-                transform: translate(-50%, -50%);
-                top: 50%;
-                left: 50%;
-            }
-
-            #dark-checkbox:checked+label::after {
-                content: 'Dark';
-            }
-        '''
+    def _build_html_head(self):
         head = []
         head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
         head.append('<meta content="utf-8" http-equiv="encoding">')
-        head.append(f"<style>{css_rules}</style>")
+        with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
+            head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
+
+    @staticmethod
+    def _wrap_links(line):
+        position_shift = 0
+        pattern = r"(?:http|https|ftp|file|mailto):(?:\\ |\S)+"
+        for match in re.finditer(pattern, line):
+            link = match.group()
+            wrapped_link = f'<a href="{link}">{link}</a>'
+            link_start_pos = match.start() + position_shift
+            link_end_pos = match.end() + position_shift
+            line = line[:link_start_pos] + wrapped_link + line[link_end_pos:]
+            position_shift += len(wrapped_link) - len(link)
+        return line
+
+    @staticmethod
+    def _build_time_stamp():
+        now = datetime.now()
+        return now.astimezone().strftime('<span class="time" title="%Z (UTC%z)">%Y-%m-%d %H:%M:%S</span> ')
