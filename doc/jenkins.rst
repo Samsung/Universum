@@ -118,9 +118,10 @@ Jenkins. When requesting an artifact, that is served from another domain, user f
 server, that returns a redirection link to acquire a said artifact.
 
 As `specified in docs <https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/#passing-request-headers>`__,
-without specification Nginx replaces ``Host`` headers with ``$proxy_host``. In this case it changes
-``res.my.jenkins.io`` to proxy IP and port specifications. The problem is, when received such specifications,
-Jenkins server no longer understands the request is sent to resource domain, and returns the ``404 NOT FOUND`` error.
+without specification Nginx replaces ``Host`` header with ``$proxy_host``. In this case it changes
+``<resource domain>`` to proxy IP specifications.The problem is that without the Host header the Jenkins server
+is not able to understand that the request is sent to the resource domain (and not the main one). Therefore it returns
+the 404 NOT FOUND error.
 
 To pass them correctly, adjust the configuration as instructed in manual mentioned above. Add the following lines
 to Nginx configuration file::
@@ -134,5 +135,4 @@ so that real headers are passed to Jenkins to handle the resource domain magic.
 
 .. note::
 
-    Also you might need to set ``server_name`` to ``my.jenkins.io res.my.jenkins.io`` if they are located
-    on the same host, or create several ``server`` entries for each domain to be processed separately
+    Also you might need to set ``server_name`` to ``<main domain> <resource domain>`` (whitespace separated)
