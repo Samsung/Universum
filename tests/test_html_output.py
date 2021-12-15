@@ -20,9 +20,12 @@ from universum.configuration_support import Configuration
 
 failed_step_cmd = ["bash", "-c", '1>&2 echo "error"; exit 1']
 
-success_step = Configuration([dict(name="Success step",
+success_links_step = Configuration([dict(name="Success links step",
     command=["echo", "http://www.samsung.com/ https://www.samsung.com/ ftp://www.samsung.com " +
         r"file://www.samsung.com/remote_file file:///local\ file mailto:asdf@samsung.com"])])
+success_ansi_step = Configuration([dict(name="Success ansi step",
+    command=["echo", "\u001b[31m red \u001b[0m, \u001b[42m\u001b[34m blue on green \u001b[0m, " +
+        "\u001b[1m\u001b[4m\u001b[36m bold underline cyan \u001b[0m"])])
 failed_step = Configuration([dict(name="Failed step", command=failed_step_cmd)])
 partially_success_step = Configuration([dict(name="Partially success step: ")])
 all_success_step = Configuration([dict(name="All success step: ")])
@@ -30,12 +33,13 @@ all_failed_step = Configuration([dict(name="All failed step: ")])
 failed_critical_step = Configuration([dict(name="Failed step", command=failed_step_cmd, critical=True)])
 
 configs = \
-    success_step + \
+    success_links_step + \
+    success_ansi_step + \
     failed_step + \
-    partially_success_step * (success_step + failed_step) + \
-    all_success_step * (success_step + success_step) + \
+    partially_success_step * (success_links_step + failed_step) + \
+    all_success_step * (success_links_step + success_ansi_step) + \
     all_failed_step * (failed_step + failed_step) + \
-    failed_critical_step + success_step
+    failed_critical_step + success_links_step
 """
 
 log_name = "universum_log"
@@ -109,6 +113,7 @@ def check_html_log(artifact_dir, browser):
     check_sections_indentation(steps_section)
     check_coloring(html_body, universum_log_element, steps_body)
     check_links_wrapping(steps_body)
+    check_ansi_colors_convertion(steps_body)
     check_dark_mode(html_body, universum_log_element)
     check_timestamps(html_body, universum_log_element)
 
@@ -116,10 +121,10 @@ def check_html_log(artifact_dir, browser):
 def check_initial_sections_display_state(universum_log_element, steps_body):
     assert steps_body.is_displayed()
     sections_expanded_state = {
-        "Success step": False,
+        "Success links step": False,
         "Failed step": True,
         "Partially success step": True,
-        "Partially success step: Success step": False,
+        "Partially success step: Success links step": False,
         "Partially success step: Failed step": True,
         "All success step": False,
         "All failed step": True,
@@ -131,7 +136,7 @@ def check_initial_sections_display_state(universum_log_element, steps_body):
 
 
 def check_manual_section_expanding(steps_body):
-    success_step = steps_body.get_section_by_name("Success step")
+    success_step = steps_body.get_section_by_name("Success links step")
     success_step_body = success_step.get_section_body()
     assert not success_step_body.is_displayed()
     success_step.click()
@@ -147,7 +152,7 @@ def check_sections_indentation(steps_section):
     assert step_lvl1_first.indent == step_lvl1_second.indent
 
     step_lvl1_body = step_lvl1_second.get_section_body()
-    step_lvl2_first = step_lvl1_body.get_section_by_name("Success step")
+    step_lvl2_first = step_lvl1_body.get_section_by_name("Success links step")
     step_lvl2_second = step_lvl1_body.get_section_by_name("Failed step")
     assert step_lvl2_first.indent == step_lvl2_second.indent
 
@@ -168,12 +173,12 @@ def check_body_coloring(body_element):
 
 
 def check_title_and_status_coloring(steps_body):
-    check_section_coloring(steps_body.get_section_by_name("Success step"))
+    check_section_coloring(steps_body.get_section_by_name("Success links step"))
     check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
     check_section_coloring(steps_body.get_section_by_name("Partially success step"), has_inner_fail=True)
 
     composite_step_body = steps_body.get_section_body_by_name("Partially success step")
-    check_section_coloring(composite_step_body.get_section_by_name("Success step"))
+    check_section_coloring(composite_step_body.get_section_by_name("Success links step"))
     check_section_coloring(composite_step_body.get_section_by_name("Failed step"), is_failed=True)
 
 
@@ -229,7 +234,7 @@ def check_text_is_bold(element):
 
 
 def check_links_wrapping(steps_body):
-    step = steps_body.get_section_by_name("Success step")
+    step = steps_body.get_section_by_name("Success links step")
     body = step.get_section_body()
     assert not body.is_displayed()
     step.click()
@@ -240,6 +245,34 @@ def check_links_wrapping(steps_body):
     link_with_whitespace = file_links[1]
     assert r"\ " in link_with_whitespace.text
     assert "%20" in link_with_whitespace.get_attribute("href")
+    step.click() # restore section closed state
+
+
+def check_ansi_colors_convertion(steps_body):
+    step = steps_body.get_section_by_name("Success ansi step")
+    body = step.get_section_body()
+    assert not body.is_displayed()
+    step.click()
+
+    span_elements = body.find_elements_by_tag_name("span")
+    def is_target_span_element(el):
+        return el.text and el.get_attribute("style")
+    span_elements = [TestElement.create(el) for el in span_elements if is_target_span_element(el)]
+    assert len(span_elements) == 6 # 3 printed elements + 3 `echo` argument elements
+
+    for element in span_elements:
+        if "red" in element.text:
+            assert element.color == Color.RED
+        elif "blue on green" in element.text:
+            assert element.color == Color.BLUE
+            assert element.background_color == Color.GREEN
+        elif "bold underline cyan" in element.text:
+            check_text_is_bold(element)
+            assert "underline" in element.value_of_css_property("text-decoration")
+            assert element.color == Color.CYAN
+        else:
+            assert False, f"Unexpected span text: {element.text}"
+
     step.click() # restore section closed state
 
 

@@ -2,6 +2,8 @@ import os
 import re
 from datetime import datetime
 
+from ansi2html import Ansi2HTMLConverter
+
 from .base_output import BaseOutput
 
 
@@ -99,6 +101,7 @@ class HtmlOutput(BaseOutput):
         if not self._log_path:
             raise RuntimeError("Artifact directory was not set")
         line = self._wrap_links(line)
+        line = self._ansi_codes_to_html(line)
         if not self.artifact_dir_ready:
             self._log_buffer.append(line)
             return
@@ -142,6 +145,11 @@ class HtmlOutput(BaseOutput):
             line = line[:link_start_pos] + wrapped_link + line[link_end_pos:]
             position_shift += len(wrapped_link) - len(link)
         return line
+
+    @staticmethod
+    def _ansi_codes_to_html(line):
+        converter = Ansi2HTMLConverter(inline=True, escaped=False)
+        return converter.convert(line, full=False)
 
     @staticmethod
     def _build_time_stamp():

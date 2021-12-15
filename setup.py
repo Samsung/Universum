@@ -18,6 +18,8 @@ vcs = p4 + github
 
 docs = ('sphinx', 'sphinx-argparse', 'sphinx_rtd_theme')  # This extra is required for RTD to generate documentation
 
+html = ('ansi2html')
+
 setup(
     name=universum.__title__,
     version=universum.__version__,
@@ -41,6 +43,7 @@ setup(
         'git': [git],
         'github': [github],
         'docs': [docs],
+        'html': [html],
         'test': [
             vcs,
             docs,
