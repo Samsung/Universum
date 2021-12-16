@@ -255,8 +255,8 @@ def check_ansi_colors_convertion(steps_body):
     step.click()
 
     span_elements = body.find_elements_by_tag_name("span")
-    def is_target_span_element(el):
-        return el.text and el.get_attribute("style")
+    def is_target_span_element(element):
+        return element.text and element.get_attribute("style")
     span_elements = [TestElement.create(el) for el in span_elements if is_target_span_element(el)]
     assert len(span_elements) == 6 # 3 printed elements + 3 `echo` argument elements
 

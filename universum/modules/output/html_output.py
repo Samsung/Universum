@@ -1,8 +1,9 @@
+import importlib
 import os
 import re
 from datetime import datetime
-
-from ansi2html import Ansi2HTMLConverter
+from typing import cast, Callable
+from types import ModuleType
 
 from .base_output import BaseOutput
 
@@ -24,6 +25,7 @@ class HtmlOutput(BaseOutput):
         self._log_buffer = []
         self._block_level = 0
         self.module_dir = os.path.dirname(os.path.realpath(__file__))
+        self.ansi_style_converter = self._try_retrieve_ansi_converter()
 
     def set_artifact_dir(self, artifact_dir):
         self._log_path = os.path.join(artifact_dir, f"{self._log_name}.html")
@@ -133,6 +135,22 @@ class HtmlOutput(BaseOutput):
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
 
+    def _try_retrieve_ansi_converter(self):
+        class AnsiModuleStub(ModuleType):
+            Ansi2HTMLConverter: Callable
+        try:
+            ansi_module = cast(AnsiModuleStub, importlib.import_module("ansi2html"))
+            return ansi_module.Ansi2HTMLConverter(inline=True, escaped=False)
+        except ImportError as e:
+            print("Warning: ANSI escape sequences to HTML style convertion requires 'ansi2html` module to be installed. " \
+                  "Please refer to `Prerequisites` chapter of project documentation for detailed instructions")
+            return None
+
+    def _ansi_codes_to_html(self, line):
+        if not self.ansi_style_converter:
+            return line;
+        return self.ansi_style_converter.convert(line, full=False)
+
     @staticmethod
     def _wrap_links(line):
         position_shift = 0
@@ -145,11 +163,6 @@ class HtmlOutput(BaseOutput):
             line = line[:link_start_pos] + wrapped_link + line[link_end_pos:]
             position_shift += len(wrapped_link) - len(link)
         return line
-
-    @staticmethod
-    def _ansi_codes_to_html(line):
-        converter = Ansi2HTMLConverter(inline=True, escaped=False)
-        return converter.convert(line, full=False)
 
     @staticmethod
     def _build_time_stamp():
