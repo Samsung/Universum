@@ -135,21 +135,22 @@ class HtmlOutput(BaseOutput):
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
 
-    def _try_retrieve_ansi_converter(self):
+    def _ansi_codes_to_html(self, line):
+        if not self.ansi_style_converter:
+            return line
+        return self.ansi_style_converter.convert(line, full=False)
+
+    @staticmethod
+    def _try_retrieve_ansi_converter():
         class AnsiModuleStub(ModuleType):
             Ansi2HTMLConverter: Callable
         try:
             ansi_module = cast(AnsiModuleStub, importlib.import_module("ansi2html"))
             return ansi_module.Ansi2HTMLConverter(inline=True, escaped=False)
-        except ImportError as e:
+        except ImportError:
             print("Warning: ANSI escape sequences to HTML style convertion requires 'ansi2html` module to be installed. " \
                   "Please refer to `Prerequisites` chapter of project documentation for detailed instructions")
             return None
-
-    def _ansi_codes_to_html(self, line):
-        if not self.ansi_style_converter:
-            return line;
-        return self.ansi_style_converter.convert(line, full=False)
 
     @staticmethod
     def _wrap_links(line):
