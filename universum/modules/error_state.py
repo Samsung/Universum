@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import inspect
 
 from ..lib.gravity import Module, Dependency
@@ -36,17 +36,17 @@ class HasErrorState(Module):
         return True
 
     def read_multiline_option(self, setting_name: str) -> str:
-        value: str = getattr(self.settings, setting_name, None)
+        value: Optional[str] = getattr(self.settings, setting_name, None)
         if not value:
             return ""
-        if value.startswith('@'):
-            try:
-                with open(value.lstrip('@'), encoding="utf-8") as value_file:
-                    return value_file.read()
-            except FileNotFoundError as e:
-                self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")
-                return ""
-        return value
+        if not value.startswith('@'):
+            return value
+        try:
+            with open(value.lstrip('@'), encoding="utf-8") as value_file:
+                return value_file.read()
+        except FileNotFoundError as e:
+            self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")
+        return ""
 
     def read_and_check_multiline_option(self, setting_name: str, error_message: str) -> str:
         result = self.read_multiline_option(setting_name)
