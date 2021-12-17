@@ -37,13 +37,13 @@ class HasErrorState(Module):
 
     def read_multiline_option(self, setting_name: str) -> str:
         value: Optional[str] = getattr(self.settings, setting_name, None)
+        if not value:
+            return ""
+        if not value.startswith('@'):
+            return value
         try:
-            if not value.startswith('@'):
-                return value
             with open(value.lstrip('@'), encoding="utf-8") as value_file:
                 return value_file.read()
-        except AttributeError:  # happens in case value is None
-            pass
         except FileNotFoundError as e:
             self.error(f"Error reading argument {setting_name} from file {e.filename}: no such file")
         return ""
