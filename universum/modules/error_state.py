@@ -36,7 +36,7 @@ class HasErrorState(Module):
         return True
 
     def read_multiline_option(self, setting_name: str) -> str:
-        value: str = getattr(self.settings, setting_name, None)
+        value: str = getattr(self.settings, setting_name, "")
         if not value:
             return ""
         if value.startswith('@'):
