@@ -15,7 +15,7 @@ __all__ = [
 
 class HtmlOutput(BaseOutput):
 
-    default_name = "universum_log"
+    default_name = "universum_log.html"
 
     def __init__(self, *args, log_name=default_name, **kwargs):
         super().__init__(*args, **kwargs)
@@ -28,7 +28,7 @@ class HtmlOutput(BaseOutput):
         self.ansi_style_converter = self._try_retrieve_ansi_converter()
 
     def set_artifact_dir(self, artifact_dir):
-        self._log_path = os.path.join(artifact_dir, f"{self._log_name}.html")
+        self._log_path = os.path.join(artifact_dir, self._log_name)
 
     def open_block(self, num_str, name):
         opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \

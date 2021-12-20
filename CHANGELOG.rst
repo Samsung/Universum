@@ -1,8 +1,21 @@
 Change log
 ==========
 
+0.19.11 (2021-12-13)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **out:** add generating a self-contained HTML log with the following features:
+    * collapsible step blocks
+    * errors/warnings coloring
+    * timestamps
+    * etc.
+
+
 0.19.10 (2021-11-05)
--------------------
+--------------------
 
 New features
 ~~~~~~~~~~~~
