@@ -2,8 +2,8 @@ import importlib
 import os
 import re
 from datetime import datetime
-from typing import cast, Callable
-from types import ModuleType
+
+from ansi2html import Ansi2HTMLConverter
 
 from .base_output import BaseOutput
 
@@ -25,7 +25,6 @@ class HtmlOutput(BaseOutput):
         self._log_buffer = []
         self._block_level = 0
         self.module_dir = os.path.dirname(os.path.realpath(__file__))
-        self.ansi_style_converter = self._try_retrieve_ansi_converter()
 
     def set_artifact_dir(self, artifact_dir):
         self._log_path = os.path.join(artifact_dir, self._log_name)
@@ -135,23 +134,6 @@ class HtmlOutput(BaseOutput):
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
 
-    def _ansi_codes_to_html(self, line):
-        if not self.ansi_style_converter:
-            return line
-        return self.ansi_style_converter.convert(line, full=False)
-
-    @staticmethod
-    def _try_retrieve_ansi_converter():
-        class AnsiModuleStub(ModuleType):
-            Ansi2HTMLConverter: Callable
-        try:
-            ansi_module = cast(AnsiModuleStub, importlib.import_module("ansi2html"))
-            return ansi_module.Ansi2HTMLConverter(inline=True, escaped=False)
-        except ImportError:
-            print("Warning: ANSI escape sequences to HTML style convertion requires 'ansi2html` module to be installed. " \
-                  "Please refer to `Prerequisites` chapter of project documentation for detailed instructions")
-            return None
-
     @staticmethod
     def _wrap_links(line):
         position_shift = 0
@@ -169,3 +151,8 @@ class HtmlOutput(BaseOutput):
     def _build_time_stamp():
         now = datetime.now()
         return now.astimezone().strftime('<span class="time" title="%Z (UTC%z)">%Y-%m-%d %H:%M:%S</span> ')
+
+    @staticmethod
+    def _ansi_codes_to_html(line):
+        converter = Ansi2HTMLConverter(inline=True, escaped=False)
+        return converter.convert(line, full=False)
