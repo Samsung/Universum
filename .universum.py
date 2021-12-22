@@ -33,22 +33,7 @@ configs = Variations([Step(name="Create virtual environment", command=[python, "
                                                "--result-file=\"${CODE_REPORT_FILE}\" --files *.py universum/ tests/")),
                       Step(name="Run static type checker", code_report=True,
                            command=run_virtual(f"{python} -m universum.analyzers.mypy --python-version={python_version} "
-                                               "--result-file=\"${CODE_REPORT_FILE}\" --files *.py universum/ tests/")),
-
-                      Step(name="Run Jenkins plugin Java tests",
-                           artifacts="universum_log_collapser/universum_log_collapser/target/surefire-reports/*.xml",
-                           command=["mvn", "-B", "package"], directory="universum_log_collapser/universum_log_collapser"),
-                      Step(name="Run Jenkins plugin CLI version",
-                           command=["mvn", "-B", "compile", "assembly:single"],
-                           artifacts="universum_log_collapser/universum_log_collapser/target/universum_log_collapser.hpi",
-                           directory="universum_log_collapser/universum_log_collapser"),
-
-                      Step(name="Generate HTML for JavaScript tests",
-                           command=[python, "universum_log_collapser/e2e/universum_live_log_to_html.py"]),
-                      Step(name="Prepare Jenkins plugin JavaScript tests project",
-                           command=["npm", "install"], directory="universum_log_collapser/e2e"),
-                      Step(name="Run Jenkins plugin JavaScript tests",
-                           command=["npm", "test"], directory="universum_log_collapser/e2e")])
+                                               "--result-file=\"${CODE_REPORT_FILE}\" --files *.py universum/ tests/"))])
 
 if __name__ == '__main__':
     print(configs.dump())
