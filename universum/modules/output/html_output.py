@@ -1,4 +1,3 @@
-import importlib
 import os
 import re
 from datetime import datetime
@@ -25,6 +24,7 @@ class HtmlOutput(BaseOutput):
         self._log_buffer = []
         self._block_level = 0
         self.module_dir = os.path.dirname(os.path.realpath(__file__))
+        self.ansi_converter = Ansi2HTMLConverter(inline=True, escaped=False)
 
     def set_artifact_dir(self, artifact_dir):
         self._log_path = os.path.join(artifact_dir, self._log_name)
@@ -134,6 +134,9 @@ class HtmlOutput(BaseOutput):
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
 
+    def _ansi_codes_to_html(self, line):
+        return self.ansi_converter.convert(line, full=False)
+
     @staticmethod
     def _wrap_links(line):
         position_shift = 0
@@ -151,8 +154,3 @@ class HtmlOutput(BaseOutput):
     def _build_time_stamp():
         now = datetime.now()
         return now.astimezone().strftime('<span class="time" title="%Z (UTC%z)">%Y-%m-%d %H:%M:%S</span> ')
-
-    @staticmethod
-    def _ansi_codes_to_html(line):
-        converter = Ansi2HTMLConverter(inline=True, escaped=False)
-        return converter.convert(line, full=False)
