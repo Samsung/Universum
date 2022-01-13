@@ -192,10 +192,6 @@ class RunningStep:
             self.out.log("No 'command' found. Nothing to execute")
             return False
         command_name: str = utils.strip_path_start(self.configuration.command[0])
-
-        if command_name == "python":
-            command_name = "python2"
-
         try:
             try:
                 self.cmd = make_command(command_name)
