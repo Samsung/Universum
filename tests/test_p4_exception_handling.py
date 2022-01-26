@@ -2,12 +2,10 @@
 
 import py
 import pytest
-import sh
 
 from universum import __main__
 from .conftest import FuzzyCallChecker
 from .perforce_utils import P4TestEnvironment, PerforceWorkspace
-from .utils import simple_test_config
 
 
 @pytest.fixture()
@@ -100,20 +98,3 @@ def test_p4_print_exception_wrong_shelve(perforce_environment: P4TestEnvironment
     stdout_checker.assert_has_calls_with_param(
         f"Errors during command execution( \"p4 unshelve -s {cl} -f\" )")
     stdout_checker.assert_has_calls_with_param(f"[Error]: 'Change {cl} is already committed.'")
-
-
-@pytest.fixture()
-def mock_diff(monkeypatch):
-    def mocking_function(*args, **kwargs):
-        raise sh.ErrorReturnCode(stderr=b"This is error text\n F\xc3\xb8\xc3\xb6\xbbB\xc3\xa5r",
-                                 stdout=b"This is text'",
-                                 full_cmd="any shell call with any params")
-
-    monkeypatch.setattr(sh, 'Command', mocking_function, raising=False)
-
-
-def test_p4_diff_exception_handling(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker, mock_diff):
-    perforce_environment.shelve_config(simple_test_config)
-    perforce_environment.run(expect_failure=True)
-    stdout_checker.assert_has_calls_with_param("This is error text")
-    # Without the fixes all error messages go to stderr instead of stdout

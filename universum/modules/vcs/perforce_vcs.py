@@ -7,8 +7,6 @@ import shutil
 import time
 import warnings
 
-import sh
-
 from ..error_state import HasErrorState
 from ...modules.artifact_collector import ArtifactCollector
 from ...modules.reporter import Reporter
@@ -499,19 +497,16 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     @catch_p4exception(ignore_if="file(s) up-to-date")
     def check_diff_for_depot(self, depot: str) -> str:
         try:
-            p4cmd = sh.Command("p4")
-            diff_result = p4cmd("-c", self.p4.client, "-u", self.p4.user,
-                                "-P", self.p4.password, "-p", self.p4.port,
-                                "diff", depot)
-            result: str = utils.trim_and_convert_to_unicode(diff_result.stdout)
-        except sh.ErrorReturnCode as e:
-            for line in e.stderr.splitlines():
-                if not (line.startswith(b"Librarian checkout")
-                        or line.startswith(b"Error opening librarian file")
-                        or line.startswith(b"Transfer of librarian file")
-                        or line.endswith(b".gz: No such file or directory")):
-                    raise CriticalCiException(utils.trim_and_convert_to_unicode(e.stderr)) from e
-            result = utils.trim_and_convert_to_unicode(e.stdout)
+            diff_result = self.p4.run_diff(depot)
+            result: str = utils.trim_and_convert_to_unicode(str(diff_result))
+        except P4Exception as e:
+            for line in str(e).splitlines():
+                if not (line.startswith("Librarian checkout")
+                        or line.startswith("Error opening librarian file")
+                        or line.startswith("Transfer of librarian file")
+                        or line.endswith(".gz: No such file or directory")):
+                    raise
+            result = utils.trim_and_convert_to_unicode(str(e))
         return result
 
     def calculate_file_diff(self) -> Optional[List[Dict[str, str]]]:
