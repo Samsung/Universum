@@ -34,7 +34,8 @@ setup(
         'requests',
         'sh',
         'lxml',
-        'typing-extensions'
+        'typing-extensions',
+        'ansi2html'
     ],
     extras_require={
         'p4': [p4],

@@ -2,6 +2,8 @@ import os
 import re
 from datetime import datetime
 
+from ansi2html import Ansi2HTMLConverter
+
 from .base_output import BaseOutput
 
 
@@ -22,6 +24,7 @@ class HtmlOutput(BaseOutput):
         self._log_buffer = []
         self._block_level = 0
         self.module_dir = os.path.dirname(os.path.realpath(__file__))
+        self.ansi_converter = Ansi2HTMLConverter(inline=True, escaped=False)
 
     def set_artifact_dir(self, artifact_dir):
         self._log_path = os.path.join(artifact_dir, self._log_name)
@@ -99,6 +102,7 @@ class HtmlOutput(BaseOutput):
         if not self._log_path:
             raise RuntimeError("Artifact directory was not set")
         line = self._wrap_links(line)
+        line = self._ansi_codes_to_html(line)
         if not self.artifact_dir_ready:
             self._log_buffer.append(line)
             return
@@ -129,6 +133,9 @@ class HtmlOutput(BaseOutput):
         with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)
+
+    def _ansi_codes_to_html(self, line):
+        return self.ansi_converter.convert(line, full=False)
 
     @staticmethod
     def _wrap_links(line):

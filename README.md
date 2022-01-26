@@ -167,9 +167,6 @@ from root directory via `make tests` command, otherwise use standard PyTest synt
 https://universum.readthedocs.io/en/latest/configuring.html). Usage of such files
 is illustrated in `run_basic_example.sh` script.
 
-`universum_log_collapser` contains Universum Jenkins plugin sources.
-The plugin implements coloring of failed steps and provides collapsing/expansion of log sections.
-
 `setup.py` is 'setuptools' configuration file, and shouldn't be executed on its own.
 
 ## Quick architecture overview

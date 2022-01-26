@@ -1,8 +1,0 @@
-.classpath
-.factorypath
-.project
-.settings
-target
-*.iml
-node_modules
-generated.html

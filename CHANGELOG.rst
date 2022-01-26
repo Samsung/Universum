@@ -1,6 +1,20 @@
 Change log
 ==========
 
+0.19.12 (2022-01-26)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **html_log:** convert ANSI escape sequences (such as colors) to actual HTML formatting
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** switch sh diff to p4python (to avoid previously encountered issues with authorization)
+
+
 0.19.11 (2021-12-13)
 --------------------
 
