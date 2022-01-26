@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.19.12 (2022-01-26)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **out:** convert ANSI escape sequences to HTML elements formatting
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** switch sh diff to p4python (to avoid previously encountered issues with authorization)
+* remove old Jenkins plugin sources
+
+
 0.19.11 (2021-12-13)
 --------------------
 
