@@ -6,6 +6,10 @@ __all__ = [
 
 
 class GithubOutput(BaseOutput):
+    """
+    GitHub doesn't support nested grouping
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._block_opened = False
@@ -24,8 +28,6 @@ class GithubOutput(BaseOutput):
 
         if status == "Failed":
             print(f'::error::{num_str} {name} [Failed]')
-        else:
-            print(f'{num_str} {name} [Success]')
 
     def report_error(self, description):
         pass
@@ -34,9 +36,6 @@ class GithubOutput(BaseOutput):
         lines = message.splitlines(False)
         for single_line in lines:
             print(f"::warning::{single_line}")
-
-    # def report_step(self, message, status):
-    #     self.log(message)
 
     def change_status(self, message):
         pass
