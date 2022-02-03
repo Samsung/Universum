@@ -6,6 +6,7 @@ from typing import ClassVar, Optional
 from ...lib.gravity import Module, Dependency
 from ...lib import utils
 from .base_output import BaseOutput
+from .github_output import GithubOutput
 from .terminal_based_output import TerminalBasedOutput
 from .teamcity_output import TeamcityOutput
 from .html_output import HtmlOutput
@@ -21,14 +22,15 @@ class Output(Module):
     teamcity_driver_factory = Dependency(TeamcityOutput)
     terminal_driver_factory = Dependency(TerminalBasedOutput)
     html_driver_factory = Dependency(HtmlOutput)
+    github_driver_factory = Dependency(GithubOutput)
 
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
-        parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins"],
-                            help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
-                                 "TeamCity and Jenkins environments are detected automatically "
-                                 "when launched on build agent.")
+        parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins", "github"],
+                            help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal, "
+                                 "github - Github Actions). TeamCity and Jenkins environments are detected "
+                                 "automatically when launched on build agent.")
         # `universum` -> html_log == default
         # `universum -hl` -> html_log == const
         # `universum -hl custom` -> html_log == custom
@@ -43,6 +45,7 @@ class Output(Module):
             utils.create_driver(local_factory=self.terminal_driver_factory,
                                 teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.terminal_driver_factory,
+                                github_factory=self.github_driver_factory,
                                 env_type=self.settings.type)
         self.html_driver = self._create_html_driver()
 

@@ -57,29 +57,35 @@ def detect_environment() -> str:
     """
     :return: "tc" if the script is launched on TeamCity agent,
              "jenkins" is launched on Jenkins agent,
+             "github" is launched on Github Actions agent,
              "terminal" otherwise
     """
     teamcity = "TEAMCITY_VERSION" in os.environ
     jenkins = "JENKINS_HOME" in os.environ
     pycharm = "PYCHARM_HOSTED" in os.environ
+    github = "GITHUB_WORKFLOW" in os.environ
     if pycharm:
         return "terminal"
     if teamcity and not jenkins:
         return "tc"
     if not teamcity and jenkins:
         return "jenkins"
+    if github:
+        return "github"
     return "terminal"
 
 
 LocalFactoryT = TypeVar('LocalFactoryT', bound=Module)
 TeamcityFactoryT = TypeVar('TeamcityFactoryT', bound=Module)
 JenkinsFactoryT = TypeVar('JenkinsFactoryT', bound=Module)
+GithubFactoryT = TypeVar('GithubFactoryT', bound=Module)
 
 
 def create_driver(local_factory: Callable[[], LocalFactoryT],
                   teamcity_factory: Callable[[], TeamcityFactoryT],
                   jenkins_factory: Callable[[], JenkinsFactoryT],
-                  env_type: str = "") -> Union[LocalFactoryT, TeamcityFactoryT, JenkinsFactoryT]:
+                  github_factory:  Callable[[], GithubFactoryT],
+                  env_type: str = "") -> Union[LocalFactoryT, TeamcityFactoryT, JenkinsFactoryT, GithubFactoryT]:
     if not env_type:
         env_type = detect_environment()
 
@@ -87,6 +93,8 @@ def create_driver(local_factory: Callable[[], LocalFactoryT],
         return teamcity_factory()
     if env_type == "jenkins":
         return jenkins_factory()
+    if env_type == "github":
+        return github_factory()
     return local_factory()
 
 
