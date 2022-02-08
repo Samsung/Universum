@@ -1,6 +1,22 @@
 from ...lib.gravity import Module
 
 
+__all__ = [
+    "BaseOutput",
+    "TermColors"
+]
+
+
+class TermColors:
+    red = "\033[1;31m"
+    dark_red = "\033[0;31m"
+    green = "\033[1;32m"
+    blue = "\033[1;34m"
+    dark_cyan = "\033[0;36m"
+    dark_yellow = "\033[0;33m"
+    reset = "\033[00m"
+
+
 class BaseOutput(Module):
     """
     Abstract base class for output drivers

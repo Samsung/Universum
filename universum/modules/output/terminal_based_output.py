@@ -1,21 +1,11 @@
 import locale
 import sys
 
-from .base_output import BaseOutput
+from .base_output import BaseOutput, TermColors
 
 __all__ = [
     "TerminalBasedOutput"
 ]
-
-
-class Colors:
-    red = "\033[1;31m"
-    dark_red = "\033[0;31m"
-    green = "\033[1;32m"
-    blue = "\033[1;34m"
-    dark_cyan = "\033[0;36m"
-    dark_yellow = "\033[0;33m"
-    reset = "\033[00m"
 
 
 def stdout(*args, **kwargs):
@@ -43,7 +33,7 @@ class TerminalBasedOutput(BaseOutput):
 
     def open_block(self, num_str, name):
         self.indent()
-        stdout(num_str, ' ', Colors.blue, name, Colors.reset)
+        stdout(num_str, ' ', TermColors.blue, name, TermColors.reset)
         self.block_level += 1
 
     def close_block(self, num_str, name, status):
@@ -55,9 +45,9 @@ class TerminalBasedOutput(BaseOutput):
             block_end = " | "
 
         if status == "Failed":
-            stdout(self.block_level * "  ", block_end, Colors.red, "[Failed]", Colors.reset)
+            stdout(self.block_level * "  ", block_end, TermColors.red, "[Failed]", TermColors.reset)
         else:
-            stdout(self.block_level * "  ", block_end, Colors.green, "[Success]", Colors.reset)
+            stdout(self.block_level * "  ", block_end, TermColors.green, "[Success]", TermColors.reset)
         self.indent()
         stdout()
 
@@ -65,26 +55,26 @@ class TerminalBasedOutput(BaseOutput):
         pass
 
     def report_skipped(self, message):
-        self.print_lines(Colors.dark_cyan, message, Colors.reset)
+        self.print_lines(TermColors.dark_cyan, message, TermColors.reset)
 
     def report_step(self, message, status):
-        color = Colors.red
+        color = TermColors.red
         if status.lower() == "success":
-            color = Colors.green
+            color = TermColors.green
 
         if message.endswith(status):
             message = message[:-len(status)]
-            message += color + status + Colors.reset
+            message += color + status + TermColors.reset
         self.log(message)
 
     def change_status(self, message):
         pass
 
     def log_exception(self, line):
-        self.print_lines(Colors.dark_red, "Error: ", Colors.reset, line)
+        self.print_lines(TermColors.dark_red, "Error: ", TermColors.reset, line)
 
     def log_stderr(self, line):
-        self.print_lines(Colors.dark_yellow, "stderr: ", Colors.reset, line)
+        self.print_lines(TermColors.dark_yellow, "stderr: ", TermColors.reset, line)
 
     def log(self, line):
         self.print_lines("==> ", line)
