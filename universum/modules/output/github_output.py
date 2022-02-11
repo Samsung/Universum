@@ -27,7 +27,7 @@ class GithubOutput(BaseOutput):
             print("::endgroup::")
 
         if status == "Failed":
-            print(f'::error::{num_str} {name} [Failed]')
+            print(f'::error::{num_str} {name} - Failed')
 
     def report_error(self, description):
         pass
@@ -36,6 +36,12 @@ class GithubOutput(BaseOutput):
         lines = message.splitlines(False)
         for single_line in lines:
             print(f"::warning::{single_line}")
+
+    def report_step(self, message, status):
+        if status == "Failed":
+            print(f'::error::{message}')
+        else:
+            print(message)
 
     def change_status(self, message):
         pass
