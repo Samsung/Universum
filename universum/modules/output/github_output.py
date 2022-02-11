@@ -8,7 +8,7 @@ __all__ = [
 class GithubOutput(BaseOutput):
     """
     GitHub doesn't support nested grouping
-    See: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
+    See: https://github.com/actions/runner/issues/802
     """
 
     def __init__(self, *args, **kwargs):
