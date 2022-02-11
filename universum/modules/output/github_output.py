@@ -1,4 +1,4 @@
-from .base_output import BaseOutput, TermColors
+from .base_output import BaseOutput
 
 __all__ = [
     "GithubOutput"
@@ -36,16 +36,6 @@ class GithubOutput(BaseOutput):
         lines = message.splitlines(False)
         for single_line in lines:
             print(f"::warning::{single_line}")
-
-    def report_step(self, message, status):
-        color = TermColors.red
-        if status.lower() == "success":
-            color = TermColors.green
-
-        if message.endswith(status):
-            message = message[:-len(status)]
-            message += color + status + TermColors.reset
-        self.log(message)
 
     def change_status(self, message):
         pass
