@@ -14,15 +14,12 @@ class GithubOutput(TerminalBasedOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._block_opened = False
-        self.prefix = None
 
-    def print_lines(self, *args):
+    def print_lines(self, *args, prefix=""):
         result = ''.join(args)
         lines = result.splitlines(False)
         for line in lines:
-            if self.prefix:
-                line = f"{self.prefix}{line}"
-            stdout(line)
+            stdout(f"{prefix}{line}")
 
     def open_block(self, num_str, name):
         if self._block_opened:
@@ -40,22 +37,10 @@ class GithubOutput(TerminalBasedOutput):
             self.print_lines(f'::error::{num_str} {name} - Failed')
 
     def report_skipped(self, message):
-        try:
-            self.prefix = "::warning::"
-            super().report_skipped(message)
-        finally:
-            self.prefix = None
+        self.print_lines(message, prefix="::warning::")
 
     def log_exception(self, line):
-        try:
-            self.prefix = "::error::"
-            super().log_exception(line)
-        finally:
-            self.prefix = None
+        self.print_lines(line, prefix="::error::")
 
     def log_stderr(self, line):
-        try:
-            self.prefix = "::warning::"
-            super().log_stderr(line)
-        finally:
-            self.prefix = None
+        self.print_lines("stderr: ", line, prefix="::warning::")
