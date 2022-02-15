@@ -4,7 +4,6 @@ import sys
 from .base_output import BaseOutput
 
 __all__ = [
-    "stdout",
     "TerminalBasedOutput"
 ]
 
@@ -19,32 +18,32 @@ class Colors:
     reset = "\033[00m"
 
 
-def stdout(*args, **kwargs):
-    sys.stdout.write(''.join(args))
-    if not kwargs.get("no_enter", False):
-        sys.stdout.write('\n')
-
-
 class TerminalBasedOutput(BaseOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.block_level = 0
         self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")
 
+    @staticmethod
+    def stdout(*args, **kwargs):
+        sys.stdout.write(''.join(args))
+        if not kwargs.get("no_enter", False):
+            sys.stdout.write('\n')
+
     def indent(self):
         for x in range(0, self.block_level):
-            stdout("  " * x, " |   ", no_enter=True)
+            self.stdout("  " * x, " |   ", no_enter=True)
 
     def print_lines(self, *args):
         result = ''.join(args)
         lines = result.splitlines(False)
         for line in lines:
             self.indent()
-            stdout(line)
+            self.stdout(line)
 
     def open_block(self, num_str, name):
         self.indent()
-        stdout(num_str, ' ', Colors.blue, name, Colors.reset)
+        self.stdout(num_str, ' ', Colors.blue, name, Colors.reset)
         self.block_level += 1
 
     def close_block(self, num_str, name, status):
@@ -56,11 +55,11 @@ class TerminalBasedOutput(BaseOutput):
             block_end = " | "
 
         if status == "Failed":
-            stdout(self.block_level * "  ", block_end, Colors.red, "[Failed]", Colors.reset)
+            self.stdout(self.block_level * "  ", block_end, Colors.red, "[Failed]", Colors.reset)
         else:
-            stdout(self.block_level * "  ", block_end, Colors.green, "[Success]", Colors.reset)
+            self.stdout(self.block_level * "  ", block_end, Colors.green, "[Success]", Colors.reset)
         self.indent()
-        stdout()
+        self.stdout()
 
     def report_error(self, description):
         pass

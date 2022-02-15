@@ -1,4 +1,4 @@
-from .terminal_based_output import TerminalBasedOutput, stdout
+from .terminal_based_output import TerminalBasedOutput
 
 __all__ = [
     "GithubOutput"
@@ -15,11 +15,12 @@ class GithubOutput(TerminalBasedOutput):
         super().__init__(*args, **kwargs)
         self._block_opened = False
 
+    # pylint: disable = arguments-differ
     def print_lines(self, *args, prefix=""):
         result = ''.join(args)
         lines = result.splitlines(False)
         for line in lines:
-            stdout(f"{prefix}{line}")
+            self.stdout(f"{prefix}{line}")
 
     def open_block(self, num_str, name):
         if self._block_opened:
