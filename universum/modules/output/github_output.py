@@ -1,11 +1,11 @@
-from .base_output import BaseOutput
+from .terminal_based_output import TerminalBasedOutput, stdout
 
 __all__ = [
     "GithubOutput"
 ]
 
 
-class GithubOutput(BaseOutput):
+class GithubOutput(TerminalBasedOutput):
     """
     GitHub doesn't support nested grouping
     See: https://github.com/actions/runner/issues/802
@@ -14,48 +14,48 @@ class GithubOutput(BaseOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._block_opened = False
+        self.prefix = None
+
+    def print_lines(self, *args):
+        result = ''.join(args)
+        lines = result.splitlines(False)
+        for line in lines:
+            if self.prefix:
+                line = f"{self.prefix}{line}"
+            stdout(line)
 
     def open_block(self, num_str, name):
         if self._block_opened:
-            print("::endgroup::")
+            self.print_lines("::endgroup::")
 
-        print(f"::group::{num_str} {name}")
+        self.print_lines(f"::group::{num_str} {name}")
         self._block_opened = True
 
     def close_block(self, num_str, name, status):
         if self._block_opened:
             self._block_opened = False
-            print("::endgroup::")
+            self.print_lines("::endgroup::")
 
         if status == "Failed":
-            print(f'::error::{num_str} {name} - Failed')
-
-    def report_error(self, description):
-        pass
+            self.print_lines(f'::error::{num_str} {name} - Failed')
 
     def report_skipped(self, message):
-        lines = message.splitlines(False)
-        for single_line in lines:
-            print(f"::warning::{single_line}")
-
-    def change_status(self, message):
-        pass
+        try:
+            self.prefix = "::warning::"
+            super().report_skipped(message)
+        finally:
+            self.prefix = None
 
     def log_exception(self, line):
-        lines = line.splitlines(False)
-        for single_line in lines:
-            print(f"::error::{single_line}")
+        try:
+            self.prefix = "::error::"
+            super().log_exception(line)
+        finally:
+            self.prefix = None
 
     def log_stderr(self, line):
-        lines = line.splitlines(False)
-        for single_line in lines:
-            print(f"::warning::stderr: {single_line}")
-
-    def log(self, line):
-        print("==>", line)
-
-    def log_external_command(self, command):
-        print("$", command)
-
-    def log_shell_output(self, line):
-        print(line)
+        try:
+            self.prefix = "::warning::"
+            super().log_stderr(line)
+        finally:
+            self.prefix = None

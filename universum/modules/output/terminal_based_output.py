@@ -4,6 +4,7 @@ import sys
 from .base_output import BaseOutput
 
 __all__ = [
+    "stdout",
     "TerminalBasedOutput"
 ]
 
