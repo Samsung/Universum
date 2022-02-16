@@ -1,4 +1,4 @@
-from .terminal_based_output import TerminalBasedOutput
+from .terminal_based_output import TerminalBasedOutput, stdout
 
 __all__ = [
     "GithubOutput"
@@ -20,7 +20,7 @@ class GithubOutput(TerminalBasedOutput):
         result = ''.join(args)
         lines = result.splitlines(False)
         for line in lines:
-            self.stdout(f"{prefix}{line}")
+            stdout(f"{prefix}{line}")
 
     def open_block(self, num_str, name):
         if self._block_opened:
