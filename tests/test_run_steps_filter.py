@@ -1,6 +1,8 @@
 import pytest
 
+from universum import __main__
 from .deployment_utils import UniversumRunner
+
 
 config = """
 from universum.configuration_support import Configuration
@@ -10,6 +12,11 @@ def step(name, cmd=False):
 
 configs = step('parent 1 ') * (step('step 1', True) + step('step 2', True))
 configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))
+"""
+
+empty_config = """
+from universum.configuration_support import Configuration
+configs = Configuration()
 """
 
 
@@ -42,3 +49,19 @@ def test_steps_filter_few_flags(docker_main_and_nonci: UniversumRunner):
         assert log_str in console_out_log
 
     assert "step 1" not in console_out_log
+
+
+def test_config_empty(tmpdir, capsys):
+    config_file = tmpdir.join("configs.py")
+    config_file.write_text(empty_config, "utf-8")
+
+    cli_params = ["-vt", "none",
+                  "-fsd", str(tmpdir),
+                  "-cfg", str(config_file),
+                  "--clean-build"]
+    return_code = __main__.main(cli_params)
+    captured = capsys.readouterr()
+
+    assert return_code == 1
+    assert "Project configs are empty" in captured.out
+    assert not captured.err
