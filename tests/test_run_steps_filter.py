@@ -52,13 +52,20 @@ def test_steps_filter_few_flags(docker_main_and_nonci: UniversumRunner):
 
 
 def test_config_empty(tmpdir, capsys):
+    check_empty_config_error(tmpdir, capsys, ["-vt", "none",
+                                              "-fsd", str(tmpdir),
+                                              "--clean-build"])
+
+
+def test_config_empty_nonci(tmpdir, capsys):
+    check_empty_config_error(tmpdir, capsys, ["nonci"])
+
+
+def check_empty_config_error(tmpdir, capsys, cli_params):
     config_file = tmpdir.join("configs.py")
     config_file.write_text(empty_config, "utf-8")
 
-    cli_params = ["-vt", "none",
-                  "-fsd", str(tmpdir),
-                  "-cfg", str(config_file),
-                  "--clean-build"]
+    cli_params.extend(["-cfg", str(config_file)])
     return_code = __main__.main(cli_params)
     captured = capsys.readouterr()
 

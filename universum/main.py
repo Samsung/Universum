@@ -72,10 +72,6 @@ class Main(HasOutput):
 
         self.vcs.prepare_repository()
         project_configs: Configuration = self.launcher.process_project_configs()
-        if not project_configs:
-            self.out.log("Project configs are empty, build skipped\n ")
-            self.out.report_build_status("Skipped - project configs are empty")
-            raise SilentAbortException(application_exit_code=1)
         afterall_configs: Configuration = self.code_report_collector.prepare_environment(project_configs)
         self.artifacts.set_and_clean_artifacts(project_configs)
 
