@@ -29,8 +29,8 @@ class Output(Module):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
         parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins", "github"],
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal, "
-                                 "github - Github Actions). TeamCity and Jenkins environments are detected "
-                                 "automatically when launched on build agent.")
+                                 "github - Github Actions). TeamCity, Jenkins and Github Actions environments are "
+                                 "detected automatically when launched on build agent.")
         # `universum` -> html_log == default
         # `universum -hl` -> html_log == const
         # `universum -hl custom` -> html_log == custom

@@ -57,7 +57,7 @@ def detect_environment() -> str:
     """
     :return: "tc" if the script is launched on TeamCity agent,
              "jenkins" is launched on Jenkins agent,
-             "github" is launched on Github Actions agent,
+             "github" is launched on Github Actions,
              "terminal" otherwise
     """
     teamcity = "TEAMCITY_VERSION" in os.environ
