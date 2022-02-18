@@ -387,6 +387,10 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                    utils.format_traceback(e, ex_traceback) + \
                    "\nTry to execute ``confgs.dump()`` to make sure no exceptions occur in that case."
             raise CriticalCiException(text) from e
+
+        if not self.project_config:
+            raise CriticalCiException("Project configs are empty, abort")
+
         return self.project_config
 
     def create_process(self, item: configuration_support.Step) -> RunningStep:
