@@ -389,7 +389,10 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             raise CriticalCiException(text) from e
 
         if not self.project_config:
-            raise CriticalCiException("Project configs are empty, abort")
+            text = "Project configs are empty, abort"
+            if self.include_patterns or self.exclude_patterns:
+                text += f"\nRecheck filters applied:\n\tInclude patterns: {self.include_patterns}\n\tExclude patterns: {self.exclude_patterns}"
+            raise CriticalCiException(text)
 
         return self.project_config
 

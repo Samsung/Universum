@@ -19,6 +19,13 @@ from universum.configuration_support import Configuration
 configs = Configuration()
 """
 
+def get_cli_params(tmpdir):
+    return ["-vt", "none",
+            "-fsd", str(tmpdir),
+            "--clean-build"]
+
+nonci_cli_params = ["nonci"]
+
 
 @pytest.mark.parametrize("filters, expected_logs, unexpected_logs", (
         ["parent 1", ["parent 1", "step 1", "step 2"], ["parent 2"]],
@@ -51,14 +58,29 @@ def test_steps_filter_few_flags(docker_main_and_nonci: UniversumRunner):
     assert "step 1" not in console_out_log
 
 
+def test_steps_filter_no_match(tmpdir, capsys):
+    check_filter_no_match(tmpdir, capsys, get_cli_params(tmpdir))
+
+
+def test_steps_filter_no_match_nonci(tmpdir, capsys):
+    check_filter_no_match(tmpdir, capsys, nonci_cli_params)
+
+
 def test_config_empty(tmpdir, capsys):
-    check_empty_config_error(tmpdir, capsys, ["-vt", "none",
-                                              "-fsd", str(tmpdir),
-                                              "--clean-build"])
+    check_empty_config_error(tmpdir, capsys, get_cli_params(tmpdir))
 
 
 def test_config_empty_nonci(tmpdir, capsys):
-    check_empty_config_error(tmpdir, capsys, ["nonci"])
+    check_empty_config_error(tmpdir, capsys, nonci_cli_params)
+
+
+def check_filter_no_match(tmpdir, capsys, cli_params):
+    include_pattern = "asdf"
+    exclude_pattern = "qwer"
+    cli_params.extend(["-f", f"{include_pattern}:!{exclude_pattern}"])
+    captured = check_empty_config_error(tmpdir, capsys, cli_params)
+    assert f"Include patterns: ['{include_pattern}']" in captured.out
+    assert f"Exclude patterns: ['{exclude_pattern}']" in captured.out
 
 
 def check_empty_config_error(tmpdir, capsys, cli_params):
@@ -72,3 +94,5 @@ def check_empty_config_error(tmpdir, capsys, cli_params):
     assert return_code == 1
     assert "Project configs are empty" in captured.out
     assert not captured.err
+
+    return captured
