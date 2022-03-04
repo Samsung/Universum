@@ -79,8 +79,8 @@ def check_filter_no_match(tmpdir, capsys, cli_params):
     exclude_pattern = "qwer"
     cli_params.extend(["-f", f"{include_pattern}:!{exclude_pattern}"])
     captured = check_empty_config_error(tmpdir, capsys, cli_params)
-    assert f"Include patterns: ['{include_pattern}']" in captured.out
-    assert f"Exclude patterns: ['{exclude_pattern}']" in captured.out
+    assert include_pattern in captured.out
+    assert exclude_pattern in captured.out
 
 
 def check_empty_config_error(tmpdir, capsys, cli_params):
