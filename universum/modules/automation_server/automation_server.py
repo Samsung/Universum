@@ -35,6 +35,7 @@ class AutomationServerForHostingBuild(AutomationServer):
         self.driver: BaseServerForHostingBuild = \
             utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.jenkins_driver_factory,
+                                github_factory=self.local_driver_factory,
                                 local_factory=self.local_driver_factory,
                                 env_type=self.settings.type)
 
@@ -58,6 +59,7 @@ class AutomationServerForTrigger(AutomationServer):
         self.driver: BaseServerForTrigger = \
             utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.jenkins_driver_factory,
+                                github_factory=self.local_driver_factory,
                                 local_factory=self.local_driver_factory,
                                 env_type=self.settings.type)
 
