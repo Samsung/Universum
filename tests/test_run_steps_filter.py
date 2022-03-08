@@ -19,75 +19,66 @@ from universum.configuration_support import Configuration
 configs = Configuration()
 """
 
-def get_cli_params(tmpdir):
-    return ["-vt", "none",
-            "-fsd", str(tmpdir),
-            "--clean-build"]
 
-nonci_cli_params = ["nonci"]
+filters_parametrize_values = (
+    [["parent 1"], ["parent 1", "step 1", "step 2"], ["parent 2"]],
+    [["!parent 2"], ["parent 1", "step 1", "step 2"], ["parent 2"]],
+    [["parent 1:parent 2"], ["parent 1", "step 1", "step 2", "parent 2"], []],
+
+    [["parent 1:parent 2:!step 1"], ["parent 1", "step 2", "parent 2"], ["step 1"]],
+    [["step 2"], ["parent 1", "parent 2", "step 2"], ["step 1"]],
+    [["!step 2:parent 1"], ["parent 1", "step 1"], ["parent 2", "step 2"]],
+    [["step :!step 1"], ["parent 1", "parent 2", "step 2"], ["step 1"]],
+
+    [[""], ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
+    [["!"], ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
+
+    [["parent 1:parent 2", "!step 1"], ["parent 1", "step 2", "parent 2"], ["step 1"]]
+)
+
+test_types = ["main", "nonci"]
 
 
-@pytest.mark.parametrize("filters, expected_logs, unexpected_logs", (
-        ["parent 1", ["parent 1", "step 1", "step 2"], ["parent 2"]],
-        ["!parent 2", ["parent 1", "step 1", "step 2"], ["parent 2"]],
-        ["parent 1:parent 2", ["parent 1", "step 1", "step 2", "parent 2"], []],
+@pytest.mark.parametrize("test_type", test_types)
+@pytest.mark.parametrize("filters, expected_logs, unexpected_logs", filters_parametrize_values)
+def test_steps_filter(tmpdir, capsys, filters, expected_logs, unexpected_logs, test_type):
+    params = get_cli_params(test_type, tmpdir)
+    params.extend(["-o", "console"])
+    for _filter in filters:
+        params.append(f"-f={_filter}")
+    params.extend(["-cfg", get_config_file_path(tmpdir, config)])
 
-        ["parent 1:parent 2:!step 1", ["parent 1", "step 2", "parent 2"], ["step 1"]],
-        ["step 2", ["parent 1", "parent 2", "step 2"], ["step 1"]],
-        ["!step 2:parent 1", ["parent 1", "step 1"], ["parent 2", "step 2"]],
-        ["step :!step 1", ["parent 1", "parent 2", "step 2"], ["step 1"]],
+    return_code = __main__.main(params)
+    captured = capsys.readouterr()
 
-        ["", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
-        ["!", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"],
-         []],))
-def test_steps_filter(docker_main_and_nonci: UniversumRunner, filters, expected_logs, unexpected_logs):
-    console_out_log = docker_main_and_nonci.run(config, additional_parameters=f"-o console -f='{filters}'")
+    assert return_code == 0
     for log_str in expected_logs:
-        assert log_str in console_out_log
-
+        assert log_str in captured.out
     for log_str in unexpected_logs:
-        assert log_str not in console_out_log
+        assert log_str not in captured.out
+    assert not captured.err
 
 
-def test_steps_filter_few_flags(docker_main_and_nonci: UniversumRunner):
-    console_out_log = docker_main_and_nonci.run(config,
-                                                additional_parameters="-o console -f='parent 1:parent 2' -f='!step 1'")
-    for log_str in ["parent 1", "step 2", "parent 2"]:
-        assert log_str in console_out_log
-
-    assert "step 1" not in console_out_log
-
-
-def test_steps_filter_no_match(tmpdir, capsys):
-    check_filter_no_match(tmpdir, capsys, get_cli_params(tmpdir))
-
-
-def test_steps_filter_no_match_nonci(tmpdir, capsys):
-    check_filter_no_match(tmpdir, capsys, nonci_cli_params)
-
-
-def test_config_empty(tmpdir, capsys):
-    check_empty_config_error(tmpdir, capsys, get_cli_params(tmpdir))
-
-
-def test_config_empty_nonci(tmpdir, capsys):
-    check_empty_config_error(tmpdir, capsys, nonci_cli_params)
-
-
-def check_filter_no_match(tmpdir, capsys, cli_params):
+@pytest.mark.parametrize("test_type", test_types)
+def test_steps_filter_no_match(tmpdir, capsys, test_type):
     include_pattern = "asdf"
     exclude_pattern = "qwer"
+    cli_params = get_cli_params(test_type, tmpdir)
     cli_params.extend(["-f", f"{include_pattern}:!{exclude_pattern}"])
+
     captured = check_empty_config_error(tmpdir, capsys, cli_params)
+
     assert include_pattern in captured.out
     assert exclude_pattern in captured.out
 
 
-def check_empty_config_error(tmpdir, capsys, cli_params):
-    config_file = tmpdir.join("configs.py")
-    config_file.write_text(empty_config, "utf-8")
+@pytest.mark.parametrize("test_type", test_types)
+def test_config_empty(tmpdir, capsys, test_type):
+    check_empty_config_error(tmpdir, capsys, get_cli_params(test_type, tmpdir))
 
-    cli_params.extend(["-cfg", str(config_file)])
+
+def check_empty_config_error(tmpdir, capsys, cli_params):
+    cli_params.extend(["-cfg", get_config_file_path(tmpdir, empty_config)])
     return_code = __main__.main(cli_params)
     captured = capsys.readouterr()
 
@@ -96,3 +87,18 @@ def check_empty_config_error(tmpdir, capsys, cli_params):
     assert not captured.err
 
     return captured
+
+
+def get_config_file_path(tmpdir, text):
+    config_file = tmpdir.join("configs.py")
+    config_file.write_text(text, "utf-8")
+    return str(config_file)
+
+
+def get_cli_params(test_type, tmpdir):
+    if test_type == "nonci":
+        return ["nonci"]
+    else:
+        return ["-vt", "none",
+                "-fsd", str(tmpdir),
+                "--clean-build"]
