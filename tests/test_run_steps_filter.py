@@ -98,7 +98,6 @@ def get_config_file_path(tmpdir, text):
 def get_cli_params(test_type, tmpdir):
     if test_type == "nonci":
         return ["nonci"]
-    else:
-        return ["-vt", "none",
-                "-fsd", str(tmpdir),
-                "--clean-build"]
+    return ["-vt", "none",
+            "-fsd", str(tmpdir),
+            "--clean-build"]
