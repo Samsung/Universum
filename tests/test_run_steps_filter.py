@@ -1,7 +1,6 @@
 import pytest
 
 from universum import __main__
-from .conftest import stdout_checker
 
 
 config = """
