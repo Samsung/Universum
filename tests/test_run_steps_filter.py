@@ -1,7 +1,7 @@
 import pytest
 
 from universum import __main__
-from .deployment_utils import UniversumRunner
+from .conftest import stdout_checker
 
 
 config = """
@@ -41,7 +41,7 @@ test_types = ["main", "nonci"]
 
 @pytest.mark.parametrize("test_type", test_types)
 @pytest.mark.parametrize("filters, expected_logs, unexpected_logs", filters_parametrize_values)
-def test_steps_filter(tmpdir, capsys, filters, expected_logs, unexpected_logs, test_type):
+def test_steps_filter(tmpdir, stdout_checker, filters, expected_logs, unexpected_logs, test_type):
     params = get_cli_params(test_type, tmpdir)
     params.extend(["-o", "console"])
     for _filter in filters:
@@ -49,44 +49,37 @@ def test_steps_filter(tmpdir, capsys, filters, expected_logs, unexpected_logs, t
     params.extend(["-cfg", get_config_file_path(tmpdir, config)])
 
     return_code = __main__.main(params)
-    captured = capsys.readouterr()
 
     assert return_code == 0
     for log_str in expected_logs:
-        assert log_str in captured.out
+        stdout_checker.assert_has_calls_with_param(log_str)
     for log_str in unexpected_logs:
-        assert log_str not in captured.out
-    assert not captured.err
+        stdout_checker.assert_absent_calls_with_param(log_str)
 
 
 @pytest.mark.parametrize("test_type", test_types)
-def test_steps_filter_no_match(tmpdir, capsys, test_type):
+def test_steps_filter_no_match(tmpdir, stdout_checker, test_type):
     include_pattern = "asdf"
     exclude_pattern = "qwer"
     cli_params = get_cli_params(test_type, tmpdir)
     cli_params.extend(["-f", f"{include_pattern}:!{exclude_pattern}"])
 
-    captured = check_empty_config_error(tmpdir, capsys, cli_params)
-
-    assert include_pattern in captured.out
-    assert exclude_pattern in captured.out
+    check_empty_config_error(tmpdir, stdout_checker, cli_params)
+    stdout_checker.assert_has_calls_with_param(include_pattern)
+    stdout_checker.assert_has_calls_with_param(exclude_pattern)
 
 
 @pytest.mark.parametrize("test_type", test_types)
-def test_config_empty(tmpdir, capsys, test_type):
-    check_empty_config_error(tmpdir, capsys, get_cli_params(test_type, tmpdir))
+def test_config_empty(tmpdir, stdout_checker, test_type):
+    check_empty_config_error(tmpdir, stdout_checker, get_cli_params(test_type, tmpdir))
 
 
-def check_empty_config_error(tmpdir, capsys, cli_params):
+def check_empty_config_error(tmpdir, stdout_checker, cli_params):
     cli_params.extend(["-cfg", get_config_file_path(tmpdir, empty_config)])
     return_code = __main__.main(cli_params)
-    captured = capsys.readouterr()
 
     assert return_code == 1
-    assert "Project configs are empty" in captured.out
-    assert not captured.err
-
-    return captured
+    stdout_checker.assert_has_calls_with_param("Project configs are empty")
 
 
 def get_config_file_path(tmpdir, text):
