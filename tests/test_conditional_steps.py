@@ -1,5 +1,5 @@
-import pytest
 import re
+import pytest
 
 from universum import __main__
 
@@ -48,11 +48,10 @@ def check_conditional_step(tmpdir, capsys, config_file, conditional_step_passed)
     assert return_code == 0
 
     captured = capsys.readouterr()
-    conditional_step_succeeded_regexp = r"conditional.*Success.*\|   5\.2"
-    assert re.search(conditional_step_succeeded_regexp, captured.out, re.DOTALL)
+    conditional_succeeded_regexp = r"conditional.*Success.*\|   5\.2"
+    assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 
     expected_log = true_branch_step_name if conditional_step_passed else false_branch_step_name
     unexpected_log = false_branch_step_name if conditional_step_passed else true_branch_step_name
     assert expected_log in captured.out
     assert not unexpected_log in captured
-

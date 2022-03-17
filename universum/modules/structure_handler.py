@@ -122,7 +122,7 @@ class StructureHandler(HasOutput):
             args_copy = list(args)
             if step:  # not all `run_in_block()` calls have a step parameter, but it's required for conditional steps logic
                 args_copy.insert(0, step)
-            result = operation(*args_copy, **kwargs);
+            result = operation(*args_copy, **kwargs)
         except (SilentAbortException, StepException):  # user-defined step failed
             if hasattr(step, "if_failed") and step.if_failed:
                 self.get_current_block().status = "Success"  # conditional step status should be always success
@@ -194,11 +194,13 @@ class StructureHandler(HasOutput):
                                           item, step_executor, obj_a.critical)
                         if obj_a.if_succeeded:
                             step_name = self._build_next_step_name(obj_a.if_succeeded.name)
-                            self.run_in_block(self.execute_one_step, step_name, False, obj_a.if_succeeded, step_executor, obj_a.critical)
+                            self.run_in_block(self.execute_one_step, step_name, False,
+                                              obj_a.if_succeeded, step_executor, obj_a.critical)
                     except (SilentAbortException, StepException):  # user-defined step failed
                         if obj_a.if_failed:
                             step_name = self._build_next_step_name(obj_a.if_failed.name)
-                            self.run_in_block(self.execute_one_step, step_name, False, obj_a.if_failed, step_executor, obj_a.critical)
+                            self.run_in_block(self.execute_one_step, step_name, False,
+                                              obj_a.if_failed, step_executor, obj_a.critical)
 
                 else:
                     step_name = self._build_next_step_name(item.name)
