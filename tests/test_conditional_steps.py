@@ -1,11 +1,12 @@
 import re
 import pytest
+import inspect
 
 from universum import __main__
 
 
-true_branch_step_name = "true branch"
-false_branch_step_name = "false branch"
+true_branch_step_name = "true_branch"
+false_branch_step_name = "false_branch"
 
 
 def test_conditional_true_branch(tmpdir, capsys):
@@ -23,13 +24,19 @@ def check_conditional_step_success(tmpdir, capsys, conditional_step_passed):
 
 def build_config_file(tmpdir, conditional_step_passed):
     conditional_step_exit_code = 0 if conditional_step_passed else 1
-    config = "from universum.configuration_support import Configuration, Step\n"
-    config += f"true_branch_step = Step(name='{true_branch_step_name}', command=['pwd'])\n"
-    config += f"false_branch_step = Step(name='{false_branch_step_name}', command=['ls'])\n"
-    config += "conditional_step = Configuration([{'name': 'conditional',\n"
-    config += f"   'command': ['bash', '-c', 'exit {conditional_step_exit_code}'],\n"
-    config += "    'if_succeeded': true_branch_step, 'if_failed': false_branch_step}])\n"
-    config += "configs = conditional_step"
+
+    config = inspect.cleandoc(f'''
+        from universum.configuration_support import Configuration, Step
+
+        true_branch_step = Step(name='{true_branch_step_name}', command=['touch', '{true_branch_step_name}'],
+                                artifacts='{true_branch_step_name}')
+        false_branch_step = Step(name='{false_branch_step_name}', command=['touch', '{false_branch_step_name}'])
+        conditional_step = Configuration([dict(name='conditional',
+            command=['bash', '-c', 'exit {conditional_step_exit_code}'],
+            if_succeeded=true_branch_step, if_failed=false_branch_step)])
+
+        configs = conditional_step
+    ''')
 
     config_file = tmpdir.join("configs.py")
     config_file.write_text(config, "utf-8")
@@ -48,6 +55,7 @@ def check_conditional_step(tmpdir, capsys, config_file, conditional_step_passed)
     assert return_code == 0
 
     captured = capsys.readouterr()
+    print(captured.out)
     conditional_succeeded_regexp = r"conditional.*Success.*\|   5\.2"
     assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 

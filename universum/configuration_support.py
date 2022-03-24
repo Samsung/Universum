@@ -184,6 +184,7 @@ class Step:
         self.if_env_set: str = if_env_set
         self.if_succeeded = if_succeeded
         self.if_failed = if_failed
+        self.is_conditional = self.if_succeeded or self.if_failed
         self.children: Optional['Configuration'] = None
         self._extras: Dict[str, str] = {}
         for key, value in kwargs.items():

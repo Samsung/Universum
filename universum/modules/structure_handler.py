@@ -115,17 +115,12 @@ class StructureHandler(HasOutput):
     T = TypeVar('T')
 
     def run_in_block(self, operation: Callable[..., T],
-                     block_name: str, pass_errors: bool, step = None, *args, **kwargs) -> Optional[T]:
+                     block_name: str, pass_errors: bool, *args, **kwargs) -> Optional[T]:
         result = None
         self.open_block(block_name)
         try:
-            args_copy = list(args)
-            if step:  # not all `run_in_block()` calls have a step parameter, but it's required for conditional steps logic
-                args_copy.insert(0, step)
-            result = operation(*args_copy, **kwargs)
+            result = operation(*args, **kwargs)
         except (SilentAbortException, StepException):  # user-defined step failed
-            if hasattr(step, "if_failed") and step.if_failed:
-                self.get_current_block().status = "Success"  # conditional step status should be always success
             raise
         except CriticalCiException as e:  # system/environment step failed
             self.fail_current_block(str(e))
@@ -145,7 +140,12 @@ class StructureHandler(HasOutput):
 
         process.start()
         if not configuration.background:
-            process.finalize()
+            try:
+                process.finalize()
+            except StepException:
+                if configuration.if_failed:  # conditional step with next step configured at `if_failed` event
+                    self.get_current_block().status = "Success"  # conditional step status should be always success
+                raise
             return
 
         self.out.log("This step is marked to be executed in background")
@@ -177,7 +177,6 @@ class StructureHandler(HasOutput):
         for obj_a in cfg.configs:
             try:
                 item: Step = parent + copy.deepcopy(obj_a)
-                is_conditional: bool = obj_a.if_succeeded or obj_a.if_failed
 
                 if obj_a.children:
                     # Here pass_errors=True, because any exception outside executing build step
@@ -187,23 +186,11 @@ class StructureHandler(HasOutput):
                     step_name = numbering + item.name
                     self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a.children, step_executor, skipped)
-                elif is_conditional:
-                    try:
-                        step_name = self._build_next_step_name(item.name)
-                        self.run_in_block(self.execute_one_step, step_name, False,
-                                          item, step_executor, obj_a.critical)
-                        if obj_a.if_succeeded:
-                            step_name = self._build_next_step_name(obj_a.if_succeeded.name)
-                            self.run_in_block(self.execute_one_step, step_name, False,
-                                              obj_a.if_succeeded, step_executor, obj_a.critical)
-                    except (SilentAbortException, StepException):  # user-defined step failed
-                        if obj_a.if_failed:
-                            step_name = self._build_next_step_name(obj_a.if_failed.name)
-                            self.run_in_block(self.execute_one_step, step_name, False,
-                                              obj_a.if_failed, step_executor, obj_a.critical)
-
+                elif item.is_conditional:
+                    self.execute_conditional_step(item, step_executor)
                 else:
-                    step_name = self._build_next_step_name(item.name)
+                    self.configs_current_number += 1
+                    step_name = self._build_step_name(item.name)
                     if skipped:
                         self.report_skipped_block(step_name)
                         continue
@@ -227,6 +214,25 @@ class StructureHandler(HasOutput):
         if child_step_failed:
             raise StepException()
 
+    def execute_conditional_step(self, step, step_executor):
+        try:
+            self.configs_current_number += 1
+            step_name = self._build_step_name(step.name)
+            self.run_in_block(self.execute_one_step, step_name, False,
+                              step, step_executor, step.critical)
+            if step.if_succeeded:
+                self.configs_current_number += 1
+                step_name = self._build_step_name(step.if_succeeded.name)
+                self.run_in_block(self.execute_one_step, step_name, False,
+                                  step.if_succeeded, step_executor, step.critical)
+        except StepException:
+            if step.if_failed:
+                self.configs_current_number += 1
+                step_name = self._build_step_name(step.if_failed.name)
+                self.run_in_block(self.execute_one_step, step_name, False,
+                                  step.if_failed, step_executor, step.critical)
+
+
     def report_background_steps(self) -> bool:
         result = True
         for item in self.active_background_steps:
@@ -239,8 +245,8 @@ class StructureHandler(HasOutput):
         return result
 
     def execute_step_structure(self, configs: Configuration, step_executor) -> None:
-        self.configs_total_count = sum(1 for _ in configs.all())
         for config in configs.all():
+            self.configs_total_count += 1
             if config.if_succeeded or config.if_failed:
                 self.configs_total_count += 1
 
@@ -252,9 +258,8 @@ class StructureHandler(HasOutput):
         if self.active_background_steps:
             self.run_in_block(self.report_background_steps, "Reporting background steps", False)
 
-    def _build_next_step_name(self, name):
+    def _build_step_name(self, name):
         step_num_len = len(str(self.configs_total_count))
-        self.configs_current_number += 1
         numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
         return numbering + name
 
