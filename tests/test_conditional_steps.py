@@ -1,6 +1,6 @@
 import re
-import pytest
 import inspect
+import pytest
 
 from universum import __main__
 
