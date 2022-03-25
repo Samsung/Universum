@@ -28,8 +28,7 @@ def build_config_file(tmpdir, conditional_step_passed):
     config = inspect.cleandoc(f'''
         from universum.configuration_support import Configuration, Step
 
-        true_branch_step = Step(name='{true_branch_step_name}', command=['touch', '{true_branch_step_name}'],
-                                artifacts='{true_branch_step_name}')
+        true_branch_step = Step(name='{true_branch_step_name}', command=['touch', '{true_branch_step_name}'])
         false_branch_step = Step(name='{false_branch_step_name}', command=['touch', '{false_branch_step_name}'])
         conditional_step = Configuration([dict(name='conditional',
             command=['bash', '-c', 'exit {conditional_step_exit_code}'],
@@ -45,8 +44,10 @@ def build_config_file(tmpdir, conditional_step_passed):
 
 
 def check_conditional_step(tmpdir, capsys, config_file, conditional_step_passed):
+    artifacts_dir = tmpdir.join("artifacts")
     params = ["-vt", "none",
               "-fsd", str(tmpdir),
+              "-ad", str(artifacts_dir),
               "--clean-build",
               "-o", "console"]
     params.extend(["-cfg", str(config_file)])
