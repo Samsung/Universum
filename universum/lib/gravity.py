@@ -70,7 +70,7 @@ class Module:
         return instance
 
 
-ComponentType = TypeVar('ComponentType', bound=Module)
+ComponentType = TypeVar('ComponentTypeT', bound=Module)
 
 
 def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentType:
@@ -89,7 +89,7 @@ def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapp
     return cast(ComponentType, main_settings.active_modules[cls])
 
 
-DependencyType = TypeVar('DependencyType', bound=Module)
+DependencyType = TypeVar('DependencyTypeT', bound=Module)
 
 
 class Dependency(Generic[DependencyType]):

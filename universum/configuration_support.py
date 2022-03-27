@@ -436,7 +436,7 @@ class Step:
         return result
 
 
-DictType = TypeVar('DictType', bound=dict)
+DictType = TypeVar('DictTypeT', bound=dict)
 
 
 def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
