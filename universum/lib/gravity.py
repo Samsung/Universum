@@ -70,10 +70,10 @@ class Module:
         return instance
 
 
-ComponentType = TypeVar('ComponentTypeT', bound=Module)
+ComponentTypeT = TypeVar('ComponentTypeT', bound=Module)
 
 
-def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentType:
+def construct_component(cls: Type[ComponentTypeT], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentTypeT:
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = {}
 
@@ -86,21 +86,21 @@ def construct_component(cls: Type[ComponentType], main_settings: 'HasModulesMapp
         # noinspection PyArgumentList
         instance.__init__(*args, **kwargs)  # type: ignore
         main_settings.active_modules[cls] = instance
-    return cast(ComponentType, main_settings.active_modules[cls])
+    return cast(ComponentTypeT, main_settings.active_modules[cls])
 
 
-DependencyType = TypeVar('DependencyTypeT', bound=Module)
+DependencyTypeT = TypeVar('DependencyTypeT', bound=Module)
 
 
-class Dependency(Generic[DependencyType]):
-    def __init__(self, cls: Type[DependencyType]) -> None:
+class Dependency(Generic[DependencyTypeT]):
+    def __init__(self, cls: Type[DependencyTypeT]) -> None:
         self.cls = cls
 
     # The source and the target of the dependency are different modules,
     # so we need to use different type variables to annotate them.
     # instance parameter of the __get__ method is source module.
-    def __get__(self, instance: Module, owner: Any) -> Callable[..., DependencyType]:
-        def constructor_function(*args, **kwargs) -> DependencyType:
+    def __get__(self, instance: Module, owner: Any) -> Callable[..., DependencyTypeT]:
+        def constructor_function(*args, **kwargs) -> DependencyTypeT:
             return construct_component(self.cls, instance.main_settings, *args, **kwargs)
         return constructor_function
 
