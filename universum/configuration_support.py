@@ -444,10 +444,10 @@ class Step:
         return result
 
 
-DictType = TypeVar('DictType', bound=dict)
+DictTypeT = TypeVar('DictTypeT', bound=dict)
 
 
-def combine(dictionary_a: DictType, dictionary_b: DictType) -> DictType:
+def combine(dictionary_a: DictTypeT, dictionary_b: DictTypeT) -> DictTypeT:
     # TODO: move to utils, as this is no longer specific to configurations
     """
     Combine two dictionaries using plus operator for matching keys
