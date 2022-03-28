@@ -140,12 +140,7 @@ class StructureHandler(HasOutput):
 
         process.start()
         if not configuration.background:
-            try:
-                process.finalize()
-            except StepException:
-                if configuration.if_failed:  # conditional step with next step configured at `if_failed` event
-                    self.get_current_block().status = "Success"  # conditional step status should be always success
-                raise
+            process.finalize()
             return
 
         self.out.log("This step is marked to be executed in background")
@@ -187,7 +182,10 @@ class StructureHandler(HasOutput):
                     self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a.children, step_executor, skipped)
                 elif item.is_conditional:
-                    self.execute_conditional_step(item, step_executor)
+                    self.configs_current_number += 1
+                    step_name = self._build_step_name(item.name)
+                    self.run_in_block(self.execute_conditional_step, step_name, True,
+                                      item, step_executor)
                 else:
                     self.configs_current_number += 1
                     step_name = self._build_step_name(item.name)
@@ -214,23 +212,24 @@ class StructureHandler(HasOutput):
         if child_step_failed:
             raise StepException()
 
+
     def execute_conditional_step(self, step, step_executor):
         try:
-            self.configs_current_number += 1
-            step_name = self._build_step_name(step.name)
-            self.run_in_block(self.execute_one_step, step_name, False,
-                              step, step_executor, step.critical)
+            self.execute_one_step(step, step_executor, step.critical)
+            self.close_block()
             if step.if_succeeded:
-                self.configs_current_number += 1
-                step_name = self._build_step_name(step.if_succeeded.name)
-                self.run_in_block(self.execute_one_step, step_name, False,
-                                  step.if_succeeded, step_executor, step.critical)
+                self.execute_conditional_branch_step(step.if_succeeded, step_executor)
         except StepException:
             if step.if_failed:
-                self.configs_current_number += 1
-                step_name = self._build_step_name(step.if_failed.name)
-                self.run_in_block(self.execute_one_step, step_name, False,
-                                  step.if_failed, step_executor, step.critical)
+                self.close_block()
+                self.execute_conditional_branch_step(step.if_failed, step_executor)
+
+
+    def execute_conditional_branch_step(self, step, step_executor):
+        self.configs_current_number += 1
+        step_name = self._build_step_name(step.name)
+        self.open_block(step_name)
+        self.execute_one_step(step, step_executor, step.critical);
 
 
     def report_background_steps(self) -> bool:
