@@ -229,7 +229,7 @@ class StructureHandler(HasOutput):
         self.configs_current_number += 1
         step_name = self._build_step_name(step.name)
         self.open_block(step_name)
-        self.execute_one_step(step, step_executor, step.critical);
+        self.execute_one_step(step, step_executor, step.critical)
 
 
     def report_background_steps(self) -> bool:
