@@ -57,7 +57,7 @@ def check_conditional_step(tmpdir, capsys, config_file, conditional_step_passed)
 
     captured = capsys.readouterr()
     print(captured.out)
-    conditional_succeeded_regexp = r"conditional.*Success.*\|   5\.2"
+    conditional_succeeded_regexp = r"\] conditional.*Success.*\|   5\.2"
     assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 
     expected_log = true_branch_step_name if conditional_step_passed else false_branch_step_name

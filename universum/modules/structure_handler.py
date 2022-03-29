@@ -221,6 +221,7 @@ class StructureHandler(HasOutput):
                 self.execute_conditional_branch_step(step.if_succeeded, step_executor)
         except StepException:
             if step.if_failed:
+                self.get_current_block().status = "Success"  # conditional step status should be always success
                 self.close_block()
                 self.execute_conditional_branch_step(step.if_failed, step_executor)
 
