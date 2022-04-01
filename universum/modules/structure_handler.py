@@ -182,10 +182,7 @@ class StructureHandler(HasOutput):
                     self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a.children, step_executor, skipped)
                 elif item.is_conditional:
-                    self.configs_current_number += 1
-                    step_name = self._build_step_name(item.name)
-                    self.run_in_block(self.execute_conditional_step, step_name, True,
-                                      item, step_executor)
+                    self.execute_conditional_step(item, step_executor)
                 else:
                     self.configs_current_number += 1
                     step_name = self._build_step_name(item.name)
@@ -215,22 +212,14 @@ class StructureHandler(HasOutput):
 
     def execute_conditional_step(self, step, step_executor):
         try:
-            self.execute_one_step(step, step_executor, step.critical)
-            self.close_block()
+            self.configs_current_number += 1
+            step_name = self._build_step_name(step.name)
+            self.run_in_block(self.execute_one_step, step_name, True, step, step_executor, step.critical)
             if step.if_succeeded:
-                self.execute_conditional_branch_step(step.if_succeeded, step_executor)
+                self.execute_steps_recursively(None, Configuration([step.if_succeeded]), step_executor)
         except StepException:
             if step.if_failed:
-                self.get_current_block().status = "Success"  # conditional step status should be always success
-                self.close_block()
-                self.execute_conditional_branch_step(step.if_failed, step_executor)
-
-
-    def execute_conditional_branch_step(self, step, step_executor):
-        self.configs_current_number += 1
-        step_name = self._build_step_name(step.name)
-        self.open_block(step_name)
-        self.execute_one_step(step, step_executor, step.critical)
+                self.execute_steps_recursively(None, Configuration([step.if_failed]), step_executor)
 
 
     def report_background_steps(self) -> bool:
