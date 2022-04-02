@@ -74,6 +74,14 @@ def test_cli_log_custom_name(tmpdir):
 
 def test_cli_log_default_name(tmpdir):
     artifact_dir = check_cli(tmpdir, ["-hl"])
+    assert not os.path.exists(os.path.join(artifact_dir, "default"))
+    assert os.path.exists(os.path.join(artifact_dir, "universum_log.html"))
+
+
+# https://github.com/Samsung/Universum/issues/711
+def test_cli_log_default_name_last_parameter(tmpdir):
+    artifact_dir = check_cli(tmpdir, ["-hl"], is_html_last_param=True)
+    assert not os.path.exists(os.path.join(artifact_dir, "default"))
     assert os.path.exists(os.path.join(artifact_dir, "universum_log.html"))
 
 
@@ -299,7 +307,7 @@ def check_timestamps(body_element, universum_log_element):
     assert delta.seconds <= 60
 
 
-def check_cli(tmpdir, html_log_params):
+def check_cli(tmpdir, html_log_params, is_html_last_param=False):
     artifact_dir = tmpdir.join("artifacts")
     config_file = tmpdir.join("configs.py")
     config_file.write_text(config, "utf-8")
@@ -308,8 +316,14 @@ def check_cli(tmpdir, html_log_params):
                   "-fsd", str(tmpdir),
                   "-cfg", str(config_file),
                   "-ad", str(artifact_dir)]
-    html_log_params.extend(cli_params)
-    result = __main__.main(html_log_params)
+    if is_html_last_param:
+        cli_params.extend(html_log_params)
+        params = cli_params
+    else:
+        html_log_params.extend(cli_params)
+        params = html_log_params
+
+    result = __main__.main(params)
 
     assert result == 0
     return artifact_dir

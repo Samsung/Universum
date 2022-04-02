@@ -31,8 +31,9 @@ class Output(Module):
                             help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal, "
                                  "github - Github Actions). TeamCity, Jenkins and Github Actions environments are "
                                  "detected automatically when launched on build agent.")
-        # `universum` -> html_log == default
-        # `universum -hl` -> html_log == const
+        # `universum` -> html_log == `default`
+        # `universum -hl ${other_params}` -> html_log == `const`
+        # `universum ${other_params} -hl` -> html_log == "default"
         # `universum -hl custom` -> html_log == custom
         parser.add_argument("--html-log", "-hl", nargs="?", const=HtmlOutput.default_name, default=None,
                             help=f"Generate a self-contained user-friendly HTML log. "
@@ -104,7 +105,8 @@ class Output(Module):
 
     def _create_html_driver(self):
         is_enabled = self.settings.html_log is not None
-        html_driver = self.html_driver_factory(log_name=self.settings.html_log) if is_enabled else None
+        log_name = HtmlOutput.default_name if self.settings.html_log == "default" else self.settings.html_log
+        html_driver = self.html_driver_factory(log_name=log_name) if is_enabled else None
         handler = HtmlDriverHandler(html_driver)
         return handler
 
