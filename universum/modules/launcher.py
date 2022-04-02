@@ -282,8 +282,9 @@ class RunningStep(RunningStepBase):
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
                     self.file.write(text + "\n")
-                self.add_tag(self.configuration.fail_tag)
-                self._error = text
+                if not self.configuration.is_conditional:
+                    self.add_tag(self.configuration.fail_tag)
+                    self._error = text
                 return
 
             self.add_tag(self.configuration.pass_tag)
