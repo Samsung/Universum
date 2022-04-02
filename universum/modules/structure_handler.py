@@ -120,12 +120,12 @@ class StructureHandler(HasOutput):
         self.open_block(block_name)
         try:
             result = operation(*args, **kwargs)
-        except (SilentAbortException, StepException):
+        except (SilentAbortException, StepException):  # user-defined step failed
             raise
-        except CriticalCiException as e:
+        except CriticalCiException as e:  # system/environment step failed
             self.fail_current_block(str(e))
             raise SilentAbortException() from e
-        except Exception as e:
+        except Exception as e:  # unexpected failure, should not occur
             if pass_errors is True:
                 raise
             self.fail_current_block(str(e))
@@ -181,10 +181,11 @@ class StructureHandler(HasOutput):
                     step_name = numbering + item.name
                     self.run_in_block(self.execute_steps_recursively, step_name, True,
                                       item, obj_a.children, step_executor, skipped)
+                elif item.is_conditional:
+                    self.execute_conditional_step(item, step_executor)
                 else:
                     self.configs_current_number += 1
-                    numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
-                    step_name = numbering + item.name
+                    step_name = self._build_step_name(item.name)
                     if skipped:
                         self.report_skipped_block(step_name)
                         continue
@@ -208,6 +209,19 @@ class StructureHandler(HasOutput):
         if child_step_failed:
             raise StepException()
 
+
+    def execute_conditional_step(self, step, step_executor):
+        try:
+            self.configs_current_number += 1
+            step_name = self._build_step_name(step.name)
+            self.run_in_block(self.execute_one_step, step_name, True, step, step_executor, step.critical)
+            if step.if_succeeded:
+                self.execute_steps_recursively(None, Configuration([step.if_succeeded]), step_executor)
+        except StepException:
+            if step.if_failed:
+                self.execute_steps_recursively(None, Configuration([step.if_failed]), step_executor)
+
+
     def report_background_steps(self) -> bool:
         result = True
         for item in self.active_background_steps:
@@ -220,7 +234,10 @@ class StructureHandler(HasOutput):
         return result
 
     def execute_step_structure(self, configs: Configuration, step_executor) -> None:
-        self.configs_total_count = sum(1 for _ in configs.all())
+        for config in configs.all():
+            self.configs_total_count += 1
+            if config.if_succeeded or config.if_failed:
+                self.configs_total_count += 1
 
         try:
             self.execute_steps_recursively(None, configs, step_executor)
@@ -229,6 +246,11 @@ class StructureHandler(HasOutput):
 
         if self.active_background_steps:
             self.run_in_block(self.report_background_steps, "Reporting background steps", False)
+
+    def _build_step_name(self, name):
+        step_num_len = len(str(self.configs_total_count))
+        numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
+        return numbering + name
 
 
 class HasStructure(Module):
