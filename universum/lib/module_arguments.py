@@ -135,6 +135,15 @@ class ModuleArgumentParser(argparse.ArgumentParser):
         return True
 
     def _add_default_parser(self, args):
+        ***
+        We need to manually add the default parser because of the following reasons.
+        Argparser allows calls like this: ``./executable --arg=value1 subcommand --arg=value2``
+        after processing this is transformed to two different namespaces, each of which have
+        argument 'arg' with two different values. So calling ``universum -vt=p4 poll`` and
+        ``universum poll -vt=p4``will transfer these args to different namespaces. Taking into
+        account that we also manually process environment variables, handling such structure
+        is more complicated, than excluding non-subcommand namespace complitely.
+        ***
         subparsers_action = self._get_subparsers_action()
         if not subparsers_action:
             return
