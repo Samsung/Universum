@@ -142,6 +142,8 @@ class ModuleArgumentParser(argparse.ArgumentParser):
            non-subparser are ignored; so without default subparser ``universum -vt=p4 submit`` will result in
            undefined value of 'vcs_type', and ``universum -vt=p4 submit -vt=git`` will result in 'git' value.
            Adding default subparser allows to avoid such unexpected behaviour.
+        3. Also if arguments of 'general' parser and a subparser intersect, the environment variables are
+           stored to 'general' parser (and then ignored as described above).
         """
         subparsers_action = self._get_subparsers_action()
         if not subparsers_action:
