@@ -168,7 +168,8 @@ class RunningStep:
                  log_file: Optional[TextIO],
                  working_directory: str,
                  additional_environment: Dict[str, str],
-                 background: bool) -> None:
+                 background: bool,
+                 artifacts: artifact_collector.ArtifactCollector) -> None:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
@@ -186,6 +187,8 @@ class RunningStep:
         self._is_background = background
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
+
+        self.artifacts = artifacts
 
     def prepare_command(self) -> bool:  # FIXME: refactor
         if not self.configuration.command:
@@ -257,6 +260,7 @@ class RunningStep:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
+            self.artifacts.collect_step_artifacts(self.configuration)
             return
         try:
             text = ""
@@ -285,6 +289,7 @@ class RunningStep:
             if self.file:
                 self.file.close()
             self._is_background = False
+            self.artifacts.collect_step_artifacts(self.configuration)
 
     def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:
@@ -415,7 +420,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         additional_environment = self.api_support.get_environment_settings()
         return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
-                    log_file, working_directory, additional_environment, item.background)
+                    log_file, working_directory, additional_environment, item.background, self.artifacts)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)

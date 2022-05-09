@@ -80,9 +80,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
 
-        self.artifact_list = []
-        self.report_artifact_list = []
-
         # Needed because of wildcards
         self.collected_report_artifacts = set()
 
@@ -176,13 +173,13 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
         if artifact_list:
             name = "Setting and preprocessing artifacts according to configs"
-            self.artifact_list = self.structure.run_in_block(self.preprocess_artifact_list,
-                                                             name, True, artifact_list, ignore_existing_artifacts)
+            self.structure.run_in_block(self.preprocess_artifact_list,
+                                        name, True, artifact_list, ignore_existing_artifacts)
         if report_artifact_list:
             name = "Setting and preprocessing artifacts to be mentioned in report"
-            self.report_artifact_list = self.structure.run_in_block(self.preprocess_artifact_list,
-                                                                    name, True, report_artifact_list,
-                                                                    ignore_existing_artifacts)
+            self.structure.run_in_block(self.preprocess_artifact_list,
+                                        name, True, report_artifact_list,
+                                        ignore_existing_artifacts)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
@@ -220,16 +217,14 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                     artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name)
                     self.collected_report_artifacts.add(artifact_path)
 
-    @make_block("Collecting artifacts", pass_errors=False)
-    def collect_artifacts(self):
-        self.reporter.add_block_to_report(self.structure.get_current_block())
-        for path in self.report_artifact_list:
-            name = "Collecting '" + os.path.basename(path) + "' for report"
-            self.structure.run_in_block(self.move_artifact, name, False, path, is_report=True)
-        self.reporter.report_artifacts(list(self.collected_report_artifacts))
-        for path in self.artifact_list:
-            name = "Collecting '" + os.path.basename(path) + "'"
-            self.structure.run_in_block(self.move_artifact, name, False, path)
+    def collect_step_artifacts(self, step):
+        if step.artifacts:
+            path = utils.parse_path(step.artifacts, self.settings.project_root)
+            self.move_artifact(path, is_report=False)
+        if step.report_artifacts:
+            path = utils.parse_path(step.report_artifacts, self.settings.project_root)
+            self.move_artifact(path, is_report=True)
+
 
     def clean_artifacts_silently(self):
         try:

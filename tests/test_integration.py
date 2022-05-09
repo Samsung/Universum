@@ -39,13 +39,14 @@ dirs2 = Configuration([dict(name=" one/three", command=["one/three"])])
 files2 = Configuration([dict(name=" one/three/file.sh", command=["one/three/file.sh"])])
 
 artifacts = Configuration([dict(name="Existing artifacts", artifacts="one/**/file*", report_artifacts="one/*"),
-                        dict(name="Missing artifacts", artifacts="something", report_artifacts="something_else")])
+                           dict(name="Missing report artifacts", report_artifacts="non_existing_file"),
+                           dict(name="Missing all artifacts", artifacts="something", report_artifacts="something_else")])
 
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
     """
     log = docker_main.run(config)
-    assert 'Failed' in get_line_with_text("Collecting 'something' - ", log)
-    assert 'Success' in get_line_with_text("Collecting 'something_else' for report - ", log)
+    assert 'Failed' in get_line_with_text("Missing all artifacts - ", log)
+    assert 'Success' in get_line_with_text("Missing report artifacts - ", log)
 
     assert os.path.exists(os.path.join(docker_main.artifact_dir, "three.zip"))
     assert os.path.exists(os.path.join(docker_main.artifact_dir, "two2.zip"))

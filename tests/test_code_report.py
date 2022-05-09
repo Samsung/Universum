@@ -276,8 +276,15 @@ def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
 
     expected_log = log_success if expected_success else log_fail
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
-    expected_log = r"Collecting 'source_file.html' - [^\n]*Success" if expected_artifact \
-        else r"Collecting 'source_file.html' - [^\n]*Failed"
+
+    artifacts_absence_error = "No artifacts found!"
+    if expected_artifact:
+        assert artifacts_absence_error not in log, f"'{artifacts_absence_error} found in '{log}'"
+    else:
+        assert artifacts_absence_error in log, f"'{artifacts_absence_error} not found in '{log}'"
+
+    expected_step_result = r"Success" if expected_success and expected_artifact else "Failed"
+    expected_log = f"Run uncrustify - [^\n]*{expected_step_result}"
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
