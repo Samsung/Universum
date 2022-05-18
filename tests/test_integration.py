@@ -45,8 +45,8 @@ artifacts = Configuration([dict(name="Existing artifacts", artifacts="one/**/fil
 configs = mkdir * dirs1 + mkdir * dirs2 + mkfile * files1 + mkfile * files2 + artifacts
     """
     log = docker_main.run(config)
-    assert 'Failed' in get_line_with_text("Missing all artifacts - ", log)
-    assert 'Success' in get_line_with_text("Missing report artifacts - ", log)
+    assert 'Failed' in get_line_with_text("Collecting artifacts for the 'Missing all artifacts' step - ", log)
+    assert 'Success' in get_line_with_text("Collecting artifacts for the 'Missing report artifacts' step - ", log)
 
     assert os.path.exists(os.path.join(docker_main.artifact_dir, "three.zip"))
     assert os.path.exists(os.path.join(docker_main.artifact_dir, "two2.zip"))
