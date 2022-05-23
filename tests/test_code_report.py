@@ -278,7 +278,7 @@ def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
     expected_artifacts_state = "Success" if expected_artifact else "Failed"
-    exptected_log = f"Collecting artifacts for the 'Run uncrustify' step - {expected_artifacts_state}"
+    expected_log = f"Collecting artifacts for the 'Run uncrustify' step - [^\n]*{expected_artifacts_state}"
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
