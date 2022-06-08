@@ -15,7 +15,7 @@ from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .output import HasOutput, Output
 from .project_directory import ProjectDirectory
-from .structure_handler import HasStructure, StructureHandler
+from .structure_handler import HasStructure
 
 __all__ = [
     "Launcher",
@@ -163,7 +163,7 @@ class RunningStep:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item: configuration_support.Step,
                  out: Output,
-                 structure: StructureHandler,
+                 fail_block: Callable[[str], None],
                  send_tag: Callable[[str], Response],
                  log_file: Optional[TextIO],
                  working_directory: str,
@@ -173,8 +173,7 @@ class RunningStep:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
-        self.structure: StructureHandler = structure
-        self.current_block = self.structure.get_current_block()
+        self.fail_block: Callable[[str], None] = fail_block
         self.send_tag = send_tag
         self.file: Optional[TextIO] = log_file
         self.working_directory: str = working_directory
@@ -203,7 +202,7 @@ class RunningStep:
                 command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
                 self.cmd = make_command(command_name)
         except CiException as ex:
-            self.structure.fail_block(self.current_block, str(ex))
+            self.fail_block(str(ex))
             raise StepException() from ex
         return True
 
@@ -261,7 +260,6 @@ class RunningStep:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
-            self._collect_artifacts()
             return
         try:
             text = ""
@@ -280,7 +278,7 @@ class RunningStep:
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
                     self.file.write(text + "\n")
-                self.structure.fail_block(self.current_block, text)
+                self.fail_block(text)
                 self.add_tag(self.configuration.fail_tag)
                 raise StepException()
 
@@ -290,18 +288,14 @@ class RunningStep:
             if self.file:
                 self.file.close()
             self._is_background = False
-            self._collect_artifacts()
+
+    def collect_artifacts(self) -> None:
+        self.artifacts.collect_step_artifacts(self.configuration)
 
     def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:
             item[0](item[1])
         self._postponed_out = []
-
-    def _collect_artifacts(self) -> None:
-        self.structure.close_block()
-        name = f"Collecting artifacts for the '{self.configuration.name}' step"
-        self.structure.open_block(name)
-        self.artifacts.collect_step_artifacts(self.configuration)
 
 
 class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
@@ -414,13 +408,19 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
+        # get_current_block() should be called while inside the required block, not afterwards
+        block = self.structure.get_current_block()
+
+        def fail_block(line: str = "") -> None:
+            self.structure.fail_block(block, line)
+
         log_file: Optional[TextIO] = None
         if self.output == "file":
             log_file = self.artifacts.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
-        return RunningStep(item, self.out, self.structure, self.server.add_build_tag,
+        return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
                     log_file, working_directory, additional_environment, item.background, self.artifacts)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:

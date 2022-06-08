@@ -68,6 +68,7 @@ class BackgroundStepInfo(TypedDict):
 
 
 class StructureHandler(HasOutput):
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.current_block: Optional[Block] = Block("Universum")
@@ -141,12 +142,14 @@ class StructureHandler(HasOutput):
         process.start()
         if not configuration.background:
             process.finalize()
-            return
+            return process
 
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'finalizer': process.finalize,
+                                             'artifacts_collection': process.collect_artifacts,
                                              'is_critical': is_critical})
+        return None
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
         try:
@@ -198,8 +201,14 @@ class StructureHandler(HasOutput):
 
                     # Here pass_errors=False, because any exception while executing build step
                     # can be step-related and may not affect other steps
-                    self.run_in_block(self.execute_one_step, step_name, False,
-                                      item, step_executor, obj_a.critical)
+                    step_process = None
+                    try:
+                        step_process = self.run_in_block(self.execute_one_step, step_name, False,
+                                                                  item, step_executor, obj_a.critical)
+                    finally:
+                        if step_process:
+                            artifacts_step_name = f"Collecting artifacts for the '{item.name}' step"
+                            self.run_in_block(step_process.collect_artifacts, artifacts_step_name, False)
             except StepException:
                 child_step_failed = True
                 if obj_a.critical:
@@ -211,9 +220,12 @@ class StructureHandler(HasOutput):
     def report_background_steps(self) -> bool:
         result = True
         for item in self.active_background_steps:
-            if not self.run_in_block(self.finalize_background_step,
+            finalization_result = self.run_in_block(self.finalize_background_step,
                                      "Waiting for background step '" + item['name'] + "' to finish...",
-                                     True, item):
+                                     True, item)
+            artifacts_step_name = f"Collecting artifacts for the '{item['name']}' step"
+            self.run_in_block(item["artifacts_collection"], artifacts_step_name, False)
+            if not finalization_result:
                 result = False
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []

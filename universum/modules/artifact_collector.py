@@ -123,7 +123,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         :param ignore_already_existing: will not check existence of artifacts when set to 'True'
         :return: sorted list of checked paths (including duplicates and wildcards)
         """
-        dir_list = set()
         for item in artifact_list:
             # Check existence in place: wildcards applied
             matches = glob2.glob(item["path"])
@@ -152,11 +151,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                 text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
                 text += "\nPossible reason of this error: previous build results in working directory"
                 raise CriticalCiException(text)
-
-            dir_list.add(item["path"])
-        new_artifact_list = list(dir_list)
-        new_artifact_list.sort(key=len, reverse=True)
-        return new_artifact_list
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
@@ -224,7 +218,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         if step.report_artifacts:
             path = utils.parse_path(step.report_artifacts, self.settings.project_root)
             self.move_artifact(path, is_report=True)
-
 
     def clean_artifacts_silently(self):
         try:
