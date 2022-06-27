@@ -21,4 +21,6 @@ class SilentAbortException(Exception):
 
 
 class StepException(Exception):
-    pass
+    def __init__(self, step_process=None):
+        super().__init__()
+        self.step_process = step_process

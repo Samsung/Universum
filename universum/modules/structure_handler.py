@@ -64,6 +64,7 @@ class Block:
 class BackgroundStepInfo(TypedDict):
     name: str
     finalizer: Callable[[], None]
+    artifacts_collection: Callable
     is_critical: bool
 
 
@@ -139,17 +140,21 @@ class StructureHandler(HasOutput):
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
-        process.start()
-        if not configuration.background:
-            process.finalize()
-            return process
+        try:
+            process.start()
+            if not configuration.background:
+                process.finalize()
+                return process
 
-        self.out.log("This step is marked to be executed in background")
-        self.active_background_steps.append({'name': configuration.name,
-                                             'finalizer': process.finalize,
-                                             'artifacts_collection': process.collect_artifacts,
-                                             'is_critical': is_critical})
-        return None
+            self.out.log("This step is marked to be executed in background")
+            self.active_background_steps.append({'name': configuration.name,
+                                                 'finalizer': process.finalize,
+                                                 'artifacts_collection': process.collect_artifacts,
+                                                 'is_critical': is_critical})
+
+            return process
+        except StepException as e:
+            raise StepException(process)
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
         try:
@@ -204,11 +209,13 @@ class StructureHandler(HasOutput):
                     step_process = None
                     try:
                         step_process = self.run_in_block(self.execute_one_step, step_name, False,
-                                                                  item, step_executor, obj_a.critical)
-                    finally:
-                        if step_process:
-                            artifacts_step_name = f"Collecting artifacts for the '{item.name}' step"
-                            self.run_in_block(step_process.collect_artifacts, artifacts_step_name, False)
+                                                         item, step_executor, obj_a.critical)
+                        if not item.background:
+                            self._run_artifact_collection_step(item.name, step_process.collect_artifacts)
+                    except StepException as e:
+                        if not item.background:
+                            self._run_artifact_collection_step(item.name, e.step_process.collect_artifacts)
+                        raise e
             except StepException:
                 child_step_failed = True
                 if obj_a.critical:
@@ -223,8 +230,7 @@ class StructureHandler(HasOutput):
             finalization_result = self.run_in_block(self.finalize_background_step,
                                      "Waiting for background step '" + item['name'] + "' to finish...",
                                      True, item)
-            artifacts_step_name = f"Collecting artifacts for the '{item['name']}' step"
-            self.run_in_block(item["artifacts_collection"], artifacts_step_name, False)
+            self._run_artifact_collection_step(item['name'], item['artifacts_collection'])
             if not finalization_result:
                 result = False
         self.out.log("All ongoing background steps completed")
@@ -241,6 +247,11 @@ class StructureHandler(HasOutput):
 
         if self.active_background_steps:
             self.run_in_block(self.report_background_steps, "Reporting background steps", False)
+
+    def _run_artifact_collection_step(self, step_name, artifacts_collection_func):
+        artifacts_step_name = f"Collecting artifacts for the '{step_name}' step"
+        self.run_in_block(artifacts_collection_func, artifacts_step_name, pass_errors=False)
+
 
 
 class HasStructure(Module):
