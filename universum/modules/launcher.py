@@ -169,7 +169,7 @@ class RunningStep:
                  working_directory: str,
                  additional_environment: Dict[str, str],
                  background: bool,
-                 artifacts: artifact_collector.ArtifactCollector) -> None:
+                 artifact_collector: artifact_collector.ArtifactCollector) -> None:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
@@ -188,7 +188,7 @@ class RunningStep:
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
 
-        self.artifacts = artifacts
+        self.artifact_collector = artifact_collector
 
     def prepare_command(self) -> bool:  # FIXME: refactor
         if not self.configuration.command:
@@ -290,7 +290,7 @@ class RunningStep:
             self._is_background = False
 
     def collect_artifacts(self) -> None:
-        self.artifacts.collect_step_artifacts(self.configuration)
+        self.artifact_collector.collect_step_artifacts(self.configuration.artifacts, self.configuration.report_artifacts)
 
     def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:
@@ -348,7 +348,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         if not self.config_path:
             self.config_path = ".universum.py"
 
-        self.artifacts = self.artifacts_factory()
+        self.artifact_collector = self.artifacts_factory()
         self.api_support = self.api_support_factory()
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
@@ -367,7 +367,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             with open(config_path, encoding="utf-8") as config_file:
                 exec(config_file.read(), config_globals)  # pylint: disable=exec-used
             self.source_project_configs = config_globals["configs"]
-            dump_file: TextIO = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
+            dump_file: TextIO = self.artifact_collector.create_text_file("CONFIGS_DUMP.txt")
             dump_file.write(self.source_project_configs.dump())
             dump_file.close()
             config = self.source_project_configs.filter(check_if_env_set)
@@ -416,12 +416,12 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         log_file: Optional[TextIO] = None
         if self.output == "file":
-            log_file = self.artifacts.create_text_file(item.name + "_log.txt")
+            log_file = self.artifact_collector.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
         return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
-                    log_file, working_directory, additional_environment, item.background, self.artifacts)
+                    log_file, working_directory, additional_environment, item.background, self.artifact_collector)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)

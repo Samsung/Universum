@@ -211,12 +211,12 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                     artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name)
                     self.collected_report_artifacts.add(artifact_path)
 
-    def collect_step_artifacts(self, step):
-        if step.artifacts:
-            path = utils.parse_path(step.artifacts, self.settings.project_root)
+    def collect_step_artifacts(self, step_artifacts, step_report_artifacts):
+        if step_artifacts:
+            path = utils.parse_path(step_artifacts, self.settings.project_root)
             self.move_artifact(path, is_report=False)
-        if step.report_artifacts:
-            path = utils.parse_path(step.report_artifacts, self.settings.project_root)
+        if step_report_artifacts:
+            path = utils.parse_path(step_report_artifacts, self.settings.project_root)
             self.move_artifact(path, is_report=True)
 
     def clean_artifacts_silently(self):
