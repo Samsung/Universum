@@ -63,6 +63,7 @@ class Block:
 
 class BackgroundStepInfo(TypedDict):
     name: str
+    block: Block
     finalizer: Callable[[], None]
     is_critical: bool
 
@@ -154,13 +155,14 @@ class StructureHandler(HasOutput):
 
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
+                                             'block': self.get_current_block(),
                                              'finalizer': process.finalize,
                                              'is_critical': is_critical})
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
         error = background_step['finalizer']()
         if error is not None:
-            # error is already logged by finalizer
+            self.fail_block(background_step['block'], error)
             self.fail_current_block()
             return False
 

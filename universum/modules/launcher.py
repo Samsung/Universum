@@ -163,7 +163,6 @@ class RunningStep:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item: configuration_support.Step,
                  out: Output,
-                 fail_block: Callable[[str], None],
                  send_tag: Callable[[str], Response],
                  log_file: Optional[TextIO],
                  working_directory: str,
@@ -172,7 +171,6 @@ class RunningStep:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
-        self.fail_block: Callable[[str], None] = fail_block
         self.send_tag = send_tag
         self.file: Optional[TextIO] = log_file
         self.working_directory: str = working_directory
@@ -278,7 +276,6 @@ class RunningStep:
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
                     self.file.write(text + "\n")
-                self.fail_block(text)
                 self.add_tag(self.configuration.fail_tag)
                 return text
 
@@ -408,19 +405,13 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
-        # get_current_block() should be called while inside the required block, not afterwards
-        block = self.structure.get_current_block()
-
-        def fail_block(line: str = "") -> None:
-            self.structure.fail_block(block, line)
-
         log_file: Optional[TextIO] = None
         if self.output == "file":
             log_file = self.artifacts.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
-        return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
+        return RunningStep(item, self.out, self.server.add_build_tag,
                     log_file, working_directory, additional_environment, item.background)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
