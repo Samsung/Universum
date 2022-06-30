@@ -9,7 +9,7 @@ import sh
 from .error_state import HasErrorState
 from .. import configuration_support
 from ..lib import utils
-from ..lib.ci_exception import CiException, CriticalCiException, StepException
+from ..lib.ci_exception import CiException, CriticalCiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
@@ -192,21 +192,22 @@ class RunningStep:
             self.out.log("No 'command' found. Nothing to execute")
             return False
         command_name: str = utils.strip_path_start(self.configuration.command[0])
+
         try:
-            try:
-                self.cmd = make_command(command_name)
-            except CiException:
-                command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
-                self.cmd = make_command(command_name)
-        except CiException as ex:
-            self.fail_block(str(ex))
-            raise StepException() from ex
+            self.cmd = make_command(command_name)
+        except CiException:
+            command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
+            self.cmd = make_command(command_name)
+
         return True
 
-    def start(self) -> None:
-        if not self.prepare_command():
-            self._needs_finalization = False
-            return
+    def start(self) -> Optional[str]:
+        try:
+            if not self.prepare_command():
+                self._needs_finalization = False
+                return None
+        except CiException as ex:
+            return str(ex)
 
         self._postponed_out = []
         self.process = self.cmd(*self.configuration.command[1:],
@@ -222,6 +223,8 @@ class RunningStep:
         self.out.log_external_command(log_cmd)
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
+
+        return None
 
     def handle_stdout(self, line: str = "") -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -252,12 +255,12 @@ class RunningStep:
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
-    def finalize(self) -> None:
+    def finalize(self) -> Optional[str]:
         if not self._needs_finalization:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
-            return
+            return None
         try:
             text = ""
             try:
@@ -277,9 +280,11 @@ class RunningStep:
                     self.file.write(text + "\n")
                 self.fail_block(text)
                 self.add_tag(self.configuration.fail_tag)
-                raise StepException()
+                return text
 
             self.add_tag(self.configuration.pass_tag)
+            return None
+
         finally:
             self.handle_stdout()
             if self.file:

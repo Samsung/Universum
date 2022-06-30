@@ -94,6 +94,7 @@ class StructureHandler(HasOutput):
         new_skipped_block = Block(name, self.current_block)
         new_skipped_block.status = "Skipped"
 
+        # TODO: wrap block name in quotes
         self.out.report_skipped(new_skipped_block.number + " " + name +
                                 " skipped because of critical step failure")
 
@@ -138,9 +139,17 @@ class StructureHandler(HasOutput):
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
-        process.start()
+        error = process.start()
+        if error is not None:
+            self.fail_current_block(error)
+            raise StepException
+
         if not configuration.background:
-            process.finalize()
+            error = process.finalize()
+            if error is not None:
+                self.fail_current_block(error)
+                raise StepException
+
             return
 
         self.out.log("This step is marked to be executed in background")
@@ -149,15 +158,12 @@ class StructureHandler(HasOutput):
                                              'is_critical': is_critical})
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
-        try:
-            background_step['finalizer']()
-            self.out.log("This background step finished successfully")
-        except StepException:
-            if background_step['is_critical']:
-                self.out.log_stderr("This background step failed, and as it was critical, "
-                                    "all further steps will be skipped")
-                return False
-            self.out.log_stderr("This background step failed")
+        error = background_step['finalizer']()
+        if error is not None:
+            # error is already logged by finalizer
+            self.fail_current_block()
+            return False
+
         return True
 
     def execute_steps_recursively(self, parent: Optional[Step], cfg: Configuration,
@@ -211,10 +217,16 @@ class StructureHandler(HasOutput):
     def report_background_steps(self) -> bool:
         result = True
         for item in self.active_background_steps:
-            if not self.run_in_block(self.finalize_background_step,
-                                     "Waiting for background step '" + item['name'] + "' to finish...",
-                                     True, item):
+            if self.run_in_block(self.finalize_background_step,
+                                 "Waiting for background step '" + item['name'] + "' to finish...",
+                                 True, item):
+                continue
+
+            if item['is_critical']:
                 result = False
+                self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
+                                        "all further steps will be skipped")
+
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []
         return result
