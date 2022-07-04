@@ -353,6 +353,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     def process_project_configs(self) -> configuration_support.Configuration:
         config_path = utils.parse_path(self.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
+        configuration_support.set_config_path(self.settings.config_path)
         config_globals: Dict[str, configuration_support.Configuration] = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.append(os.path.join(os.path.dirname(config_path)))
