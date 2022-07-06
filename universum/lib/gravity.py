@@ -73,17 +73,24 @@ class Module:
 ComponentTypeT = TypeVar('ComponentTypeT', bound=Module)
 
 
-def construct_component(cls: Type[ComponentTypeT], main_settings: 'HasModulesMapping', *args, **kwargs) -> ComponentTypeT:
+def construct_component(cls: Type[ComponentTypeT], main_settings: 'HasModulesMapping',
+                        *args, **kwargs) -> ComponentTypeT:
+
     if not getattr(main_settings, "active_modules", None):
         main_settings.active_modules = {}
 
     if cls not in main_settings.active_modules:
         cls.settings = Settings(cls)
+
+        # The module instance is constructed manually, because we need to set
+        # settings attribute before constructor is called
         instance: 'Module' = cls.__new__(cls, main_settings=main_settings)
+
         # https://github.com/python/mypy/blob/master/mypy/checkmember.py#180
         # Accessing __init__ in statically typed code would compromise
         # type safety unless used via super().
         # noinspection PyArgumentList
+        # pylint: disable = unnecessary-dunder-call
         instance.__init__(*args, **kwargs)  # type: ignore
         main_settings.active_modules[cls] = instance
     return cast(ComponentTypeT, main_settings.active_modules[cls])

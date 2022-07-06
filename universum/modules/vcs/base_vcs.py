@@ -50,7 +50,7 @@ class BaseDownloadVcs(BaseVcs, HasErrorState):
     Base class for default CI build VCS drivers
     """
 
-    def code_review(self):  # pylint: disable=no-self-use
+    def code_review(self):
         return None
 
     def login(self):
