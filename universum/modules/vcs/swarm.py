@@ -9,7 +9,7 @@ from ...lib import utils
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Dependency
 
-urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning))
+urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning)) # type: ignore
 
 __all__ = [
     "Swarm"
