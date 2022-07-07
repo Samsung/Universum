@@ -25,7 +25,7 @@ def test(session):
     try:
         session.run("make", "rebuild", silent=True, external=True)
         session.install(".[test]")
-        session.run("make", "test", external=True)
+        session.run("make", "test", external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
         add_report_line(f"\U00002601 testing for Python {session.python} failed")
