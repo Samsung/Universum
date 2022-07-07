@@ -704,6 +704,7 @@ class Configuration:
 
 
 global_project_root = os.getcwd()
+global_config_path = None
 
 
 #: Variations is preserved as legacy alias for :class:`Configuration`
@@ -731,3 +732,23 @@ def get_project_root() -> str:
     :return: actual project root
     """
     return os.path.abspath(global_project_root)
+
+
+def set_config_path(config_path: str) -> None:
+    """
+    Function to be called from main script; not supposed to be used in configuration file.
+    Calculates the path to actual project config file; is not used when running config file itself.
+
+    :param config_path: path to configuration file
+    """
+    global global_config_path
+    global_config_path = config_path
+
+
+def get_config_path() -> Optional[str]:
+    """
+    Function to be used in configuration file. Returns absolute path to configuration file.
+
+    :return: absolute path to configuration file
+    """
+    return global_config_path
