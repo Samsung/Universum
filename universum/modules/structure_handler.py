@@ -177,6 +177,7 @@ class StructureHandler(HasOutput):
             parent = Step()
 
         step_num_len = len(str(self.configs_total_count))
+        error = None
         child_step_failed = False
         for obj_a in cfg.configs:
             item: Step = parent + copy.deepcopy(obj_a)
@@ -191,7 +192,7 @@ class StructureHandler(HasOutput):
                 with self.block(step_name, True):
                     if self.execute_steps_recursively(item, obj_a.children, step_executor, skipped):
                         self.fail_current_block()
-                        child_step_failed = True
+                        error = True
             else:
                 self.configs_current_number += 1
                 numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
@@ -212,11 +213,14 @@ class StructureHandler(HasOutput):
                     error = self.execute_one_step(item, step_executor, obj_a.critical)
                     if error is not None:
                         self.fail_current_block(error)
-                        child_step_failed = True
 
-            if child_step_failed and obj_a.critical:
-                self.report_critical_block_failure()
-                skipped = True
+            if error is not None:
+                error = None
+                child_step_failed = True
+
+                if obj_a.critical:
+                    self.report_critical_block_failure()
+                    skipped = True
 
         return child_step_failed
 
