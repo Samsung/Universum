@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import copy
 
-from typing import Callable, ClassVar, List, Optional, TypeVar
+from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
 from typing_extensions import TypedDict
 from ..configuration_support import Step, Configuration
 from ..lib.ci_exception import SilentAbortException, CriticalCiException
@@ -119,7 +119,7 @@ class StructureHandler(HasOutput):
     T = TypeVar('T')
 
     @contextlib.contextmanager
-    def block(self, block_name: str, pass_errors: bool) -> Optional[T]:
+    def block(self, *, block_name: str, pass_errors: bool) -> Generator:
         self.open_block(block_name)
         try:
             yield
@@ -137,7 +137,7 @@ class StructureHandler(HasOutput):
 
     def run_in_block(self, operation: Callable[..., T],
                      block_name: str, pass_errors: bool, *args, **kwargs) -> Optional[T]:
-        with self.block(block_name, pass_errors):
+        with self.block(block_name=block_name, pass_errors=pass_errors):
             return operation(*args, **kwargs)
 
     def execute_one_step(self, configuration: Step,
@@ -169,16 +169,22 @@ class StructureHandler(HasOutput):
 
         return True
 
-    def execute_steps_recursively(self, parent: Optional[Step], cfg: Configuration,
+    def execute_steps_recursively(self, parent: Step, cfg: Configuration,
                                   step_executor: Callable,
-                                  skipped: bool = False) -> bool:
+                                  skip_execution: bool = False) -> Optional[str]:
+        """
+
+        :param parent: Parent step. Used for calculating actual attributes of child steps.
+        :param cfg: List of steps to execute.
+        :param step_executor: Function that executes one step.
+        :param skip_execution: If True, all steps will be skipped, but reported to the output.
+        :return: True if any child step failed, False otherwise.
+        """
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
-        if parent is None:
-            parent = Step()
 
         step_num_len = len(str(self.configs_total_count))
-        error = None
-        child_step_failed = False
+        error: Optional[str]
+        child_step_error: Optional[str] = None
         for obj_a in cfg.configs:
             item: Step = parent + copy.deepcopy(obj_a)
 
@@ -189,40 +195,39 @@ class StructureHandler(HasOutput):
 
                 # Here pass_errors=True, because any exception outside executing build step
                 # is not step-related and should stop script executing
-                with self.block(step_name, True):
-                    if self.execute_steps_recursively(item, obj_a.children, step_executor, skipped):
+                with self.block(block_name=step_name, pass_errors=True):
+                    error = self.execute_steps_recursively(item, obj_a.children, step_executor, skip_execution)
+                    if error is not None:
                         self.fail_current_block()
-                        error = True
             else:
+                if item.finish_background and self.active_background_steps:
+                    self.out.log("All ongoing background steps should be finished before next step execution")
+                    if not self.report_background_steps():
+                        skip_execution = True
+
                 self.configs_current_number += 1
                 numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
                 step_name = numbering + item.name
 
-                if item.finish_background and self.active_background_steps:
-                    self.out.log("All ongoing background steps should be finished before next step execution")
-                    if not self.report_background_steps():
-                        skipped = True
-
-                if skipped:
+                if skip_execution:
                     self.report_skipped_block(step_name)
                     continue
 
                 # Here pass_errors=False, because any exception while executing build step
                 # can be step-related and may not affect other steps
-                with self.block(step_name, False):
+                with self.block(block_name=step_name, pass_errors=False):
                     error = self.execute_one_step(item, step_executor, obj_a.critical)
                     if error is not None:
                         self.fail_current_block(error)
 
             if error is not None:
-                error = None
-                child_step_failed = True
+                child_step_error = ""  # Indicate that child step failed, but forget the error message
 
                 if obj_a.critical:
                     self.report_critical_block_failure()
-                    skipped = True
+                    skip_execution = True
 
-        return child_step_failed
+        return child_step_error
 
     def report_background_steps(self) -> bool:
         result = True
@@ -244,7 +249,7 @@ class StructureHandler(HasOutput):
     def execute_step_structure(self, configs: Configuration, step_executor) -> None:
         self.configs_total_count = sum(1 for _ in configs.all())
 
-        self.execute_steps_recursively(None, configs, step_executor)
+        self.execute_steps_recursively(Step(), configs, step_executor)
 
         if self.active_background_steps:
             self.run_in_block(self.report_background_steps, "Reporting background steps", False)
