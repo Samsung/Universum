@@ -77,6 +77,8 @@ class StructureHandler(HasOutput):
         self.configs_current_number: int = 0
         self.configs_total_count: int = 0
         self.active_background_steps: List[BackgroundStepInfo] = []
+        self.step_num_len: int = 0
+        self.group_numbering: str = ""
 
     def open_block(self, name: str) -> None:
         new_block = Block(name, self.current_block)
@@ -141,7 +143,7 @@ class StructureHandler(HasOutput):
             return operation(*args, **kwargs)
 
     def execute_one_step(self, configuration: Step,
-                         step_executor: Callable, is_critical: bool) -> Optional[str]:
+                         step_executor: Callable) -> Optional[str]:
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
@@ -157,7 +159,7 @@ class StructureHandler(HasOutput):
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
                                              'finalizer': process.finalize,
-                                             'is_critical': is_critical})
+                                             'is_critical': configuration.critical})
         return None
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
@@ -169,65 +171,69 @@ class StructureHandler(HasOutput):
 
         return True
 
-    def execute_steps_recursively(self, parent: Step, cfg: Configuration,
-                                  step_executor: Callable,
-                                  skip_execution: bool = False) -> Optional[str]:
-        """
+    def process_one_step(self, merged_item: Step, step_executor: Callable, skip_execution: bool) -> bool:
+        self.configs_current_number += 1
+        numbering: str = f" [ {self.configs_current_number:>{self.step_num_len}}/{self.configs_total_count} ] "
+        step_label: str = numbering + merged_item.name
 
+        if skip_execution:
+            self.report_skipped_block(step_label)
+            return False
+
+        # Here pass_errors=False, because any exception while executing build step
+        # can be step-related and may not affect other steps
+        with self.block(block_name=step_label, pass_errors=False):
+            error: Optional[str] = self.execute_one_step(merged_item, step_executor)
+            if error is not None:
+                self.fail_current_block(error)
+                return True
+
+        return False
+
+    def execute_steps_recursively(self, parent: Step,
+                                  children: Configuration,
+                                  step_executor: Callable,
+                                  skip_execution: bool) -> bool:
+        """
         :param parent: Parent step. Used for calculating actual attributes of child steps.
-        :param cfg: List of steps to execute.
+        :param children: Configuration object containing child steps.
         :param step_executor: Function that executes one step.
         :param skip_execution: If True, all steps will be skipped, but reported to the output.
         :return: True if any child step failed, False otherwise.
         """
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
 
-        step_num_len = len(str(self.configs_total_count))
-        error: Optional[str]
-        child_step_error: Optional[str] = None
-        for obj_a in cfg.configs:
-            item: Step = parent + copy.deepcopy(obj_a)
-
-            if obj_a.children:
-
-                numbering = f" [ {'':{step_num_len}}+{'':{step_num_len}} ] "
-                step_name = numbering + item.name
+        some_step_failed: bool = False
+        current_step_failed: bool
+        for child in children.configs:
+            if child.children:
+                step_label: str = self.group_numbering + parent.name + child.name
 
                 # Here pass_errors=True, because any exception outside executing build step
                 # is not step-related and should stop script executing
-                with self.block(block_name=step_name, pass_errors=True):
-                    error = self.execute_steps_recursively(item, obj_a.children, step_executor, skip_execution)
-                    if error is not None:
-                        self.fail_current_block()
+                with self.block(block_name=step_label, pass_errors=True):
+                    current_step_failed = self.execute_steps_recursively(child, child.children, step_executor,
+                                                                         skip_execution)
             else:
-                if item.finish_background and self.active_background_steps:
+                merged_item: Step = parent + child
+                if merged_item.finish_background and self.active_background_steps:
                     self.out.log("All ongoing background steps should be finished before next step execution")
                     if not self.report_background_steps():
                         skip_execution = True
 
-                self.configs_current_number += 1
-                numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
-                step_name = numbering + item.name
+                current_step_failed = self.process_one_step(merged_item, step_executor, skip_execution)
 
-                if skip_execution:
-                    self.report_skipped_block(step_name)
-                    continue
+            if current_step_failed:
+                some_step_failed = True
 
-                # Here pass_errors=False, because any exception while executing build step
-                # can be step-related and may not affect other steps
-                with self.block(block_name=step_name, pass_errors=False):
-                    error = self.execute_one_step(item, step_executor, obj_a.critical)
-                    if error is not None:
-                        self.fail_current_block(error)
-
-            if error is not None:
-                child_step_error = ""  # Indicate that child step failed, but forget the error message
-
-                if obj_a.critical:
+                if child.critical:
                     self.report_critical_block_failure()
                     skip_execution = True
 
-        return child_step_error
+        if some_step_failed:
+            self.fail_current_block()
+
+        return some_step_failed
 
     def report_background_steps(self) -> bool:
         result = True
@@ -248,8 +254,10 @@ class StructureHandler(HasOutput):
 
     def execute_step_structure(self, configs: Configuration, step_executor) -> None:
         self.configs_total_count = sum(1 for _ in configs.all())
+        self.step_num_len = len(str(self.configs_total_count))
+        self.group_numbering = f" [ {'':{self.step_num_len}}+{'':{self.step_num_len}} ] "
 
-        self.execute_steps_recursively(Step(), configs, step_executor)
+        self.execute_steps_recursively(Step(), configs, step_executor, False)
 
         if self.active_background_steps:
             self.run_in_block(self.report_background_steps, "Reporting background steps", False)
