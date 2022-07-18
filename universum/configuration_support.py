@@ -376,7 +376,7 @@ class Step:
             report_artifacts=self.report_artifacts + other.report_artifacts,
             artifact_prebuild_clean=self.artifact_prebuild_clean or other.artifact_prebuild_clean,
             directory=self.directory + other.directory,
-            critical=False,
+            critical=other.critical,
             background=self.background or other.background,
             finish_background=self.finish_background or other.finish_background,
             code_report=self.code_report or other.code_report,
