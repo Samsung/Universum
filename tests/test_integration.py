@@ -111,7 +111,7 @@ configs = Configuration([dict(name="Good step", command=["echo", "step succeeded
                          dict(name="Bad step", command=["ls", "not_a_file"], critical=True),
                          dict(name="Extra step", command=["echo", "This shouldn't be in log."])])
 """)
-    assert "Extra step skipped because of critical step failure" in log
+    assert "'Extra step' skipped because of critical step failure" in log
     assert "This shouldn't be in log." not in log
 
     # Test embedded: critical step, critical substep
@@ -129,8 +129,8 @@ lower = Configuration([dict(name=", step 1", command=["echo", "step succeeded"])
 
 configs = upper * lower
 """)
-    assert "Group 3, step 1 skipped because of critical step failure" in log
-    assert "Group 2, step 1 skipped because of critical step failure" not in log
+    assert "'Group 3, step 1' skipped because of critical step failure" in log
+    assert "'Group 2, step 1' skipped because of critical step failure" not in log
 
     # Test embedded: critical step, non-critical substep
     docker_main_and_nonci.clean_artifacts()
@@ -146,7 +146,7 @@ lower = Configuration([dict(name=", step 1", command=["echo", "step succeeded"])
 
 configs = upper * lower
 """)
-    assert "Group 2, step 1 skipped because of critical step failure" in log
+    assert "'Group 2, step 1' skipped because of critical step failure" in log
     assert "This should be in log." in log
 
     # Test critical non-commands

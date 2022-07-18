@@ -74,7 +74,6 @@ class Output(Module):
         self.driver.report_error(problem)
         self.html_driver.report_error(problem)
 
-    # TODO: rename report_skipped to skipped_block
     def report_skipped(self, message: str) -> None:
         self.driver.report_skipped(message)
         self.html_driver.report_skipped(message)

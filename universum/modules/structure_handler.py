@@ -99,9 +99,7 @@ class StructureHandler(HasOutput):
         new_skipped_block = Block(name, self.current_block)
         new_skipped_block.status = "Skipped"
 
-        # TODO: wrap block name in quotes
-        self.out.report_skipped(new_skipped_block.number + " " + name +
-                                " skipped because of critical step failure")
+        self.out.report_skipped(new_skipped_block.number + name + " skipped because of critical step failure")
 
     def fail_current_block(self, error: str = ""):
         block: Block = self.get_current_block()
@@ -172,13 +170,20 @@ class StructureHandler(HasOutput):
         return True
 
     def process_one_step(self, merged_item: Step, step_executor: Callable, skip_execution: bool) -> bool:
+        """
+        Process one step: either execute it or skip if the skip_execution flag is set.
+        :param merged_item: Step to execute
+        :param step_executor: Function that executes one step.
+        :param skip_execution: If True, the step will be skipped, but reported to the output.
+        :return: True if step was successfully executed, False otherwise. Skipping is considered success.
+        """
         self.configs_current_number += 1
         numbering: str = f" [ {self.configs_current_number:>{self.step_num_len}}/{self.configs_total_count} ] "
         step_label: str = numbering + merged_item.name
 
         if skip_execution:
-            self.report_skipped_block(step_label)
-            return False
+            self.report_skipped_block(numbering + "'" + merged_item.name + "'")
+            return True
 
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
@@ -186,9 +191,9 @@ class StructureHandler(HasOutput):
             error: Optional[str] = self.execute_one_step(merged_item, step_executor)
             if error is not None:
                 self.fail_current_block(error)
-                return True
+                return False
 
-        return False
+        return True
 
     def execute_steps_recursively(self, parent: Step,
                                   children: Configuration,
@@ -199,29 +204,29 @@ class StructureHandler(HasOutput):
         :param children: Configuration object containing child steps.
         :param step_executor: Function that executes one step.
         :param skip_execution: If True, all steps will be skipped, but reported to the output.
-        :return: True if any child step failed, False otherwise.
+        :return: True if all child steps were successful, False otherwise.
         """
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
 
         some_step_failed: bool = False
-        current_step_failed: bool
         for child in children.configs:
+            merged_item: Step = parent + child
+            current_step_failed: bool
             if child.children:
-                step_label: str = self.group_numbering + parent.name + child.name
+                step_label: str = self.group_numbering + merged_item.name
 
                 # Here pass_errors=True, because any exception outside executing build step
                 # is not step-related and should stop script executing
                 with self.block(block_name=step_label, pass_errors=True):
-                    current_step_failed = self.execute_steps_recursively(child, child.children, step_executor,
-                                                                         skip_execution)
+                    current_step_failed = not self.execute_steps_recursively(merged_item, child.children, step_executor,
+                                                                             skip_execution)
             else:
-                merged_item: Step = parent + child
                 if merged_item.finish_background and self.active_background_steps:
                     self.out.log("All ongoing background steps should be finished before next step execution")
                     if not self.report_background_steps():
                         skip_execution = True
 
-                current_step_failed = self.process_one_step(merged_item, step_executor, skip_execution)
+                current_step_failed = not self.process_one_step(merged_item, step_executor, skip_execution)
 
             if current_step_failed:
                 some_step_failed = True
@@ -233,7 +238,7 @@ class StructureHandler(HasOutput):
         if some_step_failed:
             self.fail_current_block()
 
-        return some_step_failed
+        return not some_step_failed
 
     def report_background_steps(self) -> bool:
         result = True
