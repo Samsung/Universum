@@ -45,6 +45,9 @@ Universum in non-CI mode has the following differences from default mode:
     :prog: {python} -m universum
     :path: run
 
+    --filter -f : @after
+        Read more about using filters `in the main article about arguments. <args.html#Configuration\ execution>`__
+
 
 .. _additional_commands#poll:
 
