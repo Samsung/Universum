@@ -9,7 +9,7 @@ import sh
 from .error_state import HasErrorState
 from .. import configuration_support
 from ..lib import utils
-from ..lib.ci_exception import CiException, CriticalCiException, StepException
+from ..lib.ci_exception import CiException, CriticalCiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
@@ -163,7 +163,6 @@ class RunningStep:
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item: configuration_support.Step,
                  out: Output,
-                 fail_block: Callable[[str], None],
                  send_tag: Callable[[str], Response],
                  log_file: Optional[TextIO],
                  working_directory: str,
@@ -172,7 +171,6 @@ class RunningStep:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
-        self.fail_block: Callable[[str], None] = fail_block
         self.send_tag = send_tag
         self.file: Optional[TextIO] = log_file
         self.working_directory: str = working_directory
@@ -192,21 +190,22 @@ class RunningStep:
             self.out.log("No 'command' found. Nothing to execute")
             return False
         command_name: str = utils.strip_path_start(self.configuration.command[0])
+
         try:
-            try:
-                self.cmd = make_command(command_name)
-            except CiException:
-                command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
-                self.cmd = make_command(command_name)
-        except CiException as ex:
-            self.fail_block(str(ex))
-            raise StepException() from ex
+            self.cmd = make_command(command_name)
+        except CiException:
+            command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
+            self.cmd = make_command(command_name)
+
         return True
 
-    def start(self) -> None:
-        if not self.prepare_command():
-            self._needs_finalization = False
-            return
+    def start(self) -> Optional[str]:
+        try:
+            if not self.prepare_command():
+                self._needs_finalization = False
+                return None
+        except CiException as ex:
+            return str(ex)
 
         self._postponed_out = []
         self.process = self.cmd(*self.configuration.command[1:],
@@ -222,6 +221,8 @@ class RunningStep:
         self.out.log_external_command(log_cmd)
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
+
+        return None
 
     def handle_stdout(self, line: str = "") -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -252,12 +253,12 @@ class RunningStep:
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
-    def finalize(self) -> None:
+    def finalize(self) -> Optional[str]:
         if not self._needs_finalization:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
-            return
+            return None
         try:
             text = ""
             try:
@@ -275,11 +276,12 @@ class RunningStep:
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
                     self.file.write(text + "\n")
-                self.fail_block(text)
                 self.add_tag(self.configuration.fail_tag)
-                raise StepException()
+                return text
 
             self.add_tag(self.configuration.pass_tag)
+            return None
+
         finally:
             self.handle_stdout()
             if self.file:
@@ -403,19 +405,13 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
-        # get_current_block() should be called while inside the required block, not afterwards
-        block = self.structure.get_current_block()
-
-        def fail_block(line: str = "") -> None:
-            self.structure.fail_block(block, line)
-
         log_file: Optional[TextIO] = None
         if self.output == "file":
             log_file = self.artifacts.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
-        return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
+        return RunningStep(item, self.out, self.server.add_build_tag,
                     log_file, working_directory, additional_environment, item.background)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:

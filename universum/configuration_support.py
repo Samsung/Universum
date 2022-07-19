@@ -358,7 +358,8 @@ class Step:
     def __add__(self, other: 'Step') -> 'Step':
         """
         This functions defines operator ``+`` for :class:`Step` class objects by
-        concatenating strings and contents of dictionaries. Note that `critical` attribute is not merged.
+        concatenating strings and contents of dictionaries.
+        Note that `critical` attribute is always taken from the second operand.
 
         :param other: `Step` object
         :return: new `Step` object, including all attributes from both `self` and `other` objects
@@ -367,6 +368,8 @@ class Step:
         >>> step2 = Step(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
         >>> step1 + step2
         {'name': 'foobar', 'command': ['foo', 'bar'], 'background': True, 'my_var1': 'foobar', 'my_var2': 'baz'}
+        >>> step2 + step1
+        {'name': 'barfoo', 'command': ['bar', 'foo'], 'critical': True, 'background': True, 'my_var1': 'barfoo', 'my_var2': 'baz'}
         """
         return Step(
             name=self.name + other.name,
@@ -376,7 +379,7 @@ class Step:
             report_artifacts=self.report_artifacts + other.report_artifacts,
             artifact_prebuild_clean=self.artifact_prebuild_clean or other.artifact_prebuild_clean,
             directory=self.directory + other.directory,
-            critical=False,
+            critical=other.critical,
             background=self.background or other.background,
             finish_background=self.finish_background or other.finish_background,
             code_report=self.code_report or other.code_report,
