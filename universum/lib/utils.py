@@ -196,7 +196,8 @@ class Uninterruptible:
 def make_block(block_name: str, pass_errors: bool = True) -> DecoratorT:
     def decorated_function(func):
         def function_in_block(self, *args, **kwargs):
-            return self.structure.run_in_block(func, block_name, pass_errors, self, *args, **kwargs)
+            with self.structure.block(block_name=block_name, pass_errors=pass_errors):
+                return func(self, *args, **kwargs)
         return function_in_block
     return decorated_function
 

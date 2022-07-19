@@ -64,7 +64,8 @@ class Poll(HasOutput, HasStructure):
         try:
             self.latest_cls = self.vcs.driver.get_changes(self.stored_cls, self.settings.max_number)
             for depot in self.latest_cls.keys():
-                self.structure.run_in_block(self.process_single_mapping, "Processing depot " + depot, True, depot)
+                with self.structure.block(block_name=f"Processing depot {depot}", pass_errors=True):
+                    self.process_single_mapping(depot)
         except NotImplementedError:
             self.out.log("Polling is skipped because current VCS doesn't support it")
         finally:

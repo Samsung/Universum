@@ -490,8 +490,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.map_local_path_to_depot(report)
                 self.p4report(report)
                 self.append_repo_status("\n    " + cl)
-                self.structure.run_in_block(self.p4resolve, f"Resolving potential conflicts for CL {cl}",
-                                            pass_errors=True)
+                with self.structure.block(block_name=f"Resolving potential conflicts for CL {cl}", pass_errors=True):
+                    self.p4resolve()
             self.append_repo_status("\n")
 
     @catch_p4exception(ignore_if="file(s) up-to-date")
