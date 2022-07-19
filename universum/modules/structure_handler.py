@@ -135,11 +135,6 @@ class StructureHandler(HasOutput):
         finally:
             self.close_block()
 
-    def run_in_block(self, operation: Callable[..., T],
-                     block_name: str, pass_errors: bool, *args, **kwargs) -> Optional[T]:
-        with self.block(block_name=block_name, pass_errors=pass_errors):
-            return operation(*args, **kwargs)
-
     def execute_one_step(self, configuration: Step,
                          step_executor: Callable) -> Optional[str]:
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
@@ -241,17 +236,14 @@ class StructureHandler(HasOutput):
         return not some_step_failed
 
     def report_background_steps(self) -> bool:
-        result = True
+        result: bool = True
         for item in self.active_background_steps:
-            if self.run_in_block(self.finalize_background_step,
-                                 "Waiting for background step '" + item['name'] + "' to finish...",
-                                 True, item):
-                continue
-
-            if item['is_critical']:
-                result = False
-                self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
-                                        "all further steps will be skipped")
+            with self.block(block_name="Waiting for background step '" + item['name'] + "' to finish...",
+                            pass_errors=True):
+                if not self.finalize_background_step(item) and item['is_critical']:
+                    result = False
+                    self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
+                                            "all further steps will be skipped")
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []
@@ -265,7 +257,8 @@ class StructureHandler(HasOutput):
         self.execute_steps_recursively(Step(), configs, step_executor, False)
 
         if self.active_background_steps:
-            self.run_in_block(self.report_background_steps, "Reporting background steps", False)
+            with self.block(block_name="Reporting background steps", pass_errors=False):
+                self.report_background_steps()
 
 
 class HasStructure(Module):
