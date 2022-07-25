@@ -521,7 +521,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                     raise
                 self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
         else:
-            self.out.log_stderr("Calculating file diff failed, leaving blank")
+            self.out.log_exception("Calculating file diff failed, leaving blank")
             return None
 
         for entry in opened_files:

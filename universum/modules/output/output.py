@@ -86,13 +86,13 @@ class Output(Module):
         self.driver.log_exception(line)
         self.html_driver.log_exception(line)
 
+    def log_stdout(self, line: str) -> None:
+        self.driver.log_stdout(line)
+        self.html_driver.log_stdout(line)
+
     def log_stderr(self, line: str) -> None:
         self.driver.log_stderr(line)
         self.html_driver.log_stderr(line)
-
-    def log_shell_output(self, line: str) -> None:
-        self.driver.log_shell_output(line)
-        self.html_driver.log_shell_output(line)
 
     def log_execution_start(self, title: str, version: str) -> None:
         self.driver.log_execution_start(title, version)

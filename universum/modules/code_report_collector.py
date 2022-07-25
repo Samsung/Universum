@@ -103,15 +103,15 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                     try:
                         issue_count = self._report_as_pylint_json(report)
                     except (KeyError, AttributeError, ValueError):
-                        self.out.log_stderr("Could not parse report file. Something went wrong.")
+                        self.out.log_exception("Could not parse report file. Something went wrong.")
                         continue
             else:
-                self.out.log_stderr("There are no results in code report file. Something went wrong.")
+                self.out.log_exception("There are no results in code report file. Something went wrong.")
                 continue
 
             if issue_count != 0:
                 text = str(issue_count) + " issues"
-                self.out.log_stderr("Found " + text)
+                self.out.log_exception("Found " + text)
                 self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
             else:
                 self.out.log("Issues not found.")

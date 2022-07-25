@@ -174,7 +174,7 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
                                "repo_path": diff_record[1],
                                "local_path": utils.parse_path(diff_record[-1], self.settings.project_root)})
             except IndexError:
-                self.out.log_stderr(line)
+                self.out.log_exception(line)
 
         return result
 

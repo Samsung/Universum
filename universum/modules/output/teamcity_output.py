@@ -32,6 +32,9 @@ class TeamcityOutput(BaseOutput):
         for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='ERROR']")
 
+    def log_stdout(self, line):
+        print(line)
+
     def log_stderr(self, line):
         lines = line.split("\n")
         for single_line in lines:
@@ -42,6 +45,3 @@ class TeamcityOutput(BaseOutput):
 
     def log_external_command(self, command):
         print("$", command)
-
-    def log_shell_output(self, line):
-        print(line)

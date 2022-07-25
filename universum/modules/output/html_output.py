@@ -63,6 +63,9 @@ class HtmlOutput(BaseOutput):
     def log_exception(self, line):
         self._log_line(f'<span class="exceptionTag">Error:</span> {line}')
 
+    def log_stdout(self, line):
+        self._log_line(line)
+
     def log_stderr(self, line):
         self._log_line(f'<span class="stderrTag">stderr:</span> {line}')
 
@@ -71,9 +74,6 @@ class HtmlOutput(BaseOutput):
 
     def log_external_command(self, command):
         self._log_line(f"$ {command}")
-
-    def log_shell_output(self, line):
-        self._log_line(line)
 
     def log_execution_start(self, title, version):
         head_content = self._build_html_head()

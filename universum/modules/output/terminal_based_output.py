@@ -83,6 +83,9 @@ class TerminalBasedOutput(BaseOutput):
     def log_exception(self, line):
         self.print_lines(Colors.dark_red, "Error: ", Colors.reset, line)
 
+    def log_stdout(self, line):
+        self.print_lines(line)
+
     def log_stderr(self, line):
         self.print_lines(Colors.dark_yellow, "stderr: ", Colors.reset, line)
 
@@ -92,5 +95,3 @@ class TerminalBasedOutput(BaseOutput):
     def log_external_command(self, command):
         self.print_lines("$ ", command)
 
-    def log_shell_output(self, line):
-        self.print_lines(line)

@@ -27,6 +27,9 @@ class BaseOutput(Module):
     def log_exception(self, line):
         raise NotImplementedError
 
+    def log_stdout(self, line):
+        raise NotImplementedError
+
     def log_stderr(self, line):
         raise NotImplementedError
 
@@ -34,9 +37,6 @@ class BaseOutput(Module):
         raise NotImplementedError
 
     def log_external_command(self, command):
-        raise NotImplementedError
-
-    def log_shell_output(self, line):
         raise NotImplementedError
 
     def log_execution_start(self, title, version):

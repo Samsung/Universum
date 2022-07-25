@@ -231,9 +231,9 @@ class RunningStep(RunningStepBase):
         if self.file:
             self.file.write(line + "\n")
         elif self._is_background:
-            self._postponed_out.append((self.out.log_shell_output, line))
+            self._postponed_out.append((self.out.log_stdout, line))
         else:
-            self.out.log_shell_output(line)
+            self.out.log_stdout(line)
 
     def handle_stderr(self, line: str) -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -250,7 +250,7 @@ class RunningStep(RunningStepBase):
 
         request: Response = self.send_tag(tag)
         if request.status_code != 200:
-            self.out.log_stderr(request.text)
+            self.out.log_exception(request.text)
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
