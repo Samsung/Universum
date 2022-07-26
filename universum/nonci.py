@@ -17,16 +17,15 @@ class Nonci(Launcher):
 
     def execute(self):
         self.out.log("Cleaning artifacts...")
-        self.artifacts.clean_artifacts_silently()
+        self.artifact_collector.clean_artifacts_silently()
 
         project_configs = self.process_project_configs()
         self.code_report_collector.prepare_environment(project_configs)
-        self.artifacts.set_and_clean_artifacts(project_configs, ignore_existing_artifacts=True)
+        self.artifact_collector.set_and_clean_artifacts(project_configs, ignore_existing_artifacts=True)
 
         self.launch_project()
         self.reporter.report_initialized = True
         self.reporter.report_build_result()
-        self.artifacts.collect_artifacts()
 
     def finalize(self):
         pass

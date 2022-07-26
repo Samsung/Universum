@@ -80,9 +80,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
 
-        self.artifact_list = []
-        self.report_artifact_list = []
-
         # Needed because of wildcards
         self.collected_report_artifacts = set()
 
@@ -126,7 +123,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         :param ignore_already_existing: will not check existence of artifacts when set to 'True'
         :return: sorted list of checked paths (including duplicates and wildcards)
         """
-        dir_list = set()
         for item in artifact_list:
             # Check existence in place: wildcards applied
             matches = glob2.glob(item["path"])
@@ -156,11 +152,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                 text += "\nPossible reason of this error: previous build results in working directory"
                 raise CriticalCiException(text)
 
-            dir_list.add(item["path"])
-        new_artifact_list = list(dir_list)
-        new_artifact_list.sort(key=len, reverse=True)
-        return new_artifact_list
-
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
         self.html_output.artifact_dir_ready = True
@@ -177,13 +168,12 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         if artifact_list:
             name = "Setting and preprocessing artifacts according to configs"
             with self.structure.block(block_name=name, pass_errors=True):
-                self.artifact_list = self.preprocess_artifact_list(artifact_list, ignore_existing_artifacts)
+                self.preprocess_artifact_list(artifact_list, ignore_existing_artifacts)
 
         if report_artifact_list:
             name = "Setting and preprocessing artifacts to be mentioned in report"
             with self.structure.block(block_name=name, pass_errors=True):
-                self.report_artifact_list = self.preprocess_artifact_list(report_artifact_list,
-                                                                          ignore_existing_artifacts)
+                self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
@@ -221,18 +211,13 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                     artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name)
                     self.collected_report_artifacts.add(artifact_path)
 
-    @make_block("Collecting artifacts", pass_errors=False)
-    def collect_artifacts(self):
-        self.reporter.add_block_to_report(self.structure.get_current_block())
-        for path in self.report_artifact_list:
-            name = "Collecting '" + os.path.basename(path) + "' for report"
-            with self.structure.block(block_name=name, pass_errors=False):
-                self.move_artifact(path, is_report=True)
-        self.reporter.report_artifacts(list(self.collected_report_artifacts))
-        for path in self.artifact_list:
-            name = "Collecting '" + os.path.basename(path) + "'"
-            with self.structure.block(block_name=name, pass_errors=False):
-                self.move_artifact(path)
+    def collect_step_artifacts(self, step_artifacts, step_report_artifacts):
+        if step_artifacts:
+            path = utils.parse_path(step_artifacts, self.settings.project_root)
+            self.move_artifact(path, is_report=False)
+        if step_report_artifacts:
+            path = utils.parse_path(step_report_artifacts, self.settings.project_root)
+            self.move_artifact(path, is_report=True)
 
     def clean_artifacts_silently(self):
         try:

@@ -67,6 +67,7 @@ class BackgroundStepInfo(TypedDict):
     name: str
     block: Block
     finalizer: Callable[[], None]
+    artifats_collection: Callable
     is_critical: bool
 
 
@@ -136,24 +137,25 @@ class StructureHandler(HasOutput):
             self.close_block()
 
     def execute_one_step(self, configuration: Step,
-                         step_executor: Callable) -> Optional[str]:
+                         step_executor: Callable):
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
         error: Optional[str] = process.start()
         if error is not None:
-            return error
+            return process, error
 
         if not configuration.background:
             error = process.finalize()
-            return error  # could be None or error message
+            return process, error  # could be None or error message
 
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
                                              'finalizer': process.finalize,
+                                             'artifacts_collection': process.collect_artifacts,
                                              'is_critical': configuration.critical})
-        return None
+        return process, None
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
         error = background_step['finalizer']()
@@ -175,20 +177,25 @@ class StructureHandler(HasOutput):
         self.configs_current_number += 1
         numbering: str = f" [ {self.configs_current_number:>{self.step_num_len}}/{self.configs_total_count} ] "
         step_label: str = numbering + merged_item.name
+        executed_successfully: bool = True
 
         if skip_execution:
             self.report_skipped_block(numbering + "'" + merged_item.name + "'")
-            return True
+            return executed_successfully
 
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
+        process = None
         with self.block(block_name=step_label, pass_errors=False):
-            error: Optional[str] = self.execute_one_step(merged_item, step_executor)
-            if error is not None:
+            process, error = self.execute_one_step(merged_item, step_executor)
+            executed_successfully = (error is None)
+            if not executed_successfully:
                 self.fail_current_block(error)
-                return False
+        if not process._is_background:
+            with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
+                process.collect_artifacts()
 
-        return True
+        return executed_successfully
 
     def execute_steps_recursively(self, parent: Step,
                                   children: Configuration,
@@ -244,6 +251,8 @@ class StructureHandler(HasOutput):
                     result = False
                     self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
                                             "all further steps will be skipped")
+            with self.block(block_name=f"Collecting artifacts for the '{item['name']}' step", pass_errors=False):
+                item['artifacts_collection']();
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []
