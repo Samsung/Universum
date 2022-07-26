@@ -67,7 +67,7 @@ class BackgroundStepInfo(TypedDict):
     name: str
     block: Block
     finalizer: Callable[[], None]
-    artifats_collection: Callable
+    artifacts_collection: Callable
     is_critical: bool
 
 
@@ -191,7 +191,7 @@ class StructureHandler(HasOutput):
             executed_successfully = (error is None)
             if not executed_successfully:
                 self.fail_current_block(error)
-        if not process._is_background:
+        if not merged_item.background:
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
                 process.collect_artifacts()
 
@@ -252,7 +252,7 @@ class StructureHandler(HasOutput):
                     self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
                                             "all further steps will be skipped")
             with self.block(block_name=f"Collecting artifacts for the '{item['name']}' step", pass_errors=False):
-                item['artifacts_collection']();
+                item['artifacts_collection']()
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []

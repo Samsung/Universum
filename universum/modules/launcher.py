@@ -168,7 +168,7 @@ class RunningStep:
                  working_directory: str,
                  additional_environment: Dict[str, str],
                  background: bool,
-                 artifact_collector: artifact_collector.ArtifactCollector) -> None:
+                 artifact_collector_obj: artifact_collector.ArtifactCollector) -> None:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
@@ -186,7 +186,7 @@ class RunningStep:
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
 
-        self.artifact_collector = artifact_collector
+        self.artifact_collector = artifact_collector_obj
 
     def prepare_command(self) -> bool:  # FIXME: refactor
         if not self.configuration.command:
