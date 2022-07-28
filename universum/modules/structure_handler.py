@@ -177,15 +177,15 @@ class StructureHandler(HasOutput):
         self.configs_current_number += 1
         numbering: str = f" [ {self.configs_current_number:>{self.step_num_len}}/{self.configs_total_count} ] "
         step_label: str = numbering + merged_item.name
-        executed_successfully: bool = True
 
         if skip_execution:
             self.report_skipped_block(numbering + "'" + merged_item.name + "'")
-            return executed_successfully
+            return True
 
+        process = None
+        executed_successfully: bool = True
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
-        process = None
         with self.block(block_name=step_label, pass_errors=False):
             process, error = self.execute_one_step(merged_item, step_executor)
             executed_successfully = (error is None)
