@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+from abc import ABC, abstractmethod
 
 from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
 from typing_extensions import TypedDict
@@ -68,6 +69,19 @@ class BackgroundStepInfo(TypedDict):
     block: Block
     process: RunningStepBase
     is_critical: bool
+
+
+class RunningStepBase(ABC):
+
+    error: Optional[str] = None
+
+    @abstractmethod
+    def start(self) -> None:
+        pass
+
+    @abstractmethod
+    def finalize(self):
+        pass
 
 
 class StructureHandler(HasOutput):

@@ -16,7 +16,7 @@ from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .output import HasOutput, Output
 from .project_directory import ProjectDirectory
-from .structure_handler import HasStructure
+from .structure_handler import HasStructure, RunningStepBase
 
 __all__ = [
     "Launcher",
@@ -158,19 +158,6 @@ def get_match_patterns(filters: Union[str, List[str]]) -> Tuple[List[str], List[
         elif f:
             include.append(f)
     return include, exclude
-
-
-class RunningStepBase(ABC):
-
-    error: Optional[str] = None
-
-    @abstractmethod
-    def start(self) -> None:
-        pass
-
-    @abstractmethod
-    def finalize(self):
-        pass
 
 
 class RunningStep(RunningStepBase):
