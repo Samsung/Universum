@@ -5,7 +5,6 @@ from inspect import cleandoc
 from typing import Callable, Dict, List, Optional, TextIO, Tuple, Union
 from requests import Response
 import sh
-from abc import ABC, abstractmethod
 
 from .error_state import HasErrorState
 from .. import configuration_support

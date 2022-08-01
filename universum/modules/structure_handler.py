@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import contextlib
 import copy
-from abc import ABC, abstractmethod
 
+from abc import ABC, abstractmethod
 from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
 from typing_extensions import TypedDict
 from ..configuration_support import Step, Configuration
