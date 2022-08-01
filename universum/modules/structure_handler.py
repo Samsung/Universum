@@ -159,7 +159,7 @@ class StructureHandler(HasOutput):
         process = background_step['process']
         process.finalize()
         if process.error is not None:
-            self.fail_block(background_step['block'], error)
+            self.fail_block(background_step['block'], process.error)
             self.fail_current_block()
             return False
 
