@@ -5,6 +5,7 @@ from inspect import cleandoc
 from typing import Callable, Dict, List, Optional, TextIO, Tuple, Union
 from requests import Response
 import sh
+from abc import ABC, abstractmethod
 
 from .error_state import HasErrorState
 from .. import configuration_support
@@ -159,7 +160,20 @@ def get_match_patterns(filters: Union[str, List[str]]) -> Tuple[List[str], List[
     return include, exclude
 
 
-class RunningStep:
+class RunningStepBase(ABC):
+
+    error: Optional[str] = None
+
+    @abstractmethod
+    def start(self) -> None:
+        pass
+
+    @abstractmethod
+    def finalize(self):
+        pass
+
+
+class RunningStep(RunningStepBase):
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item: configuration_support.Step,
                  out: Output,
@@ -199,13 +213,15 @@ class RunningStep:
 
         return True
 
-    def start(self) -> Optional[str]:
+    def start(self):
+        self.error = None
         try:
             if not self.prepare_command():
                 self._needs_finalization = False
-                return None
+                return
         except CiException as ex:
-            return str(ex)
+            self.error = str(ex)
+            return
 
         self._postponed_out = []
         self.process = self.cmd(*self.configuration.command[1:],
@@ -221,8 +237,6 @@ class RunningStep:
         self.out.log_external_command(log_cmd)
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
-
-        return None
 
     def handle_stdout(self, line: str = "") -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -253,12 +267,13 @@ class RunningStep:
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
-    def finalize(self) -> Optional[str]:
+    def finalize(self) -> None:
+        self.error = None
         if not self._needs_finalization:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
-            return None
+            return
         try:
             text = ""
             try:
@@ -277,10 +292,11 @@ class RunningStep:
                 if self.file:
                     self.file.write(text + "\n")
                 self.add_tag(self.configuration.fail_tag)
-                return text
+                self.error = text
+                return
 
             self.add_tag(self.configuration.pass_tag)
-            return None
+            return
 
         finally:
             self.handle_stdout()

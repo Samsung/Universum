@@ -66,7 +66,7 @@ class Block:
 class BackgroundStepInfo(TypedDict):
     name: str
     block: Block
-    finalizer: Callable[[], None]
+    process: RunningStepBase
     is_critical: bool
 
 
@@ -140,24 +140,25 @@ class StructureHandler(HasOutput):
         # step_executor is [[Step], Step], but referring to Step creates circular dependency
         process = step_executor(configuration)
 
-        error: Optional[str] = process.start()
-        if error is not None:
-            return error
+        process.start()
+        if process.error is not None:
+            return process.error
 
         if not configuration.background:
-            error = process.finalize()
-            return error  # could be None or error message
+            process.finalize()
+            return process.error  # could be None or error message
 
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
-                                             'finalizer': process.finalize,
+                                             'process': process,
                                              'is_critical': configuration.critical})
         return None
 
     def finalize_background_step(self, background_step: BackgroundStepInfo):
-        error = background_step['finalizer']()
-        if error is not None:
+        process = background_step['process']
+        process.finalize()
+        if process.error is not None:
             self.fail_block(background_step['block'], error)
             self.fail_current_block()
             return False
