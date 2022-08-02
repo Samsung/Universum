@@ -174,8 +174,9 @@ class StructureHandler(HasOutput):
     def finalize_background_step(self, background_step: BackgroundStepInfo):
         process = background_step['process']
         process.finalize()
-        if process.get_error() is not None:
-            self.fail_block(background_step['block'], process.get_error())
+        error = process.get_error()
+        if error is not None:
+            self.fail_block(background_step['block'], error)
             self.fail_current_block()
             return False
 
