@@ -184,6 +184,7 @@ class RunningStep(RunningStepBase):
         self._is_background = background
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
+        self._error: Optional[str] = None
 
     def prepare_command(self) -> bool:  # FIXME: refactor
         if not self.configuration.command:
@@ -200,13 +201,13 @@ class RunningStep(RunningStepBase):
         return True
 
     def start(self):
-        self.error = None
+        self._error = None
         try:
             if not self.prepare_command():
                 self._needs_finalization = False
                 return
         except CiException as ex:
-            self.error = str(ex)
+            self._error = str(ex)
             return
 
         self._postponed_out = []
@@ -254,7 +255,7 @@ class RunningStep(RunningStepBase):
             self.out.log("Tag '" + tag + "' added to build.")
 
     def finalize(self) -> None:
-        self.error = None
+        self._error = None
         if not self._needs_finalization:
             if self._is_background:
                 self._is_background = False
@@ -278,7 +279,7 @@ class RunningStep(RunningStepBase):
                 if self.file:
                     self.file.write(text + "\n")
                 self.add_tag(self.configuration.fail_tag)
-                self.error = text
+                self._error = text
                 return
 
             self.add_tag(self.configuration.pass_tag)
@@ -289,6 +290,9 @@ class RunningStep(RunningStepBase):
             if self.file:
                 self.file.close()
             self._is_background = False
+
+    def get_error(self) -> Optional[str]:
+        return self._error
 
     def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:

@@ -73,14 +73,16 @@ class BackgroundStepInfo(TypedDict):
 
 class RunningStepBase(ABC):
 
-    error: Optional[str] = None
-
     @abstractmethod
     def start(self) -> None:
         pass
 
     @abstractmethod
-    def finalize(self):
+    def finalize(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_error(self) -> Optional[str]:
         pass
 
 
@@ -155,12 +157,12 @@ class StructureHandler(HasOutput):
         process = step_executor(configuration)
 
         process.start()
-        if process.error is not None:
-            return process.error
+        if process.get_error() is not None:
+            return process.get_error()
 
         if not configuration.background:
             process.finalize()
-            return process.error  # could be None or error message
+            return process.get_error()  # could be None or error message
 
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
@@ -172,8 +174,8 @@ class StructureHandler(HasOutput):
     def finalize_background_step(self, background_step: BackgroundStepInfo):
         process = background_step['process']
         process.finalize()
-        if process.error is not None:
-            self.fail_block(background_step['block'], process.error)
+        if process.get_error() is not None:
+            self.fail_block(background_step['block'], process.get_error())
             self.fail_current_block()
             return False
 
