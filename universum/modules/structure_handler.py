@@ -152,9 +152,8 @@ class StructureHandler(HasOutput):
             self.close_block()
 
     def execute_one_step(self, configuration: Step,
-                         step_executor: Callable) -> Optional[str]:
-        # step_executor is [[Step], Step], but referring to Step creates circular dependency
-        process = step_executor(configuration)
+                         step_executor: Callable[[Step], RunningStepBase]) -> Optional[str]:
+        process: RunningStepBase = step_executor(configuration)
 
         process.start()
         if process.get_error() is not None:
@@ -171,10 +170,10 @@ class StructureHandler(HasOutput):
                                              'is_critical': configuration.critical})
         return None
 
-    def finalize_background_step(self, background_step: BackgroundStepInfo):
-        process = background_step['process']
+    def finalize_background_step(self, background_step: BackgroundStepInfo) -> bool:
+        process: RunningStepBase = background_step['process']
         process.finalize()
-        error = process.get_error()
+        error: Optional[str] = process.get_error()
         if error is not None:
             self.fail_block(background_step['block'], error)
             self.fail_current_block()
