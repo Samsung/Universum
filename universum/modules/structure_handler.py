@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import copy
 
+from abc import ABC, abstractmethod
 from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
 from typing_extensions import TypedDict
 from ..configuration_support import Step, Configuration
@@ -66,8 +67,23 @@ class Block:
 class BackgroundStepInfo(TypedDict):
     name: str
     block: Block
-    finalizer: Callable[[], None]
+    process: RunningStepBase
     is_critical: bool
+
+
+class RunningStepBase(ABC):
+
+    @abstractmethod
+    def start(self) -> None:
+        pass
+
+    @abstractmethod
+    def finalize(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_error(self) -> Optional[str]:
+        pass
 
 
 class StructureHandler(HasOutput):
@@ -136,27 +152,28 @@ class StructureHandler(HasOutput):
             self.close_block()
 
     def execute_one_step(self, configuration: Step,
-                         step_executor: Callable) -> Optional[str]:
-        # step_executor is [[Step], Step], but referring to Step creates circular dependency
-        process = step_executor(configuration)
+                         step_executor: Callable[[Step], RunningStepBase]) -> Optional[str]:
+        process: RunningStepBase = step_executor(configuration)
 
-        error: Optional[str] = process.start()
-        if error is not None:
-            return error
+        process.start()
+        if process.get_error() is not None:
+            return process.get_error()
 
         if not configuration.background:
-            error = process.finalize()
-            return error  # could be None or error message
+            process.finalize()
+            return process.get_error()  # could be None or error message
 
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
-                                             'finalizer': process.finalize,
+                                             'process': process,
                                              'is_critical': configuration.critical})
         return None
 
-    def finalize_background_step(self, background_step: BackgroundStepInfo):
-        error = background_step['finalizer']()
+    def finalize_background_step(self, background_step: BackgroundStepInfo) -> bool:
+        process: RunningStepBase = background_step['process']
+        process.finalize()
+        error: Optional[str] = process.get_error()
         if error is not None:
             self.fail_block(background_step['block'], error)
             self.fail_current_block()
