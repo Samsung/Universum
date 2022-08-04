@@ -87,6 +87,7 @@ class Main(HasOutput):
                     self.launcher.launch_custom_configs(afterall_configs)
                     self.code_report_collector.repo_diff = repo_diff
             self.code_report_collector.report_code_report_results()
+        self.artifacts.report_artifacts()
         self.reporter.report_build_result()
 
     def finalize(self) -> None:

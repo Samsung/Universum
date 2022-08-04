@@ -25,6 +25,7 @@ class Nonci(Launcher):
 
         self.launch_project()
         self.reporter.report_initialized = True
+        self.artifact_collector.report_artifacts()
         self.reporter.report_build_result()
 
     def finalize(self):

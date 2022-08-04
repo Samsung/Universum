@@ -219,6 +219,9 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             path = utils.parse_path(step_report_artifacts, self.settings.project_root)
             self.move_artifact(path, is_report=True)
 
+    def report_artifacts(self):
+        self.reporter.report_artifacts(list(self.collected_report_artifacts))
+
     def clean_artifacts_silently(self):
         try:
             shutil.rmtree(self.artifact_dir)
