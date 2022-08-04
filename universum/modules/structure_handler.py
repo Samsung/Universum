@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import copy
 
+from abc import ABC, abstractmethod
 from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
 from typing_extensions import TypedDict
 from ..configuration_support import Step, Configuration
@@ -66,9 +67,23 @@ class Block:
 class BackgroundStepInfo(TypedDict):
     name: str
     block: Block
-    finalizer: Callable[[], None]
-    artifacts_collection: Callable
+    process: RunningStepBase
     is_critical: bool
+
+
+class RunningStepBase(ABC):
+
+    @abstractmethod
+    def start(self) -> None:
+        pass
+
+    @abstractmethod
+    def finalize(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_error(self) -> Optional[str]:
+        pass
 
 
 class StructureHandler(HasOutput):
@@ -137,28 +152,25 @@ class StructureHandler(HasOutput):
             self.close_block()
 
     def execute_one_step(self, configuration: Step,
-                         step_executor: Callable):
-        # step_executor is [[Step], Step], but referring to Step creates circular dependency
-        process = step_executor(configuration)
-
-        error: Optional[str] = process.start()
-        if error is not None:
-            return process, error
-
+                         step_executor: Callable[[Step], RunningStepBase]) -> RunningStepBase:
+        process: RunningStepBase = step_executor(configuration)
+        process.start()
+        if process.get_error() is not None:
+            return process
         if not configuration.background:
             error = process.finalize()
-            return process, error  # could be None or error message
-
+            return process
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
-                                             'finalizer': process.finalize,
-                                             'artifacts_collection': process.collect_artifacts,
+                                             'process': process,
                                              'is_critical': configuration.critical})
-        return process, None
+        return process
 
-    def finalize_background_step(self, background_step: BackgroundStepInfo):
-        error = background_step['finalizer']()
+    def finalize_background_step(self, background_step: BackgroundStepInfo) -> bool:
+        process: RunningStepBase = background_step['process']
+        process.finalize()
+        error: Optional[str] = process.get_error()
         if error is not None:
             self.fail_block(background_step['block'], error)
             self.fail_current_block()
@@ -187,7 +199,8 @@ class StructureHandler(HasOutput):
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
         with self.block(block_name=step_label, pass_errors=False):
-            process, error = self.execute_one_step(merged_item, step_executor)
+            process = self.execute_one_step(merged_item, step_executor)
+            error = process.get_error()
             executed_successfully = (error is None)
             if not executed_successfully:
                 self.fail_current_block(error)
@@ -252,7 +265,7 @@ class StructureHandler(HasOutput):
                     self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
                                             "all further steps will be skipped")
             with self.block(block_name=f"Collecting artifacts for the '{item['name']}' step", pass_errors=False):
-                item['artifacts_collection']()
+                item['process'].collect_artifacts()
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []

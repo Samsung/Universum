@@ -15,7 +15,7 @@ from ..lib.utils import make_block
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .output import HasOutput, Output
 from .project_directory import ProjectDirectory
-from .structure_handler import HasStructure
+from .structure_handler import HasStructure, RunningStepBase
 
 __all__ = [
     "Launcher",
@@ -159,7 +159,7 @@ def get_match_patterns(filters: Union[str, List[str]]) -> Tuple[List[str], List[
     return include, exclude
 
 
-class RunningStep:
+class RunningStep(RunningStepBase):
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item: configuration_support.Step,
                  out: Output,
@@ -185,6 +185,7 @@ class RunningStep:
         self._is_background = background
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
+        self._error: Optional[str] = None
 
         self.artifact_collector = artifact_collector_obj
 
@@ -202,13 +203,15 @@ class RunningStep:
 
         return True
 
-    def start(self) -> Optional[str]:
+    def start(self):
+        self._error = None
         try:
             if not self.prepare_command():
                 self._needs_finalization = False
-                return None
+                return
         except CiException as ex:
-            return str(ex)
+            self._error = str(ex)
+            return
 
         self._postponed_out = []
         self.process = self.cmd(*self.configuration.command[1:],
@@ -224,8 +227,6 @@ class RunningStep:
         self.out.log_external_command(log_cmd)
         if self.file:
             self.file.write("$ " + log_cmd + "\n")
-
-        return None
 
     def handle_stdout(self, line: str = "") -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -256,12 +257,13 @@ class RunningStep:
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
-    def finalize(self) -> Optional[str]:
+    def finalize(self) -> None:
+        self._error = None
         if not self._needs_finalization:
             if self._is_background:
                 self._is_background = False
                 self.out.log("Nothing was executed: this background step had no command")
-            return None
+            return
         try:
             text = ""
             try:
@@ -280,16 +282,20 @@ class RunningStep:
                 if self.file:
                     self.file.write(text + "\n")
                 self.add_tag(self.configuration.fail_tag)
-                return text
+                self._error = text
+                return
 
             self.add_tag(self.configuration.pass_tag)
-            return None
+            return
 
         finally:
             self.handle_stdout()
             if self.file:
                 self.file.close()
             self._is_background = False
+
+    def get_error(self) -> Optional[str]:
+        return self._error
 
     def collect_artifacts(self) -> None:
         self.artifact_collector.collect_step_artifacts(self.configuration.artifacts,
