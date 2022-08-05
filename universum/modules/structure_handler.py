@@ -85,6 +85,10 @@ class RunningStepBase(ABC):
     def get_error(self) -> Optional[str]:
         pass
 
+    @abstractmethod
+    def collect_artifacts(self) -> None:
+        pass
+
 
 class StructureHandler(HasOutput):
     def __init__(self, *args, **kwargs) -> None:
@@ -158,7 +162,7 @@ class StructureHandler(HasOutput):
         if process.get_error() is not None:
             return process
         if not configuration.background:
-            error = process.finalize()
+            process.finalize()
             return process
         self.out.log("This step is marked to be executed in background")
         self.active_background_steps.append({'name': configuration.name,
@@ -199,10 +203,11 @@ class StructureHandler(HasOutput):
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
         with self.block(block_name=step_label, pass_errors=False):
-            process = self.execute_one_step(merged_item, step_executor)
+            process= self.execute_one_step(merged_item, step_executor)
             error = process.get_error()
             executed_successfully = (error is None)
             if not executed_successfully:
+                error = error if error else ""
                 self.fail_current_block(error)
         if not merged_item.background:
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
