@@ -46,4 +46,4 @@ class GithubServer(BaseServerForHostingBuild, BaseServerForTrigger, HasErrorStat
         return "Here is the link to Github Actions build: " + build_link
 
     def artifact_path(self, local_artifacts_dir: str, item: str) -> str:
-        raise RuntimeError("Artifact path function is not defined for current driver.")
+        return "/Artifact/not/exist"
