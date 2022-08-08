@@ -24,18 +24,24 @@ class GithubServer(BaseServerForHostingBuild, BaseServerForTrigger, HasErrorStat
         super().__init__(*args, **kwargs)
         self.check_required_option("server_url", """
             The URL of the Github server is not specified.
+            
+            The URL of the Github server is used for constructing links to builds in code review system.
 
             Please specify the github server url by using '--github-server' ('-ghs') command-line
             option or GITHUB_SERVER_URL environment variable.
             """)
         self.check_required_option("repo", """
             The Github repository is not specified.
+            
+            The name of the Github repository is used for constructing links to builds in code review system.
 
             Please specify the Github repository by using '--github-repo' ('-ghr') command-line
             option or GITHUB_REPOSITORY environment variable.
             """)
         self.check_required_option("run_id", """
             The Github run ID is not specified.
+            
+            The id of the run on Github is used for constructing links to builds in code review system.
 
             Please specify the Github repository by using '--github-run-id' ('-ghri') command-line
             option or GITHUB_RUN_ID environment variable.
