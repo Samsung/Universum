@@ -112,7 +112,10 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                     raise CriticalCiException(text)
 
             self.file_list.add(file_name)
-            file_path = self.automation_server.artifact_path(self.artifact_dir, os.path.basename(file_name))
+            try:
+                file_path = self.automation_server.artifact_path(self.artifact_dir, os.path.basename(file_name))
+            except RuntimeError as e:
+                file_path = file_name
             self.out.log("Adding file " + file_path + " to artifacts...")
             return codecs.open(file_name, "a", encoding="utf-8")          # pylint: disable = consider-using-with
 
