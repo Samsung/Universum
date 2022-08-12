@@ -123,7 +123,7 @@ class StructureHandler(HasOutput):
 
     def fail_block(self, block, error: str = ""):
         if error:
-            self.out.log_exception(error)
+            self.out.log_error(error)
         block.status = "Failed"
         self.out.report_build_problem(block.name + " " + block.status)
 

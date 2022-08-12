@@ -60,7 +60,7 @@ def run(settings: ModuleNamespace) -> int:
     signal.signal(signal.SIGTERM, signal_handler)
 
     try:
-        with Uninterruptible(main_module.out.log_exception) as run_function:
+        with Uninterruptible(main_module.out.log_error) as run_function:
             run_function(main_module.execute)
             run_function(main_module.finalize)
 
@@ -69,7 +69,7 @@ def run(settings: ModuleNamespace) -> int:
 
     except Exception as e:
         ex_traceback = sys.exc_info()[2]
-        main_module.out.log_exception("Unexpected error.\n" + format_traceback(e, ex_traceback))
+        main_module.out.log_error("Unexpected error.\n" + format_traceback(e, ex_traceback))
         main_module.out.report_build_problem("Unexpected error while executing script.")
         result = 2
 

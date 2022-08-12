@@ -40,7 +40,7 @@ class GithubOutput(TerminalBasedOutput):
     def report_skipped(self, message):
         self.print_lines(message, prefix="::warning::")
 
-    def log_exception(self, line):
+    def log_error(self, line):
         self.print_lines(line, prefix="::error::")
 
     def log_stderr(self, line):

@@ -27,7 +27,7 @@ class TeamcityOutput(BaseOutput):
     def change_status(self, message):
         print(f"##teamcity[buildStatus text='{escape(message)}']")
 
-    def log_exception(self, line):
+    def log_error(self, line):
         lines = line.split("\n")
         for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='ERROR']")

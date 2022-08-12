@@ -60,7 +60,7 @@ class HtmlOutput(BaseOutput):
     def change_status(self, message):
         pass
 
-    def log_exception(self, line):
+    def log_error(self, line):
         self._log_line(f'<span class="exceptionTag">Error:</span> {line}')
 
     def log_stdout(self, line):

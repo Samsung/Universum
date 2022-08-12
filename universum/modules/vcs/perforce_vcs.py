@@ -125,7 +125,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
             raise SilentAbortException()
 
     def finalize(self):
-        with Uninterruptible(self.out.log_exception) as run:
+        with Uninterruptible(self.out.log_error) as run:
             run(self.disconnect)
             run(super().finalize)
 
@@ -521,7 +521,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                     raise
                 self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
         else:
-            self.out.log_exception("Calculating file diff failed, leaving blank")
+            self.out.log_error("Calculating file diff failed, leaving blank")
             return None
 
         for entry in opened_files:
@@ -650,7 +650,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.structure.fail_current_block(e.value)
 
     def finalize(self):
-        with Uninterruptible(self.out.log_exception) as run:
+        with Uninterruptible(self.out.log_error) as run:
             if self.settings.force_clean:
                 run(self.connect)
                 run(self.clean_workspace)

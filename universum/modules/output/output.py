@@ -82,9 +82,9 @@ class Output(Module):
         self.driver.report_step(message, status)
         self.html_driver.report_step(message, status)
 
-    def log_exception(self, line: str) -> None:
-        self.driver.log_exception(line)
-        self.html_driver.log_exception(line)
+    def log_error(self, line: str) -> None:
+        self.driver.log_error(line)
+        self.html_driver.log_error(line)
 
     def log_stdout(self, line: str) -> None:
         self.driver.log_stdout(line)
@@ -130,9 +130,8 @@ class MinimalOut:
         pass
 
     @staticmethod
-    def log_exception(exc: Exception) -> None:
-        ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
-        sys.stderr.write("Unexpected error.\n" + utils.format_traceback(exc, ex_traceback))
+    def log_error(line: str) -> None:
+        sys.stderr.write("Error: " + line)
 
     def log_execution_start(self, title, version):
         pass

@@ -250,7 +250,7 @@ class RunningStep(RunningStepBase):
 
         request: Response = self.send_tag(tag)
         if request.status_code != 200:
-            self.out.log_exception(request.text)
+            self.out.log_error(request.text)
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
