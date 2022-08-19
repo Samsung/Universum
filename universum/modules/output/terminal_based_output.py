@@ -61,13 +61,10 @@ class TerminalBasedOutput(BaseOutput):
         self.indent()
         self.stdout()
 
-    def report_error(self, description):
-        pass
-
-    def report_skipped(self, message):
+    def log_skipped(self, message):
         self.print_lines(Colors.dark_cyan, message, Colors.reset)
 
-    def report_step(self, step_title, has_children, status):
+    def log_summary_step(self, step_title, has_children, status):
         color = Colors.red
         if status.lower() == "success":
             color = Colors.green
@@ -77,11 +74,14 @@ class TerminalBasedOutput(BaseOutput):
 
         self.log(step_title)
 
-    def change_status(self, message):
+    def report_build_problem(self, description):
         pass
 
-    def log_error(self, line):
-        self.print_lines(Colors.dark_red, "Error: ", Colors.reset, line)
+    def set_build_title(self, message):
+        pass
+
+    def log_error(self, description):
+        self.print_lines(Colors.dark_red, "Error: ", Colors.reset, description)
 
     def log_stdout(self, line):
         self.print_lines(line)
@@ -94,4 +94,3 @@ class TerminalBasedOutput(BaseOutput):
 
     def log_external_command(self, command):
         self.print_lines("$ ", command)
-

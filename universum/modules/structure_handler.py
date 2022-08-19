@@ -109,14 +109,14 @@ class StructureHandler(HasOutput):
             self.current_block = self.current_block.parent
             self.out.close_block(block.number, block.name, block.status)
 
-    def report_critical_block_failure(self) -> None:
-        self.out.report_skipped("Critical step failed. All further configurations will be skipped")
+    def log_critical_block_failure(self) -> None:
+        self.out.log_skipped("Critical step failed. All further configurations will be skipped")
 
-    def report_skipped_block(self, name):
+    def log_skipped_block(self, name):
         new_skipped_block = Block(name, self.current_block)
         new_skipped_block.status = "Skipped"
 
-        self.out.report_skipped(new_skipped_block.number + name + " skipped because of critical step failure")
+        self.out.log_skipped(new_skipped_block.number + name + " skipped because of critical step failure")
 
     def fail_current_block(self, error: str = ""):
         block: Block = self.get_current_block()
@@ -195,7 +195,7 @@ class StructureHandler(HasOutput):
         step_label: str = numbering + merged_item.name
 
         if skip_execution:
-            self.report_skipped_block(numbering + "'" + merged_item.name + "'")
+            self.log_skipped_block(numbering + "'" + merged_item.name + "'")
             return True
 
         # Here pass_errors=False, because any exception while executing build step
@@ -245,7 +245,7 @@ class StructureHandler(HasOutput):
                 some_step_failed = True
 
                 if child.critical:
-                    self.report_critical_block_failure()
+                    self.log_critical_block_failure()
                     skip_execution = True
 
         if some_step_failed:
@@ -260,7 +260,7 @@ class StructureHandler(HasOutput):
                             pass_errors=True):
                 if not self.finalize_background_step(item) and item['is_critical']:
                     result = False
-                    self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
+                    self.out.log_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
                                             "all further steps will be skipped")
 
         self.out.log("All ongoing background steps completed")

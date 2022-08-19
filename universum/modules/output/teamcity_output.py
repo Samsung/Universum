@@ -16,26 +16,25 @@ class TeamcityOutput(BaseOutput):
     def close_block(self, num_str, name, status):
         print(f"##teamcity[blockClosed name='{num_str} {escape(name)}']")
 
-    def report_error(self, description):
+    def report_build_problem(self, description):
         print(f"##teamcity[buildProblem description='<{escape(description)}>']")
 
-    def report_skipped(self, message):
+    def log_skipped(self, message):
         lines = message.split("\n")
         for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='WARNING']")
 
-    def report_step(self, step_title, has_children, status):
+    def log_summary_step(self, step_title, has_children, status):
         if has_children:
             self.log(step_title)
         else:
             self.log(f"{step_title} - {status}")
 
-
-    def change_status(self, message):
+    def set_build_title(self, message):
         print(f"##teamcity[buildStatus text='{escape(message)}']")
 
-    def log_error(self, line):
-        lines = line.split("\n")
+    def log_error(self, description):
+        lines = description.split("\n")
         for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='ERROR']")
 

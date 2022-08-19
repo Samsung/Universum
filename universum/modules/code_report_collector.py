@@ -112,6 +112,6 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             if issue_count != 0:
                 text = str(issue_count) + " issues"
                 self.out.log_error("Found " + text)
-                self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
+                self.out.set_build_title(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
             else:
                 self.out.log("Issues not found.")

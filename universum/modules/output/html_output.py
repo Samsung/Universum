@@ -45,22 +45,16 @@ class HtmlOutput(BaseOutput):
         self._log_line(f"{indent} \u2514 {status_html}{closing_html}", with_line_separator=False)
         self._log_line("")
 
-    def report_error(self, description):
-        pass
-
-    def report_skipped(self, message):
+    def log_skipped(self, message):
         self._log_line(f'<span class="skipped">{message}</span>')
 
-    def report_step(self, step_title, has_children, status):
+    def log_summary_step(self, step_title, has_children, status):
         if not has_children:
             step_title += f' - <span class="{status.lower()}Status">{status}</span>'
         self.log(step_title)
 
-    def change_status(self, message):
-        pass
-
-    def log_error(self, line):
-        self._log_line(f'<span class="exceptionTag">Error:</span> {line}')
+    def log_error(self, description):
+        self._log_line(f'<span class="exceptionTag">Error:</span> {description}')
 
     def log_stdout(self, line):
         self._log_line(line)
@@ -91,6 +85,12 @@ class HtmlOutput(BaseOutput):
             html_footer += f"<script>{js_file.read()}</script>"
         html_footer += "</body></html>"
         self._log_line(html_footer)
+
+    def report_build_problem(self, description):
+        raise RuntimeError("Html output doesn't support reporting build problem.")
+
+    def set_build_title(self, message):
+        raise RuntimeError("Html output doesn't support setting build title.")
 
     def _log_line(self, line, with_line_separator=True):
         if with_line_separator and not line.endswith(os.linesep):

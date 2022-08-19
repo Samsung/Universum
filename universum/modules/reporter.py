@@ -148,13 +148,13 @@ class Reporter(HasOutput, HasStructure):
         block_title: str = block.number + ' ' + block.name
         if not self.settings.only_fails:
             text += indent + str(block) + '\n'
-            self.out.report_step(indent + block_title, has_children, block.status)
+            self.out.log_summary_step(indent + block_title, has_children, block.status)
         elif not block.is_successful():
             text += str(block) + '\n'
-            self.out.report_step(block_title, has_children, block.status)
+            self.out.log_summary_step(block_title, has_children, block.status)
 
         is_successful = block.is_successful()
-        for substep in block.children:  # type: Block
-            text, status = self._report_steps_recursively(substep, text, indent + "  ")
+        for child in block.children:  # type: Block
+            text, status = self._report_steps_recursively(child, text, indent + "  ")
             is_successful = is_successful and status
         return text, is_successful

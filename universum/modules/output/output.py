@@ -65,26 +65,24 @@ class Output(Module):
         self.driver.close_block(number, name, status)
         self.html_driver.close_block(number, name, status)
 
-    def report_build_status(self, status: str) -> None:
-        self.driver.change_status(status)
-        self.html_driver.change_status(status)
+    def set_build_title(self, status: str) -> None:
+        self.driver.set_build_title(status)
 
     # TODO: pass build problem to the Report module
     def report_build_problem(self, problem: str) -> None:
-        self.driver.report_error(problem)
-        self.html_driver.report_error(problem)
+        self.driver.report_build_problem(problem)
 
-    def report_skipped(self, message: str) -> None:
-        self.driver.report_skipped(message)
-        self.html_driver.report_skipped(message)
+    def log_skipped(self, message: str) -> None:
+        self.driver.log_skipped(message)
+        self.html_driver.log_skipped(message)
 
-    def report_step(self, step_title: str, has_children: bool, status: str) -> None:
-        self.driver.report_step(step_title, has_children, status)
-        self.html_driver.report_step(step_title, has_children, status)
+    def log_summary_step(self, step_title: str, has_children: bool, status: str) -> None:
+        self.driver.log_summary_step(step_title, has_children, status)
+        self.html_driver.log_summary_step(step_title, has_children, status)
 
-    def log_error(self, line: str) -> None:
-        self.driver.log_error(line)
-        self.html_driver.log_error(line)
+    def log_error(self, description: str) -> None:
+        self.driver.log_error(description)
+        self.html_driver.log_error(description)
 
     def log_stdout(self, line: str) -> None:
         self.driver.log_stdout(line)

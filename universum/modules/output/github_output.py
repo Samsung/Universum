@@ -37,11 +37,11 @@ class GithubOutput(TerminalBasedOutput):
         if status == "Failed":
             self.print_lines(f"::error::{num_str} {name} - Failed")
 
-    def report_skipped(self, message):
+    def log_skipped(self, message):
         self.print_lines(message, prefix="::warning::")
 
-    def log_error(self, line):
-        self.print_lines(line, prefix="::error::")
+    def log_error(self, description):
+        self.print_lines(description, prefix="::error::")
 
     def log_stderr(self, line):
         self.print_lines("stderr: ", line, prefix="::warning::")

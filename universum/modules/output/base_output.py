@@ -12,19 +12,19 @@ class BaseOutput(Module):
     def close_block(self, num_str, name, status):
         raise NotImplementedError
 
-    def report_error(self, description):
+    def log_skipped(self, message):
         raise NotImplementedError
 
-    def report_skipped(self, message):
+    def log_summary_step(self, step_title, has_children, status):
         raise NotImplementedError
 
-    def report_step(self, step_title, has_children, status):
+    def report_build_problem(self, description):
         raise NotImplementedError
 
-    def change_status(self, message):
+    def set_build_title(self, message):
         raise NotImplementedError
 
-    def log_error(self, msg):
+    def log_error(self, description):
         raise NotImplementedError
 
     def log_external_command(self, command):
