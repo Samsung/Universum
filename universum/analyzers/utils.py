@@ -110,7 +110,15 @@ def expand_files_argument(settings: argparse.Namespace) -> None:
     # TODO: subclass argparse.Action
     result = []
     for pattern in settings.file_list:
-        result.extend(glob.glob(pattern))
+        file_list: List[str] = glob.glob(pattern)
+        if not file_list:
+            sys.stderr.write(f"Warning: no files found for input pattern {pattern}\n")
+        else:
+            result.extend(file_list)
+
+    if not result:
+        raise AnalyzerException(message="Error: no files found for analysis")
+
     settings.file_list = result
 
 
