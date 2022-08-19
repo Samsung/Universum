@@ -51,11 +51,10 @@ class HtmlOutput(BaseOutput):
     def report_skipped(self, message):
         self._log_line(f'<span class="skipped">{message}</span>')
 
-    def report_step(self, message, status):
-        if message.endswith(status):
-            message = message[:-len(status)]
-            message += f'<span class="{status.lower()}Status">{status}</span>'
-        self.log(message)
+    def report_step(self, step_title, has_children, status):
+        if not has_children:
+            step_title += f' - <span class="{status.lower()}Status">{status}</span>'
+        self.log(step_title)
 
     def change_status(self, message):
         pass

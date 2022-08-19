@@ -24,6 +24,13 @@ class TeamcityOutput(BaseOutput):
         for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='WARNING']")
 
+    def report_step(self, step_title, has_children, status):
+        if has_children:
+            self.log(step_title)
+        else:
+            self.log(f"{step_title} - {status}")
+
+
     def change_status(self, message):
         print(f"##teamcity[buildStatus text='{escape(message)}']")
 

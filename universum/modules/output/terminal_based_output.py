@@ -67,15 +67,15 @@ class TerminalBasedOutput(BaseOutput):
     def report_skipped(self, message):
         self.print_lines(Colors.dark_cyan, message, Colors.reset)
 
-    def report_step(self, message, status):
+    def report_step(self, step_title, has_children, status):
         color = Colors.red
         if status.lower() == "success":
             color = Colors.green
 
-        if message.endswith(status):
-            message = message[:-len(status)]
-            message += color + status + Colors.reset
-        self.log(message)
+        if not has_children:
+            step_title += " - " + color + status + Colors.reset
+
+        self.log(step_title)
 
     def change_status(self, message):
         pass

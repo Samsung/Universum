@@ -78,9 +78,9 @@ class Output(Module):
         self.driver.report_skipped(message)
         self.html_driver.report_skipped(message)
 
-    def report_step(self, message: str, status: str) -> None:
-        self.driver.report_step(message, status)
-        self.html_driver.report_step(message, status)
+    def report_step(self, step_title: str, has_children: bool, status: str) -> None:
+        self.driver.report_step(step_title, has_children, status)
+        self.html_driver.report_step(step_title, has_children, status)
 
     def log_error(self, line: str) -> None:
         self.driver.log_error(line)

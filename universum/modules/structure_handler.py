@@ -12,7 +12,8 @@ from ..lib.gravity import Dependency, Module
 from .output import HasOutput
 
 __all__ = [
-    "HasStructure"
+    "HasStructure",
+    "Block"
 ]
 
 

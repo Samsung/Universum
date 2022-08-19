@@ -18,8 +18,8 @@ class BaseOutput(Module):
     def report_skipped(self, message):
         raise NotImplementedError
 
-    def report_step(self, message, status):
-        self.log(message)
+    def report_step(self, step_title, has_children, status):
+        raise NotImplementedError
 
     def change_status(self, message):
         raise NotImplementedError

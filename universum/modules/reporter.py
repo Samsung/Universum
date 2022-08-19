@@ -1,12 +1,12 @@
 from collections import defaultdict
-from typing import Dict, List, Optional, TextIO, Tuple
+from typing import Dict, List, Tuple
 from typing_extensions import TypedDict
 
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 from . import automation_server
 from .output import HasOutput
-from .structure_handler import HasStructure
+from .structure_handler import HasStructure, Block
 
 __all__ = [
     "ReportObserver",
@@ -143,16 +143,18 @@ class Reporter(HasOutput, HasStructure):
             for observer in self.observers:
                 observer.code_report_to_review(self.code_report_comments)
 
-    def _report_steps_recursively(self, block, text, indent):
+    def _report_steps_recursively(self, block: Block, text: str, indent: str) -> Tuple[str, bool]:
+        has_children: bool = bool(block.children)
+        block_title: str = block.number + ' ' + block.name
         if not self.settings.only_fails:
             text += indent + str(block) + '\n'
-            self.out.report_step(indent + str(block), block.status)
+            self.out.report_step(indent + block_title, has_children, block.status)
         elif not block.is_successful():
             text += str(block) + '\n'
-            self.out.report_step(str(block), block.status)
+            self.out.report_step(block_title, has_children, block.status)
 
         is_successful = block.is_successful()
-        for substep in block.children:
+        for substep in block.children:  # type: Block
             text, status = self._report_steps_recursively(substep, text, indent + "  ")
             is_successful = is_successful and status
         return text, is_successful
