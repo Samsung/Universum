@@ -1,12 +1,13 @@
 from collections import defaultdict
 from typing import Dict, List, Tuple
+
 from typing_extensions import TypedDict
 
-from ..lib.gravity import Dependency
-from ..lib.utils import make_block
 from . import automation_server
 from .output import HasOutput
 from .structure_handler import HasStructure, Block
+from ..lib.gravity import Dependency
+from ..lib.utils import make_block
 
 __all__ = [
     "ReportObserver",

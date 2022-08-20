@@ -3,19 +3,20 @@ import re
 import sys
 from inspect import cleandoc
 from typing import Callable, Dict, List, Optional, TextIO, Tuple, Union
-from requests import Response
-import sh
 
+import sh
+from requests import Response
+
+from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
 from .error_state import HasErrorState
+from .output import HasOutput, Output
+from .project_directory import ProjectDirectory
+from .structure_handler import HasStructure, RunningStepBase
 from .. import configuration_support
 from ..lib import utils
 from ..lib.ci_exception import CiException, CriticalCiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
-from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
-from .output import HasOutput, Output
-from .project_directory import ProjectDirectory
-from .structure_handler import HasStructure, RunningStepBase
 
 __all__ = [
     "Launcher",
@@ -320,7 +321,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                                                      "External command launching and reporting parameters")
 
         parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
-                            help="Path to project configuration file (example: -cfg=my/prject/my_conf.py). "
+                            help="Path to project configuration file (example: -cfg=my/project/my_conf.py). "
                                  "Default is ``.universum.py``")
 
         parser.add_argument("--filter", "-f", dest="step_filter", action='append', metavar="STEP_FILTER",
@@ -394,7 +395,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             ex_traceback = sys.exc_info()[2]
             text = "Exception while processing Universum configuration file:\n" + \
                    utils.format_traceback(e, ex_traceback) + \
-                   "\nTry to execute ``confgs.dump()`` to make sure no exceptions occur in that case."
+                   "\nTry to execute ``configs.dump()`` to make sure no exceptions occur in that case."
             raise CriticalCiException(text) from e
 
         if not self.project_config:
@@ -418,7 +419,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         additional_environment = self.api_support.get_environment_settings()
         return RunningStep(item, self.out, self.server.add_build_tag,
-                    log_file, working_directory, additional_environment, item.background)
+                           log_file, working_directory, additional_environment, item.background)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)

@@ -7,7 +7,7 @@ __all__ = [
 
 class GithubOutput(TerminalBasedOutput):
     """
-    Github Actions manual: https://docs.github.com/en/actions
+    GitHub Actions manual: https://docs.github.com/en/actions
     GitHub doesn't support nested grouping (https://github.com/actions/runner/issues/802)
     """
 

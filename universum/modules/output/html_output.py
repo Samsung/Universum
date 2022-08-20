@@ -6,14 +6,12 @@ from ansi2html import Ansi2HTMLConverter
 
 from .base_output import BaseOutput
 
-
 __all__ = [
     "HtmlOutput"
 ]
 
 
 class HtmlOutput(BaseOutput):
-
     default_name = "universum_log.html"
 
     def __init__(self, *args, log_name=default_name, **kwargs):
@@ -61,7 +59,7 @@ class HtmlOutput(BaseOutput):
 
     def open_block(self, num_str, name):
         opening_html = f'<input type="checkbox" id="{num_str}" class="hide"/>' + \
-            f'<label for="{num_str}"><span class="sectionLbl">'
+                       f'<label for="{num_str}"><span class="sectionLbl">'
         closing_html = "</span></label><div>"
         name_html = f'<span class="sectionTitle">{name}</span>'
         self._log_line(f"{opening_html}{num_str} {name_html}{closing_html}", with_line_separator=False)
@@ -126,9 +124,8 @@ class HtmlOutput(BaseOutput):
         return "".join(indent_str)
 
     def _build_html_head(self):
-        head = []
-        head.append('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
-        head.append('<meta content="utf-8" http-equiv="encoding">')
+        head = ['<meta content="text/html;charset=utf-8" http-equiv="Content-Type">',
+                '<meta content="utf-8" http-equiv="encoding">']
         with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
             head.append(f"<style>{css_file.read()}</style>")
         return "".join(head)

@@ -51,7 +51,3 @@ class TeamcityOutput(BaseOutput):
 
     def set_build_title(self, message):
         print(f"##teamcity[buildStatus text='{escape(message)}']")
-
-
-
-

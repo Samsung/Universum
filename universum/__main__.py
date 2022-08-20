@@ -1,11 +1,11 @@
-from typing import List, Optional
 import signal
 import sys
+from typing import List, Optional
 
 from . import __version__, __title__
 from .api import Api
-from .github_handler import GithubHandler
 from .config_creator import ConfigCreator
+from .github_handler import GithubHandler
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import define_arguments_recursive, construct_component
 from .lib.module_arguments import ModuleArgumentParser, ModuleNamespace, IncorrectParameterError
@@ -50,7 +50,7 @@ def run(settings: ModuleNamespace) -> int:
     main_module = construct_component(settings.main_class, settings)
 
     if error_state_module.is_in_error_state():
-        raise IncorrectParameterError(("\n\n"+"-"*80 + "\n").join(error_state_module.get_errors()))
+        raise IncorrectParameterError(("\n\n" + "-" * 80 + "\n").join(error_state_module.get_errors()))
 
     main_module.out.log_execution_start(__title__, __version__)
 
@@ -87,8 +87,8 @@ def main(args: Optional[List[str]] = None) -> int:
         return run(settings)
     except IncorrectParameterError as e:
         settings.command_parser.print_usage(sys.stderr)
-        sys.stderr.write("\nThe following errors were encountered:\n" + "-"*80+"\n")
-        sys.stderr.write(str(e)+"\n")
+        sys.stderr.write("\nThe following errors were encountered:\n" + "-" * 80 + "\n")
+        sys.stderr.write(str(e) + "\n")
         return 2
     except ImportError as e:
         print(e)

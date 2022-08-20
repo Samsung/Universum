@@ -1,15 +1,13 @@
 import sys
-import os
-from types import TracebackType
-from typing import ClassVar, Optional
+from typing import ClassVar
 
-from ...lib.gravity import Module, Dependency
-from ...lib import utils
 from .base_output import BaseOutput
 from .github_output import GithubOutput
-from .terminal_based_output import TerminalBasedOutput
-from .teamcity_output import TeamcityOutput
 from .html_output import HtmlOutput
+from .teamcity_output import TeamcityOutput
+from .terminal_based_output import TerminalBasedOutput
+from ...lib import utils
+from ...lib.gravity import Module, Dependency
 
 __all__ = [
     "HasOutput",

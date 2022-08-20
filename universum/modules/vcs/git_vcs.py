@@ -2,6 +2,7 @@
 import glob
 import importlib
 import os
+from typing import Any
 
 from .base_vcs import BaseVcs, BaseDownloadVcs, BasePollVcs, BaseSubmitVcs
 from ..error_state import HasErrorState
@@ -17,7 +18,7 @@ __all__ = [
     "GitPollVcs"
 ]
 
-git = None
+git: Any = None
 
 
 def catch_git_exception(ignore_if=None):
@@ -146,7 +147,7 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
 
     def _diff_against_reference_commit(self, commit_id):
         """Details. Depending on a 'git' version 'rename file' operation generates
-        different output. It could be sequence of 'add' and 'delete' or single
+        different output. It could be a sequence of 'add' and 'delete' or single
         'rename' operation.
         """
 
@@ -187,6 +188,9 @@ class GitMainVcs(GitVcs, BaseDownloadVcs):
         self.check_out()
         if self.settings.cherrypick_id:
             self.cherry_pick()
+
+    def copy_cl_files_and_revert(self):
+        raise RuntimeError("Git doesn't support calculating diff for code report steps.")
 
 
 class GitSubmitVcs(GitVcs, BaseSubmitVcs, HasErrorState):

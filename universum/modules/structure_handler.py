@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import contextlib
-import copy
-
 from abc import ABC, abstractmethod
-from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
+from typing import Callable, ClassVar, List, Optional, TypeVar, Generator
+
 from typing_extensions import TypedDict
+
+from .output import HasOutput
 from ..configuration_support import Step, Configuration
 from ..lib.ci_exception import SilentAbortException, CriticalCiException
 from ..lib.gravity import Dependency, Module
-from .output import HasOutput
 
 __all__ = [
     "HasStructure",
-    "Block"
+    "Block",
+    "RunningStepBase"
 ]
 
 
@@ -185,7 +186,7 @@ class StructureHandler(HasOutput):
     def process_one_step(self, merged_item: Step, step_executor: Callable, skip_execution: bool) -> bool:
         """
         Process one step: either execute it or skip if the skip_execution flag is set.
-        :param merged_item: Step to execute
+        :param merged_item: Step to execute.
         :param step_executor: Function that executes one step.
         :param skip_execution: If True, the step will be skipped, but reported to the output.
         :return: True if step was successfully executed, False otherwise. Skipping is considered success.
@@ -261,7 +262,7 @@ class StructureHandler(HasOutput):
                 if not self.finalize_background_step(item) and item['is_critical']:
                     result = False
                     self.out.log_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
-                                            "all further steps will be skipped")
+                                                                                  "all further steps will be skipped")
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []

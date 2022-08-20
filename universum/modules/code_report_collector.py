@@ -5,14 +5,14 @@ import urllib.parse
 from copy import deepcopy
 from typing import Dict, List, Optional, TextIO, Tuple
 
-from ..configuration_support import Configuration
+from . import artifact_collector, reporter
 from .output import HasOutput
 from .project_directory import ProjectDirectory
-from . import artifact_collector, reporter
+from .structure_handler import HasStructure
+from ..configuration_support import Configuration
 from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
-from .structure_handler import HasStructure
 
 
 class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
@@ -95,7 +95,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             json_file: TextIO = self.artifacts.create_text_file("Static_analysis_report.json")
             json_file.write(json.dumps(report, indent=4))
 
-            issue_count: int = 0
+            issue_count: int
             if report or report == []:
                 try:
                     issue_count = self._report_as_sarif_json(report)
