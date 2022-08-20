@@ -6,6 +6,27 @@ class BaseOutput(Module):
     Abstract base class for output drivers
     """
 
+    def log_execution_start(self, title, version):
+        self.log(self._build_execution_start_msg(title, version))
+
+    def log_execution_finish(self, title, version):
+        self.log(self._build_execution_finish_msg(title, version))
+
+    def log(self, line):
+        raise NotImplementedError
+
+    def log_error(self, description):
+        raise NotImplementedError
+
+    def log_external_command(self, command):
+        raise NotImplementedError
+
+    def log_stdout(self, line):
+        raise NotImplementedError
+
+    def log_stderr(self, line):
+        raise NotImplementedError
+
     def open_block(self, num_str, name):
         raise NotImplementedError
 
@@ -23,27 +44,6 @@ class BaseOutput(Module):
 
     def set_build_title(self, message):
         raise NotImplementedError
-
-    def log_error(self, description):
-        raise NotImplementedError
-
-    def log_external_command(self, command):
-        raise NotImplementedError
-
-    def log_stdout(self, line):
-        raise NotImplementedError
-
-    def log_stderr(self, line):
-        raise NotImplementedError
-
-    def log(self, line):
-        raise NotImplementedError
-
-    def log_execution_start(self, title, version):
-        self.log(self._build_execution_start_msg(title, version))
-
-    def log_execution_finish(self, title, version):
-        self.log(self._build_execution_finish_msg(title, version))
 
     @staticmethod
     def _build_execution_start_msg(title, version):

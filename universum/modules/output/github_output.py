@@ -15,33 +15,33 @@ class GithubOutput(TerminalBasedOutput):
         super().__init__(*args, **kwargs)
         self._block_opened = False
 
-    def print_lines(self, *args, **kwargs):
+    def _print_lines(self, *args, **kwargs):
         prefix = kwargs.setdefault("prefix", "")
         result = "".join(args)
         lines = result.splitlines(False)
         for line in lines:
-            self.stdout(f"{prefix}{line}")
+            self._stdout(f"{prefix}{line}")
+
+    def log_error(self, description):
+        self._print_lines(description, prefix="::error::")
+
+    def log_stderr(self, line):
+        self._print_lines("stderr: ", line, prefix="::warning::")
 
     def open_block(self, num_str, name):
         if self._block_opened:
-            self.print_lines("::endgroup::")
+            self._print_lines("::endgroup::")
 
-        self.print_lines(f"::group::{num_str} {name}")
+        self._print_lines(f"::group::{num_str} {name}")
         self._block_opened = True
 
     def close_block(self, num_str, name, status):
         if self._block_opened:
             self._block_opened = False
-            self.print_lines("::endgroup::")
+            self._print_lines("::endgroup::")
 
         if status == "Failed":
-            self.print_lines(f"::error::{num_str} {name} - Failed")
+            self._print_lines(f"::error::{num_str} {name} - Failed")
 
     def log_skipped(self, message):
-        self.print_lines(message, prefix="::warning::")
-
-    def log_error(self, description):
-        self.print_lines(description, prefix="::error::")
-
-    def log_stderr(self, line):
-        self.print_lines("stderr: ", line, prefix="::warning::")
+        self._print_lines(message, prefix="::warning::")

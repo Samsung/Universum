@@ -49,40 +49,25 @@ class Output(Module):
                                 env_type=self.settings.type)
         self.html_driver = self._create_html_driver()
 
+    def log_execution_start(self, title: str, version: str) -> None:
+        self.driver.log_execution_start(title, version)
+        self.html_driver.log_execution_start(title, version)
+
+    def log_execution_finish(self, title: str, version: str) -> None:
+        self.driver.log_execution_finish(title, version)
+        self.html_driver.log_execution_finish(title, version)
+
     def log(self, line: str) -> None:
         self.driver.log(line)
         self.html_driver.log(line)
 
-    def log_external_command(self, command: str) -> None:
-        self.driver.log_external_command(command)
-        self.html_driver.log_external_command(command)
-
-    def open_block(self, number: str, name: str) -> None:
-        self.driver.open_block(number, name)
-        self.html_driver.open_block(number, name)
-
-    def close_block(self, number: str, name: str, status: str) -> None:
-        self.driver.close_block(number, name, status)
-        self.html_driver.close_block(number, name, status)
-
-    def set_build_title(self, status: str) -> None:
-        self.driver.set_build_title(status)
-
-    # TODO: pass build problem to the Report module
-    def report_build_problem(self, problem: str) -> None:
-        self.driver.report_build_problem(problem)
-
-    def log_skipped(self, message: str) -> None:
-        self.driver.log_skipped(message)
-        self.html_driver.log_skipped(message)
-
-    def log_summary_step(self, step_title: str, has_children: bool, status: str) -> None:
-        self.driver.log_summary_step(step_title, has_children, status)
-        self.html_driver.log_summary_step(step_title, has_children, status)
-
     def log_error(self, description: str) -> None:
         self.driver.log_error(description)
         self.html_driver.log_error(description)
+
+    def log_external_command(self, command: str) -> None:
+        self.driver.log_external_command(command)
+        self.html_driver.log_external_command(command)
 
     def log_stdout(self, line: str) -> None:
         self.driver.log_stdout(line)
@@ -92,13 +77,28 @@ class Output(Module):
         self.driver.log_stderr(line)
         self.html_driver.log_stderr(line)
 
-    def log_execution_start(self, title: str, version: str) -> None:
-        self.driver.log_execution_start(title, version)
-        self.html_driver.log_execution_start(title, version)
+    def open_block(self, number: str, name: str) -> None:
+        self.driver.open_block(number, name)
+        self.html_driver.open_block(number, name)
 
-    def log_execution_finish(self, title: str, version: str) -> None:
-        self.driver.log_execution_finish(title, version)
-        self.html_driver.log_execution_finish(title, version)
+    def close_block(self, number: str, name: str, status: str) -> None:
+        self.driver.close_block(number, name, status)
+        self.html_driver.close_block(number, name, status)
+
+    def log_skipped(self, message: str) -> None:
+        self.driver.log_skipped(message)
+        self.html_driver.log_skipped(message)
+
+    def log_summary_step(self, step_title: str, has_children: bool, status: str) -> None:
+        self.driver.log_summary_step(step_title, has_children, status)
+        self.html_driver.log_summary_step(step_title, has_children, status)
+
+    # TODO: pass build problem to the Report module
+    def report_build_problem(self, problem: str) -> None:
+        self.driver.report_build_problem(problem)
+
+    def set_build_title(self, status: str) -> None:
+        self.driver.set_build_title(status)
 
     def _create_html_driver(self):
         is_enabled = self.settings.html_log is not None
