@@ -19,49 +19,49 @@ class Colors:
 
 
 class TerminalBasedOutput(BaseOutput):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.block_level = 0
         self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")
 
     @staticmethod
-    def _stdout(*args, **kwargs):
+    def _stdout(*args, **kwargs) -> None:
         sys.stdout.write(''.join(args))
         if not kwargs.get("no_enter", False):
             sys.stdout.write('\n')
 
-    def _indent(self):
+    def _indent(self) -> None:
         for x in range(0, self.block_level):
             self._stdout("  " * x, " |   ", no_enter=True)
 
-    def _print_lines(self, *args, **kwargs):
-        result = ''.join(args)
-        lines = result.splitlines(False)
-        for line in lines:
+    def _print_lines(self, *args, **kwargs) -> None:
+        result: str = ''.join(args)
+        lines: list[str] = result.splitlines(False)
+        for line in lines:  # type: str
             self._indent()
             self._stdout(line)
 
-    def log(self, line):
+    def log(self, line: str) -> None:
         self._print_lines("==> ", line)
 
-    def log_error(self, description):
+    def log_error(self, description: str) -> None:
         self._print_lines(Colors.dark_red, "Error: ", Colors.reset, description)
 
-    def log_external_command(self, command):
+    def log_external_command(self, command: str) -> None:
         self._print_lines("$ ", command)
 
-    def log_stdout(self, line):
+    def log_stdout(self, line: str) -> None:
         self._print_lines(line)
 
-    def log_stderr(self, line):
+    def log_stderr(self, line: str) -> None:
         self._print_lines(Colors.dark_yellow, "stderr: ", Colors.reset, line)
 
-    def open_block(self, num_str, name):
+    def open_block(self, num_str: str, name: str) -> None:
         self._indent()
         self._stdout(num_str, ' ', Colors.blue, name, Colors.reset)
         self.block_level += 1
 
-    def close_block(self, num_str, name, status):
+    def close_block(self, num_str: str, name: str, status: str) -> None:
         self.block_level -= 1
         self._indent()
         if self.unicode_acceptable:
@@ -76,10 +76,10 @@ class TerminalBasedOutput(BaseOutput):
         self._indent()
         self._stdout()
 
-    def log_skipped(self, message):
+    def log_skipped(self, message: str) -> None:
         self._print_lines(Colors.dark_cyan, message, Colors.reset)
 
-    def log_summary_step(self, step_title, has_children, status):
+    def log_summary_step(self, step_title: str, has_children: bool, status: str) -> None:
         color = Colors.red
         if status.lower() == "success":
             color = Colors.green
@@ -89,8 +89,8 @@ class TerminalBasedOutput(BaseOutput):
 
         self.log(step_title)
 
-    def report_build_problem(self, description):
+    def report_build_problem(self, description: str) -> None:
         pass
 
-    def set_build_title(self, message):
+    def set_build_title(self, message: str) -> None:
         pass
