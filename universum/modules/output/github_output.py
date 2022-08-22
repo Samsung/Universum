@@ -1,3 +1,5 @@
+from typing import List
+
 from .terminal_based_output import TerminalBasedOutput
 
 __all__ = [
@@ -18,7 +20,7 @@ class GithubOutput(TerminalBasedOutput):
     def _print_lines(self, *args, **kwargs):
         prefix: str = kwargs.setdefault("prefix", "")
         result: str = "".join(args)
-        lines: list[str] = result.splitlines(False)
+        lines: List[str] = result.splitlines(False)
         for line in lines:  # type: str
             self._stdout(f"{prefix}{line}")
 

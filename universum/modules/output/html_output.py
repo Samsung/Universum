@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime
 from re import Match
-from typing import Optional
+from typing import Optional, List
 
 from ansi2html import Ansi2HTMLConverter
 
@@ -21,7 +21,7 @@ class HtmlOutput(BaseOutput):
         self._log_name: str = log_name
         self._log_path: Optional[str] = None
         self.artifact_dir_ready: bool = False
-        self._log_buffer: list[str] = []
+        self._log_buffer: List[str] = []
         self._block_level: int = 0
         self.module_dir: str = os.path.dirname(os.path.realpath(__file__))
         self.ansi_converter: Ansi2HTMLConverter = Ansi2HTMLConverter(inline=True, escaped=False)
@@ -120,14 +120,14 @@ class HtmlOutput(BaseOutput):
             file.write(line)
 
     def _build_indent(self) -> str:
-        indent_str: list[str] = []
+        indent_str: List[str] = []
         for x in range(0, self._block_level):  # type: int
             indent_str.append("  " * x)
             indent_str.append(" |   ")
         return "".join(indent_str)
 
     def _build_html_head(self) -> str:
-        head: list[str] = ['<meta content="text/html;charset=utf-8" http-equiv="Content-Type">',
+        head: List[str] = ['<meta content="text/html;charset=utf-8" http-equiv="Content-Type">',
                            '<meta content="utf-8" http-equiv="encoding">']
         with open(os.path.join(self.module_dir, "html_output.css"), encoding="utf-8") as css_file:
             head.append(f"<style>{css_file.read()}</style>")

@@ -1,5 +1,6 @@
 import locale
 import sys
+from typing import List
 
 from .base_output import BaseOutput
 
@@ -36,7 +37,7 @@ class TerminalBasedOutput(BaseOutput):
 
     def _print_lines(self, *args, **kwargs) -> None:
         result: str = ''.join(args)
-        lines: list[str] = result.splitlines(False)
+        lines: List[str] = result.splitlines(False)
         for line in lines:  # type: str
             self._indent()
             self._stdout(line)
