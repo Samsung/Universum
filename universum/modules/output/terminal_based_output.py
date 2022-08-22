@@ -92,5 +92,5 @@ class TerminalBasedOutput(BaseOutput):
     def report_build_problem(self, description: str) -> None:
         pass
 
-    def set_build_title(self, message: str) -> None:
+    def set_build_title(self, title: str) -> None:
         pass
