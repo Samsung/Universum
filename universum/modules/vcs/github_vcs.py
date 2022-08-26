@@ -211,7 +211,7 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
             "Authorization": "token " + self.get_token()
         }
 
-        utils.make_request(check_url, request_method="PATCH", json=self.request, headers=headers)
+        utils.make_request(check_url, request_method="PATCH", json=self.request, headers=headers, timeout=5*60)
 
     def code_report_to_review(self, report):
         # git show returns string, each file separated by \n,
