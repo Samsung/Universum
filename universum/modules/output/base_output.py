@@ -71,6 +71,8 @@ class BaseOutput(Module):
     def open_block(self, num_str: str, name: str) -> None:
         """
         Start the block of the output. Block is a group of related output lines.
+        Depending on the capabilities of the output, the blocks can be marked by indentation, color or numbering.
+        Output can also implement dynamic blocks collapsing and expanding.
 
         :param num_str: the string that represents the block number within the hierarchy.
             Inner blocks are numbered using dot notation.
