@@ -108,7 +108,7 @@ class HtmlOutput(BaseOutput):
         self._write_to_file(line)
 
     def _log_and_clear_buffer(self) -> None:
-        for buffered_line in self._log_buffer:  # type: str
+        for buffered_line in self._log_buffer:
             self._write_to_file(buffered_line)
         self._log_buffer = []
 
@@ -121,7 +121,7 @@ class HtmlOutput(BaseOutput):
 
     def _build_indent(self) -> str:
         indent_str: List[str] = []
-        for x in range(0, self._block_level):  # type: int
+        for x in range(0, self._block_level):
             indent_str.append("  " * x)
             indent_str.append(" |   ")
         return "".join(indent_str)
@@ -140,7 +140,7 @@ class HtmlOutput(BaseOutput):
     def _wrap_links(line: str) -> str:
         position_shift: int = 0
         pattern = r"(?:http|https|ftp|file|mailto):(?:\\ |\S)+"
-        for match in re.finditer(pattern, line):  # type: Match[str]
+        for match in re.finditer(pattern, line):
             link: str = match.group()
             wrapped_link: str = f'<a href="{link}">{link}</a>'
             link_start_pos: int = match.start() + position_shift

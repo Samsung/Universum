@@ -15,7 +15,7 @@ class TeamcityOutput(BaseOutput):
 
     def log_error(self, description: str) -> None:
         lines = description.split("\n")
-        for single_line in lines:  # type: str
+        for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='ERROR']")
 
     def log_external_command(self, command: str) -> None:
@@ -26,7 +26,7 @@ class TeamcityOutput(BaseOutput):
 
     def log_stderr(self, line: str) -> None:
         lines = line.split("\n")
-        for single_line in lines:  # type: str
+        for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='WARNING']")
 
     def open_block(self, num_str: str, name: str) -> None:
@@ -37,7 +37,7 @@ class TeamcityOutput(BaseOutput):
 
     def log_skipped(self, message: str) -> None:
         lines = message.split("\n")
-        for single_line in lines:  # type: str
+        for single_line in lines:
             print(f"##teamcity[message text='{escape(single_line)}' status='WARNING']")
 
     def log_summary_step(self, step_title: str, has_children: bool, status: str) -> None:

@@ -38,7 +38,7 @@ class TerminalBasedOutput(BaseOutput):
     def _print_lines(self, *args, **kwargs) -> None:
         result: str = ''.join(args)
         lines: List[str] = result.splitlines(False)
-        for line in lines:  # type: str
+        for line in lines:
             self._indent()
             self._stdout(line)
 

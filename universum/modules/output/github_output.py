@@ -17,11 +17,11 @@ class GithubOutput(TerminalBasedOutput):
         super().__init__(*args, **kwargs)
         self._block_opened: bool = False
 
-    def _print_lines(self, *args, **kwargs):
+    def _print_lines(self, *args, **kwargs) -> None:
         prefix: str = kwargs.setdefault("prefix", "")
         result: str = "".join(args)
         lines: List[str] = result.splitlines(False)
-        for line in lines:  # type: str
+        for line in lines:
             self._stdout(f"{prefix}{line}")
 
     def log_error(self, description: str) -> None:

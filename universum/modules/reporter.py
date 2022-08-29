@@ -155,7 +155,7 @@ class Reporter(HasOutput, HasStructure):
             self.out.log_summary_step(block_title, has_children, block.status)
 
         is_successful = block.is_successful()
-        for child in block.children:  # type: Block
+        for child in block.children:
             text, status = self._report_steps_recursively(child, text, indent + "  ")
             is_successful = is_successful and status
         return text, is_successful
