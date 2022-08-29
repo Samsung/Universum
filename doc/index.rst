@@ -13,10 +13,10 @@ Project 'Universum'
     code_report.rst
     github_handler.rst
     universum_docs.rst
-    internal.rst
     teamcity.rst
     jenkins.rst
     examples.rst
+    internal.rst
     changelog_ref.rst
 
 .. image:: _static/logo.svg
