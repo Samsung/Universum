@@ -88,7 +88,7 @@ class GithubHandler(GithubToken, HasOutput, HasStructure, HasErrorState):
                 self.out.log(f"Sending request to {url}")
                 if self.settings.verbose:
                     self.out.log(f"Headers are:\n{headers}\nOther passed params are:\n{data}")
-                utils.make_request(url=url, request_method="POST", json=data, headers=headers)
+                utils.make_request(url=url, request_method="POST", json=data, headers=headers, timeout=5*60)
                 self.out.log("Successfully created check run")
 
             elif self.settings.event == "check_run" and \
