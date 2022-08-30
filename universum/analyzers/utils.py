@@ -5,7 +5,7 @@ import glob
 import pathlib
 import subprocess
 
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Set
 from typing_extensions import TypedDict
 
 from universum.lib.ci_exception import CiException
@@ -108,7 +108,7 @@ def add_files_argument(parser: argparse.ArgumentParser) -> None:
 
 def expand_files_argument(settings: argparse.Namespace) -> None:
     # TODO: subclass argparse.Action
-    result: set[str] = set()
+    result: Set[str] = set()
     for pattern in settings.file_list:
         file_list: List[str] = glob.glob(pattern)
         if not file_list:
