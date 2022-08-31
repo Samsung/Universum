@@ -14,11 +14,14 @@ class GithubServer(BaseServerForHostingBuild, BaseServerForTrigger, HasErrorStat
                                                      "Github Actions specific parameters")
 
         parser.add_argument("--github-server", "-ghs", dest="server_url", metavar="GITHUB_SERVER_URL",
-                            help="Github server URL", type=str)
+                            help="Github server URL, used on Github Actions for constructing links to builds. "
+                                 "For example: https://github.com", type=str)
         parser.add_argument("--github-repo", "-ghr", dest="repo", metavar="GITHUB_REPOSITORY",
-                            help="Github owner and repository name. For example, octocat/Hello-World", type=str)
+                            help="Github owner and repository name, used on Github Actions for constructing links to "
+                                 "builds. For example: octocat/Hello-World", type=str)
         parser.add_argument("--github-run-id", "-ghri", dest="run_id", metavar="GITHUB_RUN_ID",
-                            help="Github run ID", type=str)
+                            help="Github run ID, used on Github Actions for constructing links to builds."
+                                 "For example: 1658821493", type=str)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
