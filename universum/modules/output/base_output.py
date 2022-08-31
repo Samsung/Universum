@@ -39,6 +39,8 @@ class BaseOutput(Module):
     def log_error(self, description: str) -> None:
         """
         Print an error message to the output. Error may use different colors or other formatting.
+        Used for printing own error messages of the universum as well as error messages from other modules and libraries
+        and operating system.
 
         :param description: the detailed error message
         """
@@ -46,7 +48,8 @@ class BaseOutput(Module):
 
     def log_external_command(self, command: str) -> None:
         """
-        Print the start of the external command with parameters.
+        Print the start of the launch of the external command. Full command line with all arameters is supposed to be
+        printed.
 
         :param command: external command with parameters
         """
@@ -54,7 +57,8 @@ class BaseOutput(Module):
 
     def log_stdout(self, line: str) -> None:
         """
-        Print one line of the standard output of the previously launched external command.
+        Print one line of the standard output of the previously launched external command. The only usage is for
+        printing output of the commands that are launched during the execution of the universum config.
 
         :param line: the line to print
         """
@@ -62,7 +66,8 @@ class BaseOutput(Module):
 
     def log_stderr(self, line: str) -> None:
         """
-        Print one line of the standard error output of the previously launched external command.
+        Print one line of the standard error output of the previously launched external command. The only usage is for
+        printing standard error output of the commands that are launched during the execution of the universum config.
 
         :param line: the line to print
         """
@@ -121,13 +126,13 @@ class BaseOutput(Module):
         """
         raise NotImplementedError
 
-    def set_build_title(self, title: str) -> None:
+    def set_build_status(self, status: str) -> None:
         """
-        TeamCity only. Set the title of the build. Changes the title of the build visible in the configuration build
-        history and on the build page itself. For builds containing build problems, by default the title is
-        automatically populated with them by the TeamCity server itself. This method allows to override the title.
+        TeamCity only. Set the title of the build. Changes the status of the build visible in the configuration build
+        history and on the build page itself. For builds containing build problems, by default the status is
+        automatically populated with them by the TeamCity server itself. This method allows to override the status.
 
-        :param title: the title of the build
+        :param status: the status (title) of the build
         """
         raise NotImplementedError
 

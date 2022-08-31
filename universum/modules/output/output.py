@@ -95,8 +95,8 @@ class Output(Module):
     def report_build_problem(self, problem: str) -> None:
         self.driver.report_build_problem(problem)
 
-    def set_build_title(self, title: str) -> None:
-        self.driver.set_build_title(title)
+    def set_build_status(self, status: str) -> None:
+        self.driver.set_build_status(status)
 
     def _create_html_driver(self):
         is_enabled = self.settings.html_log is not None

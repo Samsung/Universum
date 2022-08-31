@@ -459,7 +459,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         except P4Exception as e:
             if "already committed" in str(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
-                self.out.set_build_title("CL already committed")
+                self.out.set_build_status("CL already committed")
                 self.swarm = None
                 raise SilentAbortException(application_exit_code=0) from e  # This scenario does not fail build
             raise

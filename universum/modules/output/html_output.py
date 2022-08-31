@@ -86,7 +86,7 @@ class HtmlOutput(BaseOutput):
     def report_build_problem(self, description: str) -> None:
         raise RuntimeError("Html output doesn't support reporting build problem.")
 
-    def set_build_title(self, title: str) -> None:
+    def set_build_status(self, status: str) -> None:
         raise RuntimeError("Html output doesn't support setting build title.")
 
     def set_artifact_dir(self, artifact_dir: str) -> None:

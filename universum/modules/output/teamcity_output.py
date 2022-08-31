@@ -49,5 +49,5 @@ class TeamcityOutput(BaseOutput):
     def report_build_problem(self, description: str) -> None:
         print(f"##teamcity[buildProblem description='<{escape(description)}>']")
 
-    def set_build_title(self, title: str) -> None:
-        print(f"##teamcity[buildStatus text='{escape(title)}']")
+    def set_build_status(self, status: str) -> None:
+        print(f"##teamcity[buildStatus text='{escape(status)}']")

@@ -96,22 +96,22 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             json_file.write(json.dumps(report, indent=4))
 
             issue_count: int
-            if report or report == []:
-                try:
-                    issue_count = self._report_as_sarif_json(report)
-                except (KeyError, AttributeError, ValueError):
-                    try:
-                        issue_count = self._report_as_pylint_json(report)
-                    except (KeyError, AttributeError, ValueError):
-                        self.out.log_error("Could not parse report file. Something went wrong.")
-                        continue
-            else:
+            if not report and report != []:
                 self.out.log_error("There are no results in code report file. Something went wrong.")
                 continue
+
+            try:
+                issue_count = self._report_as_sarif_json(report)
+            except (KeyError, AttributeError, ValueError):
+                try:
+                    issue_count = self._report_as_pylint_json(report)
+                except (KeyError, AttributeError, ValueError):
+                    self.out.log_error("Could not parse report file. Something went wrong.")
+                    continue
 
             if issue_count != 0:
                 text = str(issue_count) + " issues"
                 self.out.log_error("Found " + text)
-                self.out.set_build_title(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
+                self.out.set_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
             else:
                 self.out.log("Issues not found.")
