@@ -75,6 +75,11 @@ class Step:
         as a separate artifact, so when using ``--no-archive`` option, do not claim directories as `report_artifacts`.
         Please note that any file can be put as `artifact`, `report_artifact`, or both. A file that is both
         in `artifacts` and `report_artifacts`, will be mentioned in a report and will cause build failure when missing.
+
+        .. note::
+
+            GitHub Actions doesn't support this key.
+
     artifact_prebuild_clean
         A flag to signal that artifacts must be cleaned before the build. Cleaning of single files, directories and
         sets of files defined by shell-style patterns is supported. By default, artifacts are not stored in VCS, and
