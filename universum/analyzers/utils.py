@@ -5,7 +5,7 @@ import glob
 import pathlib
 import subprocess
 
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Set
 from typing_extensions import TypedDict
 
 from universum.lib.ci_exception import CiException
@@ -108,10 +108,18 @@ def add_files_argument(parser: argparse.ArgumentParser) -> None:
 
 def expand_files_argument(settings: argparse.Namespace) -> None:
     # TODO: subclass argparse.Action
-    result = []
+    result: Set[str] = set()
     for pattern in settings.file_list:
-        result.extend(glob.glob(pattern))
-    settings.file_list = result
+        file_list: List[str] = glob.glob(pattern)
+        if not file_list:
+            sys.stderr.write(f"Warning: no files found for input pattern {pattern}\n")
+        else:
+            result.update(file_list)
+
+    if not result:
+        raise AnalyzerException(message="Error: no files found for analysis\n")
+
+    settings.file_list = list(result)
 
 
 def add_result_file_argument(parser: argparse.ArgumentParser) -> None:
