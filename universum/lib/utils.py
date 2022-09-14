@@ -203,7 +203,11 @@ def make_block(block_name: str, pass_errors: bool = True) -> DecoratorT:
 
 
 def make_request(url: str, request_method: str = "GET", critical: bool = True, **kwargs) -> Response:
+    if "timeout" not in kwargs:
+        kwargs["timeout"] = 60
+
     try:
+        # pylint: disable = missing-timeout
         response: Response = requests.request(method=request_method, url=url, **kwargs)
         response.raise_for_status()
         return response
