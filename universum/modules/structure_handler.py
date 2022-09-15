@@ -166,11 +166,12 @@ class StructureHandler(HasOutput):
             process.finalize()
             return process
         self.out.log("This step is marked to be executed in background")
+        has_artifacts: bool = bool(configuration.artifacts) or bool(configuration.report_artifacts)
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
                                              'process': process,
                                              'is_critical': configuration.critical,
-                                             'has_artifacts': bool(configuration.artifacts)})
+                                             'has_artifacts': has_artifacts})
         return process
 
     def finalize_background_step(self, background_step: BackgroundStepInfo) -> bool:
@@ -210,7 +211,8 @@ class StructureHandler(HasOutput):
             executed_successfully = (error is None)
             if not executed_successfully:
                 self.fail_current_block(error)  # type: ignore[arg-type]
-        if not merged_item.background and merged_item.artifacts:
+        has_artifacts: bool = bool(merged_item.artifacts) or bool(merged_item.report_artifacts)
+        if not merged_item.background and has_artifacts:
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
                 process.collect_artifacts()
 
