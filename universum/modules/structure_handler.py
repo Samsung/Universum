@@ -69,6 +69,7 @@ class BackgroundStepInfo(TypedDict):
     block: Block
     process: RunningStepBase
     is_critical: bool
+    has_artifacts: bool
 
 
 class RunningStepBase(ABC):
@@ -168,7 +169,8 @@ class StructureHandler(HasOutput):
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
                                              'process': process,
-                                             'is_critical': configuration.critical})
+                                             'is_critical': configuration.critical,
+                                             'has_artifacts': bool(configuration.artifacts)})
         return process
 
     def finalize_background_step(self, background_step: BackgroundStepInfo) -> bool:
@@ -209,7 +211,7 @@ class StructureHandler(HasOutput):
             if not executed_successfully:
                 error = error if error else ""
                 self.fail_current_block(error)
-        if not merged_item.background:
+        if not merged_item.background and merged_item.artifacts:
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
                 process.collect_artifacts()
 
@@ -269,8 +271,9 @@ class StructureHandler(HasOutput):
                     result = False
                     self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
                                             "all further steps will be skipped")
-            with self.block(block_name=f"Collecting artifacts for the '{item['name']}' step", pass_errors=False):
-                item['process'].collect_artifacts()
+            if item['has_artifacts']:
+                with self.block(block_name=f"Collecting artifacts for the '{item['name']}' step", pass_errors=False):
+                    item['process'].collect_artifacts()
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []
