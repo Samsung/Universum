@@ -1,3 +1,5 @@
+from typing import List
+
 from .terminal_based_output import TerminalBasedOutput
 
 __all__ = [
@@ -7,41 +9,41 @@ __all__ = [
 
 class GithubOutput(TerminalBasedOutput):
     """
-    Github Actions manual: https://docs.github.com/en/actions
+    GitHub Actions manual: https://docs.github.com/en/actions
     GitHub doesn't support nested grouping (https://github.com/actions/runner/issues/802)
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._block_opened = False
+        self._block_opened: bool = False
 
-    def print_lines(self, *args, **kwargs):
-        prefix = kwargs.setdefault("prefix", "")
-        result = "".join(args)
-        lines = result.splitlines(False)
+    def _print_lines(self, *args, **kwargs) -> None:
+        prefix: str = kwargs.setdefault("prefix", "")
+        result: str = "".join(args)
+        lines: List[str] = result.splitlines(False)
         for line in lines:
-            self.stdout(f"{prefix}{line}")
+            self._stdout(f"{prefix}{line}")
 
-    def open_block(self, num_str, name):
+    def log_error(self, description: str) -> None:
+        self._print_lines(description, prefix="::error::")
+
+    def log_stderr(self, line: str) -> None:
+        self._print_lines("stderr: ", line, prefix="::warning::")
+
+    def open_block(self, num_str: str, name: str) -> None:
         if self._block_opened:
-            self.print_lines("::endgroup::")
+            self._print_lines("::endgroup::")
 
-        self.print_lines(f"::group::{num_str} {name}")
+        self._print_lines(f"::group::{num_str} {name}")
         self._block_opened = True
 
-    def close_block(self, num_str, name, status):
+    def close_block(self, num_str: str, name: str, status: str) -> None:
         if self._block_opened:
             self._block_opened = False
-            self.print_lines("::endgroup::")
+            self._print_lines("::endgroup::")
 
         if status == "Failed":
-            self.print_lines(f"::error::{num_str} {name} - Failed")
+            self._print_lines(f"::error::{num_str} {name} - Failed")
 
-    def report_skipped(self, message):
-        self.print_lines(message, prefix="::warning::")
-
-    def log_exception(self, line):
-        self.print_lines(line, prefix="::error::")
-
-    def log_stderr(self, line):
-        self.print_lines("stderr: ", line, prefix="::warning::")
+    def log_skipped(self, message: str) -> None:
+        self._print_lines(message, prefix="::warning::")
