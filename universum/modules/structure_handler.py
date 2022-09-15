@@ -200,17 +200,16 @@ class StructureHandler(HasOutput):
             self.report_skipped_block(numbering + "'" + merged_item.name + "'")
             return True
 
-        process = None
+        process: Optional[RunningStepBase] = None
         executed_successfully: bool = True
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
         with self.block(block_name=step_label, pass_errors=False):
-            process= self.execute_one_step(merged_item, step_executor)
-            error = process.get_error()
+            process = self.execute_one_step(merged_item, step_executor)
+            error: Optional[str] = process.get_error()
             executed_successfully = (error is None)
             if not executed_successfully:
-                error = error if error else ""
-                self.fail_current_block(error)
+                self.fail_current_block(error)  # type: ignore[arg-type]
         if not merged_item.background and merged_item.artifacts:
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
                 process.collect_artifacts()
