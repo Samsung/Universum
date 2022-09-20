@@ -47,14 +47,14 @@ class FuzzyCallChecker:
 
 @pytest.fixture()
 def stdout_checker(request):
-    with mock.patch('universum.modules.output.terminal_based_output.TerminalBasedOutput.stdout') as logging_mock:
+    with mock.patch('universum.modules.output.terminal_based_output.TerminalBasedOutput._stdout') as logging_mock:
         result = FuzzyCallChecker(logging_mock)
         yield result
 
 
 @pytest.fixture()
 def log_exception_checker(request):
-    with mock.patch('universum.modules.output.terminal_based_output.TerminalBasedOutput.log_exception') as logging_mock:
+    with mock.patch('universum.modules.output.terminal_based_output.TerminalBasedOutput.log_error') as logging_mock:
         result = FuzzyCallChecker(logging_mock)
         yield result
 

@@ -16,6 +16,7 @@ Project 'Universum'
     teamcity.rst
     jenkins.rst
     examples.rst
+    internal.rst
     changelog_ref.rst
 
 .. image:: _static/logo.svg
