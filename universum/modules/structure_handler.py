@@ -202,21 +202,20 @@ class StructureHandler(HasOutput):
             return True
 
         process: Optional[RunningStepBase] = None
-        executed_successfully: bool = True
+        error: Optional[str] = None
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
         with self.block(block_name=step_label, pass_errors=False):
             process = self.execute_one_step(merged_item, step_executor)
-            error: Optional[str] = process.get_error()
-            executed_successfully = (error is None)
-            if not executed_successfully:
-                self.fail_current_block(error)  # type: ignore[arg-type]
+            error = process.get_error()
+            if error:
+                self.fail_current_block(error)
         has_artifacts: bool = bool(merged_item.artifacts) or bool(merged_item.report_artifacts)
         if not merged_item.background and has_artifacts:
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
                 process.collect_artifacts()
 
-        return executed_successfully
+        return (error is None)
 
     def execute_steps_recursively(self, parent: Step,
                                   children: Configuration,
