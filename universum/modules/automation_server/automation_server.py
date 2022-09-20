@@ -7,6 +7,7 @@ from .base_server import BaseServerForHostingBuild, BaseServerForTrigger
 from .jenkins_server import JenkinsServerForHostingBuild, JenkinsServerForTrigger
 from .local_server import LocalServer
 from .teamcity_server import TeamcityServer
+from .github_server import GithubServer
 
 __all__ = [
     "AutomationServerForHostingBuild",
@@ -29,13 +30,14 @@ class AutomationServerForHostingBuild(AutomationServer):
     teamcity_driver_factory = Dependency(TeamcityServer)
     local_driver_factory = Dependency(LocalServer)
     jenkins_driver_factory = Dependency(JenkinsServerForHostingBuild)
+    github_driver_factory = Dependency(GithubServer)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.driver: BaseServerForHostingBuild = \
             utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.jenkins_driver_factory,
-                                github_factory=self.local_driver_factory,
+                                github_factory=self.github_driver_factory,
                                 local_factory=self.local_driver_factory,
                                 env_type=self.settings.type)
 
@@ -53,13 +55,14 @@ class AutomationServerForTrigger(AutomationServer):
     teamcity_driver_factory = Dependency(TeamcityServer)
     local_driver_factory = Dependency(LocalServer)
     jenkins_driver_factory = Dependency(JenkinsServerForTrigger)
+    github_driver_factory = Dependency(GithubServer)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.driver: BaseServerForTrigger = \
             utils.create_driver(teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.jenkins_driver_factory,
-                                github_factory=self.local_driver_factory,
+                                github_factory=self.github_driver_factory,
                                 local_factory=self.local_driver_factory,
                                 env_type=self.settings.type)
 
