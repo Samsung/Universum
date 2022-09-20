@@ -217,7 +217,7 @@ class StructureHandler(HasOutput):
             with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
                 process.collect_artifacts()
 
-        return (error is None)
+        return error is None
 
     def execute_steps_recursively(self, parent: Step,
                                   children: Configuration,
