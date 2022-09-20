@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 import contextlib
-import copy
-
 from abc import ABC, abstractmethod
-from typing import Callable, ClassVar, List, Optional, TypeVar, Union, Generator
+from typing import Callable, ClassVar, List, Optional, TypeVar, Generator
+
 from typing_extensions import TypedDict
+
+from .output import HasOutput
 from ..configuration_support import Step, Configuration
 from ..lib.ci_exception import SilentAbortException, CriticalCiException
 from ..lib.gravity import Dependency, Module
-from .output import HasOutput
 
 __all__ = [
-    "HasStructure"
+    "HasStructure",
+    "Block",
+    "RunningStepBase"
 ]
 
 
@@ -69,6 +71,7 @@ class BackgroundStepInfo(TypedDict):
     block: Block
     process: RunningStepBase
     is_critical: bool
+    has_artifacts: bool
 
 
 class RunningStepBase(ABC):
@@ -83,6 +86,10 @@ class RunningStepBase(ABC):
 
     @abstractmethod
     def get_error(self) -> Optional[str]:
+        pass
+
+    @abstractmethod
+    def collect_artifacts(self) -> None:
         pass
 
 
@@ -108,14 +115,14 @@ class StructureHandler(HasOutput):
             self.current_block = self.current_block.parent
             self.out.close_block(block.number, block.name, block.status)
 
-    def report_critical_block_failure(self) -> None:
-        self.out.report_skipped("Critical step failed. All further configurations will be skipped")
+    def log_critical_block_failure(self) -> None:
+        self.out.log_skipped("Critical step failed. All further configurations will be skipped")
 
-    def report_skipped_block(self, name):
+    def log_skipped_block(self, name):
         new_skipped_block = Block(name, self.current_block)
         new_skipped_block.status = "Skipped"
 
-        self.out.report_skipped(new_skipped_block.number + name + " skipped because of critical step failure")
+        self.out.log_skipped(new_skipped_block.number + name + " skipped because of critical step failure")
 
     def fail_current_block(self, error: str = ""):
         block: Block = self.get_current_block()
@@ -123,7 +130,7 @@ class StructureHandler(HasOutput):
 
     def fail_block(self, block, error: str = ""):
         if error:
-            self.out.log_exception(error)
+            self.out.log_error(error)
         block.status = "Failed"
         self.out.report_build_problem(block.name + " " + block.status)
 
@@ -152,23 +159,22 @@ class StructureHandler(HasOutput):
             self.close_block()
 
     def execute_one_step(self, configuration: Step,
-                         step_executor: Callable[[Step], RunningStepBase]) -> Optional[str]:
+                         step_executor: Callable[[Step], RunningStepBase]) -> RunningStepBase:
         process: RunningStepBase = step_executor(configuration)
-
         process.start()
         if process.get_error() is not None:
-            return process.get_error()
-
+            return process
         if not configuration.background:
             process.finalize()
-            return process.get_error()  # could be None or error message
-
+            return process
         self.out.log("This step is marked to be executed in background")
+        has_artifacts: bool = bool(configuration.artifacts) or bool(configuration.report_artifacts)
         self.active_background_steps.append({'name': configuration.name,
                                              'block': self.get_current_block(),
                                              'process': process,
-                                             'is_critical': configuration.critical})
-        return None
+                                             'is_critical': configuration.critical,
+                                             'has_artifacts': has_artifacts})
+        return process
 
     def finalize_background_step(self, background_step: BackgroundStepInfo) -> bool:
         process: RunningStepBase = background_step['process']
@@ -184,7 +190,7 @@ class StructureHandler(HasOutput):
     def process_one_step(self, merged_item: Step, step_executor: Callable, skip_execution: bool) -> bool:
         """
         Process one step: either execute it or skip if the skip_execution flag is set.
-        :param merged_item: Step to execute
+        :param merged_item: Step to execute.
         :param step_executor: Function that executes one step.
         :param skip_execution: If True, the step will be skipped, but reported to the output.
         :return: True if step was successfully executed, False otherwise. Skipping is considered success.
@@ -194,18 +200,24 @@ class StructureHandler(HasOutput):
         step_label: str = numbering + merged_item.name
 
         if skip_execution:
-            self.report_skipped_block(numbering + "'" + merged_item.name + "'")
+            self.log_skipped_block(numbering + "'" + merged_item.name + "'")
             return True
 
+        process: Optional[RunningStepBase] = None
+        error: Optional[str] = None
         # Here pass_errors=False, because any exception while executing build step
         # can be step-related and may not affect other steps
         with self.block(block_name=step_label, pass_errors=False):
-            error: Optional[str] = self.execute_one_step(merged_item, step_executor)
-            if error is not None:
+            process = self.execute_one_step(merged_item, step_executor)
+            error = process.get_error()
+            if error:
                 self.fail_current_block(error)
-                return False
+        has_artifacts: bool = bool(merged_item.artifacts) or bool(merged_item.report_artifacts)
+        if not merged_item.background and has_artifacts:
+            with self.block(block_name=f"Collecting artifacts for the '{merged_item.name}' step", pass_errors=False):
+                process.collect_artifacts()
 
-        return True
+        return error is None
 
     def execute_steps_recursively(self, parent: Step,
                                   children: Configuration,
@@ -244,7 +256,7 @@ class StructureHandler(HasOutput):
                 some_step_failed = True
 
                 if child.critical:
-                    self.report_critical_block_failure()
+                    self.log_critical_block_failure()
                     skip_execution = True
 
         if some_step_failed:
@@ -259,8 +271,11 @@ class StructureHandler(HasOutput):
                             pass_errors=True):
                 if not self.finalize_background_step(item) and item['is_critical']:
                     result = False
-                    self.out.report_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
-                                            "all further steps will be skipped")
+                    self.out.log_skipped("The background step '" + item['name'] + "' failed, and as it is critical, "
+                                                                                  "all further steps will be skipped")
+            if item['has_artifacts']:
+                with self.block(block_name=f"Collecting artifacts for the '{item['name']}' step", pass_errors=False):
+                    item['process'].collect_artifacts()
 
         self.out.log("All ongoing background steps completed")
         self.active_background_steps = []

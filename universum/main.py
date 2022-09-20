@@ -1,12 +1,12 @@
 from typing import ClassVar
+
 from . import __title__
+from .configuration_support import Configuration
 from .lib.ci_exception import SilentAbortException
 from .lib.gravity import Dependency
 from .lib.module_arguments import ModuleArgumentParser
 from .modules import vcs, artifact_collector, reporter, launcher, code_report_collector
 from .modules.output import HasOutput
-from .configuration_support import Configuration
-
 
 __all__ = ["Main"]
 
@@ -67,7 +67,7 @@ class Main(HasOutput):
         if self.settings.build_only_latest:
             if not self.vcs.is_latest_review_version():
                 self.out.log("Build skipped because review revision is not latest")
-                self.out.report_build_status("Skipped - review revision is not latest")
+                self.out.set_build_status("Skipped - review revision is not latest")
                 raise SilentAbortException(application_exit_code=0)
 
         self.vcs.prepare_repository()
@@ -87,7 +87,7 @@ class Main(HasOutput):
                     self.launcher.launch_custom_configs(afterall_configs)
                     self.code_report_collector.repo_diff = repo_diff
             self.code_report_collector.report_code_report_results()
-        self.artifacts.collect_artifacts()
+        self.artifacts.report_artifacts()
         self.reporter.report_build_result()
 
     def finalize(self) -> None:
