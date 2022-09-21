@@ -175,7 +175,7 @@ def check_body_coloring(body_element):
 def check_title_and_status_coloring(steps_body):
     check_section_coloring(steps_body.get_section_by_name("Success links step"))
     check_section_coloring(steps_body.get_section_by_name("Failed step"), is_failed=True)
-    check_section_coloring(steps_body.get_section_by_name("Partially success step"), has_inner_fail=True)
+    check_section_coloring(steps_body.get_section_by_name("Partially success step"), is_failed=True)
 
     composite_step_body = steps_body.get_section_body_by_name("Partially success step")
     check_section_coloring(composite_step_body.get_section_by_name("Success links step"))
@@ -212,14 +212,13 @@ def check_errors_tags_coloring(steps_body):
     assert stderr_tag.color == Color.YELLOW
 
 
-def check_section_coloring(step, is_failed=False, has_inner_fail=False):
-    is_section_failed = is_failed or has_inner_fail
-    check_text_item_style(step.get_section_title(), is_section_failed, normal_color=Color.BLUE)
-    if not is_section_failed:
-        step.click() # open section body
+def check_section_coloring(step, is_failed=False):
+    check_text_item_style(step.get_section_title(), is_failed, normal_color=Color.BLUE)
+    if not is_failed:
+        step.click()  # open section body
     check_text_item_style(step.get_section_status(), is_failed, normal_color=Color.GREEN)
-    if not is_section_failed:
-        step.click() # close section body
+    if not is_failed:
+        step.click()  # close section body
 
 
 def check_text_item_style(item, is_failed, normal_color):

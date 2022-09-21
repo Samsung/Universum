@@ -196,13 +196,18 @@ class Uninterruptible:
 def make_block(block_name: str, pass_errors: bool = True) -> DecoratorT:
     def decorated_function(func):
         def function_in_block(self, *args, **kwargs):
-            return self.structure.run_in_block(func, block_name, pass_errors, self, *args, **kwargs)
+            with self.structure.block(block_name=block_name, pass_errors=pass_errors):
+                return func(self, *args, **kwargs)
         return function_in_block
     return decorated_function
 
 
 def make_request(url: str, request_method: str = "GET", critical: bool = True, **kwargs) -> Response:
+    if "timeout" not in kwargs:
+        kwargs["timeout"] = 60
+
     try:
+        # pylint: disable = missing-timeout
         response: Response = requests.request(method=request_method, url=url, **kwargs)
         response.raise_for_status()
         return response

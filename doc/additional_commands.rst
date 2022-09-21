@@ -45,6 +45,9 @@ Universum in non-CI mode has the following differences from default mode:
     :prog: {python} -m universum
     :path: run
 
+    --filter -f : @replace
+        .. include:: filter_description.rst
+
 
 .. _additional_commands#poll:
 

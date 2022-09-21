@@ -61,8 +61,8 @@ class Step:
         one time at most.
     artifacts
         Path to the file or directory to be copied to the working directory as an execution
-        result. Can contain shell-style pattern matching (e.g. `"out/*.html"`), including recursive wildcards
-        (e.g. `"out/**/index.html"`). If not stated otherwise (see ``--no-archive``
+        result immediately after step finish. Can contain shell-style pattern matching (e.g. `"out/*.html"`),
+        including recursive wildcards (e.g. `"out/**/index.html"`). If not stated otherwise (see ``--no-archive``
         command-line parameter for details), artifact directories are copied
         as archives. If `artifact_prebuild_clean` key is either absent or set to `False`
         and stated artifacts are present in downloaded sources, it is considered a failure and configuration
@@ -75,6 +75,11 @@ class Step:
         as a separate artifact, so when using ``--no-archive`` option, do not claim directories as `report_artifacts`.
         Please note that any file can be put as `artifact`, `report_artifact`, or both. A file that is both
         in `artifacts` and `report_artifacts`, will be mentioned in a report and will cause build failure when missing.
+
+        .. note::
+
+            GitHub Actions doesn't support this key.
+
     artifact_prebuild_clean
         A flag to signal that artifacts must be cleaned before the build. Cleaning of single files, directories and
         sets of files defined by shell-style patterns is supported. By default, artifacts are not stored in VCS, and
@@ -363,7 +368,8 @@ class Step:
     def __add__(self, other: 'Step') -> 'Step':
         """
         This functions defines operator ``+`` for :class:`Step` class objects by
-        concatenating strings and contents of dictionaries. Note that `critical` attribute is not merged.
+        concatenating strings and contents of dictionaries.
+        Note that `critical` attribute is always taken from the second operand.
 
         :param other: `Step` object
         :return: new `Step` object, including all attributes from both `self` and `other` objects
@@ -372,6 +378,8 @@ class Step:
         >>> step2 = Step(name='bar', command=['bar'], background=True, my_var1='bar', my_var2='baz')
         >>> step1 + step2
         {'name': 'foobar', 'command': ['foo', 'bar'], 'background': True, 'my_var1': 'foobar', 'my_var2': 'baz'}
+        >>> step2 + step1
+        {'name': 'barfoo', 'command': ['bar', 'foo'], 'critical': True, 'background': True, 'my_var1': 'barfoo', 'my_var2': 'baz'}
         """
         return Step(
             name=self.name + other.name,
@@ -381,7 +389,7 @@ class Step:
             report_artifacts=self.report_artifacts + other.report_artifacts,
             artifact_prebuild_clean=self.artifact_prebuild_clean or other.artifact_prebuild_clean,
             directory=self.directory + other.directory,
-            critical=False,
+            critical=other.critical,
             background=self.background or other.background,
             finish_background=self.finish_background or other.finish_background,
             code_report=self.code_report or other.code_report,
@@ -712,6 +720,7 @@ class Configuration:
 
 
 global_project_root = os.getcwd()
+global_config_path = None
 
 
 #: Variations is preserved as legacy alias for :class:`Configuration`
@@ -739,3 +748,23 @@ def get_project_root() -> str:
     :return: actual project root
     """
     return os.path.abspath(global_project_root)
+
+
+def set_config_path(config_path: str) -> None:
+    """
+    Function to be called from main script; not supposed to be used in configuration file.
+    Calculates the path to actual project config file; is not used when running config file itself.
+
+    :param config_path: path to configuration file
+    """
+    global global_config_path
+    global_config_path = config_path
+
+
+def get_config_path() -> Optional[str]:
+    """
+    Function to be used in configuration file. Returns absolute path to configuration file.
+
+    :return: absolute path to configuration file
+    """
+    return global_config_path

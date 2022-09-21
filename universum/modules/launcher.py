@@ -3,19 +3,20 @@ import re
 import sys
 from inspect import cleandoc
 from typing import Callable, Dict, List, Optional, TextIO, Tuple, Union
-from requests import Response
-import sh
 
-from .error_state import HasErrorState
-from .. import configuration_support
-from ..lib import utils
-from ..lib.ci_exception import CiException, CriticalCiException, StepException
-from ..lib.gravity import Dependency
-from ..lib.utils import make_block
+import sh
+from requests import Response
+
 from . import automation_server, api_support, artifact_collector, reporter, code_report_collector
+from .error_state import HasErrorState
 from .output import HasOutput, Output
 from .project_directory import ProjectDirectory
-from .structure_handler import HasStructure
+from .structure_handler import HasStructure, RunningStepBase
+from .. import configuration_support
+from ..lib import utils
+from ..lib.ci_exception import CiException, CriticalCiException
+from ..lib.gravity import Dependency
+from ..lib.utils import make_block
 
 __all__ = [
     "Launcher",
@@ -159,20 +160,19 @@ def get_match_patterns(filters: Union[str, List[str]]) -> Tuple[List[str], List[
     return include, exclude
 
 
-class RunningStep:
+class RunningStep(RunningStepBase):
     # TODO: change to non-singleton module and get all dependencies by ourselves
     def __init__(self, item: configuration_support.Step,
                  out: Output,
-                 fail_block: Callable[[str], None],
                  send_tag: Callable[[str], Response],
                  log_file: Optional[TextIO],
                  working_directory: str,
                  additional_environment: Dict[str, str],
-                 background: bool) -> None:
+                 background: bool,
+                 artifact_collector_obj: artifact_collector.ArtifactCollector) -> None:
         super().__init__()
         self.configuration: configuration_support.Step = item
         self.out: Output = out
-        self.fail_block: Callable[[str], None] = fail_block
         self.send_tag = send_tag
         self.file: Optional[TextIO] = log_file
         self.working_directory: str = working_directory
@@ -186,26 +186,32 @@ class RunningStep:
         self._is_background = background
         self._postponed_out: List[Tuple[Callable[[str], None], str]] = []
         self._needs_finalization: bool = True
+        self._error: Optional[str] = None
+
+        self.artifact_collector = artifact_collector_obj
 
     def prepare_command(self) -> bool:  # FIXME: refactor
         if not self.configuration.command:
             self.out.log("No 'command' found. Nothing to execute")
             return False
         command_name: str = utils.strip_path_start(self.configuration.command[0])
+
         try:
-            try:
-                self.cmd = make_command(command_name)
-            except CiException:
-                command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
-                self.cmd = make_command(command_name)
-        except CiException as ex:
-            self.fail_block(str(ex))
-            raise StepException() from ex
+            self.cmd = make_command(command_name)
+        except CiException:
+            command_name = os.path.abspath(os.path.join(self.working_directory, command_name))
+            self.cmd = make_command(command_name)
+
         return True
 
-    def start(self) -> None:
-        if not self.prepare_command():
-            self._needs_finalization = False
+    def start(self):
+        self._error = None
+        try:
+            if not self.prepare_command():
+                self._needs_finalization = False
+                return
+        except CiException as ex:
+            self._error = str(ex)
             return
 
         self._postponed_out = []
@@ -229,9 +235,9 @@ class RunningStep:
         if self.file:
             self.file.write(line + "\n")
         elif self._is_background:
-            self._postponed_out.append((self.out.log_shell_output, line))
+            self._postponed_out.append((self.out.log_stdout, line))
         else:
-            self.out.log_shell_output(line)
+            self.out.log_stdout(line)
 
     def handle_stderr(self, line: str) -> None:
         line = utils.trim_and_convert_to_unicode(line)
@@ -248,11 +254,12 @@ class RunningStep:
 
         request: Response = self.send_tag(tag)
         if request.status_code != 200:
-            self.out.log_stderr(request.text)
+            self.out.log_error(request.text)
         else:
             self.out.log("Tag '" + tag + "' added to build.")
 
     def finalize(self) -> None:
+        self._error = None
         if not self._needs_finalization:
             if self._is_background:
                 self._is_background = False
@@ -276,16 +283,25 @@ class RunningStep:
                 if self.file:
                     self.file.write(text + "\n")
                 if not self.configuration.is_conditional:
-                    self.fail_block(text)
                     self.add_tag(self.configuration.fail_tag)
-                raise StepException()
+                    self._error = text
+                return
 
             self.add_tag(self.configuration.pass_tag)
+            return
+
         finally:
             self.handle_stdout()
             if self.file:
                 self.file.close()
             self._is_background = False
+
+    def get_error(self) -> Optional[str]:
+        return self._error
+
+    def collect_artifacts(self) -> None:
+        self.artifact_collector.collect_step_artifacts(self.configuration.artifacts,
+                                                       self.configuration.report_artifacts)
 
     def _handle_postponed_out(self) -> None:
         for item in self._postponed_out:
@@ -313,7 +329,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                                                      "External command launching and reporting parameters")
 
         parser.add_argument("--config", "-cfg", dest="config_path", metavar="CONFIG_PATH",
-                            help="Path to project configuration file (example: -cfg=my/prject/my_conf.py). "
+                            help="Path to project configuration file (example: -cfg=my/project/my_conf.py). "
                                  "Default is ``.universum.py``")
 
         parser.add_argument("--filter", "-f", dest="step_filter", action='append', metavar="STEP_FILTER",
@@ -343,7 +359,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         if not self.config_path:
             self.config_path = ".universum.py"
 
-        self.artifacts = self.artifacts_factory()
+        self.artifact_collector = self.artifacts_factory()
         self.api_support = self.api_support_factory()
         self.reporter = self.reporter_factory()
         self.server = self.server_factory()
@@ -354,6 +370,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     def process_project_configs(self) -> configuration_support.Configuration:
         config_path = utils.parse_path(self.config_path, self.settings.project_root)
         configuration_support.set_project_root(self.settings.project_root)
+        configuration_support.set_config_path(self.settings.config_path)
         config_globals: Dict[str, configuration_support.Configuration] = {}
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.append(os.path.join(os.path.dirname(config_path)))
@@ -362,7 +379,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             with open(config_path, encoding="utf-8") as config_file:
                 exec(config_file.read(), config_globals)  # pylint: disable=exec-used
             self.source_project_configs = config_globals["configs"]
-            dump_file: TextIO = self.artifacts.create_text_file("CONFIGS_DUMP.txt")
+            dump_file: TextIO = self.artifact_collector.create_text_file("CONFIGS_DUMP.txt")
             dump_file.write(self.source_project_configs.dump())
             dump_file.close()
             config = self.source_project_configs.filter(check_if_env_set)
@@ -386,7 +403,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             ex_traceback = sys.exc_info()[2]
             text = "Exception while processing Universum configuration file:\n" + \
                    utils.format_traceback(e, ex_traceback) + \
-                   "\nTry to execute ``confgs.dump()`` to make sure no exceptions occur in that case."
+                   "\nTry to execute ``configs.dump()`` to make sure no exceptions occur in that case."
             raise CriticalCiException(text) from e
 
         if not self.project_config:
@@ -403,20 +420,14 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         working_directory = utils.parse_path(utils.strip_path_start(item.directory.rstrip("/")),
                                              self.settings.project_root)
 
-        # get_current_block() should be called while inside the required block, not afterwards
-        block = self.structure.get_current_block()
-
-        def fail_block(line: str = "") -> None:
-            self.structure.fail_block(block, line)
-
         log_file: Optional[TextIO] = None
         if self.output == "file":
-            log_file = self.artifacts.create_text_file(item.name + "_log.txt")
+            log_file = self.artifact_collector.create_text_file(item.name + "_log.txt")
             self.out.log("Execution log is redirected to file")
 
         additional_environment = self.api_support.get_environment_settings()
-        return RunningStep(item, self.out, fail_block, self.server.add_build_tag,
-                    log_file, working_directory, additional_environment, item.background)
+        return RunningStep(item, self.out, self.server.add_build_tag, log_file, working_directory,
+                           additional_environment, item.background, self.artifact_collector)
 
     def launch_custom_configs(self, custom_configs: configuration_support.Configuration) -> None:
         self.structure.execute_step_structure(custom_configs, self.create_process)
