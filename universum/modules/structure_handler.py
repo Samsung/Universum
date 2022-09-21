@@ -146,7 +146,7 @@ class StructureHandler(HasOutput):
         self.open_block(block_name)
         try:
             yield
-        except (SilentAbortException, StepException):  # user-defined step failed
+        except SilentAbortException:
             raise
         except CriticalCiException as e:  # system/environment step failed
             self.fail_current_block(str(e))
