@@ -156,7 +156,7 @@ class Reporter(HasOutput, HasStructure):
             text += indent + str(block) + '\n'
             self.out.log_summary_step(indent + block_title, has_children, block.status)
         elif not block.is_successful():
-            if not self.settings.only_fails_short or not block.children:
+            if not self.settings.only_fails_short or not has_children:
                 text += str(block) + '\n'
                 self.out.log_summary_step(block_title, has_children, block.status)
 
