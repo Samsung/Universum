@@ -244,6 +244,8 @@ class StructureHandler(HasOutput):
                 with self.block(block_name=step_label, pass_errors=True):
                     current_step_failed = not self.execute_steps_recursively(merged_item, child.children, step_executor,
                                                                              skip_execution)
+            elif child.is_conditional:
+                current_step_failed = not self.execute_conditional_step(merged_item, step_executor)
             else:
                 if merged_item.finish_background and self.active_background_steps:
                     self.out.log("All ongoing background steps should be finished before next step execution")
@@ -263,18 +265,18 @@ class StructureHandler(HasOutput):
 
         return not some_step_failed
 
-
     def execute_conditional_step(self, step, step_executor):
-        try:
-            self.configs_current_number += 1
-            step_name = self._build_step_name(step.name)
-            self.run_in_block(self.execute_one_step, step_name, True, step, step_executor, step.critical)
-            if step.if_succeeded:
-                self.execute_steps_recursively(None, Configuration([step.if_succeeded]), step_executor)
-        except StepException:
-            if step.if_failed:
-                self.execute_steps_recursively(None, Configuration([step.if_failed]), step_executor)
-
+        self.configs_current_number += 1
+        step_name = self._build_step_name(step.name)
+        conditional_step_succeeded = False
+        with self.block(block_name=step_name, pass_errors=True):
+            process = self.execute_one_step(step, step_executor);
+            conditional_step_succeeded = not process.get_error()
+        step_to_execute = step.if_succeeded if conditional_step_succeeded else step.if_failed
+        return self.execute_steps_recursively(parent=Step(),
+                                              children=Configuration([step_to_execute]),
+                                              step_executor=step_executor,
+                                              skip_execution=False)
 
     def report_background_steps(self) -> bool:
         result: bool = True
