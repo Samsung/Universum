@@ -49,6 +49,8 @@ class Reporter(HasOutput, HasStructure):
                             help="Send comment to review system on build success (in addition to vote up)")
         parser.add_argument("--report-only-fails", "-rof", action="store_true", dest="only_fails",
                             help="Include only the list of failed steps to reporting comments")
+        parser.add_argument("--report-only-fails-short", "-rofs", action="store_true", dest="only_fails_short",
+                            help="Include only the short list of failed steps to reporting comments")
         parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
                             help="Do not vote up/down review depending on result")
 
@@ -102,6 +104,9 @@ class Reporter(HasOutput, HasStructure):
             self.out.log("Not reporting: no build steps executed")
             return
 
+        if self.settings.only_fails_short:
+            self.settings.only_fails = True
+
         is_successful = True
         text = "Here is the summarized build result:\n"
         self.out.log(text)
@@ -151,8 +156,9 @@ class Reporter(HasOutput, HasStructure):
             text += indent + str(block) + '\n'
             self.out.log_summary_step(indent + block_title, has_children, block.status)
         elif not block.is_successful():
-            text += str(block) + '\n'
-            self.out.log_summary_step(block_title, has_children, block.status)
+            if not self.settings.only_fails_short or not has_children:
+                text += str(block) + '\n'
+                self.out.log_summary_step(block_title, has_children, block.status)
 
         is_successful = block.is_successful()
         for child in block.children:
