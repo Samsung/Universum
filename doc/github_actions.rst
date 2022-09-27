@@ -34,5 +34,5 @@ Artifacts can be stored with explicitly provided name in GitHub Actions via sepa
 It is possible to store multiple files in a single `artifact
 <https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts>`_, but it is not possible to
 retrieve only one file from an artifact. Because of these limitations it is not possible to provide references to
-artifacts without first creating them, and therefore the ``report_artifacts`` key in the configuration is not supported
-for GitHub Actions.
+artifacts without first creating them, and therefore the ``report_artifacts`` key can not be processed correctly and
+shouldn't be set in configuration.
