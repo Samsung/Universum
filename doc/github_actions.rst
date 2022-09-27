@@ -39,7 +39,8 @@ It is possible to store multiple files in a single `artifact
 <https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts>`_, but it is not possible to
 retrieve only one file from such artifact. This leads to the following limitations:
 
-    - links to artifacts can only be retrieved after artifact creation (which happens after `Universum` run)
+    - links to GitHub Actions artifacts can only be retrieved after actual artifact creation
+      (which happens after `Universum` run)
     - links to single artifact files cannot be provided at all
 
 This is the reason the ``report_artifacts`` key can not be processed correctly and shouldn't be set in configuration.
