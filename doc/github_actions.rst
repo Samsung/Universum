@@ -6,19 +6,18 @@ launched as one long step in a single build stage.
 
 .. warning::
 
-    GitHub Actions doesn't support `report_artifacts` key in configuration. If specified, a broken link will be created.
+    GitHub Actions doesn't support `report_artifacts` key in configuration. If set, a broken link will be created.
 
 Command line
 ------------
 
-To use `universum` to check-out current repository (the repository that contains the GitHub Action workflow) is
-necessary to use `GitHub Environment variables
-<https://docs.github.com/en/actions/learn-github-actions/environment-variables>`_:
+`Universum` command line example that can be used in GitHub Actions (see `GitHub Environment variables
+<https://docs.github.com/en/actions/learn-github-actions/environment-variables>`_):
 ::
     python -m universum --vcs-type=git --git-repo "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" --git-refspec "${GITHUB_REF_NAME}"
 
-`Universum` also supports reports to review systems from GitHub Actions. Link to build are created using environment
-variables and do not require any additional command line parameters.
+`Universum` also supports reporting to code review systems ('--report-to-review' option) from GitHub Actions. Link to
+build is created using environment variables and do not require any additional command line parameters.
 
 Logs
 ----
