@@ -7,8 +7,8 @@ and trigger an already set up automation server to perform these checks. GitHub 
 and passes them to the triggered builds.
 
 
-How to set up GitHub auto check using Unversum
-----------------------------------------------
+How to set up GitHub auto check using Universum
+-----------------------------------------------
 
 Default Universum ('main' mode) can post `check run` statuses to GitHub to be depicted both on 'Checks' page
 in pull requests and as a simple icon near any checked commit.

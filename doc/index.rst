@@ -15,6 +15,7 @@ Project 'Universum'
     universum_docs.rst
     teamcity.rst
     jenkins.rst
+    github_actions.rst
     examples.rst
     internal.rst
     changelog_ref.rst
@@ -28,7 +29,24 @@ Project `Universum` is a continuous integration framework, containing
 a collection of functions that simplify implementation of the
 automatic build, testing, static analysis and other steps.
 The goal of this project is to provide unified approach for adding continuous integration
-to any project. It currently supports Perforce, Git, Gerrit, Swarm, Jenkins and TeamCity.
+to any project.
+
+Supported VCS:
+
+- Git
+- Perforce
+
+Supported review systems:
+
+- Gerrit
+- Swarm
+- GitHub
+
+Supported CI:
+
+- Jenkins
+- TeamCity
+- Github Actions
 
 Sometimes `Universum` system can be referred to as the framework or just CI.
 
