@@ -13,7 +13,7 @@ launched as one long step in a single build stage.
 Command line
 ------------
 
-Here's an example of a comman line to be used for running Universum in GitHub Actions::
+Here's an example of a command line to be used for running Universum in GitHub Actions::
 
     python -m universum --vcs-type=git --git-repo "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" --git-refspec "${GITHUB_REF_NAME}"
 
