@@ -299,7 +299,7 @@ class StructureHandler(HasOutput):
     def execute_step_structure(self, configs: Configuration, step_executor) -> None:
         for config in configs.all():
             self.configs_total_count += 1
-            if config.if_succeeded or config.if_failed:
+            if config.is_conditional:
                 self.configs_total_count += 1
         self.step_num_len = len(str(self.configs_total_count))
         self.group_numbering = f" [ {'':{self.step_num_len}}+{'':{self.step_num_len}} ] "
