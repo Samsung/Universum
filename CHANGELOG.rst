@@ -1,6 +1,27 @@
 Change log
 ==========
 
+0.19.13 (2022-10-10)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **automation:** add Github Action automation server support
+* **out:** add Github Actions environment support
+* **config:** add path to configuration file in :doc:`configuration_support <configuration_support>`
+* **report:** add option to switch failures report to short form
+
+Bug fixes
+~~~~~~~~~
+
+* **config:** throw an error if project config is empty,
+  update error message if config is empty after step filtering
+* **doc:** add commentary on default parser
+* **doc:** add reference to filter usage in non-CI
+* **analyzer:** incorrect error on missing input file
+
+
 0.19.12 (2022-01-26)
 --------------------
 
