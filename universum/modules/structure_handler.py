@@ -271,7 +271,7 @@ class StructureHandler(HasOutput):
         step_name = self._build_step_name(step.name)
         conditional_step_succeeded = False
         with self.block(block_name=step_name, pass_errors=True):
-            process = self.execute_one_step(step, step_executor);
+            process = self.execute_one_step(step, step_executor)
             conditional_step_succeeded = not process.get_error()
         step_to_execute = step.if_succeeded if conditional_step_succeeded else step.if_failed
         return self.execute_steps_recursively(parent=Step(),
