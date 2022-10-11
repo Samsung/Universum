@@ -17,7 +17,8 @@ def send_report():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat = os.getenv("TELEGRAM_CHAT_ID")
     requests.post(url=f"https://api.telegram.org/bot{token}/sendMessage",
-                  data={"chat_id": chat, "text": report})
+                  data={"chat_id": chat, "text": report},
+                  timeout=30)
 
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9"])
@@ -25,7 +26,7 @@ def test(session):
     try:
         session.run("make", "rebuild", silent=True, external=True)
         session.install(".[test]")
-        session.run("make", "test", external=True)
+        session.run("make", "test", external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
         add_report_line(f"\U00002601 testing for Python {session.python} failed")

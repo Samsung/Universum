@@ -115,11 +115,13 @@ def mock_opened(monkeypatch):
     monkeypatch.setattr(P4.P4, 'run_opened', mocking_function, raising=False)
 
 
+@utils.nox_only
 def test_p4_failed_opened(perforce_environment: P4TestEnvironment, mock_opened: None):
     perforce_environment.run()
 
 
 # TODO: move this test to 'test_api.py' after test refactoring and Docker use reduction
+@utils.nox_only
 def test_p4_api_failed_opened(perforce_environment: P4TestEnvironment, mock_opened: None):
     step_name = "API"
     config = f"""

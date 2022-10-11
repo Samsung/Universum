@@ -38,7 +38,7 @@ class LocalMainVcs(base_vcs.BaseDownloadVcs, HasOutput, HasStructure, HasErrorSt
         else:
             self.source_dir = utils.parse_path(self.settings.source_dir, os.getcwd())
 
-    def calculate_file_diff(self):  # pylint: disable=no-self-use
+    def calculate_file_diff(self):
         return {}                   # No file diff can be calculated for local VCS
 
     @make_block("Copying sources to working directory")

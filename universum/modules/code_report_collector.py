@@ -5,14 +5,14 @@ import urllib.parse
 from copy import deepcopy
 from typing import Dict, List, Optional, TextIO, Tuple
 
-from ..configuration_support import Configuration
+from . import artifact_collector, reporter
 from .output import HasOutput
 from .project_directory import ProjectDirectory
-from . import artifact_collector, reporter
+from .structure_handler import HasStructure
+from ..configuration_support import Configuration
 from ..lib import utils
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
-from .structure_handler import HasStructure
 
 
 class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
@@ -95,23 +95,23 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             json_file: TextIO = self.artifacts.create_text_file("Static_analysis_report.json")
             json_file.write(json.dumps(report, indent=4))
 
-            issue_count: int = 0
-            if report or report == []:
-                try:
-                    issue_count = self._report_as_sarif_json(report)
-                except (KeyError, AttributeError, ValueError):
-                    try:
-                        issue_count = self._report_as_pylint_json(report)
-                    except (KeyError, AttributeError, ValueError):
-                        self.out.log_stderr("Could not parse report file. Something went wrong.")
-                        continue
-            else:
-                self.out.log_stderr("There are no results in code report file. Something went wrong.")
+            issue_count: int
+            if not report and report != []:
+                self.out.log_error("There are no results in code report file. Something went wrong.")
                 continue
+
+            try:
+                issue_count = self._report_as_sarif_json(report)
+            except (KeyError, AttributeError, ValueError):
+                try:
+                    issue_count = self._report_as_pylint_json(report)
+                except (KeyError, AttributeError, ValueError):
+                    self.out.log_error("Could not parse report file. Something went wrong.")
+                    continue
 
             if issue_count != 0:
                 text = str(issue_count) + " issues"
-                self.out.log_stderr("Found " + text)
-                self.out.report_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
+                self.out.log_error("Found " + text)
+                self.out.set_build_status(os.path.splitext(os.path.basename(report_file))[0] + ": " + text)
             else:
                 self.out.log("Issues not found.")

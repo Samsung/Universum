@@ -1,23 +1,22 @@
-from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple, Type
-from types import ModuleType
-
 import importlib
 import os
 import shutil
 import time
 import warnings
+from types import ModuleType
+from typing import cast, Callable, Dict, List, Optional, TextIO, Tuple, Type
 
+from . import base_vcs
+from .swarm import Swarm
 from ..error_state import HasErrorState
-from ...modules.artifact_collector import ArtifactCollector
-from ...modules.reporter import Reporter
+from ..output import HasOutput
+from ..structure_handler import HasStructure
+from ...lib import utils
 from ...lib.ci_exception import CriticalCiException, SilentAbortException
 from ...lib.gravity import Dependency
 from ...lib.utils import make_block, Uninterruptible, convert_to_str
-from ...lib import utils
-from ..output import HasOutput
-from ..structure_handler import HasStructure
-from . import base_vcs
-from .swarm import Swarm
+from ...modules.artifact_collector import ArtifactCollector
+from ...modules.reporter import Reporter
 
 __all__ = [
     "PerforceMainVcs",
@@ -125,7 +124,7 @@ class PerforceVcs(base_vcs.BaseVcs, HasOutput, HasStructure, HasErrorState):
             raise SilentAbortException()
 
     def finalize(self):
-        with Uninterruptible(self.out.log_exception) as run:
+        with Uninterruptible(self.out.log_error) as run:
             run(self.disconnect)
             run(super().finalize)
 
@@ -176,7 +175,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
             reconcile_result = self.p4reconcile("-c", change_id, convert_to_str(file_path))
 
         for line in reconcile_result:
-            # p4reconcile returns list of dicts AND strings if file is opened in another workspace
+            # p4reconcile returns list of dicts AND strings if file is opened in another workspace,
             # so we catch TypeError if line is not dict
             try:
                 if line["action"] == "add":
@@ -216,7 +215,7 @@ class PerforceSubmitVcs(PerforceVcs, base_vcs.BaseSubmitVcs):
 
             text = "The changes in following files are going to be submitted:"
             for line in current_cl["Files"]:
-                text+= "\n\t" + line
+                text += "\n\t" + line
             self.out.log(text)
             self.p4.run_submit(current_cl, "-f", "revertunchanged")
         except Exception as e:
@@ -421,7 +420,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     @make_block("Downloading")
     @catch_p4exception()
     def sync(self):
-        self.sources_need_cleaning = True        # pylint: disable=attribute-defined-outside-init
+        self.sources_need_cleaning = True  # pylint: disable=attribute-defined-outside-init
         self.append_repo_status("Sync CLs:\n")
 
         for idx, depot in enumerate(self.depots):
@@ -460,7 +459,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         except P4Exception as e:
             if "already committed" in str(e) and self.swarm and len(self.shelve_cls) == 1:
                 self.out.log("CL already committed")
-                self.out.report_build_status("CL already committed")
+                self.out.set_build_status("CL already committed")
                 self.swarm = None
                 raise SilentAbortException(application_exit_code=0) from e  # This scenario does not fail build
             raise
@@ -470,7 +469,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
     def p4resolve(self):
         result = self.p4.run_resolve("-am")
         if "resolve skipped" in str(result):
-            raise CriticalCiException(f"Problems during merge while resolving shelved CLs in file '{result[0]['clientFile']}'")
+            raise CriticalCiException(
+                f"Problems during merge while resolving shelved CLs in file '{result[0]['clientFile']}'")
         self.append_repo_status(" with conflicts resolved in files:")
         for entry in result:
             try:
@@ -490,8 +490,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.map_local_path_to_depot(report)
                 self.p4report(report)
                 self.append_repo_status("\n    " + cl)
-                self.structure.run_in_block(self.p4resolve, f"Resolving potential conflicts for CL {cl}",
-                                            pass_errors=True)
+                with self.structure.block(block_name=f"Resolving potential conflicts for CL {cl}", pass_errors=True):
+                    self.p4resolve()
             self.append_repo_status("\n")
 
     @catch_p4exception(ignore_if="file(s) up-to-date")
@@ -521,7 +521,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                     raise
                 self.out.log(f"Getting file diff via 'p4 opened' failed after {timeout} seconds timeout")
         else:
-            self.out.log_stderr("Calculating file diff failed, leaving blank")
+            self.out.log_error("Calculating file diff failed, leaving blank")
             return None
 
         for entry in opened_files:
@@ -567,7 +567,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.unshelved_files = self.p4.run_opened()
         unshelved_path: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []
 
-        unshelved_filtered: List[Dict[str, str]] =\
+        unshelved_filtered: List[Dict[str, str]] = \
             [item for item in self.unshelved_files if item["action"] != "move/delete"]
 
         for item in unshelved_filtered:
@@ -650,7 +650,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                 self.structure.fail_current_block(e.value)
 
     def finalize(self):
-        with Uninterruptible(self.out.log_exception) as run:
+        with Uninterruptible(self.out.log_error) as run:
             if self.settings.force_clean:
                 run(self.connect)
                 run(self.clean_workspace)

@@ -12,7 +12,7 @@ class BaseServerForTrigger(Module):
     Abstract base class for API of triggering builds on automation (CI) server
     """
 
-    def trigger_build(self, revision: str) -> None:  # pylint: disable=no-self-use
+    def trigger_build(self, revision: str) -> None:
         raise RuntimeError("Trigger build function is not defined for current driver.")
 
 
@@ -21,7 +21,7 @@ class BaseServerForHostingBuild(Module):
     Abstract base class for API of hosting CI builds on automation server
     """
 
-    def add_build_tag(self, tag: str) -> Response:  # pylint: disable=no-self-use
+    def add_build_tag(self, tag: str) -> Response:
         raise RuntimeError("Tag adding function is not defined for current driver.")
 
     def report_build_location(self) -> str:

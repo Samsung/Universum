@@ -1,6 +1,7 @@
 import pytest
 
-from .deployment_utils import UniversumRunner
+from universum import __main__
+
 
 config = """
 from universum.configuration_support import Configuration
@@ -12,33 +13,83 @@ configs = step('parent 1 ') * (step('step 1', True) + step('step 2', True))
 configs += step('parent 2 ') * (step('step 1', True) + step('step 2', True))
 """
 
+empty_config = """
+from universum.configuration_support import Configuration
+configs = Configuration()
+"""
 
-@pytest.mark.parametrize("filters, expected_logs, unexpected_logs", (
-        ["parent 1", ["parent 1", "step 1", "step 2"], ["parent 2"]],
-        ["!parent 2", ["parent 1", "step 1", "step 2"], ["parent 2"]],
-        ["parent 1:parent 2", ["parent 1", "step 1", "step 2", "parent 2"], []],
 
-        ["parent 1:parent 2:!step 1", ["parent 1", "step 2", "parent 2"], ["step 1"]],
-        ["step 2", ["parent 1", "parent 2", "step 2"], ["step 1"]],
-        ["!step 2:parent 1", ["parent 1", "step 1"], ["parent 2", "step 2"]],
-        ["step :!step 1", ["parent 1", "parent 2", "step 2"], ["step 1"]],
+filters_parametrize_values = (
+    [["parent 1"], ["parent 1", "step 1", "step 2"], ["parent 2"]],
+    [["!parent 2"], ["parent 1", "step 1", "step 2"], ["parent 2"]],
+    [["parent 1:parent 2"], ["parent 1", "step 1", "step 2", "parent 2"], []],
 
-        ["", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
-        ["!", ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"],
-         []],))
-def test_steps_filter(docker_main_and_nonci: UniversumRunner, filters, expected_logs, unexpected_logs):
-    console_out_log = docker_main_and_nonci.run(config, additional_parameters=f"-o console -f='{filters}'")
+    [["parent 1:parent 2:!step 1"], ["parent 1", "step 2", "parent 2"], ["step 1"]],
+    [["step 2"], ["parent 1", "parent 2", "step 2"], ["step 1"]],
+    [["!step 2:parent 1"], ["parent 1", "step 1"], ["parent 2", "step 2"]],
+    [["step :!step 1"], ["parent 1", "parent 2", "step 2"], ["step 1"]],
+
+    [[""], ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
+    [["!"], ["parent 1", "parent 2", "parent 1 step 1", "parent 2 step 1", "parent 1 step 2", "parent 2 step 2"], []],
+
+    [["parent 1:parent 2", "!step 1"], ["parent 1", "step 2", "parent 2"], ["step 1"]]
+)
+
+test_types = ["main", "nonci"]
+
+
+@pytest.mark.parametrize("test_type", test_types)
+@pytest.mark.parametrize("filters, expected_logs, unexpected_logs", filters_parametrize_values)
+def test_steps_filter(tmpdir, stdout_checker, filters, expected_logs, unexpected_logs, test_type):
+    params = get_cli_params(test_type, tmpdir)
+    params.extend(["-o", "console"])
+    for _filter in filters:
+        params.append(f"-f={_filter}")
+    params.extend(["-cfg", get_config_file_path(tmpdir, config)])
+
+    return_code = __main__.main(params)
+
+    assert return_code == 0
     for log_str in expected_logs:
-        assert log_str in console_out_log
-
+        stdout_checker.assert_has_calls_with_param(log_str)
     for log_str in unexpected_logs:
-        assert log_str not in console_out_log
+        stdout_checker.assert_absent_calls_with_param(log_str)
 
 
-def test_steps_filter_few_flags(docker_main_and_nonci: UniversumRunner):
-    console_out_log = docker_main_and_nonci.run(config,
-                                                additional_parameters="-o console -f='parent 1:parent 2' -f='!step 1'")
-    for log_str in ["parent 1", "step 2", "parent 2"]:
-        assert log_str in console_out_log
+@pytest.mark.parametrize("test_type", test_types)
+def test_steps_filter_no_match(tmpdir, stdout_checker, test_type):
+    include_pattern = "asdf"
+    exclude_pattern = "qwer"
+    cli_params = get_cli_params(test_type, tmpdir)
+    cli_params.extend(["-f", f"{include_pattern}:!{exclude_pattern}"])
 
-    assert "step 1" not in console_out_log
+    check_empty_config_error(tmpdir, stdout_checker, cli_params)
+    stdout_checker.assert_has_calls_with_param(include_pattern)
+    stdout_checker.assert_has_calls_with_param(exclude_pattern)
+
+
+@pytest.mark.parametrize("test_type", test_types)
+def test_config_empty(tmpdir, stdout_checker, test_type):
+    check_empty_config_error(tmpdir, stdout_checker, get_cli_params(test_type, tmpdir))
+
+
+def check_empty_config_error(tmpdir, stdout_checker, cli_params):
+    cli_params.extend(["-cfg", get_config_file_path(tmpdir, empty_config)])
+    return_code = __main__.main(cli_params)
+
+    assert return_code == 1
+    stdout_checker.assert_has_calls_with_param("Project configs are empty")
+
+
+def get_config_file_path(tmpdir, text):
+    config_file = tmpdir.join("configs.py")
+    config_file.write_text(text, "utf-8")
+    return str(config_file)
+
+
+def get_cli_params(test_type, tmpdir):
+    if test_type == "nonci":
+        return ["nonci"]
+    return ["-vt", "none",
+            "-fsd", str(tmpdir),
+            "--clean-build"]

@@ -10,6 +10,7 @@ from typing import Type
 from docker.models.containers import Container
 import httpretty
 import py
+import pytest
 
 from universum import submit, poll, main, github_handler, nonci, __main__
 from universum.lib import gravity
@@ -22,6 +23,7 @@ __all__ = [
     "python",
     "python_version",
     "reuse_docker_containers",
+    "nox_only",
     "randomize_name",
     "get_open_port",
     "python_time_from_rfc3339_time",
@@ -48,6 +50,10 @@ def python_version() -> str:
 
 def reuse_docker_containers() -> bool:
     return ("PYCHARM_HOSTED" in os.environ) or ("REUSE_DOCKER_CONTAINERS" in os.environ)
+
+
+nox_only = pytest.mark.skipif("UNIVERSUM_NOX_REGRESSION" not in os.environ,
+                              reason="This test is only needed for regression testing")
 
 
 def randomize_name(name: str) -> str:

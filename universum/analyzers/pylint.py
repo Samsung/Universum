@@ -26,6 +26,11 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
 
 def pylint_output_parser(output: str) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
+    # Workaround for colorama polluting the process output when run from PyCharm - remove the trailing color reset
+    # escape sequence. Details:
+    # 1. https://github.com/PyCQA/isort/issues/1657
+    # 2. https://github.com/tartley/colorama/issues/307
+    output = output[:output.rfind(']') + 1]
     for data in json.loads(output):
         # pylint has its own escape rules for json output of "message" values.
         # it uses cgi.escape lib and escapes symbols <>&

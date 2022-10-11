@@ -1,14 +1,13 @@
 import sys
-import os
-from types import TracebackType
-from typing import ClassVar, Optional
+from typing import ClassVar
 
-from ...lib.gravity import Module, Dependency
-from ...lib import utils
 from .base_output import BaseOutput
-from .terminal_based_output import TerminalBasedOutput
-from .teamcity_output import TeamcityOutput
+from .github_output import GithubOutput
 from .html_output import HtmlOutput
+from .teamcity_output import TeamcityOutput
+from .terminal_based_output import TerminalBasedOutput
+from ...lib import utils
+from ...lib.gravity import Module, Dependency
 
 __all__ = [
     "HasOutput",
@@ -21,14 +20,15 @@ class Output(Module):
     teamcity_driver_factory = Dependency(TeamcityOutput)
     terminal_driver_factory = Dependency(TerminalBasedOutput)
     html_driver_factory = Dependency(HtmlOutput)
+    github_driver_factory = Dependency(GithubOutput)
 
     @staticmethod
     def define_arguments(argument_parser):
         parser = argument_parser.get_or_create_group("Output", "Log appearance parameters")
-        parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins"],
-                            help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal). "
-                                 "TeamCity and Jenkins environments are detected automatically "
-                                 "when launched on build agent.")
+        parser.add_argument("--out-type", "-ot", dest="type", choices=["tc", "term", "jenkins", "github"],
+                            help="Type of output to produce (tc - TeamCity, jenkins - Jenkins, term - terminal, "
+                                 "github - Github Actions). TeamCity, Jenkins and Github Actions environments are "
+                                 "detected automatically when launched on build agent.")
         # `universum` -> html_log == default
         # `universum -hl` -> html_log == const
         # `universum -hl custom` -> html_log == custom
@@ -43,16 +43,37 @@ class Output(Module):
             utils.create_driver(local_factory=self.terminal_driver_factory,
                                 teamcity_factory=self.teamcity_driver_factory,
                                 jenkins_factory=self.terminal_driver_factory,
+                                github_factory=self.github_driver_factory,
                                 env_type=self.settings.type)
         self.html_driver = self._create_html_driver()
+
+    def log_execution_start(self, title: str, version: str) -> None:
+        self.driver.log_execution_start(title, version)
+        self.html_driver.log_execution_start(title, version)
+
+    def log_execution_finish(self, title: str, version: str) -> None:
+        self.driver.log_execution_finish(title, version)
+        self.html_driver.log_execution_finish(title, version)
 
     def log(self, line: str) -> None:
         self.driver.log(line)
         self.html_driver.log(line)
 
+    def log_error(self, description: str) -> None:
+        self.driver.log_error(description)
+        self.html_driver.log_error(description)
+
     def log_external_command(self, command: str) -> None:
         self.driver.log_external_command(command)
         self.html_driver.log_external_command(command)
+
+    def log_stdout(self, line: str) -> None:
+        self.driver.log_stdout(line)
+        self.html_driver.log_stdout(line)
+
+    def log_stderr(self, line: str) -> None:
+        self.driver.log_stderr(line)
+        self.html_driver.log_stderr(line)
 
     def open_block(self, number: str, name: str) -> None:
         self.driver.open_block(number, name)
@@ -62,42 +83,20 @@ class Output(Module):
         self.driver.close_block(number, name, status)
         self.html_driver.close_block(number, name, status)
 
-    def report_build_status(self, status: str) -> None:
-        self.driver.change_status(status)
-        self.html_driver.change_status(status)
+    def log_skipped(self, message: str) -> None:
+        self.driver.log_skipped(message)
+        self.html_driver.log_skipped(message)
+
+    def log_summary_step(self, step_title: str, has_children: bool, status: str) -> None:
+        self.driver.log_summary_step(step_title, has_children, status)
+        self.html_driver.log_summary_step(step_title, has_children, status)
 
     # TODO: pass build problem to the Report module
     def report_build_problem(self, problem: str) -> None:
-        self.driver.report_error(problem)
-        self.html_driver.report_error(problem)
+        self.driver.report_build_problem(problem)
 
-    def report_skipped(self, message: str) -> None:
-        self.driver.report_skipped(message)
-        self.html_driver.report_skipped(message)
-
-    def report_step(self, message: str, status: str) -> None:
-        self.driver.report_step(message, status)
-        self.html_driver.report_step(message, status)
-
-    def log_exception(self, line: str) -> None:
-        self.driver.log_exception(line)
-        self.html_driver.log_exception(line)
-
-    def log_stderr(self, line: str) -> None:
-        self.driver.log_stderr(line)
-        self.html_driver.log_stderr(line)
-
-    def log_shell_output(self, line: str) -> None:
-        self.driver.log_shell_output(line)
-        self.html_driver.log_shell_output(line)
-
-    def log_execution_start(self, title: str, version: str) -> None:
-        self.driver.log_execution_start(title, version)
-        self.html_driver.log_execution_start(title, version)
-
-    def log_execution_finish(self, title: str, version: str) -> None:
-        self.driver.log_execution_finish(title, version)
-        self.html_driver.log_execution_finish(title, version)
+    def set_build_status(self, status: str) -> None:
+        self.driver.set_build_status(status)
 
     def _create_html_driver(self):
         is_enabled = self.settings.html_log is not None
@@ -127,9 +126,8 @@ class MinimalOut:
         pass
 
     @staticmethod
-    def log_exception(exc: Exception) -> None:
-        ex_traceback: Optional[TracebackType] = sys.exc_info()[2]
-        sys.stderr.write("Unexpected error.\n" + utils.format_traceback(exc, ex_traceback))
+    def log_error(line: str) -> None:
+        sys.stderr.write("Error: " + line)
 
     def log_execution_start(self, title, version):
         pass
