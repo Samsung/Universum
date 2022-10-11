@@ -7,19 +7,18 @@ Change log
 New features
 ~~~~~~~~~~~~
 
-* **automation:** add Github Action automation server support
-* **out:** add Github Actions environment support
-* **config:** add path to configuration file in :doc:`configuration_support <configuration_support>`
-* **report:** add option to switch failures report to short form
+* **automation:** add full support of GitHub Actions CI server (as alternative to Jenkins and TeamCity)
+* **config:** add path to configuration file in :doc:`configuration_support <configuration_support>`;
+  this might be very useful in non-CI mode when launched from directory other than project root
+* **report:** status reports now include more useful info; previous short form can be enabled by
+  ``-rofs`` `command-line option <args.html#Result\ reporting>`__
 
 Bug fixes
 ~~~~~~~~~
 
-* **config:** throw an error if project config is empty,
-  update error message if config is empty after step filtering
-* **doc:** add commentary on default parser
-* **doc:** add reference to filter usage in non-CI
-* **analyzer:** incorrect error on missing input file
+* **config:** update error message if config is empty after step filtering
+* **doc:** add explanation of filter usage in :ref:`non-CI mode description <additional_commands#run>`
+* **analyzer:** update error message on missing input file
 
 
 0.19.12 (2022-01-26)
