@@ -115,9 +115,9 @@ class Step:
         A tag used to mark successful TeamCity builds. This tag can be set independenty
         of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
         TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
-        not in the end of all run.
+        not in the end of all run. Not applicable for conditional steps.
     fail_tag
-        A tag used to mark failed TemCity builds. See `pass_tag` for details.
+        A tag used to mark failed TemCity builds. See `pass_tag` for details. Not applicable for conditional steps.
 
     Each parameter is optional, and is substituted with a falsy value, if omitted.
 

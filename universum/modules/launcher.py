@@ -248,16 +248,6 @@ class RunningStep(RunningStepBase):
         else:
             self.out.log_stderr(line)
 
-    def add_tag(self, tag: str) -> None:
-        if not tag:
-            return
-
-        request: Response = self.send_tag(tag)
-        if request.status_code != 200:
-            self.out.log_error(request.text)
-        else:
-            self.out.log("Tag '" + tag + "' added to build.")
-
     def finalize(self) -> None:
         self._error = None
         if not self._needs_finalization:
@@ -282,15 +272,12 @@ class RunningStep(RunningStepBase):
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
                     self.file.write(text + "\n")
-                if not self.configuration.is_conditional:
-                    self.add_tag(self.configuration.fail_tag)
-                    self._error = text
-                return
-
-            self.add_tag(self.configuration.pass_tag)
-            return
+                self._error = text
 
         finally:
+            tag: Optional[str] = self._get_teamcity_build_tag()
+            if tag:
+                self._assign_teamcity_build_tag(tag)
             self.handle_stdout()
             if self.file:
                 self.file.close()
@@ -307,6 +294,19 @@ class RunningStep(RunningStepBase):
         for item in self._postponed_out:
             item[0](item[1])
         self._postponed_out = []
+
+    def _get_teamcity_build_tag(self) -> Optional[str]:
+        if self.configuration.is_conditional:
+            return None  # conditional steps always succeed, no sense to set a tag
+        tag: str = self.configuration.fail_tag if self._error else self.configuration.pass_tag
+        return tag  # can be also None if not set for current Configuration
+
+    def _assign_teamcity_build_tag(self, tag: str) -> None:
+        response: Response = self.send_tag(tag)
+        if response.status_code != 200:
+            self.out.log_error(response.text)
+        else:
+            self.out.log("Tag '" + tag + "' added to build.")
 
 
 class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
