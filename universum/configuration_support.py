@@ -115,9 +115,9 @@ class Step:
         A tag used to mark successful TeamCity builds. This tag can be set independenty
         of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
         TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
-        not in the end of all run.
+        not in the end of all run. Not applicable for conditional steps.
     fail_tag
-        A tag used to mark failed TemCity builds. See `pass_tag` for details.
+        A tag used to mark failed TemCity builds. See `pass_tag` for details. Not applicable for conditional steps.
 
     Each parameter is optional, and is substituted with a falsy value, if omitted.
 
@@ -170,6 +170,8 @@ class Step:
                  pass_tag: str = '',
                  fail_tag: str = '',
                  if_env_set: str = '',
+                 if_succeeded = None,
+                 if_failed = None,
                  **kwargs) -> None:
         self.name: str = name
         self.directory: str = directory
@@ -185,6 +187,9 @@ class Step:
         self.pass_tag: str = pass_tag
         self.fail_tag: str = fail_tag
         self.if_env_set: str = if_env_set
+        self.if_succeeded = if_succeeded
+        self.if_failed = if_failed
+        self.is_conditional = self.if_succeeded or self.if_failed
         self.children: Optional['Configuration'] = None
         self._extras: Dict[str, str] = {}
         for key, value in kwargs.items():
@@ -391,6 +396,9 @@ class Step:
             pass_tag=self.pass_tag + other.pass_tag,
             fail_tag=self.fail_tag + other.fail_tag,
             if_env_set=self.if_env_set + other.if_env_set,
+            # FIXME: This is a dummy implementation. Define addition logic and implement it.
+            if_succeeded=other.if_succeeded,
+            if_failed=other.if_failed,
             **combine(self._extras, other._extras)
         )
 
