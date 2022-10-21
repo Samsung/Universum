@@ -94,12 +94,12 @@ Here are the symptoms of domain names not resolving correctly:
 1. Jenkins warnings when trying to save the updated settings
 2. Client inability to access said pages (timeout error)
 
-To set up domain name resolving, add following lines to server ``/ets/host`` file::
+To set up domain name resolving, add following lines to server ``/ets/hosts`` file::
 
     127.0.0.1       <main domain>
     <server IP>     <resource domain>
 
-And add the following lines to client ``/ets/host`` file::
+And add the following lines to client ``/ets/hosts`` file::
 
     <server IP>     <main domain>
     <server IP>     <resource domain>
