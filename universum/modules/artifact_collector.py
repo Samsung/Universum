@@ -209,7 +209,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     def get_conditional_step_branches_artifacts(self, configuration):
         """
         Both branches have artifacts -> return ConditionalStepArtifacts(dict, dict)
-        One branch have artifact -> return dict
+        One branch has artifact -> return dict
         No branches have artifacts -> return None
         """
         succeeded_config_artifact = self.get_config_artifact_if_exists(configuration.if_succeeded)
@@ -278,31 +278,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
     def report_artifacts(self):
         self.reporter.report_artifacts(list(self.collected_report_artifacts))
-        for path in self.artifact_list:
-            if isinstance(path, ConditionalStepArtifacts):
-                self.collect_conditional_step_artifacts(path)
-            else:
-                name = "Collecting '" + os.path.basename(path) + "'"
-                self.structure.run_in_block(self.move_artifact, name, False, path)
-
-    def collect_conditional_step_artifacts(self, artifacts_info):
-        succeeded_artifact_path = artifacts_info.succeeded_config_artifact["path"]
-        succeeded_artifact_exists = os.path.exists(succeeded_artifact_path)
-        failed_artifact_path = artifacts_info.failed_config_artifact["path"]
-        failed_artifact_exists = os.path.exists(failed_artifact_path)
-
-        # At this point we don't know which branch step was executed,
-        # so assuming that any single branch artifact presence is good
-        if succeeded_artifact_exists and failed_artifact_exists:
-            raise CriticalCiException("Both conditional step branches artifacts exist")
-        if succeeded_artifact_exists:
-            name = "Collecting '" + os.path.basename(succeeded_artifact_path) + "'"
-            self.structure.run_in_block(self.move_artifact, name, False, succeeded_artifact_path)
-        elif failed_artifact_exists:
-            name = "Collecting '" + os.path.basename(failed_artifact_path) + "'"
-            self.structure.run_in_block(self.move_artifact, name, False, failed_artifact_path)
-        else:
-            raise CriticalCiException("Conditional step branches artifacts are absent")
 
     def clean_artifacts_silently(self):
         try:
