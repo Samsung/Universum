@@ -58,6 +58,17 @@ def make_big_archive(target, source):
     return filename
 
 
+class ConditionalStepArtifacts:
+
+    def __init__(self, succeeded_config_artifact, failed_config_artifact):
+        self.succeeded_config_artifact = succeeded_config_artifact
+        self.failed_config_artifact = failed_config_artifact
+
+    def __len__(self):
+        # dummy logic to make this class sortable
+        return len(self.succeeded_config_artifact["path"]) + len(self.failed_config_artifact["path"])
+
+
 class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServerForHostingBuild)
@@ -79,6 +90,9 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         super().__init__(*args, **kwargs)
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
+
+        self.artifact_list = []
+        self.report_artifact_list = []
 
         # Needed because of wildcards
         self.collected_report_artifacts = set()
@@ -123,34 +137,48 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         :param ignore_already_existing: will not check existence of artifacts when set to 'True'
         :return: sorted list of checked paths (including duplicates and wildcards)
         """
+        dir_list = set()
         for item in artifact_list:
-            # Check existence in place: wildcards applied
-            matches = glob2.glob(item["path"])
-            if matches:
-                if item["clean"]:
-                    for matching_path in matches:
-                        try:
-                            os.remove(matching_path)  # TODO: use shutil by default
-                        except OSError as e:
-                            if "Is a directory" not in e.strerror:
-                                raise
-                            shutil.rmtree(matching_path)
-                        self.out.log(f"Cleaned up '{matching_path}'")
-                elif not ignore_already_existing:
-                    text = "Build artifacts, such as"
-                    for matching_path in matches:
-                        text += f"\n * '{os.path.basename(matching_path)}'"
-                    text += f"\nalready exist in '{os.path.dirname(item['path'])}' directory."
-                    text += "\nPossible reason of this error: previous build results in working directory"
-                    raise CriticalCiException(text)
+            if isinstance(item, ConditionalStepArtifacts):
+                self.preprocess_artifact(item.succeeded_config_artifact, ignore_already_existing)
+                self.preprocess_artifact(item.failed_config_artifact, ignore_already_existing)
+                dir_list.add(item)
+            else:
+                self.preprocess_artifact(item, ignore_already_existing)
+                dir_list.add(item["path"])
 
-            # Check existence in 'artifacts' directory: wildcards NOT applied
-            path_to_check1 = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
-            path_to_check2 = os.path.join(path_to_check1 + ".zip")
-            if os.path.exists(path_to_check1) or os.path.exists(path_to_check2):
-                text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
+        new_artifact_list = list(dir_list)
+        new_artifact_list.sort(key=len, reverse=True)
+        return new_artifact_list
+
+    def preprocess_artifact(self, item, ignore_already_existing):
+        # Check existence in place: wildcards applied
+        matches = glob2.glob(item["path"])
+        if matches:
+            if item["clean"]:
+                for matching_path in matches:
+                    try:
+                        os.remove(matching_path)  # TODO: use shutil by default
+                    except OSError as e:
+                        if "Is a directory" not in e.strerror:
+                            raise
+                        shutil.rmtree(matching_path)
+                    self.out.log(f"Cleaned up '{matching_path}'")
+            elif not ignore_already_existing:
+                text = "Build artifacts, such as"
+                for matching_path in matches:
+                    text += f"\n * '{os.path.basename(matching_path)}'"
+                text += f"\nalready exist in '{os.path.dirname(item['path'])}' directory."
                 text += "\nPossible reason of this error: previous build results in working directory"
                 raise CriticalCiException(text)
+
+        # Check existence in 'artifacts' directory: wildcards NOT applied
+        path_to_check1 = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
+        path_to_check2 = os.path.join(path_to_check1 + ".zip")
+        if os.path.exists(path_to_check1) or os.path.exists(path_to_check2):
+            text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
+            text += "\nPossible reason of this error: previous build results in working directory"
+            raise CriticalCiException(text)
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
@@ -159,8 +187,11 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         report_artifact_list = []
         for configuration in project_configs.all():
             if configuration.artifacts:
-                path = utils.parse_path(configuration.artifacts, self.settings.project_root)
-                artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
+                artifact_list.append(self.get_config_artifact(configuration))
+            if configuration.is_conditional:
+                artifacts_info = self.get_conditional_step_branches_artifacts(configuration)
+                if artifacts_info:
+                    artifact_list.append(artifacts_info)
             if configuration.report_artifacts:
                 path = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
                 report_artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
@@ -174,6 +205,32 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             name = "Setting and preprocessing artifacts to be mentioned in report"
             with self.structure.block(block_name=name, pass_errors=True):
                 self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
+
+    def get_conditional_step_branches_artifacts(self, configuration):
+        """
+        Both branches have artifacts -> return ConditionalStepArtifacts(dict, dict)
+        One branch have artifact -> return dict
+        No branches have artifacts -> return None
+        """
+        succeeded_config_artifact = self.get_config_artifact_if_exists(configuration.if_succeeded)
+        failed_config_artifact = self.get_config_artifact_if_exists(configuration.if_failed)
+
+        if succeeded_config_artifact and failed_config_artifact:
+            return ConditionalStepArtifacts(succeeded_config_artifact, failed_config_artifact)
+        if succeeded_config_artifact:
+            return succeeded_config_artifact
+        if failed_config_artifact:
+            return succeeded_config_artifact
+        return None
+
+    def get_config_artifact_if_exists(self, configuration):
+        if configuration and configuration.artifacts:
+            return self.get_config_artifact(configuration)
+        return None
+
+    def get_config_artifact(self, configuration):
+        path = utils.parse_path(configuration.artifacts, self.settings.project_root)
+        return dict(path=path, clean=configuration.artifact_prebuild_clean)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
@@ -221,6 +278,31 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
     def report_artifacts(self):
         self.reporter.report_artifacts(list(self.collected_report_artifacts))
+        for path in self.artifact_list:
+            if isinstance(path, ConditionalStepArtifacts):
+                self.collect_conditional_step_artifacts(path)
+            else:
+                name = "Collecting '" + os.path.basename(path) + "'"
+                self.structure.run_in_block(self.move_artifact, name, False, path)
+
+    def collect_conditional_step_artifacts(self, artifacts_info):
+        succeeded_artifact_path = artifacts_info.succeeded_config_artifact["path"]
+        succeeded_artifact_exists = os.path.exists(succeeded_artifact_path)
+        failed_artifact_path = artifacts_info.failed_config_artifact["path"]
+        failed_artifact_exists = os.path.exists(failed_artifact_path)
+
+        # At this point we don't know which branch step was executed,
+        # so assuming that any single branch artifact presence is good
+        if succeeded_artifact_exists and failed_artifact_exists:
+            raise CriticalCiException("Both conditional step branches artifacts exist")
+        if succeeded_artifact_exists:
+            name = "Collecting '" + os.path.basename(succeeded_artifact_path) + "'"
+            self.structure.run_in_block(self.move_artifact, name, False, succeeded_artifact_path)
+        elif failed_artifact_exists:
+            name = "Collecting '" + os.path.basename(failed_artifact_path) + "'"
+            self.structure.run_in_block(self.move_artifact, name, False, failed_artifact_path)
+        else:
+            raise CriticalCiException("Conditional step branches artifacts are absent")
 
     def clean_artifacts_silently(self):
         try:

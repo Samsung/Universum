@@ -1,10 +1,12 @@
 import re
+import os
 import inspect
 import pytest
 
 from universum import __main__
 
 
+conditional_step_name = "conditional"
 true_branch_step_name = "true_branch"
 false_branch_step_name = "false_branch"
 
@@ -28,13 +30,24 @@ def build_config_file(tmpdir, conditional_step_passed):
     config = inspect.cleandoc(f'''
         from universum.configuration_support import Configuration, Step
 
-        true_branch_step = Step(name='{true_branch_step_name}', command=['touch', '{true_branch_step_name}'])
-        false_branch_step = Step(name='{false_branch_step_name}', command=['touch', '{false_branch_step_name}'])
-        conditional_step = Configuration([dict(name='conditional',
-            command=['bash', '-c', 'exit {conditional_step_exit_code}'],
-            if_succeeded=true_branch_step, if_failed=false_branch_step)])
+        true_branch_step = Step(
+            name='{true_branch_step_name}',
+            command=['touch', '{true_branch_step_name}'],
+            artifacts='{true_branch_step_name}')
 
-        configs = conditional_step
+        false_branch_step = Step(
+            name='{false_branch_step_name}',
+            command=['touch', '{false_branch_step_name}'],
+            artifacts='{false_branch_step_name}')
+
+        conditional_step = Step(
+            name='{conditional_step_name}',
+            command=['bash', '-c', 'touch {conditional_step_name}; exit {conditional_step_exit_code}'],
+            if_succeeded=true_branch_step,
+            if_failed=false_branch_step,
+            artifacts='{conditional_step_name}')
+
+        configs = Configuration([conditional_step])
     ''')
 
     config_file = tmpdir.join("configs.py")
@@ -60,7 +73,9 @@ def check_conditional_step(tmpdir, capsys, config_file, conditional_step_passed)
     conditional_succeeded_regexp = r"\] conditional.*Success.*\|   5\.2"
     assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 
-    expected_log = true_branch_step_name if conditional_step_passed else false_branch_step_name
-    unexpected_log = false_branch_step_name if conditional_step_passed else true_branch_step_name
-    assert expected_log in captured.out
-    assert not unexpected_log in captured
+    assert os.path.exists(os.path.join(artifacts_dir, conditional_step_name))
+    expected_file = true_branch_step_name if conditional_step_passed else false_branch_step_name
+    unexpected_file = false_branch_step_name if conditional_step_passed else true_branch_step_name
+    assert os.path.exists(os.path.join(artifacts_dir, expected_file))
+    assert not os.path.exists(os.path.join(artifacts_dir, unexpected_file))
+
