@@ -245,8 +245,9 @@ class StructureHandler(HasOutput):
                     current_step_failed = not self.execute_steps_recursively(merged_item, child.children, step_executor,
                                                                              skip_execution)
             elif child.is_conditional:
-                conditional_step_succeeded = self.process_one_step(merged_item, step_executor, skip_execution=False)
-                step_to_execute = merged_item.if_succeeded if conditional_step_succeeded else merged_item.if_failed
+                conditional_step_succeeded: bool = self.process_one_step(merged_item, step_executor,
+                                                                         skip_execution=False)
+                step_to_execute: Step = merged_item.if_succeeded if conditional_step_succeeded else merged_item.if_failed
                 return self.execute_steps_recursively(parent=Step(),
                                                       children=Configuration([step_to_execute]),
                                                       step_executor=step_executor,

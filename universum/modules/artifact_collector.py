@@ -4,10 +4,11 @@ from distutils import dir_util, errors
 import os
 import shutil
 import zipfile
+from typing import List, Optional, Dict, Union, TypedDict
 
 import glob2
 
-from ..configuration_support import Configuration
+from ..configuration_support import Configuration, Step
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
@@ -56,6 +57,11 @@ def make_big_archive(target, source):
             os.chdir(save_cwd)
 
     return filename
+
+
+class ArtifactInfo(TypedDict):
+    path: str
+    clean: bool
 
 
 class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
@@ -155,15 +161,15 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
         self.html_output.artifact_dir_ready = True
-        artifact_list = []
-        report_artifact_list = []
+        artifact_list: List[ArtifactInfo] = []
+        report_artifact_list: List[ArtifactInfo] = []
         for configuration in project_configs.all():
             if configuration.artifacts:
                 artifact_list.append(self.get_config_artifact(configuration))
             if configuration.is_conditional:
                 artifact_list.extend(self.get_conditional_step_branches_artifacts(configuration))
             if configuration.report_artifacts:
-                path = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
+                path: str = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
                 report_artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
 
         if artifact_list:
@@ -176,9 +182,9 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             with self.structure.block(block_name=name, pass_errors=True):
                 self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
 
-    def get_conditional_step_branches_artifacts(self, configuration):
-        succeeded_config_artifact = self.get_config_artifact_if_exists(configuration.if_succeeded)
-        failed_config_artifact = self.get_config_artifact_if_exists(configuration.if_failed)
+    def get_conditional_step_branches_artifacts(self, configuration: Step) -> List[ArtifactInfo]:
+        succeeded_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(configuration.if_succeeded)
+        failed_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(configuration.if_failed)
 
         if succeeded_config_artifact and failed_config_artifact:
             return [succeeded_config_artifact, failed_config_artifact]
@@ -189,12 +195,12 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         else:
             return []
 
-    def get_config_artifact_if_exists(self, configuration):
+    def get_config_artifact_if_exists(self, configuration: Step) -> Optional[ArtifactInfo]:
         if configuration and configuration.artifacts:
             return self.get_config_artifact(configuration)
         return None
 
-    def get_config_artifact(self, configuration):
+    def get_config_artifact(self, configuration: Step) -> ArtifactInfo:
         path = utils.parse_path(configuration.artifacts, self.settings.project_root)
         return dict(path=path, clean=configuration.artifact_prebuild_clean)
 
