@@ -58,17 +58,6 @@ def make_big_archive(target, source):
     return filename
 
 
-class ConditionalStepArtifacts:
-
-    def __init__(self, succeeded_config_artifact, failed_config_artifact):
-        self.succeeded_config_artifact = succeeded_config_artifact
-        self.failed_config_artifact = failed_config_artifact
-
-    def __len__(self):
-        # dummy logic to make this class sortable
-        return len(self.succeeded_config_artifact["path"]) + len(self.failed_config_artifact["path"])
-
-
 class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     reporter_factory = Dependency(Reporter)
     automation_server_factory = Dependency(AutomationServerForHostingBuild)
@@ -139,13 +128,8 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         """
         dir_list = set()
         for item in artifact_list:
-            if isinstance(item, ConditionalStepArtifacts):
-                self.preprocess_artifact(item.succeeded_config_artifact, ignore_already_existing)
-                self.preprocess_artifact(item.failed_config_artifact, ignore_already_existing)
-                dir_list.add(item)
-            else:
-                self.preprocess_artifact(item, ignore_already_existing)
-                dir_list.add(item["path"])
+            self.preprocess_artifact(item, ignore_already_existing)
+            dir_list.add(item["path"])
 
         new_artifact_list = list(dir_list)
         new_artifact_list.sort(key=len, reverse=True)
@@ -189,9 +173,7 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             if configuration.artifacts:
                 artifact_list.append(self.get_config_artifact(configuration))
             if configuration.is_conditional:
-                artifacts_info = self.get_conditional_step_branches_artifacts(configuration)
-                if artifacts_info:
-                    artifact_list.append(artifacts_info)
+                artifact_list.extend(self.get_conditional_step_branches_artifacts(configuration))
             if configuration.report_artifacts:
                 path = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
                 report_artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
@@ -207,21 +189,17 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                 self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
 
     def get_conditional_step_branches_artifacts(self, configuration):
-        """
-        Both branches have artifacts -> return ConditionalStepArtifacts(dict, dict)
-        One branch has artifact -> return dict
-        No branches have artifacts -> return None
-        """
         succeeded_config_artifact = self.get_config_artifact_if_exists(configuration.if_succeeded)
         failed_config_artifact = self.get_config_artifact_if_exists(configuration.if_failed)
 
         if succeeded_config_artifact and failed_config_artifact:
-            return ConditionalStepArtifacts(succeeded_config_artifact, failed_config_artifact)
-        if succeeded_config_artifact:
-            return succeeded_config_artifact
-        if failed_config_artifact:
-            return succeeded_config_artifact
-        return None
+            return [succeeded_config_artifact, failed_config_artifact]
+        elif succeeded_config_artifact:
+            return [succeeded_config_artifact]
+        elif failed_config_artifact:
+            return [failed_config_artifact]
+        else:
+            return []
 
     def get_config_artifact_if_exists(self, configuration):
         if configuration and configuration.artifacts:
