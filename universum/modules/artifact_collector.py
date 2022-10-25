@@ -80,9 +80,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         self.reporter = self.reporter_factory()
         self.automation_server = self.automation_server_factory()
 
-        self.artifact_list = []
-        self.report_artifact_list = []
-
         # Needed because of wildcards
         self.collected_report_artifacts = set()
 
