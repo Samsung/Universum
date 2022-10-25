@@ -126,43 +126,34 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         :param ignore_already_existing: will not check existence of artifacts when set to 'True'
         :return: sorted list of checked paths (including duplicates and wildcards)
         """
-        dir_list = set()
         for item in artifact_list:
-            self.preprocess_artifact(item, ignore_already_existing)
-            dir_list.add(item["path"])
+            # Check existence in place: wildcards applied
+            matches = glob2.glob(item["path"])
+            if matches:
+                if item["clean"]:
+                    for matching_path in matches:
+                        try:
+                            os.remove(matching_path)  # TODO: use shutil by default
+                        except OSError as e:
+                            if "Is a directory" not in e.strerror:
+                                raise
+                            shutil.rmtree(matching_path)
+                        self.out.log(f"Cleaned up '{matching_path}'")
+                elif not ignore_already_existing:
+                    text = "Build artifacts, such as"
+                    for matching_path in matches:
+                        text += f"\n * '{os.path.basename(matching_path)}'"
+                    text += f"\nalready exist in '{os.path.dirname(item['path'])}' directory."
+                    text += "\nPossible reason of this error: previous build results in working directory"
+                    raise CriticalCiException(text)
 
-        new_artifact_list = list(dir_list)
-        new_artifact_list.sort(key=len, reverse=True)
-        return new_artifact_list
-
-    def preprocess_artifact(self, item, ignore_already_existing):
-        # Check existence in place: wildcards applied
-        matches = glob2.glob(item["path"])
-        if matches:
-            if item["clean"]:
-                for matching_path in matches:
-                    try:
-                        os.remove(matching_path)  # TODO: use shutil by default
-                    except OSError as e:
-                        if "Is a directory" not in e.strerror:
-                            raise
-                        shutil.rmtree(matching_path)
-                    self.out.log(f"Cleaned up '{matching_path}'")
-            elif not ignore_already_existing:
-                text = "Build artifacts, such as"
-                for matching_path in matches:
-                    text += f"\n * '{os.path.basename(matching_path)}'"
-                text += f"\nalready exist in '{os.path.dirname(item['path'])}' directory."
+            # Check existence in 'artifacts' directory: wildcards NOT applied
+            path_to_check1 = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
+            path_to_check2 = os.path.join(path_to_check1 + ".zip")
+            if os.path.exists(path_to_check1) or os.path.exists(path_to_check2):
+                text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
                 text += "\nPossible reason of this error: previous build results in working directory"
                 raise CriticalCiException(text)
-
-        # Check existence in 'artifacts' directory: wildcards NOT applied
-        path_to_check1 = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
-        path_to_check2 = os.path.join(path_to_check1 + ".zip")
-        if os.path.exists(path_to_check1) or os.path.exists(path_to_check2):
-            text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
-            text += "\nPossible reason of this error: previous build results in working directory"
-            raise CriticalCiException(text)
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
