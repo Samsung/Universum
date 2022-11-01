@@ -1,9 +1,9 @@
 import re
 import os
 import inspect
-import pytest
 
 from universum import __main__
+from universum.configuration_support import Step, Configuration
 
 
 conditional_step_name = "conditional"
@@ -27,25 +27,32 @@ def check_conditional_step_success(tmpdir, capsys, conditional_step_passed):
 def build_config_file(tmpdir, conditional_step_passed):
     conditional_step_exit_code = 0 if conditional_step_passed else 1
 
+    true_branch_step = Step(
+        name=true_branch_step_name,
+        command=['touch', true_branch_step_name],
+        artifacts=true_branch_step_name)
+
+    false_branch_step = Step(
+        name=false_branch_step_name,
+        command=['touch', false_branch_step_name],
+        artifacts=false_branch_step_name)
+
+    conditional_step = Step(
+        name=conditional_step_name,
+        command=['bash', '-c', f'touch {conditional_step_name}; exit {conditional_step_exit_code}'],
+        artifacts=conditional_step_name)
+
     config = inspect.cleandoc(f'''
         from universum.configuration_support import Configuration, Step
 
-        true_branch_step = Step(
-            name='{true_branch_step_name}',
-            command=['touch', '{true_branch_step_name}'],
-            artifacts='{true_branch_step_name}')
-
-        false_branch_step = Step(
-            name='{false_branch_step_name}',
-            command=['touch', '{false_branch_step_name}'],
-            artifacts='{false_branch_step_name}')
-
-        conditional_step = Step(
-            name='{conditional_step_name}',
-            command=['bash', '-c', 'touch {conditional_step_name}; exit {conditional_step_exit_code}'],
-            if_succeeded=true_branch_step,
-            if_failed=false_branch_step,
-            artifacts='{conditional_step_name}')
+        true_branch_step = Step(**{str(true_branch_step)})
+        false_branch_step = Step(**{str(false_branch_step)})
+        conditional_step = Step(**{str(conditional_step)})
+        
+        # `true/false_branch_steps` should be Python objects from this script
+        conditional_step.is_conditional = True
+        conditional_step.if_succeeded = true_branch_step
+        conditional_step.if_failed = false_branch_step
 
         configs = Configuration([conditional_step])
     ''')
@@ -69,7 +76,6 @@ def check_conditional_step(tmpdir, capsys, config_file, conditional_step_passed)
     assert return_code == 0
 
     captured = capsys.readouterr()
-    print(captured.out)
     conditional_succeeded_regexp = r"\] conditional.*Success.*\|   5\.2"
     assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 
