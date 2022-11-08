@@ -30,11 +30,18 @@ def test_same_artifact(tmpdir, capsys):
     steps_info = get_conditional_steps_info(is_conditional_step_passed=True)
 
     conditional_step_artifact = steps_info.conditional_step["artifacts"]
-    steps_info.true_branch_step["command"] = ["touch", conditional_step_artifact]
-    steps_info.true_branch_step["artifacts"] = conditional_step_artifact
+    steps_info.true_branch_step.command = ["touch", conditional_step_artifact]
+    steps_info.true_branch_step.artifacts = conditional_step_artifact
 
     check_conditional_step(tmpdir, capsys, steps_info)
 
+
+def test_no_artifact_in_executed_branch_step(tmpdir, capsys):
+    steps_info = get_conditional_steps_info(is_conditional_step_passed=True)
+
+    steps_info.true_branch_step.artifacts = ""
+
+    check_conditional_step(tmpdir, capsys, steps_info)
 
 
 def get_conditional_steps_info(is_conditional_step_passed):
@@ -104,12 +111,16 @@ def check_conditional_step(tmpdir, capsys, steps_info):
     assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 
     is_conditional_step_passed = steps_info.is_conditional_step_passed
-    conditional_step_artifact = steps_info.conditional_step["artifacts"]
-    true_branch_step_artifact = steps_info.true_branch_step["artifacts"]
-    false_branch_step_artifact = steps_info.false_branch_step["artifacts"]
+    conditional_step_artifact = steps_info.conditional_step.artifacts
+    true_branch_step_artifact = steps_info.true_branch_step.artifacts
+    false_branch_step_artifact = steps_info.false_branch_step.artifacts
 
     assert os.path.exists(os.path.join(artifacts_dir, conditional_step_artifact))
-    expected_file = true_branch_step_artifact if is_conditional_step_passed else false_branch_step_artifact
-    unexpected_file = false_branch_step_artifact if is_conditional_step_passed else true_branch_step_artifact
-    assert os.path.exists(os.path.join(artifacts_dir, expected_file))
-    assert not os.path.exists(os.path.join(artifacts_dir, unexpected_file))
+
+    expected_artifact = true_branch_step_artifact if is_conditional_step_passed else false_branch_step_artifact
+    if expected_artifact:
+        assert os.path.exists(os.path.join(artifacts_dir, expected_artifact))
+
+    unexpected_artifact = false_branch_step_artifact if is_conditional_step_passed else true_branch_step_artifact
+    if unexpected_artifact:
+        assert not os.path.exists(os.path.join(artifacts_dir, unexpected_artifact))
