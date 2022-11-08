@@ -23,6 +23,20 @@ def test_conditional_false_branch(tmpdir, capsys):
     check_conditional_step(tmpdir, capsys, steps_info)
 
 
+# https://github.com/Samsung/Universum/issues/744
+# Artifact will be collected only from the second executed step, the first one will be overwritten
+# Skipping checking file content to not overload tests with additional logic for incorrect behaviour check
+def test_same_artifact(tmpdir, capsys):
+    steps_info = get_conditional_steps_info(is_conditional_step_passed=True)
+
+    conditional_step_artifact = steps_info.conditional_step["artifacts"]
+    steps_info.true_branch_step["command"] = ["touch", conditional_step_artifact]
+    steps_info.true_branch_step["artifacts"] = conditional_step_artifact
+
+    check_conditional_step(tmpdir, capsys, steps_info)
+
+
+
 def get_conditional_steps_info(is_conditional_step_passed):
     steps_info = StepsInfo()
 
