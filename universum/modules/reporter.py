@@ -6,6 +6,7 @@ from typing_extensions import TypedDict
 from . import automation_server
 from .output import HasOutput
 from .structure_handler import HasStructure, Block
+from ..lib.ci_exception import SilentAbortException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 
@@ -53,6 +54,8 @@ class Reporter(HasOutput, HasStructure):
                             help="Include only the short list of failed steps to reporting comments")
         parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
                             help="Do not vote up/down review depending on result")
+        parser.add_argument("--fail-unsuccessful", "-rfu", action="store_true", dest="fail_unsuccessful",
+                            help="Return non-zero exit code if any step failed")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,6 +122,8 @@ class Reporter(HasOutput, HasStructure):
 
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
+            if self.settings.fail_unsuccessful and not is_successful:
+                raise SilentAbortException(1)
             return
 
         if is_successful:
@@ -148,6 +153,9 @@ class Reporter(HasOutput, HasStructure):
             self.out.log("Reporting code report issues ")
             for observer in self.observers:
                 observer.code_report_to_review(self.code_report_comments)
+
+        if self.settings.fail_unsuccessful and not is_successful:
+            raise SilentAbortException(1)
 
     def _report_steps_recursively(self, block: Block, text: str, indent: str) -> Tuple[str, bool]:
         has_children: bool = bool(block.children)
