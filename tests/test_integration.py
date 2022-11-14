@@ -351,3 +351,32 @@ configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
         time.sleep(5)
         process.send_signal(terminate_type)
         assert process.wait(5) == 3
+
+
+def test_exit_code(local_sources: LocalSources, tmpdir: py.path.local):
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
+"""
+    config_file = tmpdir.join("configs.py")
+    config_file.write(config)
+
+    with subprocess.Popen([python(), "-m", "universum",
+                           "-o", "console", "-st", "local", "-vt", "none",
+                           "-pr", str(tmpdir.join("project_root")),
+                           "-ad", str(tmpdir.join("artifacts")),
+                           "-fsd", str(local_sources.root_directory),
+                           "-cfg", str(config_file)]) as process:
+
+        assert process.wait() == 0
+
+    tmpdir.join("artifacts").remove(rec=True)
+    with subprocess.Popen([python(), "-m", "universum", "--fail-unsuccessful",
+                           "-o", "console", "-st", "local", "-vt", "none",
+                           "-pr", str(tmpdir.join("project_root")),
+                           "-ad", str(tmpdir.join("artifacts")),
+                           "-fsd", str(local_sources.root_directory),
+                           "-cfg", str(config_file)]) as process:
+        assert process.wait() == 1
+

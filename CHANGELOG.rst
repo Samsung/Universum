@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.19.14 (2022-11-14)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **main:** add option to return non-zero code if any step fails
+
+
 0.19.13 (2022-10-10)
 --------------------
 
