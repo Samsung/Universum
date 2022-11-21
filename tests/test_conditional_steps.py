@@ -36,14 +36,6 @@ def test_same_artifact(tmpdir, capsys):
     check_conditional_step(tmpdir, capsys, steps_info)
 
 
-def test_no_artifact_in_executed_branch_step(tmpdir, capsys):
-    steps_info = get_conditional_steps_info(is_conditional_step_passed=True)
-
-    steps_info.true_branch_step.artifacts = ""
-
-    check_conditional_step(tmpdir, capsys, steps_info)
-
-
 def get_conditional_steps_info(is_conditional_step_passed):
     steps_info = StepsInfo()
 

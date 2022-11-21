@@ -182,27 +182,25 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             with self.structure.block(block_name=name, pass_errors=True):
                 self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
 
-    def get_conditional_step_branches_artifacts(self, configuration: Step) -> List[ArtifactInfo]:
-        succeeded_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(configuration.if_succeeded)
-        failed_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(configuration.if_failed)
+    def get_conditional_step_branches_artifacts(self, step: Step) -> List[ArtifactInfo]:
+        succeeded_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(step.if_succeeded)
+        failed_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(step.if_failed)
 
-        if succeeded_config_artifact and failed_config_artifact:
-            return [succeeded_config_artifact, failed_config_artifact]
-        elif succeeded_config_artifact:
-            return [succeeded_config_artifact]
-        elif failed_config_artifact:
-            return [failed_config_artifact]
-        else:
-            return []
+        artifacts = []
+        if succeeded_config_artifact:
+            artifacts.append(succeeded_config_artifact)
+        if failed_config_artifact:
+            artifacts.append(failed_config_artifact)
+        return artifacts
 
-    def get_config_artifact_if_exists(self, configuration: Step) -> Optional[ArtifactInfo]:
-        if configuration and configuration.artifacts:
-            return self.get_config_artifact(configuration)
+    def get_config_artifact_if_exists(self, step: Step) -> Optional[ArtifactInfo]:
+        if step and step.artifacts:
+            return self.get_config_artifact(step)
         return None
 
-    def get_config_artifact(self, configuration: Step) -> ArtifactInfo:
-        path = utils.parse_path(configuration.artifacts, self.settings.project_root)
-        return dict(path=path, clean=configuration.artifact_prebuild_clean)
+    def get_config_artifact(self, step: Step) -> ArtifactInfo:
+        path = utils.parse_path(step.artifacts, self.settings.project_root)
+        return dict(path=path, clean=step.artifact_prebuild_clean)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")
