@@ -436,3 +436,68 @@ If executing the build step depends on more than one environment variable, use `
 For example, ``if_env_set="SPECIAL_TOOL_PATH && ADDITIONAL_SOURCES_ROOT"`` step will be executed only
 in case of both `$SPECIAL_TOOL_PATH` and `$ADDITIONAL_SOURCES_ROOT` environment variables set to some values.
 If any of them is missing or not set in current environment, the step will be excluded from current run.
+
+
+Conditional steps
+---------------------
+
+Conditional step - :class:`Step`, that has ``if_succeeded`` and/or ``if_failed`` parameters with other steps assigned.
+If the conditional step will succeed, then the step from the ``if_succeeded`` parameter will be executed.
+If the conditional step will fail, the step from the ``if_failed`` parameter will be executed instead.
+
+Configuration example:
+
+.. testcode::
+
+    from universum.configuration_support import Configuration, Step
+
+    true_branch_step = Step(name="Positive branch step", command=["ls"])
+    false_branch_step = Step(name="Negative branch step", command=["pwd"])
+    conditional_step = Step(name="Conditional step", command=["./script.sh"],
+                            if_succeeded=true_branch_step, if_failed=false_branch_step)
+
+    configs = Configuration([conditional_step])
+
+If ``script.sh`` will return zero exit code:
+
+.. testoutput::
+
+    5. Executing build steps
+     |   5.1.  [ 1/2 ] Conditional step
+     |      |   ==> Adding file .../artifacts/Conditional_step_log.txt to artifacts...
+     |      |   ==> Execution log is redirected to file
+     |      |   $ .../temp/script.sh
+     |      └ [Success]
+     |
+     |   5.2.  [ 2/2 ] Positive branch step
+     |      |   ==> Adding file .../artifacts/Positive_branch_step_log.txt to artifacts...
+     |      |   ==> Execution log is redirected to file
+     |      |   $ /usr/bin/ls
+     |      └ [Success]
+     |
+     └ [Success]
+
+If ``script.sh`` will return non-zero exit code:
+
+.. testoutput::
+
+    5. Executing build steps
+     |   5.1.  [ 1/2 ] Conditional step
+     |      |   ==> Adding file .../artifacts/Conditional_step_log.txt to artifacts...
+     |      |   ==> Execution log is redirected to file
+     |      |   $ .../temp/script.sh
+     |      └ [Success]
+     |
+     |   5.2.  [ 2/2 ] Negative branch step
+     |      |   ==> Adding file .../artifacts/Negative_branch_step_log.txt to artifacts...
+     |      |   ==> Execution log is redirected to file
+     |      |   $ /usr/bin/pwd
+     |      └ [Success]
+     |
+     └ [Success]
+
+Mainly, conditional steps behave as other regular steps, but there are some specifics:
+
+* Conditional step will be always marked as succeeded in log
+* Only one branch step will be executed (``if_succeeded`` or ``if_failed``), so artifacts collection or any other
+  side-effects will not be triggered for non-executed branch step

@@ -117,7 +117,13 @@ class Step:
         TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
         not in the end of all run. Not applicable for conditional steps.
     fail_tag
-        A tag used to mark failed TemCity builds. See `pass_tag` for details. Not applicable for conditional steps.
+        A tag used to mark failed TeamCity builds. See `pass_tag` for details. Not applicable for conditional steps.
+    if_succeeded
+        Another step, that will be executed in case of this step will succeed. Having this parameter non-None will
+        make the current step conditional.
+    if_failed
+        Another step, that will be executed in case of this step will fail. Having this parameter non-None will
+        make the current step conditional.
 
     Each parameter is optional, and is substituted with a falsy value, if omitted.
 
