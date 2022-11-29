@@ -1,6 +1,5 @@
 import re
 import os
-import inspect
 
 from universum import __main__
 from universum.configuration_support import Step
@@ -36,6 +35,18 @@ def test_same_artifact(tmpdir, capsys):
     check_conditional_step(tmpdir, capsys, steps_info)
 
 
+def test_true_branch_chosen_but_absent(tmpdir, capsys):
+    steps_info = get_conditional_steps_info(is_conditional_step_passed=True)
+    steps_info.true_branch_step = None
+    check_conditional_step(tmpdir, capsys, steps_info)
+
+
+def test_false_branch_chosen_but_absent(tmpdir, capsys):
+    steps_info = get_conditional_steps_info(is_conditional_step_passed=False)
+    steps_info.false_branch_step = None
+    check_conditional_step(tmpdir, capsys, steps_info)
+
+
 def get_conditional_steps_info(is_conditional_step_passed):
     steps_info = StepsInfo()
 
@@ -63,20 +74,23 @@ def get_conditional_steps_info(is_conditional_step_passed):
 
 
 def write_config_file(tmpdir, conditional_steps_info):
-    config = inspect.cleandoc(f'''
-        from universum.configuration_support import Configuration, Step
+    true_branch_step = f"Step(**{str(conditional_steps_info.true_branch_step)})" if conditional_steps_info.true_branch_step else "None"
+    false_branch_step = f"Step(**{str(conditional_steps_info.false_branch_step)})" if conditional_steps_info.false_branch_step else "None"
+    config_lines = [
+        "from universum.configuration_support import Configuration, Step",
+        f"true_branch_step = {true_branch_step}",
+        f"false_branch_step = {false_branch_step}",
+        f"conditional_step = Step(**{str(conditional_steps_info.conditional_step)})",
 
-        true_branch_step = Step(**{str(conditional_steps_info.true_branch_step)})
-        false_branch_step = Step(**{str(conditional_steps_info.false_branch_step)})
-        conditional_step = Step(**{str(conditional_steps_info.conditional_step)})
-        
         # `true/false_branch_steps` should be Python objects from this script
-        conditional_step.is_conditional = True
-        conditional_step.if_succeeded = true_branch_step
-        conditional_step.if_failed = false_branch_step
+        "conditional_step.is_conditional = True",
+        "conditional_step.if_succeeded = true_branch_step",
+        "conditional_step.if_failed = false_branch_step",
 
-        configs = Configuration([conditional_step])
-    ''')
+        "configs = Configuration([conditional_step])"
+    ]
+    config = "\n".join(config_lines)
+    print(config)
 
     config_file = tmpdir.join("configs.py")
     config_file.write_text(config, "utf-8")
@@ -104,8 +118,8 @@ def check_conditional_step(tmpdir, capsys, steps_info):
 
     is_conditional_step_passed = steps_info.is_conditional_step_passed
     conditional_step_artifact = steps_info.conditional_step.artifacts
-    true_branch_step_artifact = steps_info.true_branch_step.artifacts
-    false_branch_step_artifact = steps_info.false_branch_step.artifacts
+    true_branch_step_artifact = steps_info.true_branch_step.artifacts if steps_info.true_branch_step else None
+    false_branch_step_artifact = steps_info.false_branch_step.artifacts if steps_info.false_branch_step else None
 
     assert os.path.exists(os.path.join(artifacts_dir, conditional_step_artifact))
 
