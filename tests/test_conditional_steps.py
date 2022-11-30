@@ -90,7 +90,6 @@ def write_config_file(tmpdir, conditional_steps_info):
         "configs = Configuration([conditional_step])"
     ]
     config = "\n".join(config_lines)
-    print(config)
 
     config_file = tmpdir.join("configs.py")
     config_file.write_text(config, "utf-8")
