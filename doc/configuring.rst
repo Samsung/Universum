@@ -498,9 +498,12 @@ Here's the example output for ``script.sh`` returning **non-zero** exit code:
 
 In general, conditional steps behave as any other regular steps, but here are some specifics:
 
-* Conditional step will always be marked as successful in log
-* Only one branch step will be executed (``if_succeeded`` or ``if_failed``), so artifacts collection or any other
-  side-effects will not be triggered for non-executed branch step
-* Both branches artifacts will be checked for existense before steps execution
-* TeamCity tag will not be set for the conditional step
-* Only one branch step will counted for each conditional step at calculating steps numbering and total count
+* Conditional step
+    * Will always be marked as successful in the log
+    * TeamCity tag will not be set for the conditional step
+* Branch steps
+    * Only one branch step will be executed
+    * Both branches' artifacts will be checked for existence before the steps execution
+    * Artifacts collection or any other side-effects will not be triggered for non-executed branch step
+    * If chosen branch step is not set, nothing will happen (e.g. conditional step failed, but ``Step.if_failed`` was not set)
+    * Only one branch step will be counted for each conditional step at calculating steps numbering and total count
