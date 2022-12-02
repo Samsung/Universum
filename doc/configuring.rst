@@ -441,9 +441,9 @@ If any of them is missing or not set in current environment, the step will be ex
 Conditional steps
 ---------------------
 
-Conditional step - :class:`Step`, that has ``if_succeeded`` and/or ``if_failed`` parameters with other steps assigned.
-If the conditional step will succeed, then the step from the ``if_succeeded`` parameter will be executed.
-If the conditional step will fail, the step from the ``if_failed`` parameter will be executed instead.
+Conditional step is a :class:`Step` object, that has ``if_succeeded`` and/or ``if_failed`` parameters with other steps assigned.
+If the conditional step succeed, then the step from the ``if_succeeded`` parameter will be executed.
+If the conditional step fail, the step from the ``if_failed`` parameter will be executed instead.
 
 Configuration example:
 
@@ -458,7 +458,7 @@ Configuration example:
 
     configs = Configuration([conditional_step])
 
-If ``script.sh`` will return zero exit code:
+Here's the example output for ``script.sh`` returning **zero** exit code:
 
 .. testoutput::
 
@@ -477,7 +477,7 @@ If ``script.sh`` will return zero exit code:
      |
      └ [Success]
 
-If ``script.sh`` will return non-zero exit code:
+Here's the example output for ``script.sh`` returning **non-zero** exit code:
 
 .. testoutput::
 
@@ -496,8 +496,11 @@ If ``script.sh`` will return non-zero exit code:
      |
      └ [Success]
 
-Mainly, conditional steps behave as other regular steps, but there are some specifics:
+In general, conditional steps behave as any other regular steps, but here are some specifics:
 
-* Conditional step will be always marked as succeeded in log
+* Conditional step will always be marked as successful in log
 * Only one branch step will be executed (``if_succeeded`` or ``if_failed``), so artifacts collection or any other
   side-effects will not be triggered for non-executed branch step
+* Both branches artifacts will be checked for existense before steps execution
+* TeamCity tag will not be set for the conditional step
+* Only one branch step will counted for each conditional step at calculating steps numbering and total count
