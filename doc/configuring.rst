@@ -505,5 +505,6 @@ In general, conditional steps behave as any other regular steps, but here are so
     * Only one branch step will be executed
     * Both branches' artifacts will be checked for existence before the steps execution
     * Artifacts collection or any other side-effects will not be triggered for non-executed branch step
-    * If chosen branch step is not set, nothing will happen. E.g. conditional step failed, but ``Step.if_failed`` was not set
+    * If chosen branch step is not set, nothing will happen.
+      For example, if the the ``Step.if_failed`` is not set and conditional step fails during the execution, nothing will happen.
     * Only one branch step will be counted for each conditional step at calculating steps numbering and total count
