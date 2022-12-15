@@ -28,9 +28,9 @@ def test_conditional_false_branch(tmpdir, capsys):
 def test_same_artifact(tmpdir, capsys):
     steps_info = get_conditional_steps_info(is_conditional_step_passed=True)
 
-    conditional_step_artifact = steps_info.conditional_step["artifacts"]
-    steps_info.true_branch_step.command = ["touch", conditional_step_artifact]
-    steps_info.true_branch_step.artifacts = conditional_step_artifact
+    steps_info.true_branch_step.command = steps_info.conditional_step.command
+    steps_info.true_branch_step.artifacts = steps_info.conditional_step.artifacts
+    steps_info.true_branch_step.report_artifacts = steps_info.conditional_step.report_artifacts
 
     check_conditional_step(tmpdir, capsys, steps_info)
 
@@ -51,26 +51,46 @@ def get_conditional_steps_info(is_conditional_step_passed):
     steps_info = StepsInfo()
 
     conditional_step_name = "conditional"
+    conditional_step_artifact = f"{conditional_step_name}_artifact"
+    conditional_step_report_artifact = f"{conditional_step_name}_report_artifact"
     conditional_step_exit_code = 0 if is_conditional_step_passed else 1
     steps_info.conditional_step = Step(
         name=conditional_step_name,
-        command=["bash", "-c", f"touch {conditional_step_name}; exit {conditional_step_exit_code}"],
-        artifacts=conditional_step_name)
+        command=build_step_command(files_to_create=[conditional_step_artifact, conditional_step_report_artifact],
+                                   exit_code=conditional_step_exit_code),
+        artifacts=conditional_step_artifact,
+        report_artifacts=conditional_step_report_artifact)
     steps_info.is_conditional_step_passed = is_conditional_step_passed
 
     true_branch_step_name = "true_branch"
+    true_branch_step_artifact = f"{true_branch_step_name}_artifact"
+    true_branch_step_report_artifact = f"{true_branch_step_name}_report_artifact"
     steps_info.true_branch_step = Step(
         name=true_branch_step_name,
-        command=["touch", true_branch_step_name],
-        artifacts=true_branch_step_name)
+        command=build_step_command(files_to_create=[true_branch_step_artifact, true_branch_step_report_artifact],
+                                   exit_code=0),
+        artifacts=true_branch_step_artifact,
+        report_artifacts=true_branch_step_report_artifact)
 
     false_branch_step_name = "false_branch"
+    false_branch_step_artifact = f"{false_branch_step_name}_artifact"
+    false_branch_step_report_artifact = f"{false_branch_step_name}_report_artifact"
     steps_info.false_branch_step = Step(
         name=false_branch_step_name,
-        command=["touch", false_branch_step_name],
-        artifacts=false_branch_step_name)
+        command=build_step_command(files_to_create=[false_branch_step_artifact, false_branch_step_report_artifact],
+                                   exit_code=0),
+        artifacts=false_branch_step_artifact,
+        report_artifacts=false_branch_step_report_artifact)
 
     return steps_info
+
+
+def build_step_command(files_to_create, exit_code):
+    commands = []
+    for f in files_to_create:
+        commands.append(f"touch {f}")
+    commands.append(f"exit {exit_code}")
+    return ["bash", "-c", ";".join(commands)]
 
 
 def write_config_file(tmpdir, conditional_steps_info):
@@ -116,16 +136,36 @@ def check_conditional_step(tmpdir, capsys, steps_info):
     assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
 
     is_conditional_step_passed = steps_info.is_conditional_step_passed
-    conditional_step_artifact = steps_info.conditional_step.artifacts
-    true_branch_step_artifact = steps_info.true_branch_step.artifacts if steps_info.true_branch_step else None
-    false_branch_step_artifact = steps_info.false_branch_step.artifacts if steps_info.false_branch_step else None
+    conditional_step_artifact = get_step_artifact(steps_info.conditional_step)
+    conditional_step_report_artifact = get_step_report_artifact(steps_info.conditional_step)
+    true_branch_step_artifact = get_step_artifact(steps_info.true_branch_step)
+    true_branch_step_report_artifact = get_step_report_artifact(steps_info.true_branch_step)
+    false_branch_step_artifact = get_step_artifact(steps_info.false_branch_step)
+    false_branch_step_report_artifact = get_step_report_artifact(steps_info.false_branch_step)
 
     assert os.path.exists(os.path.join(artifacts_dir, conditional_step_artifact))
+    assert os.path.exists(os.path.join(artifacts_dir, conditional_step_report_artifact))
 
     expected_artifact = true_branch_step_artifact if is_conditional_step_passed else false_branch_step_artifact
+    expected_report_artifact = true_branch_step_report_artifact if is_conditional_step_passed \
+        else false_branch_step_report_artifact
     if expected_artifact:
         assert os.path.exists(os.path.join(artifacts_dir, expected_artifact))
+    if expected_report_artifact:
+        assert os.path.exists(os.path.join(artifacts_dir, expected_report_artifact))
 
     unexpected_artifact = false_branch_step_artifact if is_conditional_step_passed else true_branch_step_artifact
+    unexpected_report_artifact = false_branch_step_report_artifact if is_conditional_step_passed \
+        else true_branch_step_report_artifact
     if unexpected_artifact:
         assert not os.path.exists(os.path.join(artifacts_dir, unexpected_artifact))
+    if unexpected_report_artifact:
+        assert not os.path.exists(os.path.join(artifacts_dir, unexpected_report_artifact))
+
+
+def get_step_artifact(step):
+    return step.artifacts if step else None
+
+
+def get_step_report_artifact(step):
+    return step.report_artifacts if step else None
