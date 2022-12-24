@@ -26,6 +26,7 @@ configs = Variations([Step(name="Create virtual environment", command=[python, "
                            command=run_virtual("make")),
                       Step(name="Make tests", artifacts="htmlcov",
                            command=run_virtual("export LANG=en_US.UTF-8; make test")),
+                      Step(name="Collect test results", artifacts="junit_results.xml"),
 
                       Step(name="Run static pylint", code_report=True,
                            command=run_virtual(f"{python} -m universum.analyzers.pylint "
