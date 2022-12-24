@@ -20,7 +20,7 @@ def pip_install(module_name):
 configs = Variations([Step(name="Create virtual environment", command=[python, "-m", "venv", env_name]),
                       Step(name="Update Docker images", command=run_virtual("make images")),
 
-                      Step(name="Install Universum for tests", artifacts="junit_results.xml",
+                      Step(name="Install Universum for tests",
                            command=run_virtual(pip_install(".[test]"))),
                       Step(name="Make", artifacts="doc/_build",
                            command=run_virtual("make")),
