@@ -21,6 +21,8 @@ jobs:
         --vcs-type=git
         --git-repo $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
         --git-refspec $GITHUB_REF_NAME
+        --no-archive
+        --no-diff
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v1
