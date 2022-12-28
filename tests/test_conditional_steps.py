@@ -141,46 +141,27 @@ def check_conditional_step(tmpdir, capsys, steps_info):
     artifacts_checker.check_not_executed_step_artifacts_absent()
 
 
-def get_step_artifact(step):
-    return step.artifacts if step else None
-
-
-def get_step_report_artifact(step):
-    return step.report_artifacts if step else None
-
-
 class ConditionalStepsArtifactChecker:
 
     def __init__(self, artifacts_dir, steps_info):
-        self.artifacts_dir = artifacts_dir
-        self.is_conditional_step_passed = steps_info.is_conditional_step_passed
-        self.conditional_step_artifact = get_step_artifact(steps_info.conditional_step)
-        self.conditional_step_report_artifact = get_step_report_artifact(steps_info.conditional_step)
-        self.true_branch_step_artifact = get_step_artifact(steps_info.true_branch_step)
-        self.true_branch_step_report_artifact = get_step_report_artifact(steps_info.true_branch_step)
-        self.false_branch_step_artifact = get_step_artifact(steps_info.false_branch_step)
-        self.false_branch_step_report_artifact = get_step_report_artifact(steps_info.false_branch_step)
+        self._artifacts_dir = artifacts_dir
+        self._conditional_step = steps_info.conditional_step
+        self._executed_step = steps_info.true_branch_step if steps_info.is_conditional_step_passed \
+            else steps_info.false_branch_step
+        self._not_executed_step = steps_info.false_branch_step if steps_info.is_conditional_step_passed \
+            else steps_info.true_branch_step
 
     def check_conditional_step_artifacts_present(self):
-        assert os.path.exists(os.path.join(self.artifacts_dir, self.conditional_step_artifact))
-        assert os.path.exists(os.path.join(self.artifacts_dir, self.conditional_step_report_artifact))
+        self._check_artifacts_presence(self._conditional_step, is_presence_expected=True)
 
     def check_executed_step_artifacts_present(self):
-        expected_artifact = self.true_branch_step_artifact if self.is_conditional_step_passed \
-            else self.false_branch_step_artifact
-        expected_report_artifact = self.true_branch_step_report_artifact if self.is_conditional_step_passed \
-            else self.false_branch_step_report_artifact
-        if expected_artifact:
-            assert os.path.exists(os.path.join(self.artifacts_dir, expected_artifact))
-        if expected_report_artifact:
-            assert os.path.exists(os.path.join(self.artifacts_dir, expected_report_artifact))
+        self._check_artifacts_presence(self._executed_step, is_presence_expected=True)
 
     def check_not_executed_step_artifacts_absent(self):
-        unexpected_artifact = self.false_branch_step_artifact if self.is_conditional_step_passed \
-            else self.true_branch_step_artifact
-        unexpected_report_artifact = self.false_branch_step_report_artifact if self.is_conditional_step_passed \
-            else self.true_branch_step_report_artifact
-        if unexpected_artifact:
-            assert not os.path.exists(os.path.join(self.artifacts_dir, unexpected_artifact))
-        if unexpected_report_artifact:
-            assert not os.path.exists(os.path.join(self.artifacts_dir, unexpected_report_artifact))
+        self._check_artifacts_presence(self._not_executed_step, is_presence_expected=False)
+
+    def _check_artifacts_presence(self, step, is_presence_expected):
+        if not step:  # branch step can be not set
+            return
+        for artifact in [step.artifacts, step.report_artifacts]:
+            assert os.path.exists(os.path.join(self._artifacts_dir, artifact)) == is_presence_expected
