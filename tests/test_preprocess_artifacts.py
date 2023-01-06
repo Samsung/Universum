@@ -64,12 +64,15 @@ class ArtifactsTestEnvironment:
         self.artifacts_dir = tmpdir.join("artifacts")
         self.artifact_name = "artifact"
         self.artifact_path = self.artifacts_dir.join(self.artifact_name)
+        self.artifact_content = "artifact content"
         self.config_file = None
 
     def write_config_file(self, artifact_prebuild_clean):
         config = inspect.cleandoc(f"""
             from universum.configuration_support import Configuration, Step
-            step = Step(name='Step', command=['touch', '{self.artifact_name}'], artifacts='{self.artifact_name}', 
+            step = Step(name='Step', 
+                        command=['bash', '-c', 'echo "{self.artifact_content}" > {self.artifact_name}'], 
+                        artifacts='{self.artifact_name}', 
                         artifact_prebuild_clean={artifact_prebuild_clean})
             configs = Configuration([step])
         """)
@@ -78,10 +81,14 @@ class ArtifactsTestEnvironment:
 
     def check_step_artifact_present(self):
         assert os.path.exists(self.artifact_path)
+        with open(self.artifact_path) as f:
+            content = f.read().replace("\n", "")
+            assert content == self.artifact_content
 
     def check_step_artifact_absent(self):
         assert not os.path.exists(self.artifact_path)
 
     def create_artifact_file(self):
-        artifact_path = self.tmpdir.join(self.artifact_name)
-        open(artifact_path, "w").close()
+        precreated_artifact = self.tmpdir.join(self.artifact_name)
+        with open(precreated_artifact, "w") as f:
+            f.write("pre-created artifact content")
