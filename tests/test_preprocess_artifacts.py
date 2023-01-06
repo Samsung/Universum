@@ -29,10 +29,10 @@ def test_existing_artifact_prebuild_clean(test_env):
     test_env.check_step_artifact_present()
 
 
-def test_existing_artifact_no_prebuild_clean(test_env):
+def test_existing_artifact_no_prebuild_clean(test_env, stdout_checker):
     test_env.write_config_file(artifact_prebuild_clean=False)
     test_env.create_artifact_file()
-    check_universum_failed(test_env)
+    check_universum_failed(test_env, stdout_checker)
     test_env.check_step_artifact_absent()
 
 
@@ -41,9 +41,10 @@ def check_universum_executed_successfully(test_env):
     assert return_code == 0
 
 
-def check_universum_failed(test_env):
+def check_universum_failed(test_env, stdout_checker):
     return_code = launch_universum(test_env)
     assert return_code == 1
+    stdout_checker.assert_has_calls_with_param(f"already exist in '/.*' directory", is_regexp=True)
 
 
 def launch_universum(test_env):
