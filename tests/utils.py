@@ -257,4 +257,5 @@ class LocalTestEnvironment(BaseTestEnvironment):
         if test_type != "nonci":
             self.settings.Vcs.type = "none"
         if test_type == "main":
-            self.settings.LocalMainVcs.source_dir = str(directory.ensure_dir('project_sources'))
+            self.src_dir = directory.ensure_dir('project_sources')
+            self.settings.LocalMainVcs.source_dir = str(self.src_dir)
