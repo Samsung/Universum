@@ -116,13 +116,13 @@ class BaseVcsClient:
     def get_last_change(self):
         pass
 
-    def file_present(self, file_path: str) -> bool:
+    def file_present(self, file_path: str) -> bool:  # type: ignore
         pass
 
-    def text_in_file(self, text: str, file_path: str) -> bool:
+    def text_in_file(self, text: str, file_path: str) -> bool:  # type: ignore
         pass
 
-    def make_a_change(self) -> str:
+    def make_a_change(self) -> str:  # type: ignore
         pass
 
 

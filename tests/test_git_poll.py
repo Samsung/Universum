@@ -2,6 +2,7 @@
 
 import py
 import pytest
+from typing import Optional
 
 from .conftest import FuzzyCallChecker
 from .git_utils import GitTestEnvironment, GitClient, GitServer
@@ -13,7 +14,8 @@ def git_poll_environment(git_client: GitClient, tmpdir: py.path.local):
     yield GitTestEnvironment(git_client, tmpdir, test_type="poll")
 
 
-def make_branch_with_changes(git_server: GitServer, branch_name: str, commits_number: int, branch_from: str = None):
+def make_branch_with_changes(git_server: GitServer, branch_name: str, commits_number: int,
+                             branch_from: Optional[str] = None):
     """
     Creates a branch from the current or specified (by name) and adds passed commits number.
 
