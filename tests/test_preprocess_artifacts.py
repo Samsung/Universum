@@ -3,6 +3,7 @@
 import inspect
 import os
 import pathlib
+from typing import Generator
 
 import pytest
 
@@ -12,13 +13,13 @@ from .conftest import FuzzyCallChecker
 
 class ArtifactsTestEnvironment(LocalTestEnvironment):
 
-    def __init__(self, tmpdir: pathlib.Path):
+    def __init__(self, tmpdir: pathlib.Path) -> None:
         super().__init__(tmpdir, "main")
         self.artifact_name: str = "artifact"
         self.artifact_path: pathlib.Path = self.artifact_dir.join(self.artifact_name)
         self.artifact_content: str = "artifact content"
 
-    def write_config_file(self, artifact_prebuild_clean: bool):
+    def write_config_file(self, artifact_prebuild_clean: bool) -> None:
         config: str = inspect.cleandoc(f"""
             from universum.configuration_support import Configuration, Step
             step = Step(name='Step',
@@ -29,46 +30,47 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         """)
         self.configs_file.write_text(config, "utf-8")
 
-    def check_step_artifact_present(self):
+    def check_step_artifact_present(self) -> None:
         assert os.path.exists(self.artifact_path)
         with open(self.artifact_path, encoding="utf-8") as f:
             content: str = f.read().replace("\n", "")
             assert content == self.artifact_content
 
-    def check_step_artifact_absent(self):
+    def check_step_artifact_absent(self) -> None:
         assert not os.path.exists(self.artifact_path)
 
-    def create_artifact_file(self):
+    def create_artifact_file(self) -> None:
         precreated_artifact: pathlib.Path = self.src_dir.join(self.artifact_name)
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
 
 @pytest.fixture()
-def test_env(tmpdir: pathlib.Path):
+def test_env(tmpdir: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None, None]:
     yield ArtifactsTestEnvironment(tmpdir)
 
 
-def test_no_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment):
+def test_no_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
     test_env.run()
     test_env.check_step_artifact_present()
 
 
-def test_no_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment):
+def test_no_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
     test_env.write_config_file(artifact_prebuild_clean=False)
     test_env.run()
     test_env.check_step_artifact_present()
 
 
-def test_existing_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment):
+def test_existing_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
     test_env.create_artifact_file()
     test_env.run()
     test_env.check_step_artifact_present()
 
 
-def test_existing_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment, stdout_checker: FuzzyCallChecker):
+def test_existing_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
+                                             stdout_checker: FuzzyCallChecker) -> None:
     test_env.write_config_file(artifact_prebuild_clean=False)
     test_env.create_artifact_file()
     test_env.run(expect_failure=True)

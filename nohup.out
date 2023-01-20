@@ -1,0 +1,53 @@
+CompileCommand: exclude com/intellij/openapi/vfs/impl/FilePartNodeRoot.trieDescend bool exclude = true
+2023-01-20 20:49:15,714 [   1171]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "Visual Studio" not found PluginDescriptor(name=IDEA CORE, id=com.intellij, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/lib, version=222.4345.23, package=com.intellij.feedback, isBundled=true)
+2023-01-20 20:49:15,718 [   1175]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "Eclipse" not found PluginDescriptor(name=IDEA CORE, id=com.intellij, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/lib, version=222.4345.23, package=com.intellij.feedback, isBundled=true)
+2023-01-20 20:49:15,719 [   1176]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "NetBeans 6.5" not found PluginDescriptor(name=IDEA CORE, id=com.intellij, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/lib, version=222.4345.23, package=com.intellij.feedback, isBundled=true)
+2023-01-20 20:49:15,720 [   1177]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "Visual Studio" not found PluginDescriptor(name=IDEA CORE, id=com.intellij, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/lib, version=222.4345.23, package=com.intellij.feedback, isBundled=true)
+2023-01-20 20:49:15,751 [   1208]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "Eclipse" not found PluginDescriptor(name=GitHub, id=org.jetbrains.plugins.github, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/plugins/github, version=222.4345.23, package=org.jetbrains.plugins.github, isBundled=true)
+2023-01-20 20:49:15,755 [   1212]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "Eclipse" not found PluginDescriptor(name=Space, id=com.jetbrains.space, moduleName=intellij.space.vcs, descriptorPath=intellij.space.vcs.xml, path=~/sw/pycharm-community-2022.2.3/plugins/space, version=222.4345.23, package=com.intellij.space.vcs, isBundled=true)
+2023-01-20 20:49:15,756 [   1213]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "Eclipse" not found PluginDescriptor(name=Python Community Edition, id=PythonCore, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/plugins/python-ce, version=222.4345.23, package=null, isBundled=true)
+2023-01-20 20:49:15,757 [   1214]   WARN - #c.i.o.a.i.ActionManagerImpl - keymap "NetBeans 6.5" not found PluginDescriptor(name=Python Community Edition, id=PythonCore, descriptorPath=plugin.xml, path=~/sw/pycharm-community-2022.2.3/plugins/python-ce, version=222.4345.23, package=null, isBundled=true)
+Info  | RdCoroutineScope          | 14:JobScheduler FJ pool 2/7 | RdCoroutineHost overridden 
+2023-01-20 20:49:16,807 [   2264]   WARN - #c.i.e.t.TargetBasedSdks - SDK target configuration data is absent
+2023-01-20 20:49:19,296 [   4753]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/modules/automation_server/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,296 [   4753]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/modules/output/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,297 [   4754]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/analyzers/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,297 [   4754]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,297 [   4754]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/doc/_ext/collapsible/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,297 [   4754]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/modules/vcs/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,298 [   4755]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/lib/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,298 [   4755]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/tests/thirdparty/pyfeed/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,298 [   4755]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/tests/thirdparty/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:19,298 [   4755]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored files under another root: 11 files total
+2023-01-20 20:49:20,616 [   6073]   WARN - #c.i.o.a.i.ActionUpdater - 491 ms to grab EDT for RefactoringQuickListPopupAction#update@MainMenu (com.intellij.refactoring.actions.RefactoringQuickListPopupAction)
+2023-01-20 20:49:20,625 [   6082]   WARN - #c.i.o.a.i.ActionUpdater - 458 ms to grab EDT for AnalyzeStacktraceAction#update@MainMenu (com.intellij.unscramble.AnalyzeStacktraceAction)
+2023-01-20 20:49:23,513 [   8970]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/modules/automation_server/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,513 [   8970]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/modules/output/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,513 [   8970]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/analyzers/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,513 [   8970]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,513 [   8970]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/doc/_ext/collapsible/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,514 [   8971]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/modules/vcs/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,514 [   8971]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/universum/lib/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,514 [   8971]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/tests/thirdparty/pyfeed/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,514 [   8971]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored file under another root: /home/alelyak/github/Universum/tests/thirdparty/__pycache__; root: /home/alelyak/github/Universum; mapped root: null
+2023-01-20 20:49:23,514 [   8971]   WARN - #g.r.GitUntrackedFilesHolder - Ignoring ignored files under another root: 11 files total
+2023-01-20 20:49:23,915 [   9372]   WARN - #c.j.p.s.s.PySkeletonRefresher - Some skeletons failed to generate
+2023-01-20 20:49:23,915 [   9372]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.checkpattern
+2023-01-20 20:49:23,915 [   9372]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.fastparse2
+2023-01-20 20:49:23,915 [   9372]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.type_visitor
+2023-01-20 20:49:23,915 [   9372]   WARN - #c.j.p.s.s.PySkeletonRefresher - selenium.webdriver.firefox.amd64.x_ignore_nofocus
+2023-01-20 20:49:23,915 [   9372]   WARN - #c.j.p.s.s.PySkeletonRefresher - selenium.webdriver.firefox.x86.x_ignore_nofocus
+2023-01-20 20:49:25,695 [  11152]   WARN - #c.j.p.s.s.PySkeletonRefresher - Some skeletons failed to generate
+2023-01-20 20:49:25,695 [  11152]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.checkpattern
+2023-01-20 20:49:25,695 [  11152]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.fastparse2
+2023-01-20 20:49:25,696 [  11153]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.type_visitor
+2023-01-20 20:49:25,696 [  11153]   WARN - #c.j.p.s.s.PySkeletonRefresher - selenium.webdriver.firefox.amd64.x_ignore_nofocus
+2023-01-20 20:49:25,696 [  11153]   WARN - #c.j.p.s.s.PySkeletonRefresher - selenium.webdriver.firefox.x86.x_ignore_nofocus
+2023-01-20 20:49:40,741 [  26198]   WARN - #c.i.i.s.download - Shared indexes download was cancelled. Indexing has completed faster
+2023-01-20 20:50:08,259 [  53716]   WARN - #c.i.o.v.i.l.NativeFileWatcherImpl - table error: collision at 6179 (new /usr/local/lib/python3.10/dist-packages/~ypy-0.961.dist-info, existing /usr/local/lib/python3.10/dist-packages/mypy-0.961.dist-info)
+2023-01-20 20:50:08,276 [  53733]   WARN - #c.i.o.v.i.l.NativeFileWatcherImpl - Watcher terminated with exit code 3
+2023-01-20 20:50:21,006 [  66463]   WARN - #c.j.p.s.s.PySkeletonRefresher - Some skeletons failed to generate
+2023-01-20 20:50:21,006 [  66463]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.checkpattern
+2023-01-20 20:50:21,006 [  66463]   WARN - #c.j.p.s.s.PySkeletonRefresher - mypy.type_visitor
+2023-01-20 20:50:21,006 [  66463]   WARN - #c.j.p.s.s.PySkeletonRefresher - selenium.webdriver.firefox.amd64.x_ignore_nofocus
+2023-01-20 20:50:21,006 [  66463]   WARN - #c.j.p.s.s.PySkeletonRefresher - selenium.webdriver.firefox.x86.x_ignore_nofocus
