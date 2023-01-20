@@ -109,9 +109,9 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 
 class BaseVcsClient:
-    def __init__(self):
-        self.root_directory: py.path.local  # type: ignore
-        self.repo_file: py.path.local  # type: ignore
+    def __init__(self) -> None:
+        self.root_directory: py.path.local
+        self.repo_file: py.path.local
 
     def get_last_change(self):
         pass

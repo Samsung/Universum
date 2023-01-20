@@ -57,13 +57,13 @@ class Reporter(HasOutput, HasStructure):
         parser.add_argument("--fail-unsuccessful", "-rfu", action="store_true", dest="fail_unsuccessful",
                             help="Return non-zero exit code if any step failed")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.observers = []
-        self.report_initialized = False
-        self.blocks_to_report = []
-        self.artifacts_to_report = []
-        self.code_report_comments: Dict[str, List[ReportMessage]] = defaultdict(list)  # type: ignore
+        self.observers: List = []
+        self.report_initialized: bool = False
+        self.blocks_to_report: List = []
+        self.artifacts_to_report: List = []
+        self.code_report_comments: Dict[str, List[ReportMessage]] = defaultdict(list)
 
         self.automation_server = self.automation_server_factory()
 

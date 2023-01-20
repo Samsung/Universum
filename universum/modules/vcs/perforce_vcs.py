@@ -299,7 +299,7 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
                             help="**Revert all vcs within '--p4-client' and delete the workspace.** "
                                  "Mandatory for CI environment, otherwise use with caution")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.check_required_option("client", """
@@ -318,14 +318,14 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.client_name = self.settings.client
         self.client_root = self.settings.project_root
 
-        self.sync_cls = []
-        self.shelve_cls = []
-        self.depots = []
-        self.client_view = []
-        self.mappings_dict = {}
+        self.sync_cls: List = []
+        self.shelve_cls: List = []
+        self.depots: List = []
+        self.client_view: List = []
+        self.mappings_dict: Dict = {}
 
-        self.unshelved_files: List[Dict[str, str]] = []  # type: ignore
-        self.diff_in_files: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []  # type: ignore
+        self.unshelved_files: List[Dict[str, str]] = []
+        self.diff_in_files: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []
 
     def code_review(self):
         self.swarm = self.swarm_factory()
