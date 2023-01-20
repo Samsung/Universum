@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-def create_vcs(class_type: str = None) -> Type[ProjectDirectory]:
+def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
     driver_factory_class: Union[
         Dict[str, Type[base_vcs.BasePollVcs]],
         Dict[str, Type[base_vcs.BaseSubmitVcs]],

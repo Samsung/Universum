@@ -379,4 +379,3 @@ configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         assert process.wait() == 1
-

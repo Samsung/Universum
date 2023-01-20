@@ -1,3 +1,5 @@
+# pylint: disable = redefined-outer-name
+
 import inspect
 import os
 import pytest
@@ -33,7 +35,7 @@ def test_existing_artifact_no_prebuild_clean(test_env, stdout_checker):
     test_env.write_config_file(artifact_prebuild_clean=False)
     test_env.create_artifact_file()
     test_env.run(expect_failure=True)
-    stdout_checker.assert_has_calls_with_param(f"already exist in '/.*' directory", is_regexp=True)
+    stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
     test_env.check_step_artifact_absent()
 
 
@@ -58,7 +60,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
 
     def check_step_artifact_present(self):
         assert os.path.exists(self.artifact_path)
-        with open(self.artifact_path) as f:
+        with open(self.artifact_path, encoding="utf-8") as f:
             content = f.read().replace("\n", "")
             assert content == self.artifact_content
 
@@ -67,5 +69,5 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
 
     def create_artifact_file(self):
         precreated_artifact = self.src_dir.join(self.artifact_name)
-        with open(precreated_artifact, "w") as f:
+        with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
