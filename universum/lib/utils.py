@@ -107,7 +107,7 @@ def format_traceback(exc: Exception, trace: Optional[TracebackType]) -> str:
 def catch_exception(exception_name: str, ignore_if: Optional[str] = None) -> DecoratorT:
     def decorated_function(function):
         def function_to_run(*args, **kwargs):
-            result: ReturnT = None
+            result: ReturnT = None  # type: ignore
             try:
                 result = function(*args, **kwargs)
                 return result

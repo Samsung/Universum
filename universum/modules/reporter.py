@@ -63,7 +63,7 @@ class Reporter(HasOutput, HasStructure):
         self.report_initialized = False
         self.blocks_to_report = []
         self.artifacts_to_report = []
-        self.code_report_comments: Dict[str, List[ReportMessage]] = defaultdict(list)
+        self.code_report_comments: Dict[str, List[ReportMessage]] = defaultdict(list)  # type: ignore
 
         self.automation_server = self.automation_server_factory()
 

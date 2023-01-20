@@ -324,8 +324,8 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
         self.client_view = []
         self.mappings_dict = {}
 
-        self.unshelved_files: List[Dict[str, str]] = []
-        self.diff_in_files: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []
+        self.unshelved_files: List[Dict[str, str]] = []  # type: ignore
+        self.diff_in_files: List[Tuple[Optional[str], Optional[str], Optional[str]]] = []  # type: ignore
 
     def code_review(self):
         self.swarm = self.swarm_factory()
