@@ -2,8 +2,8 @@
 
 import inspect
 import os
-import pathlib
 from typing import Generator
+from py._path.local import LocalPath
 
 import pytest
 
@@ -13,10 +13,10 @@ from .conftest import FuzzyCallChecker
 
 class ArtifactsTestEnvironment(LocalTestEnvironment):
 
-    def __init__(self, tmpdir: pathlib.Path) -> None:
+    def __init__(self, tmpdir: LocalPath) -> None:
         super().__init__(tmpdir, "main")
         self.artifact_name: str = "artifact"
-        self.artifact_path: pathlib.Path = self.artifact_dir.join(self.artifact_name)
+        self.artifact_path: LocalPath = self.artifact_dir.join(self.artifact_name)
         self.artifact_content: str = "artifact content"
 
     def write_config_file(self, artifact_prebuild_clean: bool) -> None:
@@ -40,13 +40,13 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         assert not os.path.exists(self.artifact_path)
 
     def create_artifact_file(self, directory) -> None:
-        precreated_artifact: pathlib.Path = directory.join(self.artifact_name)
+        precreated_artifact: LocalPath = directory.join(self.artifact_name)
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
 
 @pytest.fixture()
-def test_env(tmpdir: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None, None]:
+def test_env(tmpdir: LocalPath) -> Generator[ArtifactsTestEnvironment, None, None]:
     yield ArtifactsTestEnvironment(tmpdir)
 
 
