@@ -39,8 +39,8 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
     def check_step_artifact_absent(self) -> None:
         assert not os.path.exists(self.artifact_path)
 
-    def create_artifact_file(self) -> None:
-        precreated_artifact: pathlib.Path = self.src_dir.join(self.artifact_name)
+    def create_artifact_file(self, directory) -> None:
+        precreated_artifact: pathlib.Path = directory.join(self.artifact_name)
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
@@ -62,17 +62,33 @@ def test_no_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment) -> No
     test_env.check_step_artifact_present()
 
 
-def test_existing_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
+def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
-    test_env.create_artifact_file()
+    test_env.create_artifact_file(test_env.src_dir)
     test_env.run()
     test_env.check_step_artifact_present()
 
 
-def test_existing_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
-                                             stdout_checker: FuzzyCallChecker) -> None:
+def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
+                                               stdout_checker: FuzzyCallChecker) -> None:
     test_env.write_config_file(artifact_prebuild_clean=False)
-    test_env.create_artifact_file()
+    test_env.create_artifact_file(test_env.src_dir)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
     test_env.check_step_artifact_absent()
+
+
+def test_artifact_in_artifacts_dir_prebuild_clean(test_env: ArtifactsTestEnvironment,
+                                                  stdout_checker: FuzzyCallChecker) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=True)
+    test_env.create_artifact_file(test_env.artifact_dir)
+    test_env.run(expect_failure=True)
+    stdout_checker.assert_has_calls_with_param("already present in artifact directory")
+
+
+def test_artifact_in_artifacts_dir_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
+                                                     stdout_checker: FuzzyCallChecker) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=False)
+    test_env.create_artifact_file(test_env.artifact_dir)
+    test_env.run(expect_failure=True)
+    stdout_checker.assert_has_calls_with_param("already present in artifact directory")
