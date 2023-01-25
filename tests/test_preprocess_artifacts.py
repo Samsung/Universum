@@ -39,7 +39,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
     def check_step_artifact_absent(self) -> None:
         assert not os.path.exists(self.artifact_path)
 
-    def create_artifact_file(self, directory) -> None:
+    def create_artifact_file(self, directory: LocalPath) -> None:
         precreated_artifact: LocalPath = directory.join(self.artifact_name)
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
