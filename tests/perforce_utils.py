@@ -179,7 +179,8 @@ def perforce_connection(request, docker_perforce: PerfoceDockerContainer):
 class PerforceWorkspace(utils.BaseVcsClient):
     def __init__(self, connection: PerforceConnection, directory: py.path.local):
         super().__init__()
-        self.root_directory = directory.mkdir("workspace")
+        self.root_directory = directory.joinpath("workspace")
+        self.root_directory.mkdir()
         self.repo_file = self.root_directory.join("writeable_file.txt")
 
         self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")

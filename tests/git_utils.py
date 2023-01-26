@@ -105,7 +105,8 @@ class GitServer:
 
 @pytest.fixture()
 def git_server(tmp_path: py.path.local):
-    directory = tmp_path.mkdir("server")
+    directory = tmp_path.joinpath("server")
+    directory.mkdir()
     server = GitServer(directory, "testing")
     try:
         yield server
@@ -123,7 +124,8 @@ class GitClient(utils.BaseVcsClient):
 
         self.server: GitServer = git_server
         self.logger: Progress = Progress()
-        self.root_directory: py.path.local = directory.mkdir("client")
+        self.root_directory: py.path.local = directory.joinpath("client")
+        self.root_directory.mkdir()
         self.repo: git.Repo = git.Repo.clone_from(git_server.url, self.root_directory)
         self.repo_file = self.root_directory.join(git_server.target_file)
 

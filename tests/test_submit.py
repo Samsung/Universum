@@ -19,7 +19,8 @@ def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.pa
 
 @pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
 def test_p4_error_forbidden_branch(p4_submit_environment: P4TestEnvironment, branch: str):
-    protected_dir = p4_submit_environment.vcs_client.root_directory.mkdir(branch)
+    protected_dir = p4_submit_environment.vcs_client.root_directory.joinpath(branch)
+    protected_dir.mkdir()
     file_to_add = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
@@ -63,7 +64,8 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment: P4TestEnv
     p4_file.write(text_default + "\n")
 
     # This file must fail submit and remain unchanged while not checked out any more
-    protected_dir = p4_submit_environment.vcs_client.root_directory.mkdir("write-protected")
+    protected_dir = p4_submit_environment.vcs_client.root_directory.joinpath("write-protected")
+    protected_dir.mkdir()
     new_file = protected_dir.join(utils.randomize_name("new_file") + ".txt")
     text_new = "This is a new line in the file"
     new_file.write(text_new + "\n")
@@ -207,7 +209,8 @@ def test_success_reconcile_directory(submit_parameters: Callable,
     dir_name = utils.randomize_name("new_directory")
 
     # Create and reconcile new directory
-    tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(dir_name)
+    tmp_dir.mkdir()
     for i in range(0, 9):
         tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
@@ -219,8 +222,9 @@ def test_success_reconcile_directory(submit_parameters: Callable,
         assert parameters.file_present(str(file_path))
 
     # Create and reconcile a directory in a directory
-    another_dir = tmp_dir.mkdir("another_directory")
-    tmp_file = another_dir.join("new_file.txt")
+    another_dir = tmp_dir.joinpath("another_directory")
+    another_dir.mkdir()
+    tmp_file = another_dir.joinpath("new_file.txt")
     tmp_file.write("This is some file" + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/"])
@@ -252,8 +256,10 @@ def test_success_reconcile_wildcard(submit_parameters: Callable,
     dir_name = utils.randomize_name("new_directory")
 
     # Create embedded directories, partially reconcile
-    tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(dir_name)
-    inner_dir = tmp_dir.mkdir("inner_directory")
+    tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(dir_name)
+    tmp_dir.mkdir()
+    inner_dir = tmp_dir.joinpath("inner_directory")
+    inner_dir.mkdir()
     text = "This is some file" + "\n"
     for i in range(0, 9):
         tmp_file = tmp_dir.join(f"new_file{i}.txt")
@@ -277,7 +283,8 @@ def test_success_reconcile_wildcard(submit_parameters: Callable,
 
     # Create one more directory
     other_dir_name = utils.randomize_name("new_directory")
-    other_tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(other_dir_name)
+    other_tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(other_dir_name)
+    other_tmp_dir.mkdir()
     for i in range(0, 9):
         tmp_file = other_tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
@@ -370,7 +377,8 @@ def test_success_reconcile_partial(submit_parameters: Callable,
 
     parameters = submit_parameters(submit_environment)
     dir_name = utils.randomize_name("new_directory")
-    tmp_dir = parameters.environment.vcs_client.root_directory.mkdir(dir_name)
+    tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(dir_name)
+    tmp_dir.mkdir()
     for i in range(0, 9):
         tmp_file = tmp_dir.join(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")

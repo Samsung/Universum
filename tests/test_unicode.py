@@ -11,7 +11,9 @@ from .perforce_utils import PerforceWorkspace, P4TestEnvironment
 
 @pytest.fixture
 def unicode_dir(tmp_path: py.path.local):
-    yield tmp_path.mkdir("Юніко́д з пробелами")
+    unicode_dir_path = tmp_path.joinpath("Юніко́д з пробелами")
+    unicode_dir_path.mkdir()
+    yield unicode_dir_path
 
 
 @pytest.mark.parametrize("vcs", ["git", "p4"])
@@ -20,14 +22,16 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
     env: utils.BaseTestEnvironment
     if vcs == "git":
         # change git client root dir to unicode path
-        work_dir = unicode_dir.mkdir("client")
+        work_dir = unicode_dir.joinpath("client")
+        work_dir.mkdir()
         git_client.repo = git.Repo.clone_from(git_client.server.url, work_dir)
         git_client.root_directory = work_dir
 
         env = GitTestEnvironment(git_client, unicode_dir, test_type=test_type)
     elif vcs == "p4":
         # change workspace root dir to unicode path
-        root = unicode_dir.mkdir("workspace")
+        root = unicode_dir.joinpath("workspace")
+        root.mkdir()
         client = perforce_workspace.p4.fetch_client(perforce_workspace.client_name)
         client["Root"] = str(root)
         perforce_workspace.root_directory = root
@@ -47,7 +51,8 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
 
 
 def test_unicode_main_local_vcs(unicode_dir: py.path.local):
-    work_dir = unicode_dir.mkdir("local_sources")
+    work_dir = unicode_dir.joinpath("local_sources")
+    work_dir.mkdir()
     work_dir.join("source_file").write("Source file contents")
 
     env = utils.LocalTestEnvironment(unicode_dir, "main")

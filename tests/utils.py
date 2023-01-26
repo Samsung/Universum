@@ -200,7 +200,9 @@ class BaseTestEnvironment:
             self.settings.Poll.db_file = db_file
             self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
-            self.settings.ProjectDirectory.project_root = str(self.temp_dir.mkdir("project_root"))
+            project_root_dir = self.temp_dir.joinpath("project_root")
+            project_root_dir.mkdir()
+            self.settings.ProjectDirectory.project_root = str(project_root_dir)
         elif test_type == "submit":
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
@@ -210,12 +212,14 @@ class BaseTestEnvironment:
             self.configs_file = self.temp_dir.join("configs.py")
             self.configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
-            self.artifact_dir = self.temp_dir.mkdir("artifacts")
+            self.artifact_dir = self.temp_dir.joinpath("artifacts")
+            self.artifact_dir.mkdir()
             self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
             if test_type == "nonci":
-                self.temp_dir.mkdir("project_root")
+                nonci_dir = self.temp_dir.joinpath("project_root")
+                nonci_dir.mkdir()
             self.settings.Launcher.output = "console"
             self.settings.AutomationServer.type = "local"
         self.settings.Output.type = "term"
