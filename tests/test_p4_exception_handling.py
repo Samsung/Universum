@@ -9,8 +9,8 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="main")
 
 
 def test_p4_forbidden_local_revert(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):

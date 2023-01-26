@@ -13,8 +13,8 @@ from .conftest import FuzzyCallChecker
 
 class ArtifactsTestEnvironment(LocalTestEnvironment):
 
-    def __init__(self, tmpdir: pathlib.Path) -> None:
-        super().__init__(tmpdir, "main")
+    def __init__(self, tmp_path: pathlib.Path) -> None:
+        super().__init__(tmp_path, "main")
         self.artifact_name: str = "artifact"
         self.artifact_path: pathlib.Path = self.artifact_dir.join(self.artifact_name)
         self.artifact_content: str = "artifact content"
@@ -46,8 +46,8 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
 
 
 @pytest.fixture()
-def test_env(tmpdir: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None, None]:
-    yield ArtifactsTestEnvironment(tmpdir)
+def test_env(tmp_path: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None, None]:
+    yield ArtifactsTestEnvironment(tmp_path)
 
 
 def test_no_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:

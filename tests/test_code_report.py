@@ -281,12 +281,12 @@ def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
-def test_code_report_extended_arg_search(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker):
-    env = utils.LocalTestEnvironment(tmpdir, "main")
+def test_code_report_extended_arg_search(tmp_path: py.path.local, stdout_checker: FuzzyCallChecker):
+    env = utils.LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
-    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+    env.settings.LocalMainVcs.source_dir = str(tmp_path)
 
-    source_file = tmpdir.join("source_file.py")
+    source_file = tmp_path.join("source_file.py")
     source_file.write(source_code_python + '\n')
 
     config = f"""
@@ -304,12 +304,12 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
 
 
-def test_code_report_extended_arg_search_embedded(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker):
-    env = utils.LocalTestEnvironment(tmpdir, "main")
+def test_code_report_extended_arg_search_embedded(tmp_path: py.path.local, stdout_checker: FuzzyCallChecker):
+    env = utils.LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
-    env.settings.LocalMainVcs.source_dir = str(tmpdir)
+    env.settings.LocalMainVcs.source_dir = str(tmp_path)
 
-    source_file = tmpdir.join("source_file.py")
+    source_file = tmp_path.join("source_file.py")
     source_file.write(source_code_python + '\n')
 
     config = """

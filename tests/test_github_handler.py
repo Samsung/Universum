@@ -57,8 +57,8 @@ class GithubHandlerEnvironment(BaseTestEnvironment):
 
 
 @pytest.fixture()
-def github_handler_environment(tmpdir: py.path.local):
-    yield GithubHandlerEnvironment(tmpdir)
+def github_handler_environment(tmp_path: py.path.local):
+    yield GithubHandlerEnvironment(tmp_path)
 
 
 @pytest.fixture(autouse=True)

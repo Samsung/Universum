@@ -42,10 +42,10 @@ def test_teardown_fixture_output_verification(print_text_on_teardown: None):
 
 
 @pytest.mark.parametrize("should_not_execute", [True, False], ids=['no-sources', 'deleted-sources'])
-def test_clean_sources_exception(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker, should_not_execute):
-    env = LocalTestEnvironment(tmpdir, "main")
+def test_clean_sources_exception(tmp_path: py.path.local, stdout_checker: FuzzyCallChecker, should_not_execute):
+    env = LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
-    source_directory = tmpdir
+    source_directory = tmp_path
     if should_not_execute:
         source_directory = source_directory / 'nonexisting_dir'
     env.settings.LocalMainVcs.source_dir = str(source_directory)
@@ -84,8 +84,8 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="main")
 
 
 def test_p4_multiple_spaces_in_mappings(perforce_environment: P4TestEnvironment):

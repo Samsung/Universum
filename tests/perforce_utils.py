@@ -293,8 +293,8 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def perforce_workspace(request, perforce_connection: PerforceConnection, tmpdir: py.path.local):
-    workspace = PerforceWorkspace(perforce_connection, tmpdir)
+def perforce_workspace(request, perforce_connection: PerforceConnection, tmp_path: py.path.local):
+    workspace = PerforceWorkspace(perforce_connection, tmp_path)
     try:
         workspace.setup()
         yield workspace

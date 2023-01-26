@@ -333,19 +333,19 @@ configs = upper * lower
 
 
 @pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
-def test_abort(local_sources: LocalSources, tmpdir: py.path.local, terminate_type):
+def test_abort(local_sources: LocalSources, tmp_path: py.path.local, terminate_type):
     config = """
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
-    config_file = tmpdir.join("configs.py")
+    config_file = tmp_path.join("configs.py")
     config_file.write(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmpdir.join("project_root")),
-                           "-ad", str(tmpdir.join("artifacts")),
+                           "-pr", str(tmp_path.join("project_root")),
+                           "-ad", str(tmp_path.join("artifacts")),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         time.sleep(5)
@@ -353,29 +353,29 @@ configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
         assert process.wait(5) == 3
 
 
-def test_exit_code(local_sources: LocalSources, tmpdir: py.path.local):
+def test_exit_code(local_sources: LocalSources, tmp_path: py.path.local):
     config = """
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
 """
-    config_file = tmpdir.join("configs.py")
+    config_file = tmp_path.join("configs.py")
     config_file.write(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmpdir.join("project_root")),
-                           "-ad", str(tmpdir.join("artifacts")),
+                           "-pr", str(tmp_path.join("project_root")),
+                           "-ad", str(tmp_path.join("artifacts")),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
 
         assert process.wait() == 0
 
-    tmpdir.join("artifacts").remove(rec=True)
+    tmp_path.join("artifacts").remove(rec=True)
     with subprocess.Popen([python(), "-m", "universum", "--fail-unsuccessful",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmpdir.join("project_root")),
-                           "-ad", str(tmpdir.join("artifacts")),
+                           "-pr", str(tmp_path.join("project_root")),
+                           "-ad", str(tmp_path.join("artifacts")),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         assert process.wait() == 1

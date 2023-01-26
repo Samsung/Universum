@@ -8,8 +8,8 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="submit")
 
 
 def test_fail_changing_non_checked_out_file(p4_submit_environment: P4TestEnvironment):

@@ -30,8 +30,8 @@ class ReportEnvironment(utils.BaseTestEnvironment):
 
 
 @pytest.fixture()
-def report_environment(git_client: GitClient, tmpdir: py.path.local):
-    yield ReportEnvironment(git_client, tmpdir)
+def report_environment(git_client: GitClient, tmp_path: py.path.local):
+    yield ReportEnvironment(git_client, tmp_path)
 
 
 def test_github_run(report_environment: ReportEnvironment, monkeypatch):

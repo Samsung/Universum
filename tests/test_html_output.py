@@ -45,16 +45,16 @@ configs = \
 log_name = "universum_log"
 
 
-def create_environment(test_type, tmpdir):
-    env = utils.LocalTestEnvironment(tmpdir, test_type)
+def create_environment(test_type, tmp_path):
+    env = utils.LocalTestEnvironment(tmp_path, test_type)
     env.configs_file.write(config)
     env.settings.Output.html_log = log_name
     return env
 
 
 @pytest.fixture(params=["main", "nonci"])
-def environment_main_and_nonci(request, tmpdir):
-    yield create_environment(request.param, tmpdir)
+def environment_main_and_nonci(request, tmp_path):
+    yield create_environment(request.param, tmp_path)
 
 
 @pytest.fixture()
@@ -66,19 +66,19 @@ def browser():
     firefox.close()
 
 
-def test_cli_log_custom_name(tmpdir):
+def test_cli_log_custom_name(tmp_path):
     custom_log_name = "custom_name.html"
-    artifact_dir = check_cli(tmpdir, ["-hl", custom_log_name])
+    artifact_dir = check_cli(tmp_path, ["-hl", custom_log_name])
     assert os.path.exists(os.path.join(artifact_dir, custom_log_name))
 
 
-def test_cli_log_default_name(tmpdir):
-    artifact_dir = check_cli(tmpdir, ["-hl"])
+def test_cli_log_default_name(tmp_path):
+    artifact_dir = check_cli(tmp_path, ["-hl"])
     assert os.path.exists(os.path.join(artifact_dir, "universum_log.html"))
 
 
-def test_cli_no_log_requested(tmpdir):
-    artifact_dir = check_cli(tmpdir, [])
+def test_cli_no_log_requested(tmp_path):
+    artifact_dir = check_cli(tmp_path, [])
     for file_name in os.listdir(artifact_dir):
         assert not file_name.endswith(".html")
 
@@ -88,8 +88,8 @@ def test_success(environment_main_and_nonci, browser):
     check_html_log(environment_main_and_nonci.artifact_dir, browser)
 
 
-def test_success_clean_build(tmpdir, browser):
-    env = create_environment("main", tmpdir)
+def test_success_clean_build(tmp_path, browser):
+    env = create_environment("main", tmp_path)
     env.settings.Main.clean_build = True
     env.run()
     check_html_log(env.artifact_dir, browser)
@@ -298,13 +298,13 @@ def check_timestamps(body_element, universum_log_element):
     assert delta.seconds <= 60
 
 
-def check_cli(tmpdir, html_log_params):
-    artifact_dir = tmpdir.join("artifacts")
-    config_file = tmpdir.join("configs.py")
+def check_cli(tmp_path, html_log_params):
+    artifact_dir = tmp_path.join("artifacts")
+    config_file = tmp_path.join("configs.py")
     config_file.write_text(config, "utf-8")
 
     cli_params = ["-vt", "none",
-                  "-fsd", str(tmpdir),
+                  "-fsd", str(tmp_path),
                   "-cfg", str(config_file),
                   "-ad", str(artifact_dir)]
     html_log_params.extend(cli_params)

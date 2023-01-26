@@ -13,8 +13,8 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="submit")
 
 
 @pytest.mark.parametrize("branch", ["write-protected", "trigger-protected"])
@@ -110,11 +110,11 @@ def submit_parameters(stdout_checker: FuzzyCallChecker):
 
 
 @pytest.fixture(params=["git", "p4"])
-def submit_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmpdir: py.path.local):
+def submit_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmp_path: py.path.local):
     if request.param == "git":
-        yield GitTestEnvironment(git_client, tmpdir, test_type="submit")
+        yield GitTestEnvironment(git_client, tmp_path, test_type="submit")
     else:
-        yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+        yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="submit")
 
 
 def test_error_no_repo(submit_environment: Union[GitTestEnvironment, P4TestEnvironment], stdout_checker: FuzzyCallChecker):

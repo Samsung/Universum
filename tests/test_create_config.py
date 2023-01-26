@@ -5,8 +5,8 @@ import py
 from .utils import python
 
 
-def test_create_config(tmpdir: py.path.local):
-    launch_parameters = dict(capture_output=True, cwd=tmpdir, env=dict(os.environ, PYTHONPATH=os.getcwd()))
+def test_create_config(tmp_path: py.path.local):
+    launch_parameters = dict(capture_output=True, cwd=tmp_path, env=dict(os.environ, PYTHONPATH=os.getcwd()))
     result = subprocess.run([python(), "-m", "universum", "init"], check=True, **launch_parameters)  # type: ignore
     new_command = ''
     for line in result.stdout.splitlines():

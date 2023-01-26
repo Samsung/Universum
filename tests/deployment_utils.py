@@ -161,7 +161,7 @@ class LocalSources(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def local_sources(tmpdir: py.path.local):
+def local_sources(tmp_path: py.path.local):
     if utils.reuse_docker_containers():
         source_dir = py.path.local(".work")
         try:
@@ -171,7 +171,7 @@ def local_sources(tmpdir: py.path.local):
         source_dir.ensure(dir=True)
 
     else:
-        source_dir = tmpdir.mkdir("project_sources")
+        source_dir = tmp_path.mkdir("project_sources")
     local_file = source_dir.join("readme.txt")
     local_file.write("This is a an empty file")
 

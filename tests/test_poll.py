@@ -11,15 +11,15 @@ from .perforce_utils import PerforceWorkspace, P4TestEnvironment
 from .utils import LocalTestEnvironment
 
 
-def test_poll_local_vcs(tmpdir: py.path.local):
-    env = LocalTestEnvironment(tmpdir, "poll")
+def test_poll_local_vcs(tmp_path: py.path.local):
+    env = LocalTestEnvironment(tmp_path, "poll")
     env.run()
 
 
 def test_p4_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
                                             perforce_workspace: PerforceWorkspace,
-                                            tmpdir: py.path.local):
-    db_file = tmpdir.join("p4poll.json")
+                                            tmp_path: py.path.local):
+    db_file = tmp_path.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
                             "-f", str(db_file),
@@ -34,8 +34,8 @@ def test_p4_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
 
 def test_git_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
                                              git_server: GitServer,
-                                             tmpdir: py.path.local):
-    db_file = tmpdir.join("gitpoll.json")
+                                             tmp_path: py.path.local):
+    db_file = tmp_path.join("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "git",
                             "-f", str(db_file),
@@ -48,8 +48,8 @@ def test_git_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
 
 def test_p4_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
                                           perforce_workspace: PerforceWorkspace,
-                                          tmpdir: py.path.local):
-    db_file = tmpdir.join("p4poll.json")
+                                          tmp_path: py.path.local):
+    db_file = tmp_path.join("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
                             "-f", str(db_file),
@@ -64,8 +64,8 @@ def test_p4_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
 
 def test_git_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
                                            git_server: GitServer,
-                                           tmpdir: py.path.local):
-    db_file = tmpdir.join("gitpoll.json")
+                                           tmp_path: py.path.local):
+    db_file = tmp_path.join("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "git",
                             "-f", str(db_file),
@@ -77,11 +77,11 @@ def test_git_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
 
 
 @pytest.fixture(params=["git", "p4"])
-def poll_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmpdir: py.path.local):
+def poll_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmp_path: py.path.local):
     if request.param == "git":
-        yield GitTestEnvironment(git_client, tmpdir, test_type="poll")
+        yield GitTestEnvironment(git_client, tmp_path, test_type="poll")
     else:
-        yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="poll")
+        yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="poll")
 
 
 def test_error_one_change(stdout_checker: FuzzyCallChecker, log_exception_checker: FuzzyCallChecker,

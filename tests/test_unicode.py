@@ -10,8 +10,8 @@ from .perforce_utils import PerforceWorkspace, P4TestEnvironment
 
 
 @pytest.fixture
-def unicode_dir(tmpdir: py.path.local):
-    yield tmpdir.mkdir("Юніко́д з пробелами")
+def unicode_dir(tmp_path: py.path.local):
+    yield tmp_path.mkdir("Юніко́д з пробелами")
 
 
 @pytest.mark.parametrize("vcs", ["git", "p4"])
