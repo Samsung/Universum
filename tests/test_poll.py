@@ -19,7 +19,7 @@ def test_poll_local_vcs(tmp_path: py.path.local):
 def test_p4_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
                                             perforce_workspace: PerforceWorkspace,
                                             tmp_path: py.path.local):
-    db_file = tmp_path.join("p4poll.json")
+    db_file = tmp_path.joinpath("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
                             "-f", str(db_file),
@@ -35,7 +35,7 @@ def test_p4_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
 def test_git_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
                                              git_server: GitServer,
                                              tmp_path: py.path.local):
-    db_file = tmp_path.join("gitpoll.json")
+    db_file = tmp_path.joinpath("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "git",
                             "-f", str(db_file),
@@ -49,7 +49,7 @@ def test_git_success_command_line_no_changes(stdout_checker: FuzzyCallChecker,
 def test_p4_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
                                           perforce_workspace: PerforceWorkspace,
                                           tmp_path: py.path.local):
-    db_file = tmp_path.join("p4poll.json")
+    db_file = tmp_path.joinpath("p4poll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "p4",
                             "-f", str(db_file),
@@ -65,7 +65,7 @@ def test_p4_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
 def test_git_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
                                            git_server: GitServer,
                                            tmp_path: py.path.local):
-    db_file = tmp_path.join("gitpoll.json")
+    db_file = tmp_path.joinpath("gitpoll.json")
     result = __main__.main(["poll", "-ot", "term",
                             "-vt", "git",
                             "-f", str(db_file),

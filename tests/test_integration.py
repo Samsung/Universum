@@ -339,13 +339,13 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
-    config_file = tmp_path.join("configs.py")
+    config_file = tmp_path.joinpath("configs.py")
     config_file.write(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmp_path.join("project_root")),
-                           "-ad", str(tmp_path.join("artifacts")),
+                           "-pr", str(tmp_path.joinpath("project_root")),
+                           "-ad", str(tmp_path.joinpath("artifacts")),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         time.sleep(5)
@@ -359,23 +359,23 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
 """
-    config_file = tmp_path.join("configs.py")
+    config_file = tmp_path.joinpath("configs.py")
     config_file.write(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmp_path.join("project_root")),
-                           "-ad", str(tmp_path.join("artifacts")),
+                           "-pr", str(tmp_path.joinpath("project_root")),
+                           "-ad", str(tmp_path.joinpath("artifacts")),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
 
         assert process.wait() == 0
 
-    tmp_path.join("artifacts").remove(rec=True)
+    tmp_path.joinpath("artifacts").remove(rec=True)
     with subprocess.Popen([python(), "-m", "universum", "--fail-unsuccessful",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmp_path.join("project_root")),
-                           "-ad", str(tmp_path.join("artifacts")),
+                           "-pr", str(tmp_path.joinpath("project_root")),
+                           "-ad", str(tmp_path.joinpath("artifacts")),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         assert process.wait() == 1

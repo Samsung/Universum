@@ -286,7 +286,7 @@ def test_code_report_extended_arg_search(tmp_path: py.path.local, stdout_checker
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmp_path)
 
-    source_file = tmp_path.join("source_file.py")
+    source_file = tmp_path.joinpath("source_file.py")
     source_file.write(source_code_python + '\n')
 
     config = f"""
@@ -309,7 +309,7 @@ def test_code_report_extended_arg_search_embedded(tmp_path: py.path.local, stdou
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmp_path)
 
-    source_file = tmp_path.join("source_file.py")
+    source_file = tmp_path.joinpath("source_file.py")
     source_file.write(source_code_python + '\n')
 
     config = """
