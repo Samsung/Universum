@@ -4,7 +4,6 @@ import re
 import pathlib
 from typing import List
 
-import py
 import pytest
 
 from . import utils

@@ -3,7 +3,6 @@
 import os
 from typing import Callable, Union
 import shutil
-import py
 import pytest
 import pathlib
 

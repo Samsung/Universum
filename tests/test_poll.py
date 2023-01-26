@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name
 
 from typing import Union
-import py
 import pytest
 import pathlib
 

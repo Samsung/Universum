@@ -1,6 +1,5 @@
 import os
 import subprocess
-import py
 import pathlib
 
 from .utils import python

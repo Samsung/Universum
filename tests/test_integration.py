@@ -6,7 +6,6 @@ import shutil
 import pathlib
 from typing import Any
 
-import py
 import pytest
 
 from .deployment_utils import UniversumRunner, LocalSources

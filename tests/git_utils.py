@@ -6,7 +6,6 @@ from time import sleep
 
 import git
 from git.remote import RemoteProgress
-import py
 import pytest
 import sh
 

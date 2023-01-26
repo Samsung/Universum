@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name, abstract-method
 
 import pytest
-import py
 import pathlib
 
 from universum.modules.vcs.github_vcs import GithubToken

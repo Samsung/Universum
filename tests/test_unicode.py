@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name
 
 import git
-import py
 import pytest
 import pathlib
 

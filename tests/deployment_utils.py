@@ -7,7 +7,6 @@ import pathlib
 from pwd import getpwnam
 
 import docker
-import py
 import pytest
 from requests.exceptions import ReadTimeout
 

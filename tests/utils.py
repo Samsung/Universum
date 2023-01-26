@@ -10,7 +10,6 @@ from typing import Type
 
 from docker.models.containers import Container
 import httpretty
-import py
 import pytest
 
 from universum import submit, poll, main, github_handler, nonci, __main__
