@@ -52,7 +52,7 @@ def test_p4_success_files_in_default(p4_submit_environment: P4TestEnvironment):
     p4_submit_environment.settings.Submit.reconcile_list = str(new_file)
 
     p4_submit_environment.run()
-    assert text in p4_file.read()
+    assert text in p4_file.read_text()
 
 
 def test_p4_error_files_in_default_and_reverted(p4_submit_environment: P4TestEnvironment):
@@ -73,8 +73,8 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment: P4TestEnv
     p4_submit_environment.settings.Submit.reconcile_list = str(new_file)
 
     p4_submit_environment.run(expect_failure=True)
-    assert text_default in p4_file.read()
-    assert text_new in new_file.read()
+    assert text_default in p4_file.read_text()
+    assert text_new in new_file.read_text()
 
 
 class SubmitterParameters:
