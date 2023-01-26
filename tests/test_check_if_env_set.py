@@ -1,7 +1,7 @@
 # pylint: disable = redefined-outer-name
 
 import os
-from typing import Optional
+from typing import Optional, List
 import pytest
 
 from universum.configuration_support import Configuration
@@ -180,7 +180,7 @@ def assert_equal_multiplication(expected: list, env_vars: Optional[dict] = None)
     var1 = Configuration([dict(if_env_set="VAR_1 == value_1"), dict(if_env_set="VAR_2 == value_2")])
     var2 = Configuration([dict(if_env_set=" && VAR_3 == value_3")])
     configs = var1 * var2
-    result = list(filter(check_if_env_set, configs.all()))
+    result: List[Configuration] = list(filter(check_if_env_set, configs.all()))
     assert expected == result
 
 

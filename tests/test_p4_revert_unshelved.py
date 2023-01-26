@@ -25,7 +25,7 @@ class DiffParameters:
         settings.PerforceVcs.user = perforce_workspace.server.user
         settings.PerforceVcs.password = perforce_workspace.server.password
         settings.Output.type = "term"
-        settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory + "/../new_workspace")
+        settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory) + "/../new_workspace"
         settings.PerforceWithMappings.mappings = [self.perforce_workspace.depot + " /..."]
         settings.PerforceMainVcs.force_clean = True
         settings.PerforceMainVcs.client = "new_client"
