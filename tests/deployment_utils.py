@@ -3,6 +3,7 @@
 import getpass
 import os
 import shutil
+import pathlib
 from pwd import getpwnam
 
 import docker
@@ -155,16 +156,16 @@ def clean_execution_environment(request):
 
 
 class LocalSources(utils.BaseVcsClient):
-    def __init__(self, root_directory: py.path.local, repo_file: py.path.local):
+    def __init__(self, root_directory: pathlib.Path, repo_file: pathlib.Path):
         super().__init__()
         self.root_directory = root_directory
         self.repo_file = repo_file
 
 
 @pytest.fixture()
-def local_sources(tmp_path: py.path.local):
+def local_sources(tmp_path: pathlib.Path):
     if utils.reuse_docker_containers():
-        source_dir = py.path.local(".work")
+        source_dir = pathlib.Path(".work")
         try:
             shutil.rmtree(str(source_dir), ignore_errors=True)
         except OSError:

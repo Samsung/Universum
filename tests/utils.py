@@ -5,6 +5,7 @@ import random
 import socket
 import string
 import sys
+import pathlib
 from typing import Type
 
 from docker.models.containers import Container
@@ -110,8 +111,8 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 class BaseVcsClient:
     def __init__(self) -> None:
-        self.root_directory: py.path.local
-        self.repo_file: py.path.local
+        self.root_directory: pathlib.Path
+        self.repo_file: pathlib.Path
 
     def get_last_change(self):
         pass
@@ -191,8 +192,8 @@ class HttpChecker:
 
 
 class BaseTestEnvironment:
-    def __init__(self, client: BaseVcsClient, directory: py.path.local, test_type: str, db_file: str):
-        self.temp_dir: py.path.local = directory
+    def __init__(self, client: BaseVcsClient, directory: pathlib.Path, test_type: str, db_file: str):
+        self.temp_dir: pathlib.Path = directory
         self.vcs_client = client
         self.settings: ModuleNamespace = create_empty_settings(test_type)
 

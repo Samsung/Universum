@@ -5,6 +5,7 @@ from typing import Callable, Union
 import shutil
 import py
 import pytest
+import pathlib
 
 from . import utils
 from .conftest import FuzzyCallChecker
@@ -13,7 +14,7 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: pathlib.Path):
     yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="submit")
 
 
@@ -112,7 +113,7 @@ def submit_parameters(stdout_checker: FuzzyCallChecker):
 
 
 @pytest.fixture(params=["git", "p4"])
-def submit_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmp_path: py.path.local):
+def submit_environment(request, perforce_workspace: PerforceWorkspace, git_client: GitClient, tmp_path: pathlib.Path):
     if request.param == "git":
         yield GitTestEnvironment(git_client, tmp_path, test_type="submit")
     else:

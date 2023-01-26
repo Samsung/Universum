@@ -3,6 +3,7 @@
 import py
 import pytest
 import shutil
+import pathlib
 
 from universum import __main__
 from .conftest import FuzzyCallChecker
@@ -10,7 +11,7 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: pathlib.Path):
     yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="main")
 
 

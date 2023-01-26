@@ -1,6 +1,7 @@
 import inspect
 import os
 import re
+import pathlib
 from typing import List
 
 import py
@@ -281,7 +282,7 @@ def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
-def test_code_report_extended_arg_search(tmp_path: py.path.local, stdout_checker: FuzzyCallChecker):
+def test_code_report_extended_arg_search(tmp_path: pathlib.Path, stdout_checker: FuzzyCallChecker):
     env = utils.LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmp_path)
@@ -304,7 +305,7 @@ configs = Configuration([dict(name="Run static pylint", code_report=True, artifa
     assert os.path.exists(os.path.join(env.settings.ArtifactCollector.artifact_dir, "Run_static_pylint.json"))
 
 
-def test_code_report_extended_arg_search_embedded(tmp_path: py.path.local, stdout_checker: FuzzyCallChecker):
+def test_code_report_extended_arg_search_embedded(tmp_path: pathlib.Path, stdout_checker: FuzzyCallChecker):
     env = utils.LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmp_path)

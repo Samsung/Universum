@@ -3,6 +3,7 @@
 import git
 import py
 import pytest
+import pathlib
 
 from . import utils
 from .git_utils import GitClient, GitTestEnvironment
@@ -10,7 +11,7 @@ from .perforce_utils import PerforceWorkspace, P4TestEnvironment
 
 
 @pytest.fixture
-def unicode_dir(tmp_path: py.path.local):
+def unicode_dir(tmp_path: pathlib.Path):
     unicode_dir_path = tmp_path.joinpath("Юніко́д з пробелами")
     unicode_dir_path.mkdir()
     yield unicode_dir_path
@@ -18,7 +19,7 @@ def unicode_dir(tmp_path: py.path.local):
 
 @pytest.mark.parametrize("vcs", ["git", "p4"])
 @pytest.mark.parametrize("test_type", ["main", "poll", "submit"])
-def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_client: GitClient, unicode_dir: py.path.local):
+def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_client: GitClient, unicode_dir: pathlib.Path):
     env: utils.BaseTestEnvironment
     if vcs == "git":
         # change git client root dir to unicode path
@@ -50,7 +51,7 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
     env.run()
 
 
-def test_unicode_main_local_vcs(unicode_dir: py.path.local):
+def test_unicode_main_local_vcs(unicode_dir: pathlib.Path):
     work_dir = unicode_dir.joinpath("local_sources")
     work_dir.mkdir()
     work_dir.joinpath("source_file").write("Source file contents")

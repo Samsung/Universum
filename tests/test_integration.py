@@ -3,6 +3,7 @@ import signal
 import subprocess
 import time
 import shutil
+import pathlib
 from typing import Any
 
 import py
@@ -334,7 +335,7 @@ configs = upper * lower
 
 
 @pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
-def test_abort(local_sources: LocalSources, tmp_path: py.path.local, terminate_type):
+def test_abort(local_sources: LocalSources, tmp_path: pathlib.Path, terminate_type):
     config = """
 from universum.configuration_support import Configuration
 
@@ -354,7 +355,7 @@ configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
         assert process.wait(5) == 3
 
 
-def test_exit_code(local_sources: LocalSources, tmp_path: py.path.local):
+def test_exit_code(local_sources: LocalSources, tmp_path: pathlib.Path):
     config = """
 from universum.configuration_support import Configuration
 

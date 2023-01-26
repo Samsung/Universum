@@ -3,6 +3,7 @@
 from typing import Optional
 import py
 import pytest
+import pathlib
 
 from .conftest import FuzzyCallChecker
 from .git_utils import GitTestEnvironment, GitClient, GitServer
@@ -10,7 +11,7 @@ from .utils import HttpChecker
 
 
 @pytest.fixture()
-def git_poll_environment(git_client: GitClient, tmp_path: py.path.local):
+def git_poll_environment(git_client: GitClient, tmp_path: pathlib.Path):
     yield GitTestEnvironment(git_client, tmp_path, test_type="poll")
 
 

@@ -1,6 +1,7 @@
 # pylint: disable = redefined-outer-name
 
 import os
+import pathlib
 from time import sleep
 
 import git
@@ -13,11 +14,11 @@ from . import utils
 
 
 class GitServer:
-    def __init__(self, working_directory: py.path.local, branch_name: str):
+    def __init__(self, working_directory: pathlib.Path, branch_name: str):
         self.target_branch: str = branch_name
         self.target_file: str = "readme.txt"
 
-        self._working_directory: py.path.local = working_directory
+        self._working_directory: pathlib.Path = working_directory
         self._repo: git.Repo = git.Repo.init(working_directory)
         self._repo.daemon_export = True
         self._daemon_started: bool = False
@@ -42,7 +43,7 @@ class GitServer:
         with self._repo.config_writer() as configurator:
             configurator.set_value("user", "name", "Testing user")
             configurator.set_value("user", "email", "some@email.com")
-        self._file: py.path.local = self._working_directory.joinpath(self.target_file)
+        self._file: pathlib.Path = self._working_directory.joinpath(self.target_file)
         self._file.write("")
 
         self._repo.index.add([str(self._file)])
@@ -104,7 +105,7 @@ class GitServer:
 
 
 @pytest.fixture()
-def git_server(tmp_path: py.path.local):
+def git_server(tmp_path: pathlib.Path):
     directory = tmp_path.joinpath("server")
     directory.mkdir()
     server = GitServer(directory, "testing")
@@ -115,7 +116,7 @@ def git_server(tmp_path: py.path.local):
 
 
 class GitClient(utils.BaseVcsClient):
-    def __init__(self, git_server: GitServer, directory: py.path.local):
+    def __init__(self, git_server: GitServer, directory: pathlib.Path):
         super().__init__()
 
         class Progress(RemoteProgress):
@@ -124,7 +125,7 @@ class GitClient(utils.BaseVcsClient):
 
         self.server: GitServer = git_server
         self.logger: Progress = Progress()
-        self.root_directory: py.path.local = directory.joinpath("client")
+        self.root_directory: pathlib.Path = directory.joinpath("client")
         self.root_directory.mkdir()
         self.repo: git.Repo = git.Repo.clone_from(git_server.url, self.root_directory)
         self.repo_file = self.root_directory.joinpath(git_server.target_file)
@@ -146,12 +147,12 @@ class GitClient(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def git_client(git_server: GitServer, tmp_path: py.path.local):
+def git_client(git_server: GitServer, tmp_path: pathlib.Path):
     yield GitClient(git_server, tmp_path)
 
 
 class GitTestEnvironment(utils.BaseTestEnvironment):
-    def __init__(self, client: GitClient, directory: py.path.local, test_type: str):
+    def __init__(self, client: GitClient, directory: pathlib.Path, test_type: str):
         db_file = directory.joinpath("gitpoll.json")
         super().__init__(client, directory, test_type, str(db_file))
         self.vcs_client: GitClient

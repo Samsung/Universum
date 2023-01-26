@@ -2,6 +2,7 @@
 
 import pytest
 import py
+import pathlib
 
 from universum.modules.vcs.github_vcs import GithubToken
 from .conftest import FuzzyCallChecker
@@ -45,7 +46,7 @@ class GithubHandlerEnvironment(BaseTestEnvironment):
 }"""
     check_run_url: str = "http://localhost/"
 
-    def __init__(self, directory: py.path.local):
+    def __init__(self, directory: pathlib.Path):
         super().__init__(BaseVcsClient(), directory, "github-handler", "")
 
         self.settings.GithubHandler.payload = "{}"
@@ -57,7 +58,7 @@ class GithubHandlerEnvironment(BaseTestEnvironment):
 
 
 @pytest.fixture()
-def github_handler_environment(tmp_path: py.path.local):
+def github_handler_environment(tmp_path: pathlib.Path):
     yield GithubHandlerEnvironment(tmp_path)
 
 

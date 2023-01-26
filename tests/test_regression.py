@@ -3,6 +3,7 @@
 import py
 import pytest
 import P4
+import pathlib
 
 from . import utils
 from .conftest import FuzzyCallChecker
@@ -42,7 +43,7 @@ def test_teardown_fixture_output_verification(print_text_on_teardown: None):
 
 
 @pytest.mark.parametrize("should_not_execute", [True, False], ids=['no-sources', 'deleted-sources'])
-def test_clean_sources_exception(tmp_path: py.path.local, stdout_checker: FuzzyCallChecker, should_not_execute):
+def test_clean_sources_exception(tmp_path: pathlib.Path, stdout_checker: FuzzyCallChecker, should_not_execute):
     env = LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
     source_directory = tmp_path
@@ -84,7 +85,7 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.path.local):
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: pathlib.Path):
     yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="main")
 
 
