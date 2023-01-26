@@ -1,8 +1,8 @@
 # pylint: disable = redefined-outer-name
 
 from typing import Optional
-import pytest
 import pathlib
+import pytest
 
 from .conftest import FuzzyCallChecker
 from .git_utils import GitTestEnvironment, GitClient, GitServer

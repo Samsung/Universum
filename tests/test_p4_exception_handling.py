@@ -1,9 +1,9 @@
 # pylint: disable = redefined-outer-name
 
 import os
-import pytest
 import shutil
 import pathlib
+import pytest
 
 from universum import __main__
 from .conftest import FuzzyCallChecker

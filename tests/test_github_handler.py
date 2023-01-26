@@ -1,7 +1,7 @@
 # pylint: disable = redefined-outer-name, abstract-method
 
-import pytest
 import pathlib
+import pytest
 
 from universum.modules.vcs.github_vcs import GithubToken
 from .conftest import FuzzyCallChecker

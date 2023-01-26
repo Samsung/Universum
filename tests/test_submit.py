@@ -3,8 +3,8 @@
 import os
 from typing import Callable, Union
 import shutil
-import pytest
 import pathlib
+import pytest
 
 from . import utils
 from .conftest import FuzzyCallChecker

@@ -1,8 +1,8 @@
 # pylint: disable = redefined-outer-name
 
+import pathlib
 import git
 import pytest
-import pathlib
 
 from . import utils
 from .git_utils import GitClient, GitTestEnvironment

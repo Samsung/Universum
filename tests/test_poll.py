@@ -1,8 +1,8 @@
 # pylint: disable = redefined-outer-name
 
 from typing import Union
-import pytest
 import pathlib
+import pytest
 
 from universum import __main__
 from .conftest import FuzzyCallChecker

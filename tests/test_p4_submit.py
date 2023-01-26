@@ -1,7 +1,7 @@
 # pylint: disable = redefined-outer-name
 
-import pytest
 import pathlib
+import pytest
 
 from . import utils
 from .perforce_utils import P4TestEnvironment, PerforceWorkspace
