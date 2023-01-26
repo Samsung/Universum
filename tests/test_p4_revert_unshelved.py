@@ -61,7 +61,8 @@ def diff_parameters(perforce_workspace: PerforceWorkspace):
 
 def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     p4 = diff_parameters.perforce_workspace.p4
-    test_dir = diff_parameters.perforce_workspace.root_directory.ensure("test_files", dir=True)
+    test_dir = diff_parameters.perforce_workspace.root_directory.joinpath("test_files")
+    test_dir.mkdir()
 
     def create_file(filename):
         cur_file = test_dir.joinpath(filename)

@@ -169,7 +169,7 @@ def local_sources(tmp_path: py.path.local):
             shutil.rmtree(str(source_dir), ignore_errors=True)
         except OSError:
             pass
-        source_dir.ensure(dir=True)
+        source_dir.mkdir()
 
     else:
         source_dir = tmp_path.joinpath("project_sources")
