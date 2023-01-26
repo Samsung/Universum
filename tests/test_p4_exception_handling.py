@@ -2,6 +2,7 @@
 
 import py
 import pytest
+import shutil
 
 from universum import __main__
 from .conftest import FuzzyCallChecker
@@ -27,7 +28,7 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
     result = __main__.run(perforce_environment.settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
     perforce_environment.temp_dir.chmod(0o0777, rec=1)
-    perforce_environment.temp_dir.remove(rec=1)
+    shutil.rmtree(str(perforce_environment.temp_dir))
 
     assert result == 0
 

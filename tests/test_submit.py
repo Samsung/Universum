@@ -155,7 +155,7 @@ def test_success_commit_add_modify_remove_one_file(submit_parameters: Callable,
     assert parameters.text_in_file(text, file_path)
 
     # Delete a file
-    temp_file.remove()
+    temp_file.unlink()
     parameters.assert_submit_success([file_path])
     assert not parameters.file_present(file_path)
 

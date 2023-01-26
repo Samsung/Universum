@@ -2,6 +2,7 @@ import os
 import signal
 import subprocess
 import time
+import shutil
 from typing import Any
 
 import py
@@ -371,7 +372,8 @@ configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
 
         assert process.wait() == 0
 
-    tmp_path.joinpath("artifacts").remove(rec=True)
+    artifacts_dir = tmp_path.joinpath("artifacts")
+    shutil.rmtree(str(artifacts_dir))
     with subprocess.Popen([python(), "-m", "universum", "--fail-unsuccessful",
                            "-o", "console", "-st", "local", "-vt", "none",
                            "-pr", str(tmp_path.joinpath("project_root")),

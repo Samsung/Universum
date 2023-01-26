@@ -2,6 +2,7 @@
 
 import getpass
 import os
+import shutil
 from pwd import getpwnam
 
 import docker
@@ -165,7 +166,7 @@ def local_sources(tmp_path: py.path.local):
     if utils.reuse_docker_containers():
         source_dir = py.path.local(".work")
         try:
-            source_dir.remove(rec=1, ignore_errors=True)
+            shutil.rmtree(str(source_dir), ignore_errors=True)
         except OSError:
             pass
         source_dir.ensure(dir=True)
