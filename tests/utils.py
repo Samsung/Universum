@@ -209,14 +209,14 @@ class BaseTestEnvironment:
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = str(self.vcs_client.root_directory)
         elif test_type in ("main", "nonci"):
-            self.configs_file = self.temp_dir.join("configs.py")
+            self.configs_file = self.temp_dir.joinpath("configs.py")
             self.configs_file.write(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
             self.artifact_dir = self.temp_dir.joinpath("artifacts")
             self.artifact_dir.mkdir()
             self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
             # The project_root directory must not exist before launching main
-            self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
+            self.settings.ProjectDirectory.project_root = str(self.temp_dir.joinpath("project_root"))
             if test_type == "nonci":
                 nonci_dir = self.temp_dir.joinpath("project_root")
                 nonci_dir.mkdir()

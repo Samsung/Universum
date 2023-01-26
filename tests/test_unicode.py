@@ -43,7 +43,7 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
         assert False, "Unsupported vcs type"
 
     if test_type == "submit":
-        temp_file = env.vcs_client.root_directory.join(utils.randomize_name("new_file") + ".txt")
+        temp_file = env.vcs_client.root_directory.joinpath(utils.randomize_name("new_file") + ".txt")
         temp_file.write("This is a new file" + "\n")
         env.settings.Submit.reconcile_list = str(temp_file)
 
@@ -53,7 +53,7 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
 def test_unicode_main_local_vcs(unicode_dir: py.path.local):
     work_dir = unicode_dir.joinpath("local_sources")
     work_dir.mkdir()
-    work_dir.join("source_file").write("Source file contents")
+    work_dir.joinpath("source_file").write("Source file contents")
 
     env = utils.LocalTestEnvironment(unicode_dir, "main")
     env.settings.Vcs.type = "none"

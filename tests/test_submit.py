@@ -21,7 +21,7 @@ def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: py.pa
 def test_p4_error_forbidden_branch(p4_submit_environment: P4TestEnvironment, branch: str):
     protected_dir = p4_submit_environment.vcs_client.root_directory.joinpath(branch)
     protected_dir.mkdir()
-    file_to_add = protected_dir.join(utils.randomize_name("new_file") + ".txt")
+    file_to_add = protected_dir.joinpath(utils.randomize_name("new_file") + ".txt")
     text = "This is a new line in the file"
     file_to_add.write(text + "\n")
 
@@ -46,7 +46,7 @@ def test_p4_success_files_in_default(p4_submit_environment: P4TestEnvironment):
 
     # This file should be successfully submitted
     file_name = utils.randomize_name("new_file") + ".txt"
-    new_file = p4_submit_environment.vcs_client.root_directory.join(file_name)
+    new_file = p4_submit_environment.vcs_client.root_directory.joinpath(file_name)
     new_file.write("This is a new file" + "\n")
 
     p4_submit_environment.settings.Submit.reconcile_list = str(new_file)
@@ -66,7 +66,7 @@ def test_p4_error_files_in_default_and_reverted(p4_submit_environment: P4TestEnv
     # This file must fail submit and remain unchanged while not checked out any more
     protected_dir = p4_submit_environment.vcs_client.root_directory.joinpath("write-protected")
     protected_dir.mkdir()
-    new_file = protected_dir.join(utils.randomize_name("new_file") + ".txt")
+    new_file = protected_dir.joinpath(utils.randomize_name("new_file") + ".txt")
     text_new = "This is a new line in the file"
     new_file.write(text_new + "\n")
 
@@ -140,7 +140,7 @@ def test_success_commit_add_modify_remove_one_file(submit_parameters: Callable,
     parameters = submit_parameters(submit_environment)
 
     file_name = utils.randomize_name("new_file") + ".txt"
-    temp_file = parameters.environment.vcs_client.root_directory.join(file_name)
+    temp_file = parameters.environment.vcs_client.root_directory.joinpath(file_name)
     file_path = str(temp_file)
 
     # Add a file
@@ -165,7 +165,7 @@ def test_success_ignore_new_and_deleted_while_edit_only(submit_parameters: Calla
     parameters = submit_parameters(submit_environment)
 
     new_file_name = utils.randomize_name("new_file") + ".txt"
-    temp_file = parameters.environment.vcs_client.root_directory.join(new_file_name)
+    temp_file = parameters.environment.vcs_client.root_directory.joinpath(new_file_name)
     temp_file.write("This is a new temp file" + "\n")
     deleted_file_path = str(parameters.environment.vcs_client.repo_file)
     deleted_file_name = os.path.basename(deleted_file_path)
@@ -212,13 +212,13 @@ def test_success_reconcile_directory(submit_parameters: Callable,
     tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(dir_name)
     tmp_dir.mkdir()
     for i in range(0, 9):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/"])
 
     for i in range(0, 9):
-        file_path = tmp_dir.join(f"new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert parameters.file_present(str(file_path))
 
     # Create and reconcile a directory in a directory
@@ -233,13 +233,13 @@ def test_success_reconcile_directory(submit_parameters: Callable,
     # Modify some vcs
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/"], edit_only=True)
 
     for i in range(0, 9, 2):
-        file_path = tmp_dir.join(f"/new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"/new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
     parameters.environment.settings.Submit.edit_only = False
 
@@ -262,23 +262,23 @@ def test_success_reconcile_wildcard(submit_parameters: Callable,
     inner_dir.mkdir()
     text = "This is some file" + "\n"
     for i in range(0, 9):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text)
-        tmp_file = tmp_dir.join(f"another_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"another_file{i}.txt")
         tmp_file.write(text)
-        tmp_file = inner_dir.join(f"new_file{i}.txt")
+        tmp_file = inner_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text)
 
     parameters.assert_submit_success([str(tmp_dir) + "/new_file*.txt"])
 
     for i in range(0, 9):
         file_name = f"new_file{i}.txt"
-        file_path = tmp_dir.join(file_name)
+        file_path = tmp_dir.joinpath(file_name)
         assert parameters.file_present(str(file_path))
-        file_path = inner_dir.join(file_name)
+        file_path = inner_dir.joinpath(file_name)
         assert not parameters.file_present(str(file_path))
         file_name = f"another_file{i}.txt"
-        file_path = tmp_dir.join(file_name)
+        file_path = tmp_dir.joinpath(file_name)
         assert not parameters.file_present(str(file_path))
 
     # Create one more directory
@@ -286,79 +286,79 @@ def test_success_reconcile_wildcard(submit_parameters: Callable,
     other_tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(other_dir_name)
     other_tmp_dir.mkdir()
     for i in range(0, 9):
-        tmp_file = other_tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = other_tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
 
     parameters.assert_submit_success([str(parameters.environment.vcs_client.root_directory) + "/new_directory*/"])
 
     for i in range(0, 9):
         file_name = f"new_file{i}.txt"
-        file_path = other_tmp_dir.join(file_name)
+        file_path = other_tmp_dir.joinpath(file_name)
         assert parameters.file_present(str(file_path))
-        file_path = inner_dir.join(file_name)
+        file_path = inner_dir.joinpath(file_name)
         assert parameters.file_present(str(file_path))
         file_name = f"another_file{i}.txt"
-        file_path = tmp_dir.join(file_name)
+        file_path = tmp_dir.joinpath(file_name)
         assert parameters.file_present(str(file_path))
 
     # Modify some vcs
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 2):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = inner_dir.join(f"new_file{i}.txt")
+        tmp_file = inner_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = tmp_dir.join(f"another_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"another_file{i}.txt")
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/new_file*.txt"], edit_only=True)
 
     for i in range(0, 9, 2):
-        file_path = tmp_dir.join(f"/new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"/new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = inner_dir.join(f"/new_file{i}.txt")
+        file_path = inner_dir.joinpath(f"/new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join(f"/another_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"/another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
 
     # Test subdirectory wildcard
     text = utils.randomize_name("This is change ")
     for i in range(1, 9, 2):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = inner_dir.join(f"new_file{i}.txt")
+        tmp_file = inner_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = tmp_dir.join(f"another_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"another_file{i}.txt")
         tmp_file.write(text + "\n")
 
     parameters.assert_submit_success([str(tmp_dir) + "/*/*.txt"])
 
     for i in range(1, 9, 2):
-        file_path = inner_dir.join(f"new_file{i}.txt")
+        file_path = inner_dir.joinpath(f"new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join(f"new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join(f"another_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
 
     # Test edit-only subdirectory wildcard
     text = utils.randomize_name("This is change ")
     for i in range(0, 9, 3):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = inner_dir.join(f"new_file{i}.txt")
+        tmp_file = inner_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write(text + "\n")
-        tmp_file = tmp_dir.join("another_file{i}.txt")
+        tmp_file = tmp_dir.joinpath("another_file{i}.txt")
         tmp_file.write(text + "\n")
 
         parameters.assert_submit_success([str(tmp_dir) + "/*/*.txt"], edit_only=True)
 
     for i in range(0, 9, 3):
-        file_path = inner_dir.join(f"new_file{i}.txt")
+        file_path = inner_dir.joinpath(f"new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join(f"new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.join(f"another_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
     parameters.environment.settings.Submit.edit_only = False
 
@@ -380,19 +380,19 @@ def test_success_reconcile_partial(submit_parameters: Callable,
     tmp_dir = parameters.environment.vcs_client.root_directory.joinpath(dir_name)
     tmp_dir.mkdir()
     for i in range(0, 9):
-        tmp_file = tmp_dir.join(f"new_file{i}.txt")
+        tmp_file = tmp_dir.joinpath(f"new_file{i}.txt")
         tmp_file.write("This is some file" + "\n")
 
-    reconcile_list = [str(tmp_dir.join(f"new_file{i}.txt")) for i in range(0, 4)]
+    reconcile_list = [str(tmp_dir.joinpath(f"new_file{i}.txt")) for i in range(0, 4)]
     reconcile_list.extend(["", " ", "\n"])
     parameters.assert_submit_success(reconcile_list)
 
     for i in range(0, 4):
-        file_path = tmp_dir.join(f"new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert parameters.file_present(str(file_path))
 
     for i in range(5, 9):
-        file_path = tmp_dir.join(f"new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert not parameters.file_present(str(file_path))
 
     # Delete a directory

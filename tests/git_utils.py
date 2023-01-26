@@ -42,7 +42,7 @@ class GitServer:
         with self._repo.config_writer() as configurator:
             configurator.set_value("user", "name", "Testing user")
             configurator.set_value("user", "email", "some@email.com")
-        self._file: py.path.local = self._working_directory.join(self.target_file)
+        self._file: py.path.local = self._working_directory.joinpath(self.target_file)
         self._file.write("")
 
         self._repo.index.add([str(self._file)])
@@ -68,7 +68,7 @@ class GitServer:
     def commit_new_file(self) -> str:
         """ Make a mergeble commit """
         self._commit_count += 1
-        test_file = self._working_directory.join(f"test{self._commit_count}.txt")
+        test_file = self._working_directory.joinpath(f"test{self._commit_count}.txt")
         test_file.write(f"Commit number #{self._commit_count}")
         self._repo.index.add([str(test_file)])
         return str(self._repo.index.commit(f"Add file {self._commit_count}"))
@@ -127,7 +127,7 @@ class GitClient(utils.BaseVcsClient):
         self.root_directory: py.path.local = directory.joinpath("client")
         self.root_directory.mkdir()
         self.repo: git.Repo = git.Repo.clone_from(git_server.url, self.root_directory)
-        self.repo_file = self.root_directory.join(git_server.target_file)
+        self.repo_file = self.root_directory.joinpath(git_server.target_file)
 
     def get_last_change(self) -> str:
         changes = self.repo.git.log("origin/" + self.server.target_branch, pretty="oneline", max_count=1)
@@ -152,7 +152,7 @@ def git_client(git_server: GitServer, tmp_path: py.path.local):
 
 class GitTestEnvironment(utils.BaseTestEnvironment):
     def __init__(self, client: GitClient, directory: py.path.local, test_type: str):
-        db_file = directory.join("gitpoll.json")
+        db_file = directory.joinpath("gitpoll.json")
         super().__init__(client, directory, test_type, str(db_file))
         self.vcs_client: GitClient
 

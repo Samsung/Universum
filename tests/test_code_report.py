@@ -157,7 +157,7 @@ def test_code_report_direct_log(runner_with_analyzers: UniversumRunner, tested_c
     for idx, tested_content in enumerate(tested_contents):
         prelim_report = "report_file_" + str(idx)
         full_report = "${CODE_REPORT_FILE}"
-        runner_with_analyzers.local.root_directory.join(prelim_report).write(tested_content)
+        runner_with_analyzers.local.root_directory.joinpath(prelim_report).write(tested_content)
         config.add_cmd("Report " + str(idx), f"[\"bash\", \"-c\", \"cat './{prelim_report}' >> '{full_report}'\"]",
                        step_config)
     log = runner_with_analyzers.run(config.finalize())
@@ -187,13 +187,13 @@ def test_code_report_log(runner_with_analyzers: UniversumRunner, analyzers, extr
         "--result-file", "${CODE_REPORT_FILE}",
         "--files", "source_file",
     ]
-    runner_with_analyzers.local.root_directory.join("source_file").write(tested_content)
+    runner_with_analyzers.local.root_directory.joinpath("source_file").write(tested_content)
     config = ConfigData()
     for analyzer in analyzers:
         args = common_args + extra_args
         if analyzer == 'uncrustify':
             args += ["--cfg-file", "cfg"]
-            runner_with_analyzers.local.root_directory.join("cfg").write(config_uncrustify)
+            runner_with_analyzers.local.root_directory.joinpath("cfg").write(config_uncrustify)
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
@@ -241,7 +241,7 @@ def test_analyzer_python_version_params(runner_with_analyzers: UniversumRunner, 
      "Target and source folders for uncrustify are not allowed to match"],
 ])
 def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyzer, arg_set, expected_log):
-    source_file = runner_with_analyzers.local.root_directory.join("source_file")
+    source_file = runner_with_analyzers.local.root_directory.joinpath("source_file")
     source_file.write(source_code_python)
 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
@@ -261,9 +261,9 @@ def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyz
 def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
                               extra_args, tested_content, expected_success, expected_artifact):
     root = runner_with_analyzers.local.root_directory
-    source_file = root.join("source_file")
+    source_file = root.joinpath("source_file")
     source_file.write(tested_content)
-    root.join("cfg").write(config_uncrustify)
+    root.joinpath("cfg").write(config_uncrustify)
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
         "--files", "source_file",

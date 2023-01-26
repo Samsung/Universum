@@ -306,7 +306,7 @@ def test_empty_required_params(docker_main_with_vcs: UniversumRunner, url_error_
 
 
 def test_environment(docker_main_and_nonci: UniversumRunner):
-    script = docker_main_and_nonci.local.root_directory.join("script.sh")
+    script = docker_main_and_nonci.local.root_directory.joinpath("script.sh")
     script.write("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
