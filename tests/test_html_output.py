@@ -47,7 +47,7 @@ log_name = "universum_log"
 
 def create_environment(test_type, tmp_path):
     env = utils.LocalTestEnvironment(tmp_path, test_type)
-    env.configs_file.write(config)
+    env.configs_file.write_text(config)
     env.settings.Output.html_log = log_name
     return env
 

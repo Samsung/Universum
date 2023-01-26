@@ -203,10 +203,10 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
         self.p4.run("add", str(self.nonwritable_file))
         self.p4.run("edit", str(self.nonwritable_file))
-        self.nonwritable_file.write("File " + str(self.nonwritable_file) + " has no special modifiers")
+        self.nonwritable_file.write_text("File " + str(self.nonwritable_file) + " has no special modifiers")
 
         self.p4.run("add", "-t", "+w", str(self.repo_file))
-        self.repo_file.write("File " + str(self.repo_file) + " is always writable")
+        self.repo_file.write_text("File " + str(self.repo_file) + " is always writable")
 
         change = self.p4.run_change("-o")[0]
         change["Description"] = "Test submit"
@@ -228,7 +228,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
     def create_file(self, file_name: str) -> pathlib.Path:
         p4_new_file = self.root_directory.joinpath(file_name)
-        p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
+        p4_new_file.write_text("This is unchanged line 1\nThis is unchanged line 2")
         self.p4.run("add", str(p4_new_file))
 
         change = self.p4.run_change("-o")[0]
@@ -249,7 +249,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
             shelve_cl = self.p4.save_change(change)[0].split()[1]
 
         self.p4.run_edit("-c", shelve_cl, str(file))
-        file.write(content)
+        file.write_text(content)
         self.p4.run_shelve("-fc", shelve_cl)
         self.p4.run_revert("-c", shelve_cl, str(file))
         return shelve_cl
@@ -275,7 +275,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
     def make_a_change(self) -> str:
         tmpfile = self.repo_file
         self.p4.run("edit", str(tmpfile))
-        tmpfile.write("Change #1 " + str(tmpfile))
+        tmpfile.write_text("Change #1 " + str(tmpfile))
 
         change = self.p4.run_change("-o")[0]
         change["Description"] = "Test submit #1"

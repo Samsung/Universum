@@ -24,7 +24,7 @@ def test_p4_file_diff(docker_main_with_vcs: UniversumRunner):
     p4_file = docker_main_with_vcs.perforce.repo_file
 
     p4.run_edit(p4_file)
-    p4_file.write("This line is added to the file.\n")
+    p4_file.write_text("This line is added to the file.\n")
     p4.run_move(p4_file, p4_directory.joinpath("some_new_file_name.txt"))
     change = p4.fetch_change()
     change["Description"] = "Rename basic config"
@@ -50,7 +50,7 @@ def test_multiple_p4_file_diff(docker_main_with_vcs: UniversumRunner):
 
     for index in range(0, 10000):
         new_file = p4_directory.joinpath(f"new_file_{index}.txt")
-        new_file.write(f"This is file #{index}\n")
+        new_file.write_text(f"This is file #{index}\n")
         p4.run_add(new_file)
     change = p4.fetch_change()
     change["Description"] = "Add 10000 files"
@@ -105,7 +105,7 @@ def test_multiple_git_file_diff(docker_main_with_vcs: UniversumRunner):
     files = []
     for index in range(0, 10000):
         new_file = git_directory.joinpath(f"new_file_{index}.txt")
-        new_file.write(f"This is file #{index}\n")
+        new_file.write_text(f"This is file #{index}\n")
         files.append(str(new_file))
     repo.index.add(files)
     change = repo.index.commit("Special commit for testing")

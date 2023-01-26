@@ -210,7 +210,7 @@ class BaseTestEnvironment:
             self.settings.ProjectDirectory.project_root = str(self.vcs_client.root_directory)
         elif test_type in ("main", "nonci"):
             self.configs_file = self.temp_dir.joinpath("configs.py")
-            self.configs_file.write(simple_test_config)
+            self.configs_file.write_text(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
             self.artifact_dir = self.temp_dir.joinpath("artifacts")
             self.artifact_dir.mkdir()

@@ -43,7 +43,7 @@ class GitServer:
             configurator.set_value("user", "name", "Testing user")
             configurator.set_value("user", "email", "some@email.com")
         self._file: pathlib.Path = self._working_directory.joinpath(self.target_file)
-        self._file.write("")
+        self._file.write_text("")
 
         self._repo.index.add([str(self._file)])
         self._repo.index.commit("initial commit")
@@ -57,7 +57,7 @@ class GitServer:
     def make_a_change(self) -> str:
         self._branch.checkout()
 
-        self._file.write("One more line\n")
+        self._file.write_text("One more line\n")
         self._commit_count += 1
 
         self._repo.index.add([str(self._file)])
@@ -69,7 +69,7 @@ class GitServer:
         """ Make a mergeble commit """
         self._commit_count += 1
         test_file = self._working_directory.joinpath(f"test{self._commit_count}.txt")
-        test_file.write(f"Commit number #{self._commit_count}")
+        test_file.write_text(f"Commit number #{self._commit_count}")
         self._repo.index.add([str(test_file)])
         return str(self._repo.index.commit(f"Add file {self._commit_count}"))
 

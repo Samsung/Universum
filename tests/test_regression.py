@@ -49,7 +49,7 @@ def test_clean_sources_exception(tmp_path: pathlib.Path, stdout_checker: FuzzyCa
     if should_not_execute:
         source_directory = source_directory / 'nonexisting_dir'
     env.settings.LocalMainVcs.source_dir = str(source_directory)
-    env.configs_file.write(f"""
+    env.configs_file.write_text(f"""
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Test configuration",

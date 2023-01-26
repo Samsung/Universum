@@ -28,7 +28,7 @@ def test_success_changing_checked_out_file(p4_submit_environment: P4TestEnvironm
     p4_submit_environment.vcs_client.p4.run("edit", str(target_file))
 
     text = utils.randomize_name("This is change ")
-    target_file.write(text + "\n")
+    target_file.write_text(text + "\n")
 
     change = p4_submit_environment.vcs_client.p4.run_change("-o")[0]
     change["Description"] = "Test submit"

@@ -244,14 +244,14 @@ configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.basena
     # Prepare SYNC_CHANGELIST
     sync_cl = p4.run_changes("-s", "submitted", "-m1", docker_main_with_vcs.perforce.depot)[0]["change"]
     p4.run_edit(docker_main_with_vcs.perforce.depot)
-    p4_file.write("This line shouldn't be in file.\n")
+    p4_file.write_text("This line shouldn't be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "Rename basic config"
     p4.run_submit(change)
 
     # Prepare SHELVE_CHANGELIST
     p4.run_edit(docker_main_with_vcs.perforce.depot)
-    p4_file.write("This line should be in file.\n")
+    p4_file.write_text("This line should be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
     shelve_cl = p4.save_change(change)[0].split()[1]
@@ -307,7 +307,7 @@ def test_empty_required_params(docker_main_with_vcs: UniversumRunner, url_error_
 
 def test_environment(docker_main_and_nonci: UniversumRunner):
     script = docker_main_and_nonci.local.root_directory.joinpath("script.sh")
-    script.write("""#!/bin/bash
+    script.write_text("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
     script.chmod(0o777)
@@ -341,7 +341,7 @@ from universum.configuration_support import Configuration
 configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
     config_file = tmp_path.joinpath("configs.py")
-    config_file.write(config)
+    config_file.write_text(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
@@ -361,7 +361,7 @@ from universum.configuration_support import Configuration
 configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
 """
     config_file = tmp_path.joinpath("configs.py")
-    config_file.write(config)
+    config_file.write_text(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",

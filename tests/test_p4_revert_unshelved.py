@@ -68,7 +68,7 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
         cur_file = test_dir.joinpath(filename)
         p4.run("add", str(cur_file))
         p4.run("edit", str(cur_file))
-        cur_file.write(f"import os\n\nprint('File {0} has no special modifiers.')\n"
+        cur_file.write_text(f"import os\n\nprint('File {0} has no special modifiers.')\n"
                        f"print(os.name)\nprint(os.getcwd())\nprint(os.strerror(3))\n"
                        f"print('File change type: {filename}')\n")
 
@@ -89,7 +89,7 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
         p4.run("edit", str(cur_file))
 
     # edit
-    test_dir.joinpath("edit").write(f"import os\n\nprint('File {test_dir.joinpath('edit')} has no special modifiers.')\n"
+    test_dir.joinpath("edit").write_text(f"import os\n\nprint('File {test_dir.joinpath('edit')} has no special modifiers.')\n"
                                 f"print(os.name)\nprint(os.getegid())\nprint(os.ctermid())\n"
                                 f"print('File change type: \"edit\"')\n")
 
@@ -105,7 +105,7 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     p4.run("delete", test_dir + "/delete")
     # add
     add = test_dir.joinpath("add")
-    add.write("\nprint('new file')\nprint('not in repo, only for shelve.')")
+    add.write_text("\nprint('new file')\nprint('not in repo, only for shelve.')")
     p4.run("add", add)
 
     # make change
