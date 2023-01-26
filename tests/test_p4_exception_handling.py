@@ -1,5 +1,6 @@
 # pylint: disable = redefined-outer-name
 
+import os
 import pytest
 import shutil
 import pathlib
@@ -27,7 +28,7 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
     perforce_environment.shelve_config(config)
     result = __main__.run(perforce_environment.settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
-    perforce_environment.temp_dir.chmod(0o0777)
+    os.system(f"chmod -R 777 {perforce_environment.temp_dir}")
     shutil.rmtree(str(perforce_environment.temp_dir))
 
     assert result == 0

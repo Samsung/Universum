@@ -94,15 +94,15 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
                                 f"print('File change type: \"edit\"')\n")
 
     # move, rename
-    p4.run("move", test_dir + "/move", test_dir + "/moved/move")
-    p4.run("rename", test_dir + "/rename", test_dir + "/renamed_rename")
+    p4.run("move", test_dir.joinpath("move"), test_dir.joinpath("moved/move"))
+    p4.run("rename", test_dir.joinpath("rename"), test_dir.joinpath("renamed_rename"))
     # integrate
-    p4.run("integrate", test_dir + "/integrate", test_dir + "/integrated")
+    p4.run("integrate", test_dir.joinpath("integrate"), test_dir.joinpath("integrated"))
     p4.run("resolve", "-at")
     # branch
-    p4.run("integrate", test_dir + "/branch", test_dir + "/moved/branch_to")
+    p4.run("integrate", test_dir.joinpath("branch"), test_dir.joinpath("moved/branch_to"))
     # delete
-    p4.run("delete", test_dir + "/delete")
+    p4.run("delete", test_dir.joinpath("delete"))
     # add
     add = test_dir.joinpath("add")
     add.write_text("\nprint('new file')\nprint('not in repo, only for shelve.')")

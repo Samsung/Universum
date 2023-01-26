@@ -239,7 +239,7 @@ def test_success_reconcile_directory(submit_parameters: Callable,
     parameters.assert_submit_success([str(tmp_dir) + "/"], edit_only=True)
 
     for i in range(0, 9, 2):
-        file_path = tmp_dir.joinpath(f"/new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
     parameters.environment.settings.Submit.edit_only = False
 
@@ -314,11 +314,11 @@ def test_success_reconcile_wildcard(submit_parameters: Callable,
     parameters.assert_submit_success([str(tmp_dir) + "/new_file*.txt"], edit_only=True)
 
     for i in range(0, 9, 2):
-        file_path = tmp_dir.joinpath(f"/new_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"new_file{i}.txt")
         assert parameters.text_in_file(text, str(file_path))
-        file_path = inner_dir.joinpath(f"/new_file{i}.txt")
+        file_path = inner_dir.joinpath(f"new_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
-        file_path = tmp_dir.joinpath(f"/another_file{i}.txt")
+        file_path = tmp_dir.joinpath(f"another_file{i}.txt")
         assert not parameters.text_in_file(text, str(file_path))
 
     # Test subdirectory wildcard
