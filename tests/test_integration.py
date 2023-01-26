@@ -21,7 +21,7 @@ def get_line_with_text(text: str, log: str) -> str:
 
 def test_minimal_execution(docker_main_and_nonci: UniversumRunner):
     log = docker_main_and_nonci.run(simple_test_config)
-    assert docker_main_and_nonci.local.repo_file.basename in log
+    assert docker_main_and_nonci.local.repo_file.name in log
 
 
 def test_artifacts(docker_main: UniversumRunner):
@@ -224,12 +224,12 @@ configs = Configuration([Step(name="Step one"),
 
 def test_minimal_git(docker_main_with_vcs: UniversumRunner):
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="git")
-    assert docker_main_with_vcs.git.repo_file.basename in log
+    assert docker_main_with_vcs.git.repo_file.name in log
 
 
 def test_minimal_p4(docker_main_with_vcs: UniversumRunner):
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="p4")
-    assert docker_main_with_vcs.perforce.repo_file.basename in log
+    assert docker_main_with_vcs.perforce.repo_file.name in log
 
 
 def test_p4_params(docker_main_with_vcs: UniversumRunner):
@@ -238,7 +238,7 @@ def test_p4_params(docker_main_with_vcs: UniversumRunner):
     config = f"""
 from universum.configuration_support import Configuration, Step
 
-configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.basename}"])])
+configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.name}"])])
 """
 
     # Prepare SYNC_CHANGELIST

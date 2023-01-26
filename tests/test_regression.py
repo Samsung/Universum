@@ -168,7 +168,7 @@ def perforce_environment_with_files(perforce_environment: P4TestEnvironment):
     yield {"env": perforce_environment, "files": files}
 
     for entry in files:
-        perforce_environment.vcs_client.delete_file(entry.basename)
+        perforce_environment.vcs_client.delete_file(entry.name)
 
 
 def test_success_p4_resolve_unshelved(perforce_environment_with_files: dict, stdout_checker: FuzzyCallChecker):
@@ -177,7 +177,7 @@ def test_success_p4_resolve_unshelved(perforce_environment_with_files: dict, std
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.name}'"])])
 """
     env.shelve_config(config)
     cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
@@ -195,7 +195,7 @@ def test_fail_p4_resolve_unshelved(perforce_environment_with_files: dict, stdout
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.name}'"])])
 """
     env.shelve_config(config)
     cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
@@ -204,7 +204,7 @@ configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p
 
     env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Problems during merge while resolving shelved CLs")
-    stdout_checker.assert_has_calls_with_param(str(p4_file.basename))
+    stdout_checker.assert_has_calls_with_param(str(p4_file.name))
 
 
 def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files: dict):
@@ -224,5 +224,5 @@ configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
 
     env.run()
     repo_state = env.artifact_dir.joinpath('REPOSITORY_STATE.txt').read()
-    assert p4_files[0].basename in repo_state
-    assert p4_files[1].basename in repo_state
+    assert p4_files[0].name in repo_state
+    assert p4_files[1].name in repo_state

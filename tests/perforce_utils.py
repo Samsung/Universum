@@ -333,4 +333,4 @@ class P4TestEnvironment(utils.BaseTestEnvironment):
         shelve_cl = self.vcs_client.shelve_file(self.vcs_client.repo_file, config)
         settings = self.settings
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-        settings.Launcher.config_path = self.vcs_client.repo_file.basename
+        settings.Launcher.config_path = self.vcs_client.repo_file.name
