@@ -166,7 +166,7 @@ def local_sources(tmp_path: pathlib.Path):
     if utils.reuse_docker_containers():
         source_dir = pathlib.Path(".work")
         try:
-            shutil.rmtree(str(source_dir), ignore_errors=True)
+            shutil.rmtree(source_dir, ignore_errors=True)
         except OSError:
             pass
         source_dir.mkdir()
