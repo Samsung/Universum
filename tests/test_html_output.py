@@ -299,8 +299,8 @@ def check_timestamps(body_element, universum_log_element):
 
 
 def check_cli(tmp_path, html_log_params):
-    artifact_dir = tmp_path.joinpath("artifacts")
-    config_file = tmp_path.joinpath("configs.py")
+    artifact_dir = tmp_path / "artifacts"
+    config_file = tmp_path / "configs.py"
     config_file.write_text(config, "utf-8")
 
     cli_params = ["-vt", "none",

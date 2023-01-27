@@ -13,7 +13,7 @@ from .utils import python, LocalTestEnvironment
 
 def test_which_universum_is_tested(docker_main: UniversumRunner, pytestconfig):
     # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
-    init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
+    init_file = pytestconfig.rootpath / "universum" / "__init__.py"
     backup = init_file.read_bytes()
     test_line = utils.randomize_name("THIS IS A TESTING VERSION")
     init_file.write_text(f"""__title__ = "Universum"
@@ -102,7 +102,7 @@ configs = Configuration([dict(name="This is a changed step name", command=["ls",
 """
     perforce_environment.shelve_config(config)
     perforce_environment.run()
-    diff = perforce_environment.artifact_dir.joinpath('REPOSITORY_DIFFERENCE.txt').read_text()
+    diff = (perforce_environment.artifact_dir / 'REPOSITORY_DIFFERENCE.txt').read_text()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
 
@@ -134,7 +134,7 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     perforce_environment.settings.Launcher.output = "file"
 
     perforce_environment.run()
-    log = perforce_environment.artifact_dir.joinpath(f'{step_name}_log.txt').read_text()
+    log = (perforce_environment.artifact_dir / f'{step_name}_log.txt').read_text()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
 
@@ -223,6 +223,6 @@ configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
     env.settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
 
     env.run()
-    repo_state = env.artifact_dir.joinpath('REPOSITORY_STATE.txt').read_text()
+    repo_state = (env.artifact_dir / 'REPOSITORY_STATE.txt').read_text()
     assert p4_files[0].name in repo_state
     assert p4_files[1].name in repo_state

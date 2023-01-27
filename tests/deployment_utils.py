@@ -172,9 +172,9 @@ def local_sources(tmp_path: pathlib.Path):
         source_dir.mkdir()
 
     else:
-        source_dir = tmp_path.joinpath("project_sources")
+        source_dir = tmp_path / "project_sources"
         source_dir.mkdir()
-    local_file = source_dir.joinpath("readme.txt")
+    local_file = source_dir / "readme.txt"
     local_file.write_text("This is a an empty file", encoding="utf-8")
 
     yield LocalSources(root_directory=source_dir, repo_file=local_file)

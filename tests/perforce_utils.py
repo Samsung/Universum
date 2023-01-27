@@ -179,11 +179,11 @@ def perforce_connection(request, docker_perforce: PerfoceDockerContainer):
 class PerforceWorkspace(utils.BaseVcsClient):
     def __init__(self, connection: PerforceConnection, directory: pathlib.Path):
         super().__init__()
-        self.root_directory = directory.joinpath("workspace")
+        self.root_directory = directory / "workspace"
         self.root_directory.mkdir()
-        self.repo_file = self.root_directory.joinpath("writeable_file.txt")
+        self.repo_file = self.root_directory / "writeable_file.txt"
 
-        self.nonwritable_file: pathlib.Path = self.root_directory.joinpath("usual_file.txt")
+        self.nonwritable_file: pathlib.Path = self.root_directory / "usual_file.txt"
 
         self.server: PerfoceDockerContainer = connection.server
         self.client_created: bool = False
@@ -227,7 +227,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
         self.p4.save_triggers(triggers)
 
     def create_file(self, file_name: str) -> pathlib.Path:
-        p4_new_file = self.root_directory.joinpath(file_name)
+        p4_new_file = self.root_directory / file_name
         p4_new_file.write_text("This is unchanged line 1\nThis is unchanged line 2")
         self.p4.run("add", str(p4_new_file))
 
@@ -305,7 +305,7 @@ def perforce_workspace(request, perforce_connection: PerforceConnection, tmp_pat
 
 class P4TestEnvironment(utils.BaseTestEnvironment):
     def __init__(self, perforce_workspace: PerforceWorkspace, directory: pathlib.Path, test_type: str):
-        db_file = directory.joinpath("p4poll.json")
+        db_file = directory / "p4poll.json"
         super().__init__(perforce_workspace, directory, test_type, str(db_file))
         self.vcs_client: PerforceWorkspace
 

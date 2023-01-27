@@ -61,11 +61,11 @@ def diff_parameters(perforce_workspace: PerforceWorkspace):
 
 def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     p4 = diff_parameters.perforce_workspace.p4
-    test_dir = diff_parameters.perforce_workspace.root_directory.joinpath("test_files")
+    test_dir = diff_parameters.perforce_workspace.root_directory / "test_files"
     test_dir.mkdir()
 
     def create_file(filename):
-        cur_file = test_dir.joinpath(filename)
+        cur_file = test_dir / filename
         p4.run("add", str(cur_file))
         p4.run("edit", str(cur_file))
         cur_file.write_text(f"import os\n\nprint('File {0} has no special modifiers.')\n"
@@ -85,26 +85,26 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     p4.run_submit(change)
 
     # open for edit for edit, move/add and move/rename files
-    for cur_file in [test_dir.joinpath("edit"), test_dir.joinpath("move"), test_dir.joinpath("rename")]:
+    for cur_file in [test_dir / "edit", test_dir / "move", test_dir / "rename"]:
         p4.run("edit", str(cur_file))
 
     # edit
-    test_dir.joinpath("edit").write_text(f"import os\n\nprint('File {test_dir.joinpath('edit')} has no special modifiers.')\n"
+    (test_dir / "edit").write_text(f"import os\n\nprint('File {test_dir / 'edit'} has no special modifiers.')\n"
                                 f"print(os.name)\nprint(os.getegid())\nprint(os.ctermid())\n"
                                 f"print('File change type: \"edit\"')\n")
 
     # move, rename
-    p4.run("move", test_dir.joinpath("move"), test_dir.joinpath("moved/move"))
-    p4.run("rename", test_dir.joinpath("rename"), test_dir.joinpath("renamed_rename"))
+    p4.run("move", test_dir / "move", test_dir / "moved/move")
+    p4.run("rename", test_dir / "rename", test_dir / "renamed_rename")
     # integrate
-    p4.run("integrate", test_dir.joinpath("integrate"), test_dir.joinpath("integrated"))
+    p4.run("integrate", test_dir / "integrate", test_dir / "integrated")
     p4.run("resolve", "-at")
     # branch
-    p4.run("integrate", test_dir.joinpath("branch"), test_dir.joinpath("moved/branch_to"))
+    p4.run("integrate", test_dir / "branch", test_dir / "moved/branch_to")
     # delete
-    p4.run("delete", test_dir.joinpath("delete"))
+    p4.run("delete", test_dir / "delete")
     # add
-    add = test_dir.joinpath("add")
+    add = test_dir / "add"
     add.write_text("\nprint('new file')\nprint('not in repo, only for shelve.')")
     p4.run("add", add)
 

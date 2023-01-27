@@ -42,7 +42,7 @@ class GitServer:
         with self._repo.config_writer() as configurator:
             configurator.set_value("user", "name", "Testing user")
             configurator.set_value("user", "email", "some@email.com")
-        self._file: pathlib.Path = self._working_directory.joinpath(self.target_file)
+        self._file: pathlib.Path = self._working_directory / self.target_file
         self._file.write_text("")
 
         self._repo.index.add([str(self._file)])
@@ -68,7 +68,7 @@ class GitServer:
     def commit_new_file(self) -> str:
         """ Make a mergeble commit """
         self._commit_count += 1
-        test_file = self._working_directory.joinpath(f"test{self._commit_count}.txt")
+        test_file = self._working_directory / f"test{self._commit_count}.txt"
         test_file.write_text(f"Commit number #{self._commit_count}")
         self._repo.index.add([str(test_file)])
         return str(self._repo.index.commit(f"Add file {self._commit_count}"))
@@ -105,7 +105,7 @@ class GitServer:
 
 @pytest.fixture()
 def git_server(tmp_path: pathlib.Path):
-    directory = tmp_path.joinpath("server")
+    directory = tmp_path / "server"
     directory.mkdir()
     server = GitServer(directory, "testing")
     try:
@@ -124,10 +124,10 @@ class GitClient(utils.BaseVcsClient):
 
         self.server: GitServer = git_server
         self.logger: Progress = Progress()
-        self.root_directory: pathlib.Path = directory.joinpath("client")
+        self.root_directory: pathlib.Path = directory / "client"
         self.root_directory.mkdir()
         self.repo: git.Repo = git.Repo.clone_from(git_server.url, self.root_directory)
-        self.repo_file = self.root_directory.joinpath(git_server.target_file)
+        self.repo_file = self.root_directory / git_server.target_file
 
     def get_last_change(self) -> str:
         changes = self.repo.git.log("origin/" + self.server.target_branch, pretty="oneline", max_count=1)
@@ -152,7 +152,7 @@ def git_client(git_server: GitServer, tmp_path: pathlib.Path):
 
 class GitTestEnvironment(utils.BaseTestEnvironment):
     def __init__(self, client: GitClient, directory: pathlib.Path, test_type: str):
-        db_file = directory.joinpath("gitpoll.json")
+        db_file = directory / "gitpoll.json"
         super().__init__(client, directory, test_type, str(db_file))
         self.vcs_client: GitClient
 

@@ -82,7 +82,7 @@ def check_empty_config_error(tmp_path, stdout_checker, cli_params):
 
 
 def get_config_file_path(tmp_path, text):
-    config_file = tmp_path.joinpath("configs.py")
+    config_file = tmp_path / "configs.py"
     config_file.write_text(text, "utf-8")
     return str(config_file)
 

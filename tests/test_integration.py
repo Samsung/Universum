@@ -306,7 +306,7 @@ def test_empty_required_params(docker_main_with_vcs: UniversumRunner, url_error_
 
 
 def test_environment(docker_main_and_nonci: UniversumRunner):
-    script = docker_main_and_nonci.local.root_directory.joinpath("script.sh")
+    script = docker_main_and_nonci.local.root_directory / "script.sh"
     script.write_text("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
@@ -340,13 +340,13 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
-    config_file = tmp_path.joinpath("configs.py")
+    config_file = tmp_path / "configs.py"
     config_file.write_text(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmp_path.joinpath("project_root")),
-                           "-ad", str(tmp_path.joinpath("artifacts")),
+                           "-pr", str(tmp_path / "project_root"),
+                           "-ad", str(tmp_path / "artifacts"),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         time.sleep(5)
@@ -360,24 +360,24 @@ from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
 """
-    config_file = tmp_path.joinpath("configs.py")
+    config_file = tmp_path / "configs.py"
     config_file.write_text(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmp_path.joinpath("project_root")),
-                           "-ad", str(tmp_path.joinpath("artifacts")),
+                           "-pr", str(tmp_path / "project_root"),
+                           "-ad", str(tmp_path / "artifacts"),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
 
         assert process.wait() == 0
 
-    artifacts_dir = tmp_path.joinpath("artifacts")
+    artifacts_dir = tmp_path / "artifacts"
     shutil.rmtree(str(artifacts_dir))
     with subprocess.Popen([python(), "-m", "universum", "--fail-unsuccessful",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmp_path.joinpath("project_root")),
-                           "-ad", str(tmp_path.joinpath("artifacts")),
+                           "-pr", str(tmp_path / "project_root"),
+                           "-ad", str(tmp_path / "artifacts"),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         assert process.wait() == 1

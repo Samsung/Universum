@@ -11,7 +11,7 @@ from .perforce_utils import PerforceWorkspace, P4TestEnvironment
 
 @pytest.fixture
 def unicode_dir(tmp_path: pathlib.Path):
-    unicode_dir_path = tmp_path.joinpath("Юніко́д з пробелами")
+    unicode_dir_path = tmp_path / "Юніко́д з пробелами"
     unicode_dir_path.mkdir()
     yield unicode_dir_path
 
@@ -22,7 +22,7 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
     env: utils.BaseTestEnvironment
     if vcs == "git":
         # change git client root dir to unicode path
-        work_dir = unicode_dir.joinpath("client")
+        work_dir = unicode_dir / "client"
         work_dir.mkdir()
         git_client.repo = git.Repo.clone_from(git_client.server.url, work_dir)
         git_client.root_directory = work_dir
@@ -30,7 +30,7 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
         env = GitTestEnvironment(git_client, unicode_dir, test_type=test_type)
     elif vcs == "p4":
         # change workspace root dir to unicode path
-        root = unicode_dir.joinpath("workspace")
+        root = unicode_dir / "workspace"
         root.mkdir()
         client = perforce_workspace.p4.fetch_client(perforce_workspace.client_name)
         client["Root"] = str(root)
@@ -43,7 +43,8 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
         assert False, "Unsupported vcs type"
 
     if test_type == "submit":
-        temp_file = env.vcs_client.root_directory.joinpath(utils.randomize_name("new_file") + ".txt")
+        file_name = utils.randomize_name("new_file") + ".txt"
+        temp_file = env.vcs_client.root_directory / file_name
         temp_file.write_text("This is a new file" + "\n")
         env.settings.Submit.reconcile_list = str(temp_file)
 
@@ -51,9 +52,9 @@ def test_unicode(vcs, test_type, perforce_workspace: PerforceWorkspace, git_clie
 
 
 def test_unicode_main_local_vcs(unicode_dir: pathlib.Path):
-    work_dir = unicode_dir.joinpath("local_sources")
+    work_dir = unicode_dir / "local_sources"
     work_dir.mkdir()
-    work_dir.joinpath("source_file").write_text("Source file contents")
+    (work_dir / "source_file").write_text("Source file contents")
 
     env = utils.LocalTestEnvironment(unicode_dir, "main")
     env.settings.Vcs.type = "none"
