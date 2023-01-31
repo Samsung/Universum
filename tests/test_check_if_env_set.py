@@ -1,7 +1,7 @@
 # pylint: disable = redefined-outer-name
 
 import os
-from typing import Optional, List
+from typing import Optional
 import pytest
 
 from universum.configuration_support import Configuration
