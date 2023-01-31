@@ -5,11 +5,11 @@ import random
 import socket
 import string
 import sys
+import pathlib
 from typing import Type
 
 from docker.models.containers import Container
 import httpretty
-import py
 import pytest
 
 from universum import submit, poll, main, github_handler, nonci, __main__
@@ -110,8 +110,8 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 class BaseVcsClient:
     def __init__(self) -> None:
-        self.root_directory: py.path.local
-        self.repo_file: py.path.local
+        self.root_directory: pathlib.Path
+        self.repo_file: pathlib.Path
 
     def get_last_change(self):
         pass
@@ -191,8 +191,8 @@ class HttpChecker:
 
 
 class BaseTestEnvironment:
-    def __init__(self, client: BaseVcsClient, directory: py.path.local, test_type: str, db_file: str):
-        self.temp_dir: py.path.local = directory
+    def __init__(self, client: BaseVcsClient, directory: pathlib.Path, test_type: str, db_file: str):
+        self.temp_dir: pathlib.Path = directory
         self.vcs_client = client
         self.settings: ModuleNamespace = create_empty_settings(test_type)
 
@@ -200,22 +200,26 @@ class BaseTestEnvironment:
             self.settings.Poll.db_file = db_file
             self.settings.JenkinsServerForTrigger.trigger_url = "https://localhost/?cl=%s"
             self.settings.AutomationServer.type = "jenkins"
-            self.settings.ProjectDirectory.project_root = str(self.temp_dir.mkdir("project_root"))
+            project_root_dir = self.temp_dir / "project_root"
+            project_root_dir.mkdir()
+            self.settings.ProjectDirectory.project_root = str(project_root_dir)
         elif test_type == "submit":
             self.settings.Submit.commit_message = "Test CL"
             # For submitter, the main working dir (project_root) should be the root
             # of the VCS workspace/client
             self.settings.ProjectDirectory.project_root = str(self.vcs_client.root_directory)
         elif test_type in ("main", "nonci"):
-            self.configs_file = self.temp_dir.join("configs.py")
-            self.configs_file.write(simple_test_config)
+            self.configs_file = self.temp_dir / "configs.py"
+            self.configs_file.write_text(simple_test_config)
             self.settings.Launcher.config_path = str(self.configs_file)
-            self.artifact_dir = self.temp_dir.mkdir("artifacts")
+            self.artifact_dir = self.temp_dir / "artifacts"
+            self.artifact_dir.mkdir()
             self.settings.ArtifactCollector.artifact_dir = str(self.artifact_dir)
             # The project_root directory must not exist before launching main
-            self.settings.ProjectDirectory.project_root = str(self.temp_dir.join("project_root"))
+            self.settings.ProjectDirectory.project_root = str(self.temp_dir / "project_root")
             if test_type == "nonci":
-                self.temp_dir.mkdir("project_root")
+                nonci_dir = self.temp_dir / "project_root"
+                nonci_dir.mkdir()
             self.settings.Launcher.output = "console"
             self.settings.AutomationServer.type = "local"
         self.settings.Output.type = "term"
@@ -257,5 +261,6 @@ class LocalTestEnvironment(BaseTestEnvironment):
         if test_type != "nonci":
             self.settings.Vcs.type = "none"
         if test_type == "main":
-            self.src_dir = directory.ensure_dir('project_sources')
+            self.src_dir = directory / 'project_sources'
+            self.src_dir.mkdir()
             self.settings.LocalMainVcs.source_dir = str(self.src_dir)

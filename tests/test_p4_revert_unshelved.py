@@ -25,7 +25,7 @@ class DiffParameters:
         settings.PerforceVcs.user = perforce_workspace.server.user
         settings.PerforceVcs.password = perforce_workspace.server.password
         settings.Output.type = "term"
-        settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory + "/../new_workspace")
+        settings.ProjectDirectory.project_root = str(self.perforce_workspace.root_directory) + "/../new_workspace"
         settings.PerforceWithMappings.mappings = [self.perforce_workspace.depot + " /..."]
         settings.PerforceMainVcs.force_clean = True
         settings.PerforceMainVcs.client = "new_client"
@@ -61,13 +61,14 @@ def diff_parameters(perforce_workspace: PerforceWorkspace):
 
 def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     p4 = diff_parameters.perforce_workspace.p4
-    test_dir = diff_parameters.perforce_workspace.root_directory.ensure("test_files", dir=True)
+    test_dir = diff_parameters.perforce_workspace.root_directory / "test_files"
+    test_dir.mkdir()
 
     def create_file(filename):
-        cur_file = test_dir.join(filename)
+        cur_file = test_dir / filename
         p4.run("add", str(cur_file))
         p4.run("edit", str(cur_file))
-        cur_file.write(f"import os\n\nprint('File {0} has no special modifiers.')\n"
+        cur_file.write_text(f"import os\n\nprint('File {0} has no special modifiers.')\n"
                        f"print(os.name)\nprint(os.getcwd())\nprint(os.strerror(3))\n"
                        f"print('File change type: {filename}')\n")
 
@@ -84,27 +85,27 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     p4.run_submit(change)
 
     # open for edit for edit, move/add and move/rename files
-    for cur_file in [test_dir.join("edit"), test_dir.join("move"), test_dir.join("rename")]:
+    for cur_file in [test_dir / "edit", test_dir / "move", test_dir / "rename"]:
         p4.run("edit", str(cur_file))
 
     # edit
-    test_dir.join("edit").write(f"import os\n\nprint('File {test_dir.join('edit')} has no special modifiers.')\n"
+    (test_dir / "edit").write_text(f"import os\n\nprint('File {test_dir / 'edit'} has no special modifiers.')\n"
                                 f"print(os.name)\nprint(os.getegid())\nprint(os.ctermid())\n"
                                 f"print('File change type: \"edit\"')\n")
 
     # move, rename
-    p4.run("move", test_dir + "/move", test_dir + "/moved/move")
-    p4.run("rename", test_dir + "/rename", test_dir + "/renamed_rename")
+    p4.run("move", test_dir / "move", test_dir / "moved/move")
+    p4.run("rename", test_dir / "rename", test_dir / "renamed_rename")
     # integrate
-    p4.run("integrate", test_dir + "/integrate", test_dir + "/integrated")
+    p4.run("integrate", test_dir / "integrate", test_dir / "integrated")
     p4.run("resolve", "-at")
     # branch
-    p4.run("integrate", test_dir + "/branch", test_dir + "/moved/branch_to")
+    p4.run("integrate", test_dir / "branch", test_dir / "moved/branch_to")
     # delete
-    p4.run("delete", test_dir + "/delete")
+    p4.run("delete", test_dir / "delete")
     # add
-    add = test_dir.join("add")
-    add.write("\nprint('new file')\nprint('not in repo, only for shelve.')")
+    add = test_dir / "add"
+    add.write_text("\nprint('new file')\nprint('not in repo, only for shelve.')")
     p4.run("add", add)
 
     # make change

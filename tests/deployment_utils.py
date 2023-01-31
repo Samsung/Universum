@@ -2,10 +2,11 @@
 
 import getpass
 import os
+import shutil
+import pathlib
 from pwd import getpwnam
 
 import docker
-import py
 import pytest
 from requests.exceptions import ReadTimeout
 
@@ -154,26 +155,27 @@ def clean_execution_environment(request):
 
 
 class LocalSources(utils.BaseVcsClient):
-    def __init__(self, root_directory: py.path.local, repo_file: py.path.local):
+    def __init__(self, root_directory: pathlib.Path, repo_file: pathlib.Path):
         super().__init__()
         self.root_directory = root_directory
         self.repo_file = repo_file
 
 
 @pytest.fixture()
-def local_sources(tmpdir: py.path.local):
+def local_sources(tmp_path: pathlib.Path):
     if utils.reuse_docker_containers():
-        source_dir = py.path.local(".work")
+        source_dir = pathlib.Path(".work")
         try:
-            source_dir.remove(rec=1, ignore_errors=True)
+            shutil.rmtree(source_dir, ignore_errors=True)
         except OSError:
             pass
-        source_dir.ensure(dir=True)
+        source_dir.mkdir()
 
     else:
-        source_dir = tmpdir.mkdir("project_sources")
-    local_file = source_dir.join("readme.txt")
-    local_file.write("This is a an empty file")
+        source_dir = tmp_path / "project_sources"
+        source_dir.mkdir()
+    local_file = source_dir / "readme.txt"
+    local_file.write_text("This is a an empty file", encoding="utf-8")
 
     yield LocalSources(root_directory=source_dir, repo_file=local_file)
 
