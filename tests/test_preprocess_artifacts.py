@@ -2,8 +2,8 @@
 
 import inspect
 import os
+import pathlib
 from typing import Generator
-from py._path.local import LocalPath
 
 import pytest
 
@@ -39,8 +39,8 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
     def check_step_artifact_absent(self) -> None:
         assert not os.path.exists(self.artifact_path)
 
-    def create_artifact_file(self) -> None:
-        precreated_artifact: pathlib.Path = self.src_dir / self.artifact_name
+    def create_artifact_file(self, directory: pathlib.Path) -> None:
+        precreated_artifact: pathlib.Path = directory / self.artifact_name
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
