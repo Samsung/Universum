@@ -1,7 +1,7 @@
 # pylint: disable = redefined-outer-name, abstract-method
 
+import pathlib
 import pytest
-import py
 
 from universum.modules.vcs.github_vcs import GithubToken
 from . import utils
@@ -9,7 +9,7 @@ from .git_utils import GitClient
 
 
 class ReportEnvironment(utils.BaseTestEnvironment):
-    def __init__(self, client: GitClient, directory: py.path.local):
+    def __init__(self, client: GitClient, directory: pathlib.Path):
         super().__init__(client, directory, "main", "")
 
         self.settings.Vcs.type = "github"
@@ -30,8 +30,8 @@ class ReportEnvironment(utils.BaseTestEnvironment):
 
 
 @pytest.fixture()
-def report_environment(git_client: GitClient, tmpdir: py.path.local):
-    yield ReportEnvironment(git_client, tmpdir)
+def report_environment(git_client: GitClient, tmp_path: pathlib.Path):
+    yield ReportEnvironment(git_client, tmp_path)
 
 
 def test_github_run(report_environment: ReportEnvironment, monkeypatch):

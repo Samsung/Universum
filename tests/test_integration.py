@@ -2,9 +2,10 @@ import os
 import signal
 import subprocess
 import time
+import shutil
+import pathlib
 from typing import Any
 
-import py
 import pytest
 
 from .deployment_utils import UniversumRunner, LocalSources
@@ -20,7 +21,7 @@ def get_line_with_text(text: str, log: str) -> str:
 
 def test_minimal_execution(docker_main_and_nonci: UniversumRunner):
     log = docker_main_and_nonci.run(simple_test_config)
-    assert docker_main_and_nonci.local.repo_file.basename in log
+    assert docker_main_and_nonci.local.repo_file.name in log
 
 
 def test_artifacts(docker_main: UniversumRunner):
@@ -223,12 +224,12 @@ configs = Configuration([Step(name="Step one"),
 
 def test_minimal_git(docker_main_with_vcs: UniversumRunner):
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="git")
-    assert docker_main_with_vcs.git.repo_file.basename in log
+    assert docker_main_with_vcs.git.repo_file.name in log
 
 
 def test_minimal_p4(docker_main_with_vcs: UniversumRunner):
     log = docker_main_with_vcs.run(simple_test_config, vcs_type="p4")
-    assert docker_main_with_vcs.perforce.repo_file.basename in log
+    assert docker_main_with_vcs.perforce.repo_file.name in log
 
 
 def test_p4_params(docker_main_with_vcs: UniversumRunner):
@@ -237,20 +238,20 @@ def test_p4_params(docker_main_with_vcs: UniversumRunner):
     config = f"""
 from universum.configuration_support import Configuration, Step
 
-configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.basename}"])])
+configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.name}"])])
 """
 
     # Prepare SYNC_CHANGELIST
     sync_cl = p4.run_changes("-s", "submitted", "-m1", docker_main_with_vcs.perforce.depot)[0]["change"]
     p4.run_edit(docker_main_with_vcs.perforce.depot)
-    p4_file.write("This line shouldn't be in file.\n")
+    p4_file.write_text("This line shouldn't be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "Rename basic config"
     p4.run_submit(change)
 
     # Prepare SHELVE_CHANGELIST
     p4.run_edit(docker_main_with_vcs.perforce.depot)
-    p4_file.write("This line should be in file.\n")
+    p4_file.write_text("This line should be in file.\n")
     change = p4.fetch_change()
     change["Description"] = "CL for shelving"
     shelve_cl = p4.save_change(change)[0].split()[1]
@@ -305,8 +306,8 @@ def test_empty_required_params(docker_main_with_vcs: UniversumRunner, url_error_
 
 
 def test_environment(docker_main_and_nonci: UniversumRunner):
-    script = docker_main_and_nonci.local.root_directory.join("script.sh")
-    script.write("""#!/bin/bash
+    script = docker_main_and_nonci.local.root_directory / "script.sh"
+    script.write_text("""#!/bin/bash
 echo ${SPECIAL_TESTING_VARIABLE}
 """)
     script.chmod(0o777)
@@ -333,19 +334,19 @@ configs = upper * lower
 
 
 @pytest.mark.parametrize("terminate_type", [signal.SIGINT, signal.SIGTERM], ids=["interrupt", "terminate"])
-def test_abort(local_sources: LocalSources, tmpdir: py.path.local, terminate_type):
+def test_abort(local_sources: LocalSources, tmp_path: pathlib.Path, terminate_type):
     config = """
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
 """
-    config_file = tmpdir.join("configs.py")
-    config_file.write(config)
+    config_file = tmp_path / "configs.py"
+    config_file.write_text(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmpdir.join("project_root")),
-                           "-ad", str(tmpdir.join("artifacts")),
+                           "-pr", str(tmp_path / "project_root"),
+                           "-ad", str(tmp_path / "artifacts"),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         time.sleep(5)
@@ -353,29 +354,30 @@ configs = Configuration([dict(name="Long step", command=["sleep", "10"])]) * 5
         assert process.wait(5) == 3
 
 
-def test_exit_code(local_sources: LocalSources, tmpdir: py.path.local):
+def test_exit_code(local_sources: LocalSources, tmp_path: pathlib.Path):
     config = """
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
 """
-    config_file = tmpdir.join("configs.py")
-    config_file.write(config)
+    config_file = tmp_path / "configs.py"
+    config_file.write_text(config)
 
     with subprocess.Popen([python(), "-m", "universum",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmpdir.join("project_root")),
-                           "-ad", str(tmpdir.join("artifacts")),
+                           "-pr", str(tmp_path / "project_root"),
+                           "-ad", str(tmp_path / "artifacts"),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
 
         assert process.wait() == 0
 
-    tmpdir.join("artifacts").remove(rec=True)
+    artifacts_dir = tmp_path / "artifacts"
+    shutil.rmtree(str(artifacts_dir))
     with subprocess.Popen([python(), "-m", "universum", "--fail-unsuccessful",
                            "-o", "console", "-st", "local", "-vt", "none",
-                           "-pr", str(tmpdir.join("project_root")),
-                           "-ad", str(tmpdir.join("artifacts")),
+                           "-pr", str(tmp_path / "project_root"),
+                           "-ad", str(tmp_path / "artifacts"),
                            "-fsd", str(local_sources.root_directory),
                            "-cfg", str(config_file)]) as process:
         assert process.wait() == 1
