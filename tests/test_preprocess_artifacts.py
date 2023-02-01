@@ -50,15 +50,10 @@ def test_env(tmp_path: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None
     yield ArtifactsTestEnvironment(tmp_path)
 
 
-
-def test_no_artifact_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
-    test_env.write_config_file(artifact_prebuild_clean=True)
-    test_env.run()
-    test_env.check_step_artifact_present()
-
-
-def test_no_artifact_no_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
-    test_env.write_config_file(artifact_prebuild_clean=False)
+@pytest.mark.parametrize("prebuild_clean", [True, False])
+def test_no_artifact(test_env: ArtifactsTestEnvironment,
+                     prebuild_clean: bool) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=prebuild_clean)
     test_env.run()
     test_env.check_step_artifact_present()
 
@@ -79,17 +74,11 @@ def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironmen
     test_env.check_step_artifact_absent()
 
 
-def test_artifact_in_artifacts_dir_prebuild_clean(test_env: ArtifactsTestEnvironment,
-                                                  stdout_checker: FuzzyCallChecker) -> None:
-    test_env.write_config_file(artifact_prebuild_clean=True)
-    test_env.create_artifact_file(test_env.artifact_dir)
-    test_env.run(expect_failure=True)
-    stdout_checker.assert_has_calls_with_param("already present in artifact directory")
-
-
-def test_artifact_in_artifacts_dir_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
-                                                     stdout_checker: FuzzyCallChecker) -> None:
-    test_env.write_config_file(artifact_prebuild_clean=False)
+@pytest.mark.parametrize("prebuild_clean", [True, False])
+def test_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
+                                   stdout_checker: FuzzyCallChecker,
+                                   prebuild_clean: bool) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=prebuild_clean)
     test_env.create_artifact_file(test_env.artifact_dir)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already present in artifact directory")
