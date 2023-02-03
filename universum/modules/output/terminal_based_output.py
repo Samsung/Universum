@@ -23,7 +23,7 @@ class TerminalBasedOutput(BaseOutput):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.block_level = 0
-        self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")
+        self.unicode_acceptable = (locale.getpreferredencoding() == "UTF-8")  # pylint: disable = superfluous-parens
 
     @staticmethod
     def _stdout(*args, **kwargs) -> None:
