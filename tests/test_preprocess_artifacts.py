@@ -60,11 +60,11 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
 
     def check_step_dir_artifact_present(self) -> None:
         assert os.path.exists(self.dir_archive)
-        dir_zip: zipfile.ZipFile = zipfile.ZipFile(self.dir_archive)
-        assert self.artifact_name in dir_zip.namelist()
-        with dir_zip.open(self.artifact_name) as f:
-            content: str = f.read().decode(encoding="utf-8").replace("\n", "")
-            assert content == self.artifact_content
+        with zipfile.ZipFile(self.dir_archive) as dir_zip:
+            assert self.artifact_name in dir_zip.namelist()
+            with dir_zip.open(self.artifact_name) as f:
+                content: str = f.read().decode(encoding="utf-8").replace("\n", "")
+                assert content == self.artifact_content
 
     def check_step_dir_artifact_absent(self) -> None:
         assert not os.path.exists(self.dir_archive)
