@@ -44,7 +44,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
-    def create_artifacts_dir(self, directory: pathlib.Path):
+    def create_artifacts_dir(self, directory: pathlib.Path) -> None:
         precreated_artifacts_dir: pathlib.Path = directory / self.dir_name
         precreated_artifacts_dir.mkdir()
         self.create_artifact_file(precreated_artifacts_dir)
