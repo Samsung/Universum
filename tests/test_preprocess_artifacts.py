@@ -66,6 +66,9 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
             content: str = f.read().decode(encoding="utf-8").replace("\n", "")
             assert content == self.artifact_content
 
+    def check_step_dir_artifact_absent(self) -> None:
+        assert not os.path.exists(self.dir_archive)
+
 
 @pytest.fixture()
 def test_env(tmp_path: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None, None]:
@@ -101,6 +104,15 @@ def test_dir_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironme
     test_env.create_artifacts_dir(test_env.src_dir)
     test_env.run()
     test_env.check_step_dir_artifact_present()
+
+
+def test_dir_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
+                                                   stdout_checker: FuzzyCallChecker) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=False)
+    test_env.create_artifacts_dir(test_env.src_dir)
+    test_env.run(expect_failure=True)
+    stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
+    test_env.check_step_dir_artifact_absent()
 
 
 @pytest.mark.parametrize("prebuild_clean", [True, False])
