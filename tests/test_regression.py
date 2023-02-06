@@ -226,3 +226,19 @@ configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
     repo_state = (env.artifact_dir / 'REPOSITORY_STATE.txt').read_text()
     assert p4_files[0].name in repo_state
     assert p4_files[1].name in repo_state
+
+
+def test_exit_code_failed_report(perforce_environment: P4TestEnvironment):
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
+"""
+    perforce_environment.shelve_config(config)
+    perforce_environment.settings.MainVcs.report_to_review = True
+    perforce_environment.settings.Swarm.server_url = "some_server"
+    perforce_environment.settings.Swarm.review_id = "some_id"
+    perforce_environment.settings.Swarm.change = perforce_environment.settings.PerforceMainVcs.shelve_cls[0]
+    perforce_environment.settings.Reporter.fail_unsuccessful = True
+
+    perforce_environment.run(expect_failure=True)
