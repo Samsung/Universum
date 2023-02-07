@@ -120,9 +120,7 @@ class Reporter(HasOutput, HasStructure):
 
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
-            if is_successful:
-                return True
-            return False
+            return is_successful
 
         if is_successful:
             self.out.log("Reporting successful build...")
@@ -152,9 +150,7 @@ class Reporter(HasOutput, HasStructure):
             for observer in self.observers:
                 observer.code_report_to_review(self.code_report_comments)
 
-        if is_successful:
-            return True
-        return False
+        return is_successful
 
     def _report_steps_recursively(self, block: Block, text: str, indent: str) -> Tuple[str, bool]:
         has_children: bool = bool(block.children)
