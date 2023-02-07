@@ -1,12 +1,11 @@
 from collections import defaultdict
 from typing import Dict, List, Tuple
-
 from typing_extensions import TypedDict
 
 from . import automation_server
 from .output import HasOutput
 from .structure_handler import HasStructure, Block
-from ..lib.ci_exception import SilentAbortException
+from ..lib.ci_exception import CiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 
@@ -54,8 +53,6 @@ class Reporter(HasOutput, HasStructure):
                             help="Include only the short list of failed steps to reporting comments")
         parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
                             help="Do not vote up/down review depending on result")
-        parser.add_argument("--fail-unsuccessful", "-rfu", action="store_true", dest="fail_unsuccessful",
-                            help="Return non-zero exit code if any step failed")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -101,11 +98,10 @@ class Reporter(HasOutput, HasStructure):
     def code_report(self, path: str, message: ReportMessage) -> None:
         self.code_report_comments[path].append(message)
 
-    @make_block("Reporting build result", pass_errors=False)
-    def report_build_result(self):
+    def _report_build_result(self) -> bool:
         if self.report_initialized is False:
             self.out.log("Not reporting: no build steps executed")
-            return
+            return False
 
         if self.settings.only_fails_short:
             self.settings.only_fails = True
@@ -122,9 +118,7 @@ class Reporter(HasOutput, HasStructure):
 
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
-            if self.settings.fail_unsuccessful and not is_successful:
-                raise SilentAbortException(1)
-            return
+            return is_successful
 
         if is_successful:
             self.out.log("Reporting successful build...")
@@ -132,11 +126,11 @@ class Reporter(HasOutput, HasStructure):
                 text = "Sending comment skipped. " + \
                        "To report build success, use '--report-build-success' option"
                 self.out.log(text)
-                text = None
+                text = ""
         else:
             self.out.log("Reporting failed build...")
 
-        if text is not None:
+        if text:
             if not self.settings.report_start:
                 text += "\n\n" + self.automation_server.report_build_location()
 
@@ -154,8 +148,16 @@ class Reporter(HasOutput, HasStructure):
             for observer in self.observers:
                 observer.code_report_to_review(self.code_report_comments)
 
-        if self.settings.fail_unsuccessful and not is_successful:
-            raise SilentAbortException(1)
+        return is_successful
+
+    @make_block("Reporting build result")
+    def report_build_result(self) -> bool:
+        try:
+            return self._report_build_result()
+        except CiException as e:
+            self.out.log_error(str(e))
+            self.structure.fail_current_block()
+            return False
 
     def _report_steps_recursively(self, block: Block, text: str, indent: str) -> Tuple[str, bool]:
         has_children: bool = bool(block.children)

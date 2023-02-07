@@ -43,6 +43,8 @@ class Main(HasOutput):
                                      help="Only applies to build steps where ``code_report=True``; "
                                           "disables calculating analysis diff for changed files, "
                                           "in this case full analysis report will be published")
+        argument_parser.add_argument("--fail-unsuccessful", action="store_true", dest="fail_unsuccessful",
+                                     help="Return non-zero exit code if any step failed")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -88,7 +90,9 @@ class Main(HasOutput):
                     self.code_report_collector.repo_diff = repo_diff
             self.code_report_collector.report_code_report_results()
         self.artifacts.report_artifacts()
-        self.reporter.report_build_result()
+        result = self.reporter.report_build_result()
+        if self.settings.fail_unsuccessful and not result:
+            raise SilentAbortException(1)
 
     def finalize(self) -> None:
         if self.settings.no_finalize:
