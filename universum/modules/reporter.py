@@ -1,12 +1,11 @@
 from collections import defaultdict
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 from typing_extensions import TypedDict
 
 from . import automation_server
 from .output import HasOutput
 from .structure_handler import HasStructure, Block
-from ..lib.ci_exception import SilentAbortException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
 
