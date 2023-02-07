@@ -51,7 +51,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         precreated_artifacts_dir.mkdir()
         self.create_artifact_file(precreated_artifacts_dir)
 
-    def check_step_artifact_present(self, path) -> None:
+    def check_step_artifact_present(self, path: pathlib.Path) -> None:
         assert os.path.exists(path)
         with open(path, encoding="utf-8") as f:
             content: str = f.read().replace("\n", "")
