@@ -99,58 +99,63 @@ class Reporter(HasOutput, HasStructure):
     def code_report(self, path: str, message: ReportMessage) -> None:
         self.code_report_comments[path].append(message)
 
-    @make_block("Reporting build result", pass_errors=False)
+    @make_block("Reporting build result")
     def report_build_result(self) -> bool:
-        if self.report_initialized is False:
-            self.out.log("Not reporting: no build steps executed")
-            return False
+        try:
+            if self.report_initialized is False:
+                self.out.log("Not reporting: no build steps executed")
+                return False
 
-        if self.settings.only_fails_short:
-            self.settings.only_fails = True
+            if self.settings.only_fails_short:
+                self.settings.only_fails = True
 
-        is_successful = True
-        text = "Here is the summarized build result:\n"
-        self.out.log(text)
-        for step in self.blocks_to_report:
-            text, status = self._report_steps_recursively(step, text, "")
-            is_successful = is_successful and status
-        if self.settings.only_fails and is_successful:
-            text += "  All steps succeeded"
-            self.out.log("  All steps succeeded")
+            is_successful = True
+            text = "Here is the summarized build result:\n"
+            self.out.log(text)
+            for step in self.blocks_to_report:
+                text, status = self._report_steps_recursively(step, text, "")
+                is_successful = is_successful and status
+            if self.settings.only_fails and is_successful:
+                text += "  All steps succeeded"
+                self.out.log("  All steps succeeded")
 
-        if not self.observers:
-            self.out.log("Nowhere to report. Skipping...")
+            if not self.observers:
+                self.out.log("Nowhere to report. Skipping...")
+                return is_successful
+
+            if is_successful:
+                self.out.log("Reporting successful build...")
+                if not self.settings.report_success:
+                    text = "Sending comment skipped. " + \
+                           "To report build success, use '--report-build-success' option"
+                    self.out.log(text)
+                    text = ""
+            else:
+                self.out.log("Reporting failed build...")
+
+            if text:
+                if not self.settings.report_start:
+                    text += "\n\n" + self.automation_server.report_build_location()
+
+                if self.artifacts_to_report:
+                    text += "\n\nThe following artifacts were generated during check:\n"
+                    for item in self.artifacts_to_report:
+                        text += "* " + item + "\n"
+                    text += "Please take a look."
+
+                for observer in self.observers:
+                    observer.report_result(is_successful, text, no_vote=self.settings.no_vote)
+
+            if self.code_report_comments:
+                self.out.log("Reporting code report issues ")
+                for observer in self.observers:
+                    observer.code_report_to_review(self.code_report_comments)
+
             return is_successful
-
-        if is_successful:
-            self.out.log("Reporting successful build...")
-            if not self.settings.report_success:
-                text = "Sending comment skipped. " + \
-                       "To report build success, use '--report-build-success' option"
-                self.out.log(text)
-                text = ""
-        else:
-            self.out.log("Reporting failed build...")
-
-        if text:
-            if not self.settings.report_start:
-                text += "\n\n" + self.automation_server.report_build_location()
-
-            if self.artifacts_to_report:
-                text += "\n\nThe following artifacts were generated during check:\n"
-                for item in self.artifacts_to_report:
-                    text += "* " + item + "\n"
-                text += "Please take a look."
-
-            for observer in self.observers:
-                observer.report_result(is_successful, text, no_vote=self.settings.no_vote)
-
-        if self.code_report_comments:
-            self.out.log("Reporting code report issues ")
-            for observer in self.observers:
-                observer.code_report_to_review(self.code_report_comments)
-
-        return is_successful
+        except Exception as e:
+            self.out.log_error(str(e))
+            self.structure.fail_current_block()
+            return False
 
     def _report_steps_recursively(self, block: Block, text: str, indent: str) -> Tuple[str, bool]:
         has_children: bool = bool(block.children)
