@@ -229,6 +229,10 @@ configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
 
 
 def test_exit_code_failed_report(perforce_environment: P4TestEnvironment):
+    """
+    This test checks for previous bug where exceptions during result reporting led to exit code 0
+    even when '--fail-unsuccessful' option was enabled (and some steps failed)
+    """
     config = """
 from universum.configuration_support import Configuration
 
