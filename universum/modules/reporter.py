@@ -54,8 +54,6 @@ class Reporter(HasOutput, HasStructure):
                             help="Include only the short list of failed steps to reporting comments")
         parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
                             help="Do not vote up/down review depending on result")
-        parser.add_argument("--fail-unsuccessful", "-rfu", action="store_true", dest="fail_unsuccessful",
-                            help="Return non-zero exit code if any step failed")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -102,10 +100,10 @@ class Reporter(HasOutput, HasStructure):
         self.code_report_comments[path].append(message)
 
     @make_block("Reporting build result", pass_errors=False)
-    def report_build_result(self):
+    def report_build_result(self) -> bool:
         if self.report_initialized is False:
             self.out.log("Not reporting: no build steps executed")
-            return
+            return False
 
         if self.settings.only_fails_short:
             self.settings.only_fails = True
@@ -122,9 +120,9 @@ class Reporter(HasOutput, HasStructure):
 
         if not self.observers:
             self.out.log("Nowhere to report. Skipping...")
-            if self.settings.fail_unsuccessful and not is_successful:
-                raise SilentAbortException(1)
-            return
+            if is_successful:
+                return True
+            return False
 
         if is_successful:
             self.out.log("Reporting successful build...")
@@ -154,8 +152,9 @@ class Reporter(HasOutput, HasStructure):
             for observer in self.observers:
                 observer.code_report_to_review(self.code_report_comments)
 
-        if self.settings.fail_unsuccessful and not is_successful:
-            raise SilentAbortException(1)
+        if is_successful:
+            return True
+        return False
 
     def _report_steps_recursively(self, block: Block, text: str, indent: str) -> Tuple[str, bool]:
         has_children: bool = bool(block.children)

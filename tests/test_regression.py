@@ -239,6 +239,6 @@ configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
     perforce_environment.settings.Swarm.server_url = "some_server"
     perforce_environment.settings.Swarm.review_id = "some_id"
     perforce_environment.settings.Swarm.change = perforce_environment.settings.PerforceMainVcs.shelve_cls[0]
-    perforce_environment.settings.Reporter.fail_unsuccessful = True
+    perforce_environment.settings.Main.fail_unsuccessful = True
 
     perforce_environment.run(expect_failure=True)
