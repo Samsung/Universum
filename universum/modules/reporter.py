@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from typing_extensions import TypedDict
 
@@ -130,11 +130,11 @@ class Reporter(HasOutput, HasStructure):
                 text = "Sending comment skipped. " + \
                        "To report build success, use '--report-build-success' option"
                 self.out.log(text)
-                text = None
+                text = ""
         else:
             self.out.log("Reporting failed build...")
 
-        if text is not None:
+        if text:
             if not self.settings.report_start:
                 text += "\n\n" + self.automation_server.report_build_location()
 
