@@ -26,10 +26,11 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         artifact_in_dir = f"{self.dir_name}/{self.artifact_name}"
         config: str = inspect.cleandoc(f"""
             from universum.configuration_support import Configuration, Step
-            step_with_file = Step(name='Step with file',
-                                  command=['bash', '-c', 'echo "{self.artifact_content}" > {self.artifact_name}'],
-                                  artifacts='{self.artifact_name}',
-                                  artifact_prebuild_clean={artifact_prebuild_clean})
+            step_with_file = Step(
+                name='Step with file',
+                command=['bash', '-c', 'echo "{self.artifact_content}" > {self.artifact_name}'],
+                artifacts='{self.artifact_name}',
+                artifact_prebuild_clean={artifact_prebuild_clean})
             step_with_dir = Step(
                 name='Step with directory',
                 command=['bash', '-c', 'mkdir {self.dir_name}; echo "{self.artifact_content}" > {artifact_in_dir}'],
