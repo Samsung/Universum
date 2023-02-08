@@ -4,8 +4,7 @@ import inspect
 import os
 import pathlib
 import zipfile
-from typing import Generator
-from collections.abc import Callable
+from typing import Generator, Callable
 
 import pytest
 
