@@ -8,17 +8,6 @@ jobs:
 
     steps:
     - name: Comment new PR
-      if: |
-        github.event == "pull_request" &&
-        contains(fromJSON('["opened", "reopened"]'), github.event.pull_request.type)
-      run: echo A PR $NUMBER
+      run: echo $PAYLOAD
       env:
-        NUMBER: ${{ github.event.issue.number }}
-
-    - name: Comment new comment
-      if: |
-        github.event == "issue_comment" &&
-        github.event.issue.pull_request
-      run: echo A comment on PR $NUMBER
-      env:
-        NUMBER: ${{ github.event.issue.number }}
+        PAYLOAD: ${{ github }}
