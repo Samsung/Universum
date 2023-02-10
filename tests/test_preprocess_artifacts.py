@@ -76,15 +76,6 @@ def test_env(tmp_path: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None
     yield ArtifactsTestEnvironment(tmp_path)
 
 
-class ArtifactsTestData:
-    no_archive: bool
-    artifact_check_func: Callable[[ArtifactsTestEnvironment], None]
-
-    def __init__(self, no_archive, artifact_check_func) -> None:
-        self.no_archive = no_archive
-        self.artifact_check_func = artifact_check_func
-
-
 @pytest.mark.parametrize("prebuild_clean", [True, False])
 def test_no_artifact(test_env: ArtifactsTestEnvironment,
                      prebuild_clean: bool) -> None:
@@ -109,16 +100,17 @@ def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironmen
     test_env.check_artifact_absent()
 
 
-@pytest.mark.parametrize("test_data",
-                         [ArtifactsTestData(False, lambda env: env.check_dir_zip_artifact_present()),
-                          ArtifactsTestData(True, lambda env: env.check_artifact_present(env.artifact_in_dir))])
+@pytest.mark.parametrize("no_archive", [False, True])
 def test_dir_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment,
-                                                test_data: ArtifactsTestData) -> None:
+                                                no_archive: bool) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
     test_env.create_artifacts_dir(test_env.src_dir)
-    test_env.settings.ArtifactCollector.no_archive = test_data.no_archive
+    test_env.settings.ArtifactCollector.no_archive = no_archive
     test_env.run()
-    test_data.artifact_check_func(test_env)
+    if no_archive:
+        test_env.check_artifact_present(test_env.artifact_in_dir)
+    else:
+        test_env.check_dir_zip_artifact_present()
 
 
 def test_dir_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
