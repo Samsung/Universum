@@ -1,7 +1,6 @@
 # pylint: disable = redefined-outer-name
 
 import inspect
-import os
 import pathlib
 import zipfile
 from typing import Generator, Callable
@@ -52,16 +51,16 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         self.create_artifact_file(precreated_artifacts_dir)
 
     def check_artifact_present(self, path: pathlib.Path) -> None:
-        assert os.path.exists(path)
+        assert path.exists()
         with open(path, encoding="utf-8") as f:
             content: str = f.read().replace("\n", "")
             assert content == self.artifact_content
 
     def check_artifact_absent(self) -> None:
-        assert not os.path.exists(self.artifact_path)
+        assert not self.artifact_path.exists()
 
     def check_dir_zip_artifact_present(self) -> None:
-        assert os.path.exists(self.dir_archive)
+        assert self.dir_archive.exists()
         with zipfile.ZipFile(self.dir_archive) as dir_zip:
             assert self.artifact_name in dir_zip.namelist()
             with dir_zip.open(self.artifact_name) as f:
@@ -69,7 +68,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
                 assert content == self.artifact_content
 
     def check_dir_artifact_absent(self) -> None:
-        assert not os.path.exists(self.dir_archive)
+        assert not self.dir_archive.exists()
 
 
 @pytest.fixture()
