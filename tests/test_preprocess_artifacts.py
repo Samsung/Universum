@@ -51,16 +51,16 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         precreated_artifacts_dir.mkdir()
         self.create_artifact_file(precreated_artifacts_dir)
 
-    def check_step_artifact_present(self, path: pathlib.Path) -> None:
+    def check_artifact_present(self, path: pathlib.Path) -> None:
         assert os.path.exists(path)
         with open(path, encoding="utf-8") as f:
             content: str = f.read().replace("\n", "")
             assert content == self.artifact_content
 
-    def check_step_artifact_absent(self) -> None:
+    def check_artifact_absent(self) -> None:
         assert not os.path.exists(self.artifact_path)
 
-    def check_step_dir_zip_artifact_present(self) -> None:
+    def check_dir_zip_artifact_present(self) -> None:
         assert os.path.exists(self.dir_archive)
         with zipfile.ZipFile(self.dir_archive) as dir_zip:
             assert self.artifact_name in dir_zip.namelist()
@@ -68,7 +68,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
                 content: str = f.read().decode(encoding="utf-8").replace("\n", "")
                 assert content == self.artifact_content
 
-    def check_step_dir_artifact_absent(self) -> None:
+    def check_dir_artifact_absent(self) -> None:
         assert not os.path.exists(self.dir_archive)
 
 
@@ -91,14 +91,14 @@ def test_no_artifact(test_env: ArtifactsTestEnvironment,
                      prebuild_clean: bool) -> None:
     test_env.write_config_file(artifact_prebuild_clean=prebuild_clean)
     test_env.run()
-    test_env.check_step_artifact_present(test_env.artifact_path)
+    test_env.check_artifact_present(test_env.artifact_path)
 
 
 def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
     test_env.create_artifact_file(test_env.src_dir)
     test_env.run()
-    test_env.check_step_artifact_present(test_env.artifact_path)
+    test_env.check_artifact_present(test_env.artifact_path)
 
 
 def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
@@ -107,12 +107,12 @@ def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironmen
     test_env.create_artifact_file(test_env.src_dir)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
-    test_env.check_step_artifact_absent()
+    test_env.check_artifact_absent()
 
 
 @pytest.mark.parametrize("test_data",
-                         [ArtifactsTestData(False, lambda env: env.check_step_dir_zip_artifact_present()),
-                          ArtifactsTestData(True, lambda env: env.check_step_artifact_present(env.artifact_in_dir))])
+                         [ArtifactsTestData(False, lambda env: env.check_dir_zip_artifact_present()),
+                          ArtifactsTestData(True, lambda env: env.check_artifact_present(env.artifact_in_dir))])
 def test_dir_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment,
                                                 test_data: ArtifactsTestData) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
@@ -128,7 +128,7 @@ def test_dir_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnviro
     test_env.create_artifacts_dir(test_env.src_dir)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
-    test_env.check_step_dir_artifact_absent()
+    test_env.check_dir_artifact_absent()
 
 
 @pytest.mark.parametrize("prebuild_clean", [True, False])
