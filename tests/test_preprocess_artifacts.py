@@ -40,8 +40,9 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         """)
         self.configs_file.write_text(config, "utf-8")
 
-    def create_artifact_file(self, directory: pathlib.Path) -> None:
+    def create_artifact_file(self, directory: pathlib.Path, is_zip: bool = False) -> None:
         precreated_artifact: pathlib.Path = directory / self.artifact_name
+        precreated_artifact = f"{precreated_artifact}.zip" if is_zip else precreated_artifact
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
@@ -122,11 +123,13 @@ def test_dir_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnviro
     test_env.check_dir_artifact_absent()
 
 
+@pytest.mark.parametrize("is_zip", [True, False])
 @pytest.mark.parametrize("prebuild_clean", [True, False])
 def test_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
                                    stdout_checker: FuzzyCallChecker,
+                                   is_zip: bool,
                                    prebuild_clean: bool) -> None:
     test_env.write_config_file(artifact_prebuild_clean=prebuild_clean)
-    test_env.create_artifact_file(test_env.artifact_dir)
+    test_env.create_artifact_file(test_env.artifact_dir, is_zip)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already present in artifact directory")
