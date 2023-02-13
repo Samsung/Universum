@@ -41,8 +41,8 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         self.configs_file.write_text(config, "utf-8")
 
     def create_artifact_file(self, directory: pathlib.Path, is_zip: bool = False) -> None:
-        precreated_artifact: pathlib.Path = directory / self.artifact_name
-        precreated_artifact = f"{precreated_artifact}.zip" if is_zip else precreated_artifact
+        artifact_name: str = f"{self.artifact_name}.zip" if is_zip else self.artifact_name
+        precreated_artifact: pathlib.Path = directory / artifact_name
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
