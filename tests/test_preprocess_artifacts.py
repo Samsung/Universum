@@ -40,15 +40,16 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         """)
         self.configs_file.write_text(config, "utf-8")
 
-    def create_artifact_file(self, directory: pathlib.Path) -> None:
-        precreated_artifact: pathlib.Path = directory / self.artifact_name
+    def create_artifact_file(self, directory: pathlib.Path, file_name: str, is_zip: bool = False) -> None:
+        artifact_name: str = f"{file_name}.zip" if is_zip else file_name
+        precreated_artifact: pathlib.Path = directory / artifact_name
         with open(precreated_artifact, "w", encoding="utf-8") as f:
             f.write("pre-created artifact content")
 
     def create_artifacts_dir(self, directory: pathlib.Path) -> None:
         precreated_artifacts_dir: pathlib.Path = directory / self.dir_name
         precreated_artifacts_dir.mkdir()
-        self.create_artifact_file(precreated_artifacts_dir)
+        self.create_artifact_file(precreated_artifacts_dir, self.artifact_name)
 
     def check_artifact_present(self, path: pathlib.Path) -> None:
         assert path.exists()
@@ -86,7 +87,7 @@ def test_no_artifact(test_env: ArtifactsTestEnvironment,
 
 def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
     test_env.write_config_file(artifact_prebuild_clean=True)
-    test_env.create_artifact_file(test_env.src_dir)
+    test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
     test_env.run()
     test_env.check_artifact_present(test_env.artifact_path)
 
@@ -94,7 +95,7 @@ def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment) 
 def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
                                                stdout_checker: FuzzyCallChecker) -> None:
     test_env.write_config_file(artifact_prebuild_clean=False)
-    test_env.create_artifact_file(test_env.src_dir)
+    test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
     test_env.check_artifact_absent()
@@ -122,11 +123,16 @@ def test_dir_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnviro
     test_env.check_dir_artifact_absent()
 
 
+@pytest.mark.parametrize("is_zip", [True, False])
+@pytest.mark.parametrize("is_dir", [True, False])
 @pytest.mark.parametrize("prebuild_clean", [True, False])
-def test_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
-                                   stdout_checker: FuzzyCallChecker,
-                                   prebuild_clean: bool) -> None:
+def test_zip_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
+                                       stdout_checker: FuzzyCallChecker,
+                                       is_zip: bool,
+                                       is_dir: bool,
+                                       prebuild_clean: bool) -> None:
     test_env.write_config_file(artifact_prebuild_clean=prebuild_clean)
-    test_env.create_artifact_file(test_env.artifact_dir)
+    artifact_name: str = test_env.dir_name if is_dir else test_env.artifact_name
+    test_env.create_artifact_file(test_env.artifact_dir, artifact_name, is_zip)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already present in artifact directory")
