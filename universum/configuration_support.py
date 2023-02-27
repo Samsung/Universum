@@ -69,7 +69,7 @@ class Step:
         execution will not proceed. If no required artifacts were found in the end of the `Universum` run, it is
         also considered a failure. In case of shell-style patterns build is failed if no files or directories
         matching pattern are found.
-        Note: Universum checks both the artifact itself and an archive with the same name, because it does not know
+        ..note:: Universum checks both the artifact itself and an archive with the same name, because it does not know
         in advance whether the step is going to create a file or a directory.
     report_artifacts
         Path to the special artifacts for reporting (e.g. to Swarm). Unlike `artifacts` key, `report_artifacts`
