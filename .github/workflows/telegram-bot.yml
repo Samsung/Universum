@@ -1,0 +1,42 @@
+name: Telegram bot
+on: [pull_request, issue_comment]
+
+jobs:
+  make-comment:
+    name: Send comment to TG
+    runs-on: ubuntu-latest
+    env:
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+      PR_NAME: ${{ github.event.pull_request.title }}
+      PR_BASE: ${{ github.event.pull_request.base.ref }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+      COMMENT_URL: ${{ github.event.comment.html_url }}
+      COMMENT_BODY: ${{ github.event.comment.body }}
+      COMMENT_NUMBER: ${{ github.event.issue.number }}
+
+    steps:
+    - name: Comment new PR
+      if: github.event.pull_request && github.event.action == 'opened'
+      run: echo TEXT=$TEXT >> $GITHUB_ENV
+      env:
+        TEXT: ${{ env.PR_AUTHOR }}%20created%20new%20PR%20'${{ env.PR_NAME }}'%20to%20branch%20'${{ env.PR_BASE }}';%0Asee%20here:%20${{ env.PR_URL }}
+
+    - name: Comment update PR
+      if: github.event.pull_request && github.event.action == 'synchronize'
+      run: echo TEXT=$TEXT >> $GITHUB_ENV
+      env:
+        TEXT: ${{ env.PR_AUTHOR }}%20updated%20PR%23${{ env.PR_NUMBER }};%0Asee%20here:%20${{ env.PR_URL }}
+        
+    - name: Comment new comment
+      if: github.event.comment && github.event.action == 'created'
+      run: echo TEXT=$TEXT >> $GITHUB_ENV
+      env:
+        TEXT: ${{ env.COMMENT_AUTHOR }}%20posted%20the%20following%20comment%20to%20issue%20%23${{ env.COMMENT_NUMBER }}:%0A${{ env.COMMENT_BODY }}%0ASee%20here:%20${{ env.COMMENT_URL }}
+
+    - name: Send comment to TG
+      if: env.TEXT
+      run: curl $LINK
+      env:
+        LINK: https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=${{ env.TEXT }}
