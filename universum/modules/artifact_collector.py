@@ -146,8 +146,9 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             artifact_file = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
             self._check_artifact_absent(artifact_file)
 
-            artifact_zip_archive = os.path.join(artifact_file + ".zip")
-            self._check_artifact_absent(artifact_zip_archive)
+            if not self.settings.no_archive:
+                artifact_zip_archive = os.path.join(artifact_file + ".zip")
+                self._check_artifact_absent(artifact_zip_archive)
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:

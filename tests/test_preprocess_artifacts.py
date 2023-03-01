@@ -3,7 +3,7 @@
 import inspect
 import pathlib
 import zipfile
-from typing import Generator, Callable
+from typing import Generator
 
 import pytest
 
@@ -68,7 +68,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
                 content: str = f.read().decode(encoding="utf-8").replace("\n", "")
                 assert content == self.artifact_content
 
-    def check_dir_artifact_absent(self) -> None:
+    def check_dir_zip_artifact_absent(self) -> None:
         assert not self.dir_archive.exists()
 
 
@@ -120,13 +120,13 @@ def test_dir_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnviro
     test_env.create_artifacts_dir(test_env.src_dir)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
-    test_env.check_dir_artifact_absent()
+    test_env.check_dir_zip_artifact_absent()
 
 
 @pytest.mark.parametrize("is_zip", [True, False])
 @pytest.mark.parametrize("is_dir", [True, False])
 @pytest.mark.parametrize("prebuild_clean", [True, False])
-def test_zip_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
+def test_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
                                        stdout_checker: FuzzyCallChecker,
                                        is_zip: bool,
                                        is_dir: bool,
@@ -136,3 +136,11 @@ def test_zip_artifact_in_artifacts_dir(test_env: ArtifactsTestEnvironment,
     test_env.create_artifact_file(test_env.artifact_dir, artifact_name, is_zip)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already present in artifact directory")
+
+
+def test_zip_artifact_no_archive(test_env: ArtifactsTestEnvironment) -> None:
+    test_env.settings.ArtifactCollector.no_archive = True
+    test_env.write_config_file(artifact_prebuild_clean=True)
+    test_env.create_artifact_file(test_env.artifact_dir, test_env.dir_name, is_zip=True)
+    test_env.run()
+    test_env.check_artifact_present(test_env.artifact_in_dir)
