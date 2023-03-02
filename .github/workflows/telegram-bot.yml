@@ -28,74 +28,41 @@ jobs:
       UNIVERSUM_LOG: ${{ github.event.workflow_run.html_url }}
 
     steps:
-    - name: New PR
-      if: github.event.pull_request && github.event.action == 'opened'
+    - name: Send message to TG
       run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "TEXT<<$EOF" >> $GITHUB_ENV
-        echo "$TEXT$EOF" >> $GITHUB_ENV
+        if [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "opened" ]]; then
+          TEXT=$NEW_PR
+        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "synchronize" ]]; then
+          TEXT=$PR_UPDATE
+        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+          TEXT=$PR_MERGED
+        elif [[ ! -z "${{ github.event.comment }}" ]]; then
+          TEXT=$NEW_COMMENT
+        elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+          TEXT=$UNIVERSUM_SUCCEEDED
+        elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "failure" ]]; then
+          TEXT=$UNIVERSUM_FAILED
+        fi
+        if [[ ! -z $TEXT ]]; then
+          curl --get --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode "text=$TEXT" $URL
+        fi
       env:
-        TEXT: |
+        URL: https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage
+        NEW_PR: |
           ${{ env.PR_AUTHOR }} created new PR#${{ env.PR_NUMBER }} '${{ env.PR_NAME }}' to branch '${{ env.PR_BASE }}'.
           See here: ${{ env.PR_URL }}
-
-    - name: PR updated
-      if: github.event.pull_request && github.event.action == 'synchronize'
-      run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "TEXT<<$EOF" >> $GITHUB_ENV
-        echo "$TEXT$EOF" >> $GITHUB_ENV
-      env:
-        TEXT: |
+        PR_UPDATE: |
           ${{ env.PR_AUTHOR }} updated PR#${{ env.PR_NUMBER }};
           see here: ${{ env.PR_URL }}
-
-    - name: PR merged
-      if: github.event.pull_request && github.event.action == 'closed' && github.event.pull_request.merged == true
-      run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "TEXT<<$EOF" >> $GITHUB_ENV
-        echo "$TEXT$EOF" >> $GITHUB_ENV
-      env:
-        TEXT: |
+        PR_MERGED: |
           ${{ env.PR_MERGED }} merged PR#${{env.PR_NUMBER }} to branch '${{ env.PR_BASE }}'
-
-    - name: New comment
-      if: github.event.comment
-      run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "TEXT<<$EOF" >> $GITHUB_ENV
-        echo "$TEXT$EOF" >> $GITHUB_ENV
-      env:
-        TEXT: |
+        NEW_COMMENT: |
           ${{ env.COMMENT_AUTHOR }} posted the following comment to issue #${{ env.COMMENT_NUMBER }}:
           ${{ env.COMMENT_BODY }}
           See issue here: ${{ env.COMMENT_URL }}
-
-    - name: Universum succeeded
-      if: github.event.workflow_run && github.event.workflow_run.conclusion == 'success'
-      run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "TEXT<<$EOF" >> $GITHUB_ENV
-        echo "$TEXT$EOF" >> $GITHUB_ENV
-      env:
-        TEXT: |
+        UNIVERSUM_SUCCEEDED: |
           Universum run for commit ${{ env.UNIVERUM_COMMIT }} for branch '${{ env.UNIVERSUM_BRANCH }}' succeeded.
           See log here: ${{ env.UNIVERSUM_LOG }}
-
-    - name: Universum failed
-      if: github.event.workflow_run && github.event.workflow_run.conclusion == 'failure'
-      run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "TEXT<<$EOF" >> $GITHUB_ENV
-        echo "$TEXT$EOF" >> $GITHUB_ENV
-      env:
-        TEXT: |
+        UNIVERSUM_FAILED: |
           Universum run for commit ${{ env.UNIVERUM_COMMIT }} for branch '${{ env.UNIVERSUM_BRANCH }}' failed.
           See log here: ${{ env.UNIVERSUM_LOG }}
-
-    - name: Send comment to TG
-      if: env.TEXT
-      run: curl --get --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode "text=${{ env.TEXT }}" $URL
-      env:
-        URL: https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage
