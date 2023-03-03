@@ -1,0 +1,53 @@
+name: Telegram bot
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+  issue_comment:
+    types: [created]
+  workflow_run:
+    workflows: [Universum check]
+    types: [completed]
+    
+jobs:
+  make-comment:
+    name: Send comment to TG
+    runs-on: ubuntu-latest
+    env:
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+      PR_NAME: ${{ github.event.pull_request.title }}
+      PR_BASE: ${{ github.event.pull_request.base.ref }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_MERGED: ${{ github.event.pull_request.merged_by.login }}
+      COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+      COMMENT_URL: ${{ github.event.comment.html_url }}
+      COMMENT_BODY: ${{ github.event.comment.body }}
+      COMMENT_NUMBER: ${{ github.event.issue.number }}
+      UNIVERUM_COMMIT: ${{ github.event.workflow_run.head_sha }}
+      UNIVERSUM_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      UNIVERSUM_LOG: ${{ github.event.workflow_run.html_url }}
+
+    steps:
+    - name: Send message to TG
+      run: |
+        if [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "opened" ]]; then
+          ESCAPED_NAME=`echo -e "${{ env.PR_NAME }}" | sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
+          TEXT=`echo -e "<b>${{ env.PR_AUTHOR }}</b> created new <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a> '$ESCAPED_NAME' to branch '${{ env.PR_BASE }}'"`
+        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "synchronize" ]]; then
+          TEXT=`echo -e "<b>${{ env.PR_AUTHOR }}</b> updated <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
+        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+          TEXT=`echo -e "<b>${{ env.PR_MERGED }}</b> merged <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a> to branch <b>'${{ env.PR_BASE }}'</b>"`
+        elif [[ ! -z "${{ github.event.comment }}" ]]; then
+          ESCAPED_TEXT=`echo -e "${{ env.COMMENT_BODY }}"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
+          TEXT=`echo -e "<b>${{ env.COMMENT_AUTHOR }}</b> posted the following comment to issue <a href=\"${{ env.COMMENT_URL }}\">#${{ env.COMMENT_NUMBER }}</a>:\n<i>$ESCAPED_TEXT</i>"`
+        elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+          TEXT=`echo -e "<a href=\"${{ env.UNIVERSUM_LOG }}\">Universum run for branch '${{ env.UNIVERSUM_BRANCH }}'</a> <b>SUCCEDDED</b>; commit ${{ env.UNIVERUM_COMMIT }} "`
+        elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "failure" ]]; then
+          TEXT=`echo -e "<a href=\"${{ env.UNIVERSUM_LOG }}\">Universum run for branch '${{ env.UNIVERSUM_BRANCH }}'</a> <b>FAILED</b>; commit ${{ env.UNIVERUM_COMMIT }} "`
+        fi
+
+        if [[ ! -z $TEXT ]]; then
+          curl --get --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode "text=$TEXT" --data-urlencode "parse_mode=HTML" $URL
+        fi
+      env:
+        URL: https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage
