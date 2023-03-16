@@ -3,6 +3,7 @@ import difflib
 import os
 import shutil
 import pathlib
+import re
 
 from typing import Callable, List, Optional, Tuple
 
@@ -39,14 +40,15 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
         wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
         html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
 
+    cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
     files: List[Tuple[pathlib.Path, pathlib.Path]] = []
     for src_file in settings.file_list:
         src_file_absolute = utils.normalize(src_file)
         src_file_relative = src_file_absolute.relative_to(pathlib.Path.cwd())
         target_file_absolute: pathlib.Path = target_folder.joinpath(src_file_relative)
         files.append((src_file_absolute, target_file_absolute))
-    cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
-    cmd.extend(settings.file_list)
+        cmd.append(src_file_relative)
+
     utils.run_for_output(cmd)
     return uncrustify_output_parser(files, html_diff_file_writer)
 
@@ -82,12 +84,18 @@ def uncrustify_output_parser(files: List[Tuple[pathlib.Path, pathlib.Path]],
 
 
 def _get_wrapcolumn_tabsize(cfg_file: str) -> Tuple[int, int]:
+    wrapcolumn = 120
+    tabsize = 4
     with open(cfg_file, encoding="utf-8") as config:
         for line in config.readlines():
-            if line.startswith("code_width"):
-                wrapcolumn = int(line.split()[2])
-            if line.startswith("input_tab_size"):
-                tabsize = int(line.split()[2])
+            match = re.match(r"^\s*([A-Za-z_]+)\s*[,\=]?\s*([0-9]+)\s*$", line)
+            if not match:
+                continue
+            groups = match.groups()
+            if groups[0] == "code_width":
+                wrapcolumn = int(groups[1])
+            if groups[0] == "input_tab_size":
+                tabsize = int(groups[1])
     return wrapcolumn, tabsize
 
 
