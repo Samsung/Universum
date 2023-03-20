@@ -17,6 +17,8 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         super().__init__(tmp_path, "main")
         self.artifact_name: str = "artifact"
         self.artifact_path: pathlib.Path = self.artifact_dir / self.artifact_name
+        self.artifact_name_with_suffix = f"{self.artifact_name}_suffix"
+        self.artifact_path_with_suffix: pathlib.Path = self.artifact_dir / self.artifact_name_with_suffix
         self.artifact_content: str = "artifact content"
         self.dir_name: str = "artifacts_test_dir"
         self.dir_archive: pathlib.Path = self.artifact_dir / f"{self.dir_name}.zip"
@@ -38,6 +40,23 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
                 artifact_prebuild_clean={artifact_prebuild_clean})
             configs = Configuration([step_with_file, step_with_dir])
         """)
+        self.store_config_to_file(config)
+
+    def write_config_file_wildcard(self, artifact_prebuild_clean: bool) -> None:
+        config: str = inspect.cleandoc(f"""
+            from universum.configuration_support import Configuration, Step
+            step = Step(
+                name='Step',
+                command=['bash', '-c', 
+                         'echo "{self.artifact_content}" > {self.artifact_name};'
+                         'echo "{self.artifact_content}" > {self.artifact_name_with_suffix}'],
+                artifacts='{self.artifact_name}*',
+                artifact_prebuild_clean={artifact_prebuild_clean})
+            configs = Configuration([step])
+        """)
+        self.store_config_to_file(config)
+
+    def store_config_to_file(self, config: str):
         self.configs_file.write_text(config, "utf-8")
 
     def create_artifact_file(self, directory: pathlib.Path, file_name: str, is_zip: bool = False) -> None:
@@ -144,3 +163,12 @@ def test_zip_artifact_no_archive(test_env: ArtifactsTestEnvironment) -> None:
     test_env.create_artifact_file(test_env.artifact_dir, test_env.dir_name, is_zip=True)
     test_env.run()
     test_env.check_artifact_present(test_env.artifact_in_dir)
+
+
+def test_wildcard(test_env: ArtifactsTestEnvironment) -> None:
+    test_env.write_config_file_wildcard(artifact_prebuild_clean=True)
+    test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
+    test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name_with_suffix)
+    test_env.run()
+    test_env.check_artifact_present(test_env.artifact_path)
+    test_env.check_artifact_present(test_env.artifact_path_with_suffix)
