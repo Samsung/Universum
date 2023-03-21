@@ -24,19 +24,20 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
         self.dir_archive: pathlib.Path = self.artifact_dir / f"{self.dir_name}.zip"
         self.artifact_in_dir: pathlib.Path = self.artifact_dir / self.dir_name / self.artifact_name
 
-    def write_config_file(self, artifact_prebuild_clean: bool) -> None:
-        artifact_in_dir = f"{self.dir_name}/{self.artifact_name}"
+    def write_config_file(self, artifact_prebuild_clean: bool, is_report_artifact: bool = False) -> None:
+        artifact_in_dir: str = f"{self.dir_name}/{self.artifact_name}"
+        artifacts_key: str = "report_artifacts" if is_report_artifact else "artifacts"
         config: str = inspect.cleandoc(f"""
             from universum.configuration_support import Configuration, Step
             step_with_file = Step(
                 name='Step with file',
                 command=['bash', '-c', 'echo "{self.artifact_content}" > {self.artifact_name}'],
-                artifacts='{self.artifact_name}',
+                {artifacts_key}='{self.artifact_name}',
                 artifact_prebuild_clean={artifact_prebuild_clean})
             step_with_dir = Step(
                 name='Step with directory',
                 command=['bash', '-c', 'mkdir {self.dir_name}; echo "{self.artifact_content}" > {artifact_in_dir}'],
-                artifacts='{self.dir_name}',
+                {artifacts_key}='{self.dir_name}',
                 artifact_prebuild_clean={artifact_prebuild_clean})
             configs = Configuration([step_with_file, step_with_dir])
         """)
@@ -104,16 +105,20 @@ def test_no_artifact(test_env: ArtifactsTestEnvironment,
     test_env.check_artifact_present(test_env.artifact_path)
 
 
-def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment) -> None:
-    test_env.write_config_file(artifact_prebuild_clean=True)
+@pytest.mark.parametrize("is_report_artifact", [True, False])
+def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment,
+                                            is_report_artifact: bool) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=True, is_report_artifact=is_report_artifact)
     test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
     test_env.run()
     test_env.check_artifact_present(test_env.artifact_path)
 
 
+@pytest.mark.parametrize("is_report_artifact", [True, False])
 def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
-                                               stdout_checker: FuzzyCallChecker) -> None:
-    test_env.write_config_file(artifact_prebuild_clean=False)
+                                               stdout_checker: FuzzyCallChecker,
+                                               is_report_artifact: bool) -> None:
+    test_env.write_config_file(artifact_prebuild_clean=False, is_report_artifact=is_report_artifact)
     test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
     test_env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
