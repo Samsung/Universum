@@ -40,10 +40,10 @@ jobs:
           TEXT=`echo -e "<b>${{ env.PR_AUTHOR }}</b> created new <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a> '$ESCAPED_NAME' to branch '${{ env.PR_BASE }}'"`
         elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "synchronize" ]]; then
           TEXT=`echo -e "<b>${{ env.PR_AUTHOR }}</b> updated <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
-        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" ]]; then
-          TEXT=`echo -e "<b>${{ env.PR_AUTHOR }}</b> closed <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
         elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
           TEXT=`echo -e "<b>${{ env.PR_MERGED }}</b> merged <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a> to branch <b>'${{ env.PR_BASE }}'</b>"`
+        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" ]]; then
+          TEXT=`echo -e "<b>${{ env.PR_AUTHOR }}</b> closed <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
 
         elif [[ ! -z "${{ github.event.comment }}" ]]; then
           ESCAPED_TEXT=`echo -e "${{ env.COMMENT_BODY }}"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
