@@ -218,8 +218,8 @@ class BaseTestEnvironment:
             # The project_root directory must not exist before launching main
             self.settings.ProjectDirectory.project_root = str(self.temp_dir / "project_root")
             if test_type == "nonci":
-                nonci_dir = self.temp_dir / "project_root"
-                nonci_dir.mkdir()
+                self.nonci_dir = self.temp_dir / "project_root"
+                self.nonci_dir.mkdir()
             self.settings.Launcher.output = "console"
             self.settings.AutomationServer.type = "local"
         self.settings.Output.type = "term"
@@ -264,3 +264,5 @@ class LocalTestEnvironment(BaseTestEnvironment):
             self.src_dir = directory / 'project_sources'
             self.src_dir.mkdir()
             self.settings.LocalMainVcs.source_dir = str(self.src_dir)
+        if test_type == "nonci":
+            self.src_dir = self.nonci_dir
