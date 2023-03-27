@@ -13,8 +13,8 @@ from .conftest import FuzzyCallChecker
 
 class ArtifactsTestEnvironment(LocalTestEnvironment):
 
-    def __init__(self, tmp_path: pathlib.Path) -> None:
-        super().__init__(tmp_path, "main")
+    def __init__(self, tmp_path: pathlib.Path, test_type: str) -> None:
+        super().__init__(tmp_path, test_type)
         self.artifact_name: str = "artifact"
         self.artifact_path: pathlib.Path = self.artifact_dir / self.artifact_name
         self.artifact_name_with_suffix = f"{self.artifact_name}_suffix"
@@ -94,7 +94,7 @@ class ArtifactsTestEnvironment(LocalTestEnvironment):
 
 @pytest.fixture()
 def test_env(tmp_path: pathlib.Path) -> Generator[ArtifactsTestEnvironment, None, None]:
-    yield ArtifactsTestEnvironment(tmp_path)
+    yield ArtifactsTestEnvironment(tmp_path, "main")
 
 
 @pytest.mark.parametrize("prebuild_clean", [True, False])
@@ -105,24 +105,36 @@ def test_no_artifact(test_env: ArtifactsTestEnvironment,
     test_env.check_artifact_present(test_env.artifact_path)
 
 
+@pytest.mark.parametrize("test_type", ["main", "nonci"])
 @pytest.mark.parametrize("is_report_artifact", [True, False])
-def test_artifact_in_sources_prebuild_clean(test_env: ArtifactsTestEnvironment,
-                                            is_report_artifact: bool) -> None:
+def test_artifact_in_sources_prebuild_clean(tmp_path: pathlib.Path,
+                                            is_report_artifact: bool,
+                                            test_type: str) -> None:
+    test_env: ArtifactsTestEnvironment = ArtifactsTestEnvironment(tmp_path, test_type)
     test_env.write_config_file(artifact_prebuild_clean=True, is_report_artifact=is_report_artifact)
     test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
     test_env.run()
     test_env.check_artifact_present(test_env.artifact_path)
 
 
+@pytest.mark.parametrize("test_type", ["main", "nonci"])
 @pytest.mark.parametrize("is_report_artifact", [True, False])
-def test_artifact_in_sources_no_prebuild_clean(test_env: ArtifactsTestEnvironment,
+def test_artifact_in_sources_no_prebuild_clean(tmp_path: pathlib.Path,
                                                stdout_checker: FuzzyCallChecker,
-                                               is_report_artifact: bool) -> None:
+                                               is_report_artifact: bool,
+                                               test_type: str) -> None:
+    test_env: ArtifactsTestEnvironment = ArtifactsTestEnvironment(tmp_path, test_type)
     test_env.write_config_file(artifact_prebuild_clean=False, is_report_artifact=is_report_artifact)
     test_env.create_artifact_file(test_env.src_dir, test_env.artifact_name)
-    test_env.run(expect_failure=True)
-    stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
-    test_env.check_artifact_absent()
+    if test_type == "main":
+        test_env.run(expect_failure=True)
+        stdout_checker.assert_has_calls_with_param("already exist in '/.*' directory", is_regexp=True)
+        test_env.check_artifact_absent()
+    elif test_type == "nonci":
+        test_env.run()
+        test_env.check_artifact_present(test_env.artifact_path)
+    else:
+        pytest.fail(f"Unexpected type type: {test_type}")
 
 
 @pytest.mark.parametrize("no_archive", [False, True])
