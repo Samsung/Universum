@@ -18,10 +18,7 @@ jobs:
     - name: Universum
       run:
         python -u -m universum
-<<<<<<< HEAD
-=======
         --fail-unsuccessful
->>>>>>> master
         --vcs-type=git
         --git-repo $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
         --git-refspec $GITHUB_REF_NAME
