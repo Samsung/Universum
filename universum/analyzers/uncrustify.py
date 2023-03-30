@@ -2,7 +2,8 @@ import argparse
 import difflib
 import os
 import shutil
-from pathlib import Path
+import pathlib
+import re
 
 from typing import Callable, List, Optional, Tuple
 
@@ -31,41 +32,42 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
         raise EnvironmentError("Please specify the '--cfg_file' parameter "
                                "or set an env. variable 'UNCRUSTIFY_CONFIG'")
-    target_folder: Path = utils.normalize(settings.output_directory)
-    if target_folder.exists() and target_folder.samefile(Path.cwd()):
+    target_folder: pathlib.Path = utils.normalize(settings.output_directory)
+    if target_folder.exists() and target_folder.samefile(pathlib.Path.cwd()):
         raise EnvironmentError("Target and source folders for uncrustify are not allowed to match")
-    html_diff_file_writer: Optional[Callable[[Path, List[str], List[str]], None]] = None
+    html_diff_file_writer: Optional[Callable[[pathlib.Path, List[str], List[str]], None]] = None
     if settings.write_html:
         wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
         html_diff_file_writer = HtmlDiffFileWriter(target_folder, wrapcolumn, tabsize)
 
-    files: List[Tuple[Path, Path]] = []
+    cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
+    files: List[Tuple[pathlib.Path, pathlib.Path]] = []
     for src_file in settings.file_list:
         src_file_absolute = utils.normalize(src_file)
-        src_file_relative = src_file_absolute.relative_to(Path.cwd())
-        target_file_absolute: Path = target_folder.joinpath(src_file_relative)
+        src_file_relative = src_file_absolute.relative_to(pathlib.Path.cwd())
+        target_file_absolute: pathlib.Path = target_folder.joinpath(src_file_relative)
         files.append((src_file_absolute, target_file_absolute))
-    cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
-    cmd.extend(settings.file_list)
+        cmd.append(src_file_relative)
+
     utils.run_for_output(cmd)
     return uncrustify_output_parser(files, html_diff_file_writer)
 
 
 class HtmlDiffFileWriter:
 
-    def __init__(self, target_folder: Path, wrapcolumn: int, tabsize: int) -> None:
+    def __init__(self, target_folder: pathlib.Path, wrapcolumn: int, tabsize: int) -> None:
         self.target_folder = target_folder
         self.differ = difflib.HtmlDiff(tabsize=tabsize, wrapcolumn=wrapcolumn)
 
-    def __call__(self, file: Path, src: List[str], target: List[str]) -> None:
-        file_relative = file.relative_to(Path.cwd())
+    def __call__(self, file: pathlib.Path, src: List[str], target: List[str]) -> None:
+        file_relative = file.relative_to(pathlib.Path.cwd())
         out_file_name: str = str(file_relative).replace('/', '_') + '.html'
         with open(self.target_folder.joinpath(out_file_name), 'w', encoding="utf-8") as out_file:
             out_file.write(self.differ.make_file(src, target, context=False))
 
 
-def uncrustify_output_parser(files: List[Tuple[Path, Path]],
-                             write_diff_file: Optional[Callable[[Path, List[str], List[str]], None]]
+def uncrustify_output_parser(files: List[Tuple[pathlib.Path, pathlib.Path]],
+                             write_diff_file: Optional[Callable[[pathlib.Path, List[str], List[str]], None]]
                              ) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, uncrustify_file in files:
@@ -82,16 +84,22 @@ def uncrustify_output_parser(files: List[Tuple[Path, Path]],
 
 
 def _get_wrapcolumn_tabsize(cfg_file: str) -> Tuple[int, int]:
+    wrapcolumn = 120
+    tabsize = 4
     with open(cfg_file, encoding="utf-8") as config:
         for line in config.readlines():
-            if line.startswith("code_width"):
-                wrapcolumn = int(line.split()[2])
-            if line.startswith("input_tab_size"):
-                tabsize = int(line.split()[2])
+            match = re.match(r"^\s*([A-Za-z_]+)\s*[,\=]?\s*([0-9]+)\s*$", line)
+            if not match:
+                continue
+            groups = match.groups()
+            if groups[0] == "code_width":
+                wrapcolumn = int(groups[1])
+            if groups[0] == "input_tab_size":
+                tabsize = int(groups[1])
     return wrapcolumn, tabsize
 
 
-def _get_issues_from_diff(src_file: Path, src: List[str], target: List[str]) -> List[utils.ReportData]:
+def _get_issues_from_diff(src_file: pathlib.Path, src: List[str], target: List[str]) -> List[utils.ReportData]:
     result = []
     matching_blocks: List[difflib.Match] = \
         difflib.SequenceMatcher(a=src, b=target).get_matching_blocks()
@@ -102,7 +110,7 @@ def _get_issues_from_diff(src_file: Path, src: List[str], target: List[str]) -> 
         if not block:
             continue
         line, before, after = block
-        path: Path = src_file.relative_to(Path.cwd())
+        path: pathlib.Path = src_file.relative_to(pathlib.Path.cwd())
         message = _get_issue_message(before, after)
         result.append(utils.ReportData(
             symbol="Uncrustify Code Style issue",

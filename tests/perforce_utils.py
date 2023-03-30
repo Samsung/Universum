@@ -1,9 +1,9 @@
 # pylint: disable = redefined-outer-name, too-many-locals
 
 import time
+import pathlib
 
 import docker
-import py
 import pytest
 from P4 import P4, P4Exception
 from requests.exceptions import ReadTimeout
@@ -177,12 +177,13 @@ def perforce_connection(request, docker_perforce: PerfoceDockerContainer):
 
 
 class PerforceWorkspace(utils.BaseVcsClient):
-    def __init__(self, connection: PerforceConnection, directory: py.path.local):
+    def __init__(self, connection: PerforceConnection, directory: pathlib.Path):
         super().__init__()
-        self.root_directory = directory.mkdir("workspace")
-        self.repo_file = self.root_directory.join("writeable_file.txt")
+        self.root_directory = directory / "workspace"
+        self.root_directory.mkdir()
+        self.repo_file = self.root_directory / "writeable_file.txt"
 
-        self.nonwritable_file: py.path.local = self.root_directory.join("usual_file.txt")
+        self.nonwritable_file: pathlib.Path = self.root_directory / "usual_file.txt"
 
         self.server: PerfoceDockerContainer = connection.server
         self.client_created: bool = False
@@ -202,10 +203,10 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
         self.p4.run("add", str(self.nonwritable_file))
         self.p4.run("edit", str(self.nonwritable_file))
-        self.nonwritable_file.write("File " + str(self.nonwritable_file) + " has no special modifiers")
+        self.nonwritable_file.write_text("File " + str(self.nonwritable_file) + " has no special modifiers")
 
         self.p4.run("add", "-t", "+w", str(self.repo_file))
-        self.repo_file.write("File " + str(self.repo_file) + " is always writable")
+        self.repo_file.write_text("File " + str(self.repo_file) + " is always writable")
 
         change = self.p4.run_change("-o")[0]
         change["Description"] = "Test submit"
@@ -225,9 +226,9 @@ class PerforceWorkspace(utils.BaseVcsClient):
         ]}
         self.p4.save_triggers(triggers)
 
-    def create_file(self, file_name: str) -> py.path.local:
-        p4_new_file = self.root_directory.join(file_name)
-        p4_new_file.write("This is unchanged line 1\nThis is unchanged line 2")
+    def create_file(self, file_name: str) -> pathlib.Path:
+        p4_new_file = self.root_directory / file_name
+        p4_new_file.write_text("This is unchanged line 1\nThis is unchanged line 2")
         self.p4.run("add", str(p4_new_file))
 
         change = self.p4.run_change("-o")[0]
@@ -241,14 +242,14 @@ class PerforceWorkspace(utils.BaseVcsClient):
         change["Description"] = "Delete created file"
         self.p4.run_submit(change)
 
-    def shelve_file(self, file: py.path.local, content: str, shelve_cl=None) -> str:
+    def shelve_file(self, file: pathlib.Path, content: str, shelve_cl=None) -> str:
         if not shelve_cl:
             change = self.p4.fetch_change()
             change["Description"] = "This is a shelved CL"
             shelve_cl = self.p4.save_change(change)[0].split()[1]
 
         self.p4.run_edit("-c", shelve_cl, str(file))
-        file.write(content)
+        file.write_text(content)
         self.p4.run_shelve("-fc", shelve_cl)
         self.p4.run_revert("-c", shelve_cl, str(file))
         return shelve_cl
@@ -274,7 +275,7 @@ class PerforceWorkspace(utils.BaseVcsClient):
     def make_a_change(self) -> str:
         tmpfile = self.repo_file
         self.p4.run("edit", str(tmpfile))
-        tmpfile.write("Change #1 " + str(tmpfile))
+        tmpfile.write_text("Change #1 " + str(tmpfile))
 
         change = self.p4.run_change("-o")[0]
         change["Description"] = "Test submit #1"
@@ -293,8 +294,8 @@ class PerforceWorkspace(utils.BaseVcsClient):
 
 
 @pytest.fixture()
-def perforce_workspace(request, perforce_connection: PerforceConnection, tmpdir: py.path.local):
-    workspace = PerforceWorkspace(perforce_connection, tmpdir)
+def perforce_workspace(request, perforce_connection: PerforceConnection, tmp_path: pathlib.Path):
+    workspace = PerforceWorkspace(perforce_connection, tmp_path)
     try:
         workspace.setup()
         yield workspace
@@ -303,8 +304,8 @@ def perforce_workspace(request, perforce_connection: PerforceConnection, tmpdir:
 
 
 class P4TestEnvironment(utils.BaseTestEnvironment):
-    def __init__(self, perforce_workspace: PerforceWorkspace, directory: py.path.local, test_type: str):
-        db_file = directory.join("p4poll.json")
+    def __init__(self, perforce_workspace: PerforceWorkspace, directory: pathlib.Path, test_type: str):
+        db_file = directory / "p4poll.json"
         super().__init__(perforce_workspace, directory, test_type, str(db_file))
         self.vcs_client: PerforceWorkspace
 
@@ -332,4 +333,4 @@ class P4TestEnvironment(utils.BaseTestEnvironment):
         shelve_cl = self.vcs_client.shelve_file(self.vcs_client.repo_file, config)
         settings = self.settings
         settings.PerforceMainVcs.shelve_cls = [shelve_cl]
-        settings.Launcher.config_path = self.vcs_client.repo_file.basename
+        settings.Launcher.config_path = self.vcs_client.repo_file.name

@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 import sys
 
 from .modules.output.output import MinimalOut
@@ -19,7 +19,7 @@ class ConfigCreator(Module):
         config_name = ".universum.py"
         self.out.log(f"Creating an example configuration file '{config_name}'")
 
-        config = Path(config_name)
+        config = pathlib.Path(config_name)
         config.write_text(f"""#!/usr/bin/env {PYTHON_VERSION}
 
 from universum.configuration_support import Configuration, Step

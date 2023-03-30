@@ -1,6 +1,6 @@
 # pylint: disable = redefined-outer-name
 
-import py
+import pathlib
 import pytest
 import P4
 
@@ -13,7 +13,7 @@ from .utils import python, LocalTestEnvironment
 
 def test_which_universum_is_tested(docker_main: UniversumRunner, pytestconfig):
     # THIS TEST PATCHES ACTUAL SOURCES! Discretion is advised
-    init_file = pytestconfig.rootpath.joinpath("universum", "__init__.py")
+    init_file = pytestconfig.rootpath / "universum" / "__init__.py"
     backup = init_file.read_bytes()
     test_line = utils.randomize_name("THIS IS A TESTING VERSION")
     init_file.write_text(f"""__title__ = "Universum"
@@ -42,14 +42,14 @@ def test_teardown_fixture_output_verification(print_text_on_teardown: None):
 
 
 @pytest.mark.parametrize("should_not_execute", [True, False], ids=['no-sources', 'deleted-sources'])
-def test_clean_sources_exception(tmpdir: py.path.local, stdout_checker: FuzzyCallChecker, should_not_execute):
-    env = LocalTestEnvironment(tmpdir, "main")
+def test_clean_sources_exception(tmp_path: pathlib.Path, stdout_checker: FuzzyCallChecker, should_not_execute):
+    env = LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
-    source_directory = tmpdir
+    source_directory = tmp_path
     if should_not_execute:
         source_directory = source_directory / 'nonexisting_dir'
     env.settings.LocalMainVcs.source_dir = str(source_directory)
-    env.configs_file.write(f"""
+    env.configs_file.write_text(f"""
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Test configuration",
@@ -84,8 +84,8 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: pathlib.Path):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="main")
 
 
 def test_p4_multiple_spaces_in_mappings(perforce_environment: P4TestEnvironment):
@@ -102,7 +102,7 @@ configs = Configuration([dict(name="This is a changed step name", command=["ls",
 """
     perforce_environment.shelve_config(config)
     perforce_environment.run()
-    diff = perforce_environment.artifact_dir.join('REPOSITORY_DIFFERENCE.txt').read()
+    diff = (perforce_environment.artifact_dir / 'REPOSITORY_DIFFERENCE.txt').read_text()
     assert "This is a changed step name" in diff
     assert "b'" not in diff
 
@@ -134,7 +134,7 @@ configs = Configuration([Step(name="{step_name}", artifacts="output.json",
     perforce_environment.settings.Launcher.output = "file"
 
     perforce_environment.run()
-    log = perforce_environment.artifact_dir.join(f'{step_name}_log.txt').read()
+    log = (perforce_environment.artifact_dir / f'{step_name}_log.txt').read_text()
     assert "Module sh got exit code 1" in log
     assert "Getting file diff failed due to Perforce server internal error" in log
 
@@ -168,7 +168,7 @@ def perforce_environment_with_files(perforce_environment: P4TestEnvironment):
     yield {"env": perforce_environment, "files": files}
 
     for entry in files:
-        perforce_environment.vcs_client.delete_file(entry.basename)
+        perforce_environment.vcs_client.delete_file(entry.name)
 
 
 def test_success_p4_resolve_unshelved(perforce_environment_with_files: dict, stdout_checker: FuzzyCallChecker):
@@ -177,7 +177,7 @@ def test_success_p4_resolve_unshelved(perforce_environment_with_files: dict, std
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.name}'"])])
 """
     env.shelve_config(config)
     cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
@@ -195,7 +195,7 @@ def test_fail_p4_resolve_unshelved(perforce_environment_with_files: dict, stdout
     config = f"""
 from universum.configuration_support import Step, Configuration
 
-configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.basename}'"])])
+configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p4_file.name}'"])])
 """
     env.shelve_config(config)
     cls = [env.vcs_client.shelve_file(p4_file, "This is changed line 1\nThis is unchanged line 2"),
@@ -204,7 +204,7 @@ configs = Configuration([Step(name="Print file", command=["bash", "-c", "cat '{p
 
     env.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param("Problems during merge while resolving shelved CLs")
-    stdout_checker.assert_has_calls_with_param(str(p4_file.basename))
+    stdout_checker.assert_has_calls_with_param(str(p4_file.name))
 
 
 def test_success_p4_resolve_unshelved_multiple(perforce_environment_with_files: dict):
@@ -223,6 +223,26 @@ configs = Configuration([Step(name="Step one", command=["ls", "-l"])])
     env.settings.PerforceMainVcs.shelve_cls.extend([cl_1, cl_2])
 
     env.run()
-    repo_state = env.artifact_dir.join('REPOSITORY_STATE.txt').read()
-    assert p4_files[0].basename in repo_state
-    assert p4_files[1].basename in repo_state
+    repo_state = (env.artifact_dir / 'REPOSITORY_STATE.txt').read_text()
+    assert p4_files[0].name in repo_state
+    assert p4_files[1].name in repo_state
+
+
+def test_exit_code_failed_report(perforce_environment: P4TestEnvironment):
+    """
+    This test checks for previous bug where exceptions during result reporting led to exit code 0
+    even when '--fail-unsuccessful' option was enabled (and some steps failed)
+    """
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
+"""
+    perforce_environment.shelve_config(config)
+    perforce_environment.settings.MainVcs.report_to_review = True
+    perforce_environment.settings.Swarm.server_url = "some_server"
+    perforce_environment.settings.Swarm.review_id = "some_id"
+    perforce_environment.settings.Swarm.change = perforce_environment.settings.PerforceMainVcs.shelve_cls[0]
+    perforce_environment.settings.Main.fail_unsuccessful = True
+
+    perforce_environment.run(expect_failure=True)

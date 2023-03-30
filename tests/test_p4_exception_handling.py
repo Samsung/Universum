@@ -1,6 +1,8 @@
 # pylint: disable = redefined-outer-name
 
-import py
+import os
+import shutil
+import pathlib
 import pytest
 
 from universum import __main__
@@ -9,8 +11,8 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def perforce_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="main")
+def perforce_environment(perforce_workspace: PerforceWorkspace, tmp_path: pathlib.Path):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="main")
 
 
 def test_p4_forbidden_local_revert(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
@@ -26,8 +28,8 @@ configs = Configuration([dict(name="Restrict changes", command=["chmod", "-R", "
     perforce_environment.shelve_config(config)
     result = __main__.run(perforce_environment.settings)
     # Clean up the directory at once to make sure it doesn't remain non-writable even if some assert fails
-    perforce_environment.temp_dir.chmod(0o0777, rec=1)
-    perforce_environment.temp_dir.remove(rec=1)
+    os.system(f"chmod -R 777 {perforce_environment.temp_dir}")
+    shutil.rmtree(str(perforce_environment.temp_dir))
 
     assert result == 0
 
