@@ -1,3 +1,5 @@
+# pylint: disable = invalid-name
+
 import re
 import os
 
@@ -94,8 +96,10 @@ def build_step_command(files_to_create, exit_code):
 
 
 def write_config_file(tmpdir, conditional_steps_info):
-    true_branch_step = f"Step(**{str(conditional_steps_info.true_branch_step)})" if conditional_steps_info.true_branch_step else "None"
-    false_branch_step = f"Step(**{str(conditional_steps_info.false_branch_step)})" if conditional_steps_info.false_branch_step else "None"
+    true_branch_step = f"Step(**{str(conditional_steps_info.true_branch_step)})" \
+        if conditional_steps_info.true_branch_step else "None"
+    false_branch_step = f"Step(**{str(conditional_steps_info.false_branch_step)})" \
+        if conditional_steps_info.false_branch_step else "None"
     config_lines = [
         "from universum.configuration_support import Configuration, Step",
         f"true_branch_step = {true_branch_step}",
