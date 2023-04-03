@@ -149,12 +149,12 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                     raise CriticalCiException(text)
 
             # Check existence in 'artifacts' directory: wildcards NOT applied
-            path_to_check1 = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
-            path_to_check2 = os.path.join(path_to_check1 + ".zip")
-            if os.path.exists(path_to_check1) or os.path.exists(path_to_check2):
-                text = f"Build artifact '{os.path.basename(item['path'])}' already present in artifact directory."
-                text += "\nPossible reason of this error: previous build results in working directory"
-                raise CriticalCiException(text)
+            artifact_file = os.path.join(self.artifact_dir, os.path.basename(item["path"]))
+            self._check_artifact_absent(artifact_file)
+
+            if not self.settings.no_archive:
+                artifact_zip_archive = os.path.join(artifact_file + ".zip")
+                self._check_artifact_absent(artifact_zip_archive)
 
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
@@ -254,3 +254,10 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             pass
         os.makedirs(self.artifact_dir)
         self.html_output.artifact_dir_ready = True
+
+    @staticmethod
+    def _check_artifact_absent(artifact_path: str):
+        if os.path.exists(artifact_path):
+            text: str = f"Build artifact '{os.path.basename(artifact_path)}' already present in artifact directory."
+            text += "\nPossible reason of this error: previous build results in working directory"
+            raise CriticalCiException(text)
