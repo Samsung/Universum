@@ -53,6 +53,8 @@ class Reporter(HasOutput, HasStructure):
                             help="Include only the short list of failed steps to reporting comments")
         parser.add_argument("--report-no-vote", "-rnv", action="store_true", dest="no_vote",
                             help="Do not vote up/down review depending on result")
+        parser.add_argument("--fail-unsuccessful", "-rfu", action="store_true", dest="fail_unsuccessful",
+                            help="Return non-zero exit code if any step failed")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

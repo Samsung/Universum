@@ -447,7 +447,7 @@ If the conditional step fails, the step from the ``if_failed`` parameter will be
 
 Configuration example:
 
-.. testcode::
+.. code-block:: python
 
     from universum.configuration_support import Configuration, Step
 
