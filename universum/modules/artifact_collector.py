@@ -1,6 +1,4 @@
 import codecs
-import distutils
-from distutils import dir_util, errors
 import os
 import shutil
 import zipfile
@@ -228,11 +226,11 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                     # Single file archiving is not implemented at the moment
                     pass
             try:
-                distutils.dir_util.copy_tree(matching_path, destination)
+                shutil.copytree(matching_path, destination)
                 if is_report:
                     text = "'" + artifact_name + "' is not a file and cannot be reported as an artifact"
                     self.out.log(text)
-            except distutils.errors.DistutilsFileError:
+            except NotADirectoryError:
                 shutil.copyfile(matching_path, destination)
                 if is_report:
                     artifact_path = self.automation_server.artifact_path(self.artifact_dir, artifact_name)
