@@ -254,8 +254,7 @@ class StructureHandler(HasOutput):
                                                           children=Configuration([step_to_execute]),
                                                           step_executor=step_executor,
                                                           skip_execution=False)
-                else:  # conditional step should be always successful
-                    current_step_failed = False
+                current_step_failed = False  # conditional step should be always successful
             else:
                 if merged_item.finish_background and self.active_background_steps:
                     self.out.log("All ongoing background steps should be finished before next step execution")
