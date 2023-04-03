@@ -686,7 +686,7 @@ class Configuration:
         return result
 
     def filter(self, checker: Callable[[Step], bool],
-               parent: Step = None) -> 'Configuration':
+               parent: Optional[Step] = None) -> 'Configuration':
         """
         This function is supposed to be called from main script, not configuration file.
         It uses provided `checker` to find all the configurations that pass the check,
