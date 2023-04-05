@@ -1,20 +1,17 @@
 import argparse
 import json
-
 from typing import List
 
 from . import utils
 
 
-def pylint_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pylint analyzer")
+def add_pylint_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
-    return parser
 
 
 @utils.sys_exit
-@utils.analyzer(pylint_argument_parser())
+@utils.analyzer("Pylint analyzer", add_pylint_arguments)
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     cmd = [f"python{settings.version}", '-m', 'pylint', '-f', 'json']
     if settings.rcfile:
