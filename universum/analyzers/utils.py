@@ -1,11 +1,12 @@
-import json
-import sys
 import argparse
 import glob
+import json
+import os
 import pathlib
 import subprocess
-
+import sys
 from typing import Any, Callable, List, Optional, Tuple, Set
+
 from typing_extensions import TypedDict
 
 from universum.lib.ci_exception import CiException
@@ -19,18 +20,30 @@ class AnalyzerException(CiException):
         self.message: Optional[str] = message
 
 
-def analyzer(parser: argparse.ArgumentParser):
+def create_parser(description: str) -> argparse.ArgumentParser:
+    module_package = sys.modules["__main__"].__package__
+    module_name, _ = os.path.splitext(os.path.basename(sys.argv[0]))
+
+    prog = f"python{sys.version_info.major}.{sys.version_info.minor} -m {module_package}.{module_name}"
+    return argparse.ArgumentParser(prog=prog, description=description)
+
+
+def analyzer(description: str, add_analyzer_arguments: Callable[[argparse.ArgumentParser], None]):
     """
     Wraps the analyzer specific data and adds common protocol information:
       --files argument and its processing
       --result-file argument and its processing
     This function exists to define analyzer report interface
 
-    :param parser: Definition of analyzer custom arguments
+    :param description: Description of the analyzer, to be used in help
+    :param add_analyzer_arguments: Function that adds analyzer-specific arguments to parser
     :return: Wrapped analyzer with common reporting behaviour
     """
+
     def internal(func: Callable[[argparse.Namespace], List[ReportData]]) -> Callable[[], List[ReportData]]:
         def wrapper() -> List[ReportData]:
+            parser = create_parser(description)
+            add_analyzer_arguments(parser)
             add_files_argument(parser)
             add_result_file_argument(parser)
             settings: argparse.Namespace = parser.parse_args()
@@ -75,6 +88,7 @@ def sys_exit(func: Callable[[], Any]) -> Callable[[], None]:
     >>> wrap_system_exit(sys_exit(_raise_custom))
     3
     """
+
     def wrapper() -> None:
         exit_code: int
         try:
