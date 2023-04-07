@@ -35,7 +35,8 @@ setup(
         'sh',
         'lxml',
         'typing-extensions',
-        'ansi2html'
+        'ansi2html',
+        'pyyaml==6.0'
     ],
     extras_require={
         'p4': [p4],
@@ -56,7 +57,8 @@ setup(
             'coverage',
             'mypy',
             'types-requests',
-            'selenium==3.141'
+            'selenium==3.141',
+            'types-PyYAML==6.0'
         ]
     },
     package_data={'': ['*.css', '*.js']}
