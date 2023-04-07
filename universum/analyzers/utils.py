@@ -20,30 +20,26 @@ class AnalyzerException(CiException):
         self.message: Optional[str] = message
 
 
-def create_parser(description: str) -> argparse.ArgumentParser:
-    module_package = sys.modules["__main__"].__package__
-    module_name, _ = os.path.splitext(os.path.basename(sys.argv[0]))
+def create_parser(description: str, module_path: str) -> argparse.ArgumentParser:
+    module_name, _ = os.path.splitext(os.path.basename(module_path))
 
-    prog = f"python{sys.version_info.major}.{sys.version_info.minor} -m {module_package}.{module_name}"
+    prog = f"python{sys.version_info.major}.{sys.version_info.minor} -m {__package__}.{module_name}"
     return argparse.ArgumentParser(prog=prog, description=description)
 
 
-def analyzer(description: str, add_analyzer_arguments: Callable[[argparse.ArgumentParser], None]):
+def analyzer(parser: argparse.ArgumentParser):
     """
     Wraps the analyzer specific data and adds common protocol information:
       --files argument and its processing
       --result-file argument and its processing
     This function exists to define analyzer report interface
 
-    :param description: Description of the analyzer, to be used in help
-    :param add_analyzer_arguments: Function that adds analyzer-specific arguments to parser
+    :param parser: Definition of analyzer custom arguments
     :return: Wrapped analyzer with common reporting behaviour
     """
 
     def internal(func: Callable[[argparse.Namespace], List[ReportData]]) -> Callable[[], List[ReportData]]:
         def wrapper() -> List[ReportData]:
-            parser = create_parser(description)
-            add_analyzer_arguments(parser)
             add_files_argument(parser)
             add_result_file_argument(parser)
             settings: argparse.Namespace = parser.parse_args()

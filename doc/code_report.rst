@@ -62,7 +62,6 @@ Pylint
 
 .. argparse::
     :ref: universum.analyzers.pylint.pylint_argument_parser
-    :prog: {python} -m universum.analyzers.pylint
 
 Config example for ``universum.analyzers.pylint``:
 
@@ -99,7 +98,6 @@ Mypy
 
 .. argparse::
     :ref: universum.analyzers.mypy.mypy_argument_parser
-    :prog: {python} -m universum.analyzers.mypy
 
 Config example for ``universum.analyzers.mypy``:
 
@@ -136,7 +134,6 @@ Uncrustify
 
 .. argparse::
     :ref: universum.analyzers.uncrustify.uncrustify_argument_parser
-    :prog: {python} -m universum.analyzers.uncrustify
     :nodefault:
 
 Config example for ``universum.analyzers.uncrustify``:

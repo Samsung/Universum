@@ -9,7 +9,8 @@ from typing import Callable, List, Optional, Tuple
 from . import utils
 
 
-def add_uncrustify_arguments(parser: argparse.ArgumentParser) -> None:
+def uncrustify_argument_parser() -> argparse.ArgumentParser:
+    parser = utils.create_parser("Uncrustify analyzer", __file__)
     parser.add_argument("--cfg-file", "-cf", dest="cfg_file",
                         help="Name of the configuration file of Uncrustify; "
                              "can also be set via 'UNCRUSTIFY_CONFIG' env. variable")
@@ -19,10 +20,11 @@ def add_uncrustify_arguments(parser: argparse.ArgumentParser) -> None:
                              "Has to be distinct from source directory")
     parser.add_argument("--report-html", dest="write_html", action="store_true", default=False,
                         help="(optional) Set to generate html reports for each modified file")
+    return parser
 
 
 @utils.sys_exit
-@utils.analyzer("Uncrustify analyzer", add_uncrustify_arguments)
+@utils.analyzer(uncrustify_argument_parser())
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     if not shutil.which('uncrustify'):
         raise EnvironmentError("Please install uncrustify")
