@@ -365,7 +365,7 @@ class Step:
         if result is not None:
             return result
         result = self.__dict__.get(key)
-        if result:
+        if result is not None:
             warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
             return result
         return default
