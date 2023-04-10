@@ -356,8 +356,8 @@ class Step:
         'test'
         >>> step.get('command', 'test')
         'test'
-        >>> step.get('t1')
-        None
+        >>> step.get('t1') is None
+        True
         >>> step.get('t2')
         False
         """
