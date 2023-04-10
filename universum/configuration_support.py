@@ -344,7 +344,7 @@ class Step:
         ...         warnings.simplefilter("always")
         ...         f()
         ...         return w
-        >>> step = Step(name='foo', my_var='bar')
+        >>> step = Step(name='foo', my_var='bar', t1=None, t2=False)
         >>> do_and_get_warnings(lambda : step.get('name', 'test'))  # doctest: +ELLIPSIS
         [<warnings.WarningMessage object at ...>]
 
@@ -356,9 +356,13 @@ class Step:
         'test'
         >>> step.get('command', 'test')
         'test'
+        >>> step.get(t1)
+        None
+        >>> step.get(t2)
+        False
         """
         result = self._extras.get(key)
-        if result:
+        if result is not None:
             return result
         result = self.__dict__.get(key)
         if result:
