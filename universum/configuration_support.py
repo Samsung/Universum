@@ -356,16 +356,16 @@ class Step:
         'test'
         >>> step.get('command', 'test')
         'test'
-        >>> step.get(t1)
+        >>> step.get('t1')
         None
-        >>> step.get(t2)
+        >>> step.get('t2')
         False
         """
         result = self._extras.get(key)
-        if result is not None:
+        if result is not None:  # for custom fields there is a distinction between None and falsy values
             return result
         result = self.__dict__.get(key)
-        if result is not None:
+        if result:  # non-custom fields initialized with falsy values
             warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
             return result
         return default
