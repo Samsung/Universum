@@ -10,7 +10,7 @@ from . import utils
 
 
 def uncrustify_argument_parser() -> argparse.ArgumentParser:
-    parser = utils.diff_analyzer_argument_parser("Uncrustify analyzer", __file__)
+    parser = utils.diff_analyzer_argument_parser("Uncrustify analyzer", __file__, "uncrustify")
     parser.add_argument("--cfg-file", "-cf", dest="cfg_file",
                         help="Name of the configuration file of Uncrustify; "
                              "can also be set via 'UNCRUSTIFY_CONFIG' env. variable")
@@ -26,7 +26,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
 
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
         raise EnvironmentError("Please specify the '--cfg-file' parameter "
-                               "or set 'UNCRUSTIFY_CONFIG' environment variable ")
+                               "or set 'UNCRUSTIFY_CONFIG' environment variable")
 
     html_diff_file_writer: Optional[Callable[[pathlib.Path, List[str], List[str]], None]] = None
     if settings.write_html:

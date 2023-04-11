@@ -8,7 +8,7 @@ from . import utils
 
 
 def clang_format_argument_parser() -> argparse.ArgumentParser:
-    parser = utils.diff_analyzer_argument_parser("Clang-format analyzer", __file__)
+    parser = utils.diff_analyzer_argument_parser("Clang-format analyzer", __file__, "clang-format")
     parser.add_argument("--executable", "-e", dest="executable", default="clang-format",
                         help="The name of the clang-format executable, default: clang-format")
     parser.add_argument("--style", dest="style",
