@@ -4,11 +4,11 @@ from typing import Callable, List, Optional, Tuple
 
 import yaml
 
-from . import utils
+from . import utils, diff_utils
 
 
 def clang_format_argument_parser() -> argparse.ArgumentParser:
-    parser = utils.diff_analyzer_argument_parser("Clang-format analyzer", __file__, "clang-format")
+    parser = diff_utils.diff_analyzer_argument_parser("Clang-format analyzer", __file__, "clang-format")
     parser.add_argument("--executable", "-e", dest="executable", default="clang-format",
                         help="The name of the clang-format executable, default: clang-format")
     parser.add_argument("--style", dest="style",
@@ -26,12 +26,12 @@ def _add_style_param(cmd: List[str], settings: argparse.Namespace) -> None:
 @utils.analyzer(clang_format_argument_parser())
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     settings.name = "clang-format"
-    utils.diff_analyzer_common_main(settings)
+    diff_utils.diff_analyzer_common_main(settings)
 
     html_diff_file_writer: Optional[Callable[[pathlib.Path, List[str], List[str]], None]] = None
     if settings.write_html:
         wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings)
-        html_diff_file_writer = utils.HtmlDiffFileWriter(settings.target_folder, wrapcolumn, tabsize)
+        html_diff_file_writer = diff_utils.HtmlDiffFileWriter(settings.target_folder, wrapcolumn, tabsize)
 
     files: List[Tuple[pathlib.Path, pathlib.Path]] = []
     for src_file_absolute, target_file_absolute, _ in utils.get_files_with_absolute_paths(settings):
@@ -42,7 +42,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
         with open(target_file_absolute, "w", encoding="utf-8") as output_file:
             output_file.write(output)
 
-    return utils.diff_analyzer_output_parser(files, html_diff_file_writer)
+    return diff_utils.diff_analyzer_output_parser(files, html_diff_file_writer)
 
 
 def _get_wrapcolumn_tabsize(settings: argparse.Namespace) -> Tuple[int, int]:

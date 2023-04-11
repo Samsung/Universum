@@ -1,16 +1,14 @@
 import argparse
-import difflib
 import os
 import pathlib
 import re
-import shutil
 from typing import Callable, List, Optional, Tuple
 
-from . import utils
+from . import utils, diff_utils
 
 
 def uncrustify_argument_parser() -> argparse.ArgumentParser:
-    parser = utils.diff_analyzer_argument_parser("Uncrustify analyzer", __file__, "uncrustify")
+    parser = diff_utils.diff_analyzer_argument_parser("Uncrustify analyzer", __file__, "uncrustify")
     parser.add_argument("--cfg-file", "-cf", dest="cfg_file",
                         help="Name of the configuration file of Uncrustify; "
                              "can also be set via 'UNCRUSTIFY_CONFIG' env. variable")
@@ -22,7 +20,7 @@ def uncrustify_argument_parser() -> argparse.ArgumentParser:
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     settings.name = "uncrustify"
     settings.executable = "uncrustify"
-    utils.diff_analyzer_common_main(settings)
+    diff_utils.diff_analyzer_common_main(settings)
 
     if not settings.cfg_file and 'UNCRUSTIFY_CONFIG' not in os.environ:
         raise EnvironmentError("Please specify the '--cfg-file' parameter "
@@ -31,7 +29,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     html_diff_file_writer: Optional[Callable[[pathlib.Path, List[str], List[str]], None]] = None
     if settings.write_html:
         wrapcolumn, tabsize = _get_wrapcolumn_tabsize(settings.cfg_file)
-        html_diff_file_writer = utils.HtmlDiffFileWriter(settings.target_folder, wrapcolumn, tabsize)
+        html_diff_file_writer = diff_utils.HtmlDiffFileWriter(settings.target_folder, wrapcolumn, tabsize)
 
     cmd = ["uncrustify", "-q", "-c", settings.cfg_file, "--prefix", settings.output_directory]
     files: List[Tuple[pathlib.Path, pathlib.Path]] = []
@@ -40,7 +38,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
         cmd.append(src_file_relative)
 
     utils.run_for_output(cmd)
-    return utils.diff_analyzer_output_parser(files, html_diff_file_writer)
+    return diff_utils.diff_analyzer_output_parser(files, html_diff_file_writer)
 
 
 def _get_wrapcolumn_tabsize(cfg_file: str) -> Tuple[int, int]:
