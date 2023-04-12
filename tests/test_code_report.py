@@ -265,7 +265,6 @@ def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyz
     assert expected_log in log, f"'{expected_log}' is not found in '{log}'"
 
 
-# @pytest.mark.parametrize('analyzer', ['uncrustify', 'clang_format'])
 @pytest.mark.parametrize('analyzer, extra_args, tested_content, expected_success, expected_artifact', [
     ['uncrustify', ["--report-html"], source_code_c, True, False],
     ['uncrustify', ["--report-html"], source_code_c.replace('\t', ' '), False, True],

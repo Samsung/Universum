@@ -156,7 +156,7 @@ def report_to_file(issues: List[ReportData], json_file: Optional[str] = None) ->
         sys.stdout.write(issues_json)
 
 
-def normalize(file: str) -> pathlib.Path:
+def normalize_path(file: str) -> pathlib.Path:
     file_path = pathlib.Path(file)
     return file_path if file_path.is_absolute() else pathlib.Path.cwd().joinpath(file_path)
 
@@ -165,7 +165,7 @@ def get_files_with_absolute_paths(settings: argparse.Namespace) -> Iterable[Tupl
                                                                                   pathlib.Path,
                                                                                   pathlib.Path]]:
     for src_file in settings.file_list:
-        src_file_absolute = normalize(src_file)
+        src_file_absolute = normalize_path(src_file)
         src_file_relative = src_file_absolute.relative_to(pathlib.Path.cwd())
         target_file_absolute: pathlib.Path = settings.target_folder.joinpath(src_file_relative)
         yield src_file_absolute, target_file_absolute, src_file_relative

@@ -20,8 +20,11 @@ class HtmlDiffFileWriter:
             out_file.write(self.differ.make_file(src, target, context=False))
 
 
+DiffWriter = Callable[[pathlib.Path, List[str], List[str]], None]
+
+
 def diff_analyzer_output_parser(files: List[Tuple[pathlib.Path, pathlib.Path]],
-                                write_diff_file: Optional[Callable[[pathlib.Path, List[str], List[str]], None]]
+                                write_diff_file: Optional[DiffWriter]
                                 ) -> List[utils.ReportData]:
     result: List[utils.ReportData] = []
     for src_file, dst_file in files:
@@ -92,11 +95,18 @@ def _get_mismatching_block(previous_match: difflib.Match,  # src[a:a+size] = tar
 
 
 def _get_text_for_block(start: int, end: int, lines: List[str]) -> str:
-    return _replace_invisible_symbols(''.join(lines[start: end]))
+    return _replace_whitespace_characters(''.join(lines[start: end]))
 
 
-def _replace_invisible_symbols(line: str) -> str:
-    for old_str, new_str in zip([" ", "\t", "\n"], ["\u00b7", "\u2192\u2192\u2192\u2192", "\u2193\u000a"]):
+_whitespace_character_mapping = {
+    " ": "\u00b7",
+    "\t": "\u2192\u2192\u2192\u2192",
+    "\n": "\u2193\u000a"
+}.items()
+
+
+def _replace_whitespace_characters(line: str) -> str:
+    for old_str, new_str in _whitespace_character_mapping:
         line = line.replace(old_str, new_str)
     return line
 
@@ -112,7 +122,7 @@ def diff_analyzer_argument_parser(description: str, module_path: str, output_dir
 
 
 def diff_analyzer_common_main(settings: argparse.Namespace) -> None:
-    settings.target_folder = utils.normalize(settings.output_directory)
+    settings.target_folder = utils.normalize_path(settings.output_directory)
     if settings.target_folder.exists() and settings.target_folder.samefile(pathlib.Path.cwd()):
         raise EnvironmentError("Target folder must not be identical to source folder")
 

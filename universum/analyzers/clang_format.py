@@ -17,7 +17,7 @@ def clang_format_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _add_style_param(cmd: List[str], settings: argparse.Namespace) -> None:
+def _add_style_param_if_present(cmd: List[str], settings: argparse.Namespace) -> None:
     if settings.style:
         cmd.extend(["-style", settings.style])
 
@@ -37,7 +37,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     for src_file_absolute, target_file_absolute, _ in utils.get_files_with_absolute_paths(settings):
         files.append((src_file_absolute, target_file_absolute))
         cmd = [settings.executable, src_file_absolute]
-        _add_style_param(cmd, settings)
+        _add_style_param_if_present(cmd, settings)
         output, _ = utils.run_for_output(cmd)
         with open(target_file_absolute, "w", encoding="utf-8") as output_file:
             output_file.write(output)
@@ -47,7 +47,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
 
 def _get_wrapcolumn_tabsize(settings: argparse.Namespace) -> Tuple[int, int]:
     cmd = [settings.executable, "--dump-config"]
-    _add_style_param(cmd, settings)
+    _add_style_param_if_present(cmd, settings)
     output, error = utils.run_for_output(cmd)
     if error:
         raise utils.AnalyzerException(message="clang-format --dump-config failed with the following error output: " +
