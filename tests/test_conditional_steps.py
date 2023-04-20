@@ -34,7 +34,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
 
         return steps_info
 
-    def check_conditional_step(self, steps_info) -> None:
+    def check_conditional_step(self, steps_info: StepsInfo) -> None:
         self._write_config_file(steps_info)
         self.run()
 
