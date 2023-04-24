@@ -16,7 +16,7 @@ from .utils import python, python_version
 def fixture_runner_with_analyzers(docker_main: UniversumRunner):
     docker_main.environment.install_python_module("pylint")
     docker_main.environment.install_python_module("mypy")
-    docker_main.environment.assert_successful_execution("apt install uncrustify")
+    docker_main.environment.assert_successful_execution("apt install -y uncrustify clang-format")
     yield docker_main
 
 
@@ -128,6 +128,11 @@ code_width = 120
 input_tab_size = 2
 """
 
+config_clang_format = """
+---
+AllowShortFunctionsOnASingleLine: Empty
+"""
+
 log_fail = r'Found [0-9]+ issues'
 log_success = r'Issues not found'
 
@@ -167,7 +172,10 @@ def test_code_report_direct_log(runner_with_analyzers: UniversumRunner, tested_c
 
 @pytest.mark.parametrize('analyzers, extra_args, tested_content, expected_success', [
     [['uncrustify'], [], source_code_c, True],
-    [['uncrustify'], [], source_code_c.replace('\t', ' '), False],
+    [['uncrustify'], [], source_code_c.replace('\t', ' '), False],    # by default uncrustify converts spaces to tabs
+    [['clang_format'], [], source_code_c.replace('\t', '  '), True],  # by default clang-format expands tabs to 2 spaces
+    [['clang_format'], [], source_code_c.replace('\t', ' '), False],
+    [['clang_format', 'uncrustify'], [], source_code_c.replace('\t', ' '), False],
     [['pylint', 'mypy'], ["--python-version", python_version()], source_code_python, True],
     [['pylint'], ["--python-version", python_version()], source_code_python + '\n', False],
     [['mypy'], ["--python-version", python_version()], source_code_python.replace(': str', ': int'), False],
@@ -177,6 +185,9 @@ def test_code_report_direct_log(runner_with_analyzers: UniversumRunner, tested_c
 ], ids=[
     'uncrustify_no_issues',
     'uncrustify_found_issues',
+    'clang_format_no_issues',
+    'clang_format_found_issues',
+    'clang_format_and_uncrustify_found_issues',
     'pylint_and_mypy_both_no_issues',
     'pylint_found_issues',
     'mypy_found_issues',
@@ -194,6 +205,9 @@ def test_code_report_log(runner_with_analyzers: UniversumRunner, analyzers, extr
         if analyzer == 'uncrustify':
             args += ["--cfg-file", "cfg"]
             (runner_with_analyzers.local.root_directory / "cfg").write_text(config_uncrustify)
+        elif analyzer == 'clang_format':
+            (runner_with_analyzers.local.root_directory / ".clang-format").write_text(config_clang_format)
+
         config.add_analyzer(analyzer, args)
 
     log = runner_with_analyzers.run(config.finalize())
@@ -210,7 +224,7 @@ def test_without_code_report_command(runner_with_analyzers: UniversumRunner):
     assert not pattern.findall(log)
 
 
-@pytest.mark.parametrize('analyzer', ['pylint', 'mypy', 'uncrustify'])
+@pytest.mark.parametrize('analyzer', ['pylint', 'mypy', 'uncrustify', 'clang_format'])
 @pytest.mark.parametrize('arg_set, expected_log', [
     [["--files", "source_file.py"], "error: the following arguments are required: --result-file"],
     [["--files", "source_file.py", "--result-file"], "result-file: expected one argument"],
@@ -235,10 +249,12 @@ def test_analyzer_python_version_params(runner_with_analyzers: UniversumRunner, 
                 "--result-file", "${CODE_REPORT_FILE}", '--rcfile'],
      "rcfile: expected one argument"],
     ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}"],
-     "Please specify the '--cfg_file' parameter or set an env. variable 'UNCRUSTIFY_CONFIG'"],
+     "Please specify the '--cfg-file' parameter or set 'UNCRUSTIFY_CONFIG' environment variable"],
     ['uncrustify', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}",
                     "--cfg-file", "cfg", "--output-directory", "."],
-     "Target and source folders for uncrustify are not allowed to match"],
+     "Target folder must not be identical to source folder"],
+    ['clang_format', ["--files", "source_file", "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "."],
+     "Target folder must not be identical to source folder"],
 ])
 def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyzer, arg_set, expected_log):
     source_file = runner_with_analyzers.local.root_directory / "source_file"
@@ -249,39 +265,54 @@ def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyz
     assert expected_log in log, f"'{expected_log}' is not found in '{log}'"
 
 
-@pytest.mark.parametrize('extra_args, tested_content, expected_success, expected_artifact', [
-    [[], source_code_c, True, False],
-    [["--report-html"], source_code_c.replace('\t', ' '), False, True],
-    [[], source_code_c.replace('\t', ' '), False, False],
+@pytest.mark.parametrize('analyzer, extra_args, tested_content, expected_success, expected_artifact', [
+    ['uncrustify', ["--report-html"], source_code_c, True, False],
+    ['uncrustify', ["--report-html"], source_code_c.replace('\t', ' '), False, True],
+    ['uncrustify', [], source_code_c.replace('\t', ' '), False, False],
+    ['clang_format', ["--report-html"], source_code_c.replace('\t', '  '), True, False],
+    ['clang_format', ["--report-html"], source_code_c, False, True],
+    ['clang_format', [], source_code_c, False, False],
 ], ids=[
     "uncrustify_html_file_not_needed",
     "uncrustify_html_file_saved",
     "uncrustify_html_file_disabled",
+    "clang_format_html_file_not_needed",
+    "clang_format_html_file_saved",
+    "clang_format_html_file_disabled",
 ])
-def test_uncrustify_file_diff(runner_with_analyzers: UniversumRunner,
-                              extra_args, tested_content, expected_success, expected_artifact):
+def test_diff_html_file(runner_with_analyzers: UniversumRunner, analyzer,
+                        extra_args, tested_content, expected_success, expected_artifact):
+
     root = runner_with_analyzers.local.root_directory
     source_file = root / "source_file"
     source_file.write_text(tested_content)
-    (root / "cfg").write_text(config_uncrustify)
     common_args = [
         "--result-file", "${CODE_REPORT_FILE}",
         "--files", "source_file",
-        "--cfg-file", "cfg",
+        "--output-directory", "diff_temp"
     ]
+    if analyzer == 'uncrustify':
+        (root / "cfg").write_text(config_uncrustify)
+        common_args.extend(["--cfg-file", "cfg"])
+    elif analyzer == 'clang_format':
+        (root / ".clang-format").write_text(config_clang_format)
+
 
     args = common_args + extra_args
-    extra_config = "artifacts='./uncrustify/source_file.html'"
-    log = runner_with_analyzers.run(ConfigData().add_analyzer('uncrustify', args, extra_config).finalize())
+    extra_config = "artifacts='./diff_temp/source_file.html'"
+    log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, args, extra_config).finalize())
 
     expected_log = log_success if expected_success else log_fail
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
     expected_artifacts_state = "Success" if expected_artifact else "Failed"
-    expected_log = f"Collecting artifacts for the 'Run uncrustify' step - [^\n]*{expected_artifacts_state}"
+    expected_log = f"Collecting artifacts for the 'Run {analyzer}' step - [^\n]*{expected_artifacts_state}"
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
 
 
 def test_code_report_extended_arg_search(tmp_path: pathlib.Path, stdout_checker: FuzzyCallChecker):
+    """
+    Test if ${CODE_REPORT_FILE} is replaced not only in --result-file argument of the Step
+    """
     env = utils.LocalTestEnvironment(tmp_path, "main")
     env.settings.Vcs.type = "none"
     env.settings.LocalMainVcs.source_dir = str(tmp_path)

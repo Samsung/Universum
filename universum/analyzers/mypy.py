@@ -4,13 +4,15 @@ from typing import List
 from . import utils
 
 
-def add_mypy_arguments(parser: argparse.ArgumentParser) -> None:
+def mypy_argument_parser() -> argparse.ArgumentParser:
+    parser = utils.create_parser("Mypy analyzer", __file__)
     parser.add_argument("--config-file", dest="config_file", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
+    return parser
 
 
 @utils.sys_exit
-@utils.analyzer("Mypy analyzer", add_mypy_arguments)
+@utils.analyzer(mypy_argument_parser())
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     cmd = [f"python{settings.version}", '-m', 'mypy']
     if settings.config_file:

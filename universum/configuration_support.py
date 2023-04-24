@@ -344,7 +344,7 @@ class Step:
         ...         warnings.simplefilter("always")
         ...         f()
         ...         return w
-        >>> step = Step(name='foo', my_var='bar')
+        >>> step = Step(name='foo', my_var='bar', t1=None, t2=False)
         >>> do_and_get_warnings(lambda : step.get('name', 'test'))  # doctest: +ELLIPSIS
         [<warnings.WarningMessage object at ...>]
 
@@ -356,12 +356,16 @@ class Step:
         'test'
         >>> step.get('command', 'test')
         'test'
+        >>> step.get('t1') is None
+        True
+        >>> step.get('t2')
+        False
         """
         result = self._extras.get(key)
-        if result:
+        if result is not None:  # for custom fields there is a distinction between None and falsy values
             return result
         result = self.__dict__.get(key)
-        if result:
+        if result:  # non-custom fields initialized with falsy values
             warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
             return result
         return default

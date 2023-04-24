@@ -5,13 +5,15 @@ from typing import List
 from . import utils
 
 
-def add_pylint_arguments(parser: argparse.ArgumentParser) -> None:
+def pylint_argument_parser() -> argparse.ArgumentParser:
+    parser = utils.create_parser("Pylint analyzer", __file__)
     parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
+    return parser
 
 
 @utils.sys_exit
-@utils.analyzer("Pylint analyzer", add_pylint_arguments)
+@utils.analyzer(pylint_argument_parser())
 def main(settings: argparse.Namespace) -> List[utils.ReportData]:
     cmd = [f"python{settings.version}", '-m', 'pylint', '-f', 'json']
     if settings.rcfile:
