@@ -10,7 +10,7 @@ from ...lib.gravity import Dependency
 
 __all__ = [
     "GithubToken",
-    "GithubMainVcs"
+    "GithubAppMainVcs"
 ]
 
 github = None
@@ -24,13 +24,13 @@ class GithubToken(HasErrorState):
 
     @staticmethod
     def define_arguments(argument_parser):
-        parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
+        parser = argument_parser.get_or_create_group("GitHub App", "GitHub repository settings for application")
 
-        parser.add_argument("--github-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
+        parser.add_argument("--ghapp-app-id", "-gta", dest="integration_id", metavar="GITHUB_APP_ID",
                             help="GitHub application ID to use for check run report. Only GitHub App "
                                  "can report a check run result! If you don't have an App for reporting purposes, "
                                  "please don't use ``--report-to-review`` with GitHub")
-        parser.add_argument("--github-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
+        parser.add_argument("--ghapp-private-key", "-gtk", dest="key", metavar="GITHUB_PRIVATE_KEY",
                             help="GitHub App private key for obtaining installation authentication token. "
                                  "Pass raw key data via environment variable or pass a file path to read the key from "
                                  "by starting the value string with '@'. File path can be either absolute or relative. "
@@ -101,9 +101,9 @@ class GithubTokenWithInstallation(GithubToken):
 
     @staticmethod
     def define_arguments(argument_parser):
-        parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
+        parser = argument_parser.get_or_create_group("GitHub App", "GitHub repository settings for application")
 
-        parser.add_argument("--github-installation-id", "-gti", dest="installation_id",
+        parser.add_argument("--ghapp-installation-id", "-gti", dest="installation_id",
                             metavar="GITHUB_INSTALLATION_ID",
                             help="GitHub installation ID identifies specific app installation into user account "
                                  "or organization. Can be retrieved from web-hook or obtained via REST API; "
@@ -128,7 +128,7 @@ class GithubTokenWithInstallation(GithubToken):
         return super().get_token(installation_id=self.settings.installation_id)
 
 
-class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallation):
+class GithubAppMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallation):
     """
     This class mostly contains functions for Gihub report observer
     """
@@ -136,13 +136,13 @@ class GithubMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallat
 
     @staticmethod
     def define_arguments(argument_parser):
-        parser = argument_parser.get_or_create_group("GitHub", "GitHub repository settings")
+        parser = argument_parser.get_or_create_group("GitHub App", "GitHub repository settings for application")
 
-        parser.add_argument("--github-check-name", "-ghc", dest="check_name", metavar="GITHUB_CHECK_NAME",
+        parser.add_argument("--ghapp-check-name", "-ghc", dest="check_name", metavar="GITHUB_CHECK_NAME",
                             default="Universum check", help="The name of Github check run")
-        parser.add_argument("--github-check-id", "-ghi", dest="check_id", metavar="GITHUB_CHECK_ID",
+        parser.add_argument("--gapp-check-id", "-ghi", dest="check_id", metavar="GITHUB_CHECK_ID",
                             help="Github check run ID")
-        parser.add_argument("--github-api-url", "-gha", dest="api_url", metavar="GITHUB_API_URL",
+        parser.add_argument("--ghapp-api-url", "-gha", dest="api_url", metavar="GITHUB_API_URL",
                             default="https://api.github.com/", help="API URL for integration")
 
     def __init__(self, *args, **kwargs):
