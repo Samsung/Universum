@@ -164,11 +164,10 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         for configuration in project_configs.all():
             if configuration.artifacts:
                 artifact_list.append(self.get_config_artifact(configuration))
+            if configuration.report_artifacts:
+                artifact_list.append(self.get_config_artifact(configuration, is_report_artifact=True))
             if configuration.is_conditional:
                 artifact_list.extend(self.get_conditional_step_branches_artifacts(configuration))
-            if configuration.report_artifacts:
-                path: str = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
-                report_artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
 
         if artifact_list:
             name = "Setting and preprocessing artifacts according to configs"
@@ -181,23 +180,26 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
                 self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
 
     def get_conditional_step_branches_artifacts(self, step: Step) -> List[ArtifactInfo]:
-        succeeded_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(step.if_succeeded)
-        failed_config_artifact: Optional[ArtifactInfo] = self.get_config_artifact_if_exists(step.if_failed)
+        artifacts: List[Optional[ArtifactInfo]] = [
+            self.get_config_artifact_if_exists(step.if_succeeded),
+            self.get_config_artifact_if_exists(step.if_failed),
+            self.get_config_artifact_if_exists(step.if_succeeded, is_report_artifact=True),
+            self.get_config_artifact_if_exists(step.if_failed, is_report_artifact=True)
+        ]
+        defined_artifacts: List[ArtifactInfo] = [artifact for artifact in artifacts if artifact]
+        return defined_artifacts
 
-        artifacts = []
-        if succeeded_config_artifact:
-            artifacts.append(succeeded_config_artifact)
-        if failed_config_artifact:
-            artifacts.append(failed_config_artifact)
-        return artifacts
+    def get_config_artifact_if_exists(self, step: Step, is_report_artifact: bool = False) -> Optional[ArtifactInfo]:
+        if not step:
+            return None
+        artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
+        if not artifact:
+            return None
+        return self.get_config_artifact(step, is_report_artifact)
 
-    def get_config_artifact_if_exists(self, step: Step) -> Optional[ArtifactInfo]:
-        if step and step.artifacts:
-            return self.get_config_artifact(step)
-        return None
-
-    def get_config_artifact(self, step: Step) -> ArtifactInfo:
-        path = utils.parse_path(step.artifacts, self.settings.project_root)
+    def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> ArtifactInfo:
+        artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
+        path: str = utils.parse_path(artifact, self.settings.project_root)
         return dict(path=path, clean=step.artifact_prebuild_clean)
 
     def move_artifact(self, path, is_report=False):

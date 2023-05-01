@@ -34,8 +34,9 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
 
         return steps_info
 
-    def create_step_artifact(self, step: Step) -> None:
-        artifact_path: pathlib.Path = self.src_dir / step.artifacts
+    def create_step_artifact(self, step: Step, is_report_artifact: bool = False) -> None:
+        file_name: str = step.report_artifacts if is_report_artifact else step.artifacts
+        artifact_path: pathlib.Path = self.src_dir / file_name
         artifact_path.touch()
 
     def check_success(self, steps_info: StepsInfo) -> None:
@@ -183,15 +184,17 @@ def test_false_branch_chosen_but_absent(test_env: ConditionalStepsTestEnv) -> No
 
 @pytest.mark.parametrize("is_branch_step", [True, False])
 @pytest.mark.parametrize("prebuild_clean", [True, False])
+@pytest.mark.parametrize("is_report_artifact", [True, False])
 def test_prebuild_clean(test_env: ConditionalStepsTestEnv,
                         is_branch_step: bool,
-                        prebuild_clean: bool) -> None:
+                        prebuild_clean: bool,
+                        is_report_artifact: bool) -> None:
     steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
 
     assert steps_info.true_branch_step
     step: Step = steps_info.true_branch_step if is_branch_step else steps_info.conditional_step
     step.artifact_prebuild_clean = prebuild_clean
-    test_env.create_step_artifact(step)
+    test_env.create_step_artifact(step, is_report_artifact)
 
     if prebuild_clean:
         test_env.check_success(steps_info)
