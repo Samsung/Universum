@@ -182,8 +182,8 @@ class Step:
                  pass_tag: str = '',
                  fail_tag: str = '',
                  if_env_set: str = '',
-                 if_succeeded = None,
-                 if_failed = None,
+                 if_succeeded: Optional['Configuration'] = None,
+                 if_failed: Optional['Configuration'] = None,
                  **kwargs) -> None:
         self.name: str = name
         self.directory: str = directory
@@ -199,9 +199,9 @@ class Step:
         self.pass_tag: str = pass_tag
         self.fail_tag: str = fail_tag
         self.if_env_set: str = if_env_set
-        self.if_succeeded = if_succeeded
-        self.if_failed = if_failed
-        self.is_conditional = self.if_succeeded or self.if_failed
+        self.if_succeeded: Optional['Configuration'] = if_succeeded
+        self.if_failed: Optional['Configuration'] = if_failed
+        self.is_conditional: bool = bool(self.if_succeeded or self.if_failed)
         self.children: Optional['Configuration'] = None
         self._extras: Dict[str, str] = {}
         for key, value in kwargs.items():
