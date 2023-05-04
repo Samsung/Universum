@@ -160,7 +160,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
         self.html_output.artifact_dir_ready = True
         artifact_list: List[ArtifactInfo] = []
-        report_artifact_list: List[ArtifactInfo] = []
         for configuration in project_configs.all():
             if configuration.artifacts:
                 artifact_list.append(self.get_config_artifact(configuration))
@@ -173,11 +172,6 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             name = "Setting and preprocessing artifacts according to configs"
             with self.structure.block(block_name=name, pass_errors=True):
                 self.preprocess_artifact_list(artifact_list, ignore_existing_artifacts)
-
-        if report_artifact_list:
-            name = "Setting and preprocessing artifacts to be mentioned in report"
-            with self.structure.block(block_name=name, pass_errors=True):
-                self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
 
     def get_conditional_step_branches_artifacts(self, step: Step) -> List[ArtifactInfo]:
         artifacts: List[Optional[ArtifactInfo]] = [
