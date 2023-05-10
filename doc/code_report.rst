@@ -6,6 +6,7 @@ The following analysing modules (analysers) are currently added to Universum:
    * `pylint`_
    * `mypy`_
    * `uncrustify`_
+   * `clang-format`_
 
 Analysers are separate scripts, fully compatible with Universum. It is possible to use them
 as independent Python modules.
@@ -62,7 +63,6 @@ Pylint
 
 .. argparse::
     :ref: universum.analyzers.pylint.pylint_argument_parser
-    :prog: {python} -m universum.analyzers.pylint
 
 Config example for ``universum.analyzers.pylint``:
 
@@ -99,7 +99,6 @@ Mypy
 
 .. argparse::
     :ref: universum.analyzers.mypy.mypy_argument_parser
-    :prog: {python} -m universum.analyzers.mypy
 
 Config example for ``universum.analyzers.mypy``:
 
@@ -136,7 +135,6 @@ Uncrustify
 
 .. argparse::
     :ref: universum.analyzers.uncrustify.uncrustify_argument_parser
-    :prog: {python} -m universum.analyzers.uncrustify
     :nodefault:
 
 Config example for ``universum.analyzers.uncrustify``:
@@ -146,7 +144,7 @@ Config example for ``universum.analyzers.uncrustify``:
     from universum.configuration_support import Configuration, Step
 
     configs = Configuration([Step(name="uncrustify", code_report=True, command=[
-        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "/home/user/workspace/temp",
+        "{python}", "-m", "universum.analyzers.uncrustify",  "--files", "/home/user/workspace/temp/*.c",
         "--cfg-file", "file_name.cfg", "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "uncrustify"
     ])])
 
@@ -164,4 +162,38 @@ will produce this list of configurations:
 .. testoutput::
 
     $ ./.universum.py
-    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files /home/user/workspace/temp --cfg-file file_name.cfg --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
+    [{'name': 'uncrustify', 'code_report': True, 'command': '{python} -m universum.analyzers.uncrustify --files /home/user/workspace/temp/*.c --cfg-file file_name.cfg --result-file ${CODE_REPORT_FILE} --output-directory uncrustify'}]
+
+Clang-format
+------------
+
+.. argparse::
+    :ref: universum.analyzers.clang-format.clang_format_argument_parser
+    :nodefault:
+
+Config example for ``universum.analyzers.clang-format``:
+
+.. testcode::
+
+    from universum.configuration_support import Configuration, Step
+
+    configs = Configuration([Step(name="clang-format", code_report=True, command=[
+        "{python}", "-m", "universum.analyzers.clang-format",  "--files", "/home/user/workspace/temp/*.c",
+        "--result-file", "${CODE_REPORT_FILE}", "--output-directory", "clang-format", "-e", "clang-format-15",
+    ])])
+
+    if __name__ == '__main__':
+        print(configs.dump())
+
+will produce this list of configurations:
+
+.. testcode::
+    :hide:
+
+    print("$ ./.universum.py")
+    print(configs.dump())
+
+.. testoutput::
+
+    $ ./.universum.py
+    [{'name': 'clang-format', 'code_report': True, 'command': '{python} -m universum.analyzers.clang-format --files /home/user/workspace/temp/*.c --result-file ${CODE_REPORT_FILE} --output-directory clang-format -e clang-format-15'}]

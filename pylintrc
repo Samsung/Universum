@@ -20,7 +20,8 @@ disable = missing-docstring,
           no-member,
           unsupported-assignment-operation,
           super-init-not-called,
-          wildcard-import
+          wildcard-import,
+          use-dict-literal
 
 [BASIC]
 no-docstring-rgx = .*
@@ -37,3 +38,6 @@ max-line-length = 130
 
 [SIMILARITIES]
 ignore-imports=yes
+
+[TYPECHECK]
+signature-mutators=universum.analyzers.utils.analyzer

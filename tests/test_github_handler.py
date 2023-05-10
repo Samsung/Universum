@@ -1,7 +1,7 @@
 # pylint: disable = redefined-outer-name, abstract-method
 
+import pathlib
 import pytest
-import py
 
 from universum.modules.vcs.github_vcs import GithubToken
 from .conftest import FuzzyCallChecker
@@ -45,7 +45,7 @@ class GithubHandlerEnvironment(BaseTestEnvironment):
 }"""
     check_run_url: str = "http://localhost/"
 
-    def __init__(self, directory: py.path.local):
+    def __init__(self, directory: pathlib.Path):
         super().__init__(BaseVcsClient(), directory, "github-handler", "")
 
         self.settings.GithubHandler.payload = "{}"
@@ -57,8 +57,8 @@ class GithubHandlerEnvironment(BaseTestEnvironment):
 
 
 @pytest.fixture()
-def github_handler_environment(tmpdir: py.path.local):
-    yield GithubHandlerEnvironment(tmpdir)
+def github_handler_environment(tmp_path: pathlib.Path):
+    yield GithubHandlerEnvironment(tmp_path)
 
 
 @pytest.fixture(autouse=True)

@@ -9,7 +9,7 @@ from ...lib import utils
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Dependency
 
-urllib3.disable_warnings((urllib3.exceptions.InsecurePlatformWarning, urllib3.exceptions.SNIMissingWarning)) # type: ignore
+urllib3.disable_warnings(urllib3.exceptions.InsecurePlatformWarning)  # type: ignore
 
 __all__ = [
     "Swarm"
@@ -131,7 +131,7 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
             if self.review_version:
                 return
         if self.settings.fail_link:
-            self.review_version = get_version_from_link(self.settings.pass_link)
+            self.review_version = get_version_from_link(self.settings.fail_link)
             if self.review_version:
                 return
         self.out.log("PASS/FAIL links either missing or have unexpected format; "

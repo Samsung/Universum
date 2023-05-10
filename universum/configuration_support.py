@@ -69,6 +69,12 @@ class Step:
         execution will not proceed. If no required artifacts were found in the end of the `Universum` run, it is
         also considered a failure. In case of shell-style patterns build is failed if no files or directories
         matching pattern are found.
+
+        .. note::
+
+            Universum checks both the artifact itself and an archive with the same name, because it does not know
+            in advance whether the step is going to create a file or a directory.
+
     report_artifacts
         Path to the special artifacts for reporting (e.g. to Swarm). Unlike `artifacts` key, `report_artifacts`
         are not obligatory and their absence is not considered a build failure. A directory cannot be stored
@@ -338,7 +344,7 @@ class Step:
         ...         warnings.simplefilter("always")
         ...         f()
         ...         return w
-        >>> step = Step(name='foo', my_var='bar')
+        >>> step = Step(name='foo', my_var='bar', t1=None, t2=False)
         >>> do_and_get_warnings(lambda : step.get('name', 'test'))  # doctest: +ELLIPSIS
         [<warnings.WarningMessage object at ...>]
 
@@ -350,12 +356,16 @@ class Step:
         'test'
         >>> step.get('command', 'test')
         'test'
+        >>> step.get('t1') is None
+        True
+        >>> step.get('t2')
+        False
         """
         result = self._extras.get(key)
-        if result:
+        if result is not None:  # for custom fields there is a distinction between None and falsy values
             return result
         result = self.__dict__.get(key)
-        if result:
+        if result:  # non-custom fields initialized with falsy values
             warn("Using legacy API to access configuration values. Please use var." + key + " instead.")
             return result
         return default
@@ -672,7 +682,7 @@ class Configuration:
         return result
 
     def filter(self, checker: Callable[[Step], bool],
-               parent: Step = None) -> 'Configuration':
+               parent: Optional[Step] = None) -> 'Configuration':
         """
         This function is supposed to be called from main script, not configuration file.
         It uses provided `checker` to find all the configurations that pass the check,

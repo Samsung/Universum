@@ -1,6 +1,6 @@
 # pylint: disable = redefined-outer-name
 
-import py
+import pathlib
 import pytest
 
 from . import utils
@@ -8,8 +8,8 @@ from .perforce_utils import P4TestEnvironment, PerforceWorkspace
 
 
 @pytest.fixture()
-def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmpdir: py.path.local):
-    yield P4TestEnvironment(perforce_workspace, tmpdir, test_type="submit")
+def p4_submit_environment(perforce_workspace: PerforceWorkspace, tmp_path: pathlib.Path):
+    yield P4TestEnvironment(perforce_workspace, tmp_path, test_type="submit")
 
 
 def test_fail_changing_non_checked_out_file(p4_submit_environment: P4TestEnvironment):
@@ -28,7 +28,7 @@ def test_success_changing_checked_out_file(p4_submit_environment: P4TestEnvironm
     p4_submit_environment.vcs_client.p4.run("edit", str(target_file))
 
     text = utils.randomize_name("This is change ")
-    target_file.write(text + "\n")
+    target_file.write_text(text + "\n")
 
     change = p4_submit_environment.vcs_client.p4.run_change("-o")[0]
     change["Description"] = "Test submit"

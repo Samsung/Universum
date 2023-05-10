@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Optional
 import pytest
 
 from universum import __main__
@@ -101,7 +101,7 @@ missing_params = []
 
 
 def param(test_type: str, module: str, field: str,
-          vcs_type: Union[str, List[str]] = "*", error_match: str = None) -> None:
+          vcs_type: Union[str, List[str]] = "*", error_match: Optional[str] = None) -> None:
 
     if isinstance(vcs_type, list):
         for specific_vcs_type in vcs_type:
