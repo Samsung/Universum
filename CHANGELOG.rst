@@ -1,6 +1,25 @@
 Change log
 ==========
 
+0.19.15 (2023-05-10)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **analyzer:** code report based on clang-format
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** remove warning suppression that is no longer relevant
+* **config:** extra (custom) key value of the Step set as a False returned as None
+* **artifact:** remove redundant Static_analysis_report.json from artifacts
+* **analyzer:** incorrect program name in help
+* **analyzer:** various Uncrustify usability issues
+* **report:** set exit code even if reporting crashes
+
+
 0.19.14 (2022-11-14)
 --------------------
 
