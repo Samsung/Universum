@@ -12,11 +12,9 @@ New features
 Bug fixes
 ~~~~~~~~~
 
-* **swarm:** remove warning suppression that is no longer relevant
-* **config:** extra (custom) key value of the Step set as a False returned as None
+* **config:** fixed returning "None" instead of "False" for Step custom keys set to "False"
 * **artifact:** remove redundant Static_analysis_report.json from artifacts
 * **analyzer:** incorrect program name in help
-* **analyzer:** various Uncrustify usability issues
 * **report:** set exit code even if reporting crashes
 
 
