@@ -168,10 +168,10 @@ Clang-format
 ------------
 
 .. argparse::
-    :ref: universum.analyzers.clang-format.clang_format_argument_parser
+    :ref: universum.analyzers.clang_format.clang_format_argument_parser
     :nodefault:
 
-Config example for ``universum.analyzers.clang-format``:
+Config example for ``universum.analyzers.clang_format``:
 
 .. testcode::
 
