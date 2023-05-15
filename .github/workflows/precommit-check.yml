@@ -12,6 +12,9 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: Install Firefox
+      run: sudo apt install firefox
+
     - name: Install dependency
       run: pip install universum[test]
 
