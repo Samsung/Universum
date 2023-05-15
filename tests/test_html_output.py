@@ -61,6 +61,10 @@ def environment_main_and_nonci(request, tmp_path):
 def browser():
     options = Options()
     options.headless = True
+    # Deleting SNAP variables is hotfix for geckodriver bug: https://github.com/mozilla/geckodriver/issues/2062
+    for key in os.environ:
+        if "SNAP" in key:
+            del os.environ[key]
     firefox = webdriver.Firefox(options=options)
     yield firefox
     firefox.close()
