@@ -1,11 +1,12 @@
-import json
-import sys
 import argparse
 import glob
+import json
+import os
 import pathlib
 import subprocess
+import sys
+from typing import Any, Callable, List, Optional, Tuple, Set, Iterable
 
-from typing import Any, Callable, List, Optional, Tuple, Set
 from typing_extensions import TypedDict
 
 from universum.lib.ci_exception import CiException
@@ -19,6 +20,13 @@ class AnalyzerException(CiException):
         self.message: Optional[str] = message
 
 
+def create_parser(description: str, module_path: str) -> argparse.ArgumentParser:
+    module_name, _ = os.path.splitext(os.path.basename(module_path))
+
+    prog = f"python{sys.version_info.major}.{sys.version_info.minor} -m {__package__}.{module_name}"
+    return argparse.ArgumentParser(prog=prog, description=description)
+
+
 def analyzer(parser: argparse.ArgumentParser):
     """
     Wraps the analyzer specific data and adds common protocol information:
@@ -29,6 +37,7 @@ def analyzer(parser: argparse.ArgumentParser):
     :param parser: Definition of analyzer custom arguments
     :return: Wrapped analyzer with common reporting behaviour
     """
+
     def internal(func: Callable[[argparse.Namespace], List[ReportData]]) -> Callable[[], List[ReportData]]:
         def wrapper() -> List[ReportData]:
             add_files_argument(parser)
@@ -75,6 +84,7 @@ def sys_exit(func: Callable[[], Any]) -> Callable[[], None]:
     >>> wrap_system_exit(sys_exit(_raise_custom))
     3
     """
+
     def wrapper() -> None:
         exit_code: int
         try:
@@ -146,6 +156,16 @@ def report_to_file(issues: List[ReportData], json_file: Optional[str] = None) ->
         sys.stdout.write(issues_json)
 
 
-def normalize(file: str) -> pathlib.Path:
+def normalize_path(file: str) -> pathlib.Path:
     file_path = pathlib.Path(file)
     return file_path if file_path.is_absolute() else pathlib.Path.cwd().joinpath(file_path)
+
+
+def get_files_with_absolute_paths(settings: argparse.Namespace) -> Iterable[Tuple[pathlib.Path,
+                                                                                  pathlib.Path,
+                                                                                  pathlib.Path]]:
+    for src_file in settings.file_list:
+        src_file_absolute = normalize_path(src_file)
+        src_file_relative = src_file_absolute.relative_to(pathlib.Path.cwd())
+        target_file_absolute: pathlib.Path = settings.target_folder.joinpath(src_file_relative)
+        yield src_file_absolute, target_file_absolute, src_file_relative
