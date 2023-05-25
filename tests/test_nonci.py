@@ -23,7 +23,7 @@ def test_launcher_output(docker_nonci: UniversumRunner):
      - version control and review system are not used
      - project root is set to current directory
     """
-    cwd = str(docker_nonci.local.root_directory)
+    cwd = str(docker_nonci.local.root_directory.absolute())
     artifacts = docker_nonci.artifact_dir
     file_output_expected = f"Adding file {artifacts}/test_step_log.txt to artifacts"
     pwd_string_in_logs = f"pwd:[{cwd}]"
