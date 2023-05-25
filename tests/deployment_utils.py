@@ -42,7 +42,8 @@ class ExecutionEnvironment:
         if self._container:
             self.request.raiseerror("Container is already running, no dirs can be bound!")
         for directory in directories:
-            self._volumes[directory] = {'bind': directory, 'mode': 'rw'}
+            absolute_dir = str(pathlib.Path(directory).absolute())
+            self._volumes[absolute_dir] = {'bind': absolute_dir, 'mode': 'rw'}
 
     def add_environment_variables(self, variables):
         if self._container:
