@@ -1,12 +1,13 @@
 import argparse
 import json
+
 from typing import List
 
 from . import utils
 
 
 def pylint_argument_parser() -> argparse.ArgumentParser:
-    parser = utils.create_parser("Pylint analyzer", __file__)
+    parser = argparse.ArgumentParser(description="Pylint analyzer")
     parser.add_argument("--rcfile", dest="rcfile", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
     return parser
