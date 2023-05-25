@@ -35,8 +35,7 @@ setup(
         'sh',
         'lxml',
         'typing-extensions',
-        'ansi2html',
-        'pyyaml==6.0'
+        'ansi2html'
     ],
     extras_require={
         'p4': [p4],
@@ -57,9 +56,7 @@ setup(
             'coverage',
             'mypy',
             'types-requests',
-            'selenium==3.141',
-            'urllib3==1.26.15',  # This is required for selenium-3.141 to work correctly
-            'types-PyYAML==6.0'
+            'selenium==3.141'
         ]
     },
     package_data={'': ['*.css', '*.js']}
