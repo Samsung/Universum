@@ -38,3 +38,6 @@ max-line-length = 130
 
 [SIMILARITIES]
 ignore-imports=yes
+
+[TYPECHECK]
+signature-mutators=universum.analyzers.utils.analyzer
