@@ -173,23 +173,20 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
             with self.structure.block(block_name=name, pass_errors=True):
                 self.preprocess_artifact_list(artifact_list, ignore_existing_artifacts)
 
-    def get_conditional_step_branches_artifacts(self, step: Step) -> List[ArtifactInfo]:
-        artifacts: List[Optional[ArtifactInfo]] = [
-            self.get_config_artifact_if_exists(step.if_succeeded),
-            self.get_config_artifact_if_exists(step.if_failed),
-            self.get_config_artifact_if_exists(step.if_succeeded, is_report_artifact=True),
-            self.get_config_artifact_if_exists(step.if_failed, is_report_artifact=True)
-        ]
+    def get_conditional_step_branches_artifacts(self, conditional_step: Step) -> List[ArtifactInfo]:
+        steps_to_process: List[Step] = []
+        if conditional_step.if_succeeded:
+            steps_to_process.extend(list(conditional_step.if_succeeded.all()))
+        if conditional_step.if_failed:
+            steps_to_process.extend(list(conditional_step.if_failed.all()))
+
+        artifacts: List[Optional[ArtifactInfo]] = []
+        for step in steps_to_process:
+            artifacts.append(self.get_config_artifact(step))
+            artifacts.append(self.get_config_artifact(step, is_report_artifact=True))
+
         defined_artifacts: List[ArtifactInfo] = [artifact for artifact in artifacts if artifact]
         return defined_artifacts
-
-    def get_config_artifact_if_exists(self, step: Step, is_report_artifact: bool = False) -> Optional[ArtifactInfo]:
-        if not step:
-            return None
-        artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
-        if not artifact:
-            return None
-        return self.get_config_artifact(step, is_report_artifact)
 
     def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> ArtifactInfo:
         artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
