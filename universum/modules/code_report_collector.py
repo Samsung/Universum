@@ -92,6 +92,9 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                 if text:
                     report = json.loads(text)
 
+            json_file: TextIO = self.artifacts.create_text_file("Static_analysis_report.json")
+            json_file.write(json.dumps(report, indent=4))
+
             issue_count: int
             if not report and report != []:
                 self.out.log_error("There are no results in code report file. Something went wrong.")

@@ -1,11 +1,12 @@
 import argparse
+
 from typing import List
 
 from . import utils
 
 
 def mypy_argument_parser() -> argparse.ArgumentParser:
-    parser = utils.create_parser("Mypy analyzer", __file__)
+    parser = argparse.ArgumentParser(description="Mypy analyzer")
     parser.add_argument("--config-file", dest="config_file", type=str, help="Specify a configuration file.")
     utils.add_python_version_argument(parser)
     return parser
