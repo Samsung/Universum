@@ -441,9 +441,9 @@ If any of them is missing or not set in current environment, the step will be ex
 Conditional steps
 ---------------------
 
-Conditional step is a :class:`Step` object, that has ``if_succeeded`` or ``if_failed`` parameters with other steps assigned.
-If the conditional step succeeds, then the step from the ``if_succeeded`` parameter will be executed.
-If the conditional step fails, the step from the ``if_failed`` parameter will be executed instead.
+Conditional step is a :class:`Step` object, that has ``if_succeeded`` or ``if_failed`` parameters with other :class:`Configuration` objects assigned.
+If the conditional step succeeds, then the Configuration from the ``if_succeeded`` parameter will be executed.
+If the conditional step fails, then the Configuration from the ``if_failed`` parameter will be executed instead.
 
 Configuration example:
 
@@ -451,8 +451,8 @@ Configuration example:
 
     from universum.configuration_support import Configuration, Step
 
-    true_branch_step = Step(name="Positive branch step", command=["ls"])
-    false_branch_step = Step(name="Negative branch step", command=["pwd"])
+    true_branch_step = Configuration([Step(name="Positive branch step", command=["ls"])])
+    false_branch_step = Configuration([Step(name="Negative branch step", command=["pwd"])])
     conditional_step = Step(name="Conditional step", command=["./script.sh"],
                             if_succeeded=true_branch_step, if_failed=false_branch_step)
 
@@ -502,7 +502,7 @@ In general, conditional steps behave as any other regular steps, but here are so
     * Will always be marked as successful in the log
     * TeamCity tag will not be set for the conditional step
 * Branch steps
-    * Only one branch step will be executed
+    * Only one branch Configuration will be executed
     * Both branches' artifacts will be checked for existence before the steps execution
     * Artifacts collection or any other side-effects will not be triggered for non-executed branch step
     * If chosen branch step is not set, nothing will happen.

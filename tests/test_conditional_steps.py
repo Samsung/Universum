@@ -98,9 +98,9 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         return ["bash", "-c", ";".join(commands)]
 
     def _write_config_file(self, steps_info) -> None:
-        true_branch_step: str = f"Step(**{str(steps_info.true_branch_step)})" \
+        true_branch_step: str = f"Configuration([Step(**{str(steps_info.true_branch_step)})])" \
             if steps_info.true_branch_step else "None"
-        false_branch_step: str = f"Step(**{str(steps_info.false_branch_step)})" \
+        false_branch_step: str = f"Configuration([Step(**{str(steps_info.false_branch_step)})])" \
             if steps_info.false_branch_step else "None"
         config_lines: List[str] = [
             "from universum.configuration_support import Configuration, Step",
