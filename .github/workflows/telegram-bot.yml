@@ -73,3 +73,10 @@ jobs:
 
       env:
         URL: https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage
+
+  info:
+    name: print payload
+    runs-on: ubuntu-latest
+    steps:
+    - name: Payload
+      uses: hmarr/debug-action@v2
