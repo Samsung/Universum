@@ -9,6 +9,8 @@ on:
     types: [completed]
   pull_request_review:
     types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
   make-comment:
@@ -26,6 +28,7 @@ jobs:
       REVIEW_COMMENT: ${{ github.event.review.body }}
       COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
       COMMENT_URL: ${{ github.event.comment.html_url }}
+      COMMENT_FILE: ${{ github.event.comment.path }}
       COMMENT_BODY: ${{ github.event.comment.body }}
       COMMENT_NUMBER: ${{ github.event.issue.number }}
       UNIVERUM_COMMIT: ${{ github.event.workflow_run.head_sha }}
@@ -48,14 +51,18 @@ jobs:
 
         elif [[ ! -z "${{ github.event.comment }}" ]]; then
           ESCAPED_TEXT=`echo -e "${{ env.COMMENT_BODY }}"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
-          TEXT=`echo -e "<b>${{ env.COMMENT_AUTHOR }}</b> posted the following comment to issue <a href=\"${{ env.COMMENT_URL }}\">#${{ env.COMMENT_NUMBER }}</a>:\n<i>$ESCAPED_TEXT</i>"`
+          if [[ ! -z "${{ github.event.pull_request }}" ]]; then
+            TEXT=`echo -e "<b>${{ env.COMMENT_AUTHOR }}</b> posted the following comment to file <i>${{ env.COMMENT_FILE }}</i> in <a href=\"${{ env.COMMENT_URL }}\">PR#${{ env.PR_NUMBER }}</a>:\n<i>$ESCAPED_TEXT</i>"`
+          else
+            TEXT=`echo -e "<b>${{ env.COMMENT_AUTHOR }}</b> posted the following comment to issue <a href=\"${{ env.COMMENT_URL }}\">#${{ env.COMMENT_NUMBER }}</a>:\n<i>$ESCAPED_TEXT</i>"`
+          fi
 
         elif [[ ! -z "${{ github.event.review }}" && "${{ env.REVIEW_STATE }}" == "changes_requested" ]]; then
           TEXT=`echo -e "<b>${{ env.REVIEW_AUTHOR }}</b> requested changes for <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
-        elif [[ ! -z "${{ github.event.review }}" && "${{ env.REVIEW_STATE }}" == "commented" ]]; then
+        elif [[ ! -z "${{ github.event.review }}" && "${{ env.REVIEW_STATE }}" == "commented" && ! -z "${{ env.REVIEW_COMMENT }}" ]]; then
           ESCAPED_TEXT=`echo -e "${{ env.REVIEW_COMMENT }}"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
           TEXT=`echo -e "<b>${{ env.REVIEW_AUTHOR }}</b> posted the following comment to <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>:\n<i>$ESCAPED_TEXT</i>"`
-        elif [[ ! -z "${{ github.event.review }}" ]]; then
+        elif [[ ! -z "${{ github.event.review }}" && "${{ env.REVIEW_STATE }}" != "commented" ]]; then
           TEXT=`echo -e "<b>${{ env.REVIEW_AUTHOR }}</b> ${{ env.REVIEW_STATE }} <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
         elif [[ -z "${{ github.event.review }}" && "${{ github.event.action }}" == "submitted" ]]; then
           TEXT=`echo -e "Due to GitHub Actions bug we cannot identify, who approved <a href=\"${{ env.PR_URL }}\">PR#${{ env.PR_NUMBER }}</a>"`
