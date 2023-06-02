@@ -13,7 +13,7 @@ __all__ = [
 
 class GithubActionsMainVcs(ReportObserver, git_vcs.GitMainVcs):
     """
-    This class mostly contains functions for Gihub report observer
+    This class mostly contains functions for GitHub report observer
     """
     reporter_factory = Dependency(Reporter)
 
@@ -50,7 +50,7 @@ class GithubActionsMainVcs(ReportObserver, git_vcs.GitMainVcs):
             environment variable, or by passing file path as the argument value (start
             filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json' for
             relative path starting at current directory). Please note, that when passing
-            a file, it's expected to be in UTF-8 encoding
+            a file, it's expected to be in UTF-8 encoding.
             """)
 
         try:
@@ -99,14 +99,15 @@ class GithubActionsMainVcs(ReportObserver, git_vcs.GitMainVcs):
         # (https://docs.github.com/en/rest/overview/resources-in-the-rest-api?apiVersion=2022-11-28  ->
         #                                              #rate-limits-for-requests-from-github-actions)
         for path, issues in report.items():
-            if path in commit_files:
-                for issue in issues:
-                    request = dict(path=path,
-                                   commit_id=self.payload_json['pull_request']['head']['sha'],
-                                   body=issue['message'],
-                                   line=issue['line'],
-                                   side="RIGHT")
-                    self._report(self.payload_json['pull_request']['review_comments_url'], request)
+            if path not in commit_files:
+                break
+            for issue in issues:
+                request = dict(path=path,
+                               commit_id=self.payload_json['pull_request']['head']['sha'],
+                               body=issue['message'],
+                               line=issue['line'],
+                               side="RIGHT")
+                self._report(self.payload_json['pull_request']['review_comments_url'], request)
 
     def report_start(self, report_text):
         pass

@@ -130,7 +130,7 @@ class GithubTokenWithInstallation(GithubToken):
 
 class GithubAppMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstallation):
     """
-    This class mostly contains functions for Gihub report observer
+    This class mostly contains functions for GitHub report observer
     """
     reporter_factory = Dependency(Reporter)
 
@@ -220,12 +220,13 @@ class GithubAppMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstal
         comments = []
         for path, issues in report.items():
             if path in commit_files:
-                for issue in issues:
-                    comments.append(dict(path=path,
-                                         message=issue['message'],
-                                         start_line=issue['line'],
-                                         end_line=issue['line'],
-                                         annotation_level="warning"))
+                break
+            for issue in issues:
+                comments.append(dict(path=path,
+                                     message=issue['message'],
+                                     start_line=issue['line'],
+                                     end_line=issue['line'],
+                                     annotation_level="warning"))
         self.request["output"]["annotations"] = comments
         self._report()
 
