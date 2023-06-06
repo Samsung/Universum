@@ -414,6 +414,9 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                         f"\tExclude patterns: {self.exclude_patterns}"
             raise CriticalCiException(text)
 
+        if self._is_conditional_step_with_children_present(self.project_config):
+            raise CriticalCiException("Conditional step doesn't support children configuration")
+
         return self.project_config
 
     def create_process(self, item: configuration_support.Step) -> RunningStep:
@@ -436,3 +439,19 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     def launch_project(self) -> None:
         self.reporter.add_block_to_report(self.structure.get_current_block())
         self.structure.execute_step_structure(self.project_config, self.create_process)
+
+    # TODO: implement support of conditional step with children
+    #  https://github.com/Samsung/Universum/issues/709
+    @staticmethod
+    def _is_conditional_step_with_children_present(
+            configuration: Optional[configuration_support.Configuration]) -> bool:
+        if not configuration:
+            return False
+        for step in configuration.configs:
+            if step.is_conditional and step.children:
+                return True
+            if Launcher._is_conditional_step_with_children_present(step.children) or \
+               Launcher._is_conditional_step_with_children_present(step.if_succeeded) or \
+               Launcher._is_conditional_step_with_children_present(step.if_failed):
+                return True
+        return False
