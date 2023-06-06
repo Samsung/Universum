@@ -97,20 +97,20 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
     def _write_config_file(self, steps_info) -> None:
         true_branch_config = self._build_configuration_string(steps_info.true_branch_steps)
         false_branch_config = self._build_configuration_string(steps_info.false_branch_steps)
-        cs_children_config = self._build_configuration_string(steps_info.conditional_step.children)
+        conditional_children_config = self._build_configuration_string(steps_info.conditional_step.children)
         steps_info.conditional_step.children = None  # will be set in config text
         config_lines: List[str] = [
             "from universum.configuration_support import Configuration, Step",
             f"true_branch_config = {true_branch_config}",
             f"false_branch_config = {false_branch_config}",
-            f"cs_children_config = {cs_children_config}",
+            f"conditional_children_config = {conditional_children_config}",
             f"conditional_step = Step(**{str(steps_info.conditional_step)})",
 
             # `true/false_branch_steps` should be Python objects from this script
             "conditional_step.is_conditional = True",
             "conditional_step.if_succeeded = true_branch_config",
             "conditional_step.if_failed = false_branch_config",
-            "conditional_step.children = cs_children_config",
+            "conditional_step.children = conditional_children_config",
 
             "configs = Configuration([conditional_step])"
         ]
