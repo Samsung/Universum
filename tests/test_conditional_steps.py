@@ -6,7 +6,7 @@ from typing import Generator, AnyStr, List, Optional
 
 import pytest
 
-from universum.configuration_support import Step
+from universum.configuration_support import Step, Configuration
 
 from .utils import LocalTestEnvironment
 
@@ -95,18 +95,22 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         return ["bash", "-c", ";".join(commands)]
 
     def _write_config_file(self, steps_info) -> None:
-        true_branch_config = self._build_branch_configuration_string(steps_info.true_branch_steps)
-        false_branch_config = self._build_branch_configuration_string(steps_info.false_branch_steps)
+        true_branch_config = self._build_configuration_string(steps_info.true_branch_steps)
+        false_branch_config = self._build_configuration_string(steps_info.false_branch_steps)
+        conditional_children_config = self._build_configuration_string(steps_info.conditional_step.children)
+        steps_info.conditional_step.children = None  # will be set in config text
         config_lines: List[str] = [
             "from universum.configuration_support import Configuration, Step",
             f"true_branch_config = {true_branch_config}",
             f"false_branch_config = {false_branch_config}",
+            f"conditional_children_config = {conditional_children_config}",
             f"conditional_step = Step(**{str(steps_info.conditional_step)})",
 
             # `true/false_branch_steps` should be Python objects from this script
             "conditional_step.is_conditional = True",
             "conditional_step.if_succeeded = true_branch_config",
             "conditional_step.if_failed = false_branch_config",
+            "conditional_step.children = conditional_children_config",
 
             "configs = Configuration([conditional_step])"
         ]
@@ -115,7 +119,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         self.configs_file.write_text(config, "utf-8")
 
     @staticmethod
-    def _build_branch_configuration_string(steps: Optional[List[Step]]) -> str:
+    def _build_configuration_string(steps: Optional[List[Step]]) -> str:
         if not steps:
             return "None"
         steps_strings: List[str] = [f"Step(**{str(step)})" for step in steps]
@@ -204,3 +208,11 @@ def test_prebuild_clean(test_env: ConditionalStepsTestEnv,
         test_env.check_success(steps_info)
     else:
         test_env.check_fail(steps_info)
+
+
+# TODO: implement support of conditional step with children
+#  https://github.com/Samsung/Universum/issues/709
+def test_conditional_step_with_children(test_env: ConditionalStepsTestEnv) -> None:
+    steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
+    steps_info.conditional_step.children = Configuration([Step(name=" dummy child 1"), Step(name=" dummy child 2")])
+    test_env.check_fail(steps_info)
