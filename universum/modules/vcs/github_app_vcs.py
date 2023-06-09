@@ -220,7 +220,7 @@ class GithubAppMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstal
         comments = []
         for path, issues in report.items():
             if path in commit_files:
-                break
+                continue
             for issue in issues:
                 comments.append(dict(path=path,
                                      message=issue['message'],

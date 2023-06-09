@@ -38,21 +38,20 @@ class GithubActionsMainVcs(ReportObserver, git_vcs.GitMainVcs):
         self.check_required_option("token", """
             The GitHub workflow token is not specified.
 
-            For github the git checkout id defines the commit to be checked and reported.
-            Please specify the checkout id by using '--git-checkout-id' ('-gco') command
-            line parameter or by setting GIT_CHECKOUT_ID environment variable.
-
-            If using 'universum github-handler', the checkout ID is automatically extracted
-            from the webhook payload and passed via GIT_CHECKOUT_ID environment variable.
+            Token is automatically created by GitHub Actions and stored in 
+            ${{ secrets.GITHUB_TOKEN }} environment variable. For Universum
+            to work correctly please copy it to ${{ env.GITHUB_TOKEN }}
+            (as due to security reasons Universum cannot get access to secrets directly),
+            or pass it directly using '--ghactions-token' ('-ght') command line parameter.
             """)
 
         self.payload: str = self.read_and_check_multiline_option("payload", """
             GitHub web-hook payload JSON is not specified.
 
-            Please pass incoming web-hook request payload to this parameter directly via
-            '--github-payload' ('-ghp') command line parameter or by setting GITHUB_PAYLOAD
-            environment variable, or by passing file path as the argument value (start
-            filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json' for
+            Please pass the payload stored in ${{ github.event_path }} file to this parameter
+            directly via '--ghactions-payload' ('-ghp') command line parameter or by setting
+            GITHUB_PAYLOAD environment variable, or by passing file path as the argument value
+            (start filename with '@' character, e.g. '@/tmp/file.json' or '@payload.json' for
             relative path starting at current directory). Please note, that when passing
             a file, it's expected to be in UTF-8 encoding.
             """)
@@ -104,9 +103,10 @@ class GithubActionsMainVcs(ReportObserver, git_vcs.GitMainVcs):
         # NB! When using GITHUB_TOKEN, the rate limit is 1,000 requests per hour per repository.
         # (https://docs.github.com/en/rest/overview/resources-in-the-rest-api?apiVersion=2022-11-28  ->
         #                                              #rate-limits-for-requests-from-github-actions)
+        # Therefore the following reporting cycle will FAIL if PR has more than 1,000 analyzer issues
         for path, issues in report.items():
             if path not in commit_files:
-                break
+                continue
             for issue in issues:
                 request = dict(path=path,
                                commit_id=self.payload_json['pull_request']['head']['sha'],
