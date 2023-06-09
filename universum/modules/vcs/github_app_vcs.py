@@ -219,7 +219,7 @@ class GithubAppMainVcs(ReportObserver, git_vcs.GitMainVcs, GithubTokenWithInstal
         commit_files = self.repo.git.show("--name-only", "--oneline", self.settings.checkout_id).split('\n')[1:]
         comments = []
         for path, issues in report.items():
-            if path in commit_files:
+            if path not in commit_files:
                 continue
             for issue in issues:
                 comments.append(dict(path=path,
