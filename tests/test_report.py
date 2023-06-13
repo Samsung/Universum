@@ -12,7 +12,7 @@ class ReportEnvironment(utils.BaseTestEnvironment):
     def __init__(self, client: GitClient, directory: pathlib.Path):
         super().__init__(client, directory, "main", "")
 
-        self.settings.Vcs.type = "github"
+        self.settings.Vcs.type = "ghapp"
         self.settings.MainVcs.report_to_review = True
         self.settings.GitVcs.repo = client.server.url
         commit_id = str(client.repo.remotes.origin.refs[client.server.target_branch].commit)
@@ -20,8 +20,8 @@ class ReportEnvironment(utils.BaseTestEnvironment):
         self.settings.GithubToken.integration_id = "1234"
         self.settings.GithubToken.key = "this is key"
         self.settings.GithubTokenWithInstallation.installation_id = "5678"
-        self.settings.GithubMainVcs.check_id = "123"
-        self.settings.GithubMainVcs.api_url = "http://localhost/"
+        self.settings.GithubAppMainVcs.check_id = "123"
+        self.settings.GithubAppMainVcs.api_url = "http://localhost/"
         self.settings.Reporter.report_start = True
         self.settings.Reporter.report_success = True
 
