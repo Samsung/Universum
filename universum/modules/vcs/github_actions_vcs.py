@@ -122,5 +122,3 @@ class GithubActionsMainVcs(ReportObserver, git_vcs.GitMainVcs):
         if not report_text:
             report_text = "Universum check finished"
         self._report(self.payload_json['pull_request']['comments_url'], {"body": report_text})
-
-
