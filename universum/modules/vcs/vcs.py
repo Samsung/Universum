@@ -3,7 +3,7 @@ import json
 import shutil
 import sh
 
-from . import git_vcs, github_vcs, gerrit_vcs, perforce_vcs, local_vcs, base_vcs
+from . import git_vcs, github_app_vcs, gerrit_vcs, github_actions_vcs, perforce_vcs, local_vcs, base_vcs
 from .. import artifact_collector
 from ..api_support import ApiSupport
 from ..error_state import HasErrorState
@@ -32,7 +32,8 @@ def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
             "p4": perforce_vcs.PerforceSubmitVcs,
             "git": git_vcs.GitSubmitVcs,
             "gerrit": gerrit_vcs.GerritSubmitVcs,
-            "github": git_vcs.GitSubmitVcs
+            "ghapp": git_vcs.GitSubmitVcs,
+            "ghactions": git_vcs.GitSubmitVcs
         }
     elif class_type == "poll":
         driver_factory_class = {
@@ -40,7 +41,8 @@ def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
             "p4": perforce_vcs.PerforcePollVcs,
             "git": git_vcs.GitPollVcs,
             "gerrit": git_vcs.GitPollVcs,
-            "github": git_vcs.GitPollVcs
+            "ghapp": git_vcs.GitPollVcs,
+            "ghactions": git_vcs.GitPollVcs
         }
     else:
         driver_factory_class = {
@@ -48,16 +50,18 @@ def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
             "p4": perforce_vcs.PerforceMainVcs,
             "git": git_vcs.GitMainVcs,
             "gerrit": gerrit_vcs.GerritMainVcs,
-            "github": github_vcs.GithubMainVcs
+            "ghapp": github_app_vcs.GithubAppMainVcs,
+            "ghactions": github_actions_vcs.GithubActionsMainVcs
         }
 
-    vcs_types: List[str] = ["none", "p4", "git", "gerrit", "github"]
+    vcs_types: List[str] = ["none", "p4", "git", "gerrit", "ghapp", "ghactions"]
 
     class Vcs(ProjectDirectory, HasStructure, HasErrorState):
         local_driver_factory = Dependency(driver_factory_class['none'])
         git_driver_factory = Dependency(driver_factory_class['git'])
         gerrit_driver_factory = Dependency(driver_factory_class['gerrit'])
-        github_driver_factory = Dependency(driver_factory_class['github'])
+        ghapp_driver_factory = Dependency(driver_factory_class['ghapp'])
+        ghactions_driver_factory = Dependency(driver_factory_class['ghactions'])
         perforce_driver_factory = Dependency(driver_factory_class['p4'])
 
         @staticmethod
@@ -67,7 +71,8 @@ def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
             parser.add_argument("--vcs-type", "-vt", dest="type",
                                 choices=vcs_types, metavar="VCS_TYPE",
                                 help="Select repository type to download sources from: Perforce ('p4'), "
-                                     "Git ('git'), Gerrit ('gerrit'), GitHub ('github') or a local directory ('none'). "
+                                     "Git ('git'), Gerrit ('gerrit'), GitHub App ('ghapp'), "
+                                     "GitHub Actions ('ghactions'), or a local directory ('none'). "
                                      "Gerrit uses Git parameters. Each VCS type has its own settings.")
 
         def __init__(self, *args, **kwargs):
@@ -86,9 +91,9 @@ def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
                     Each of these types requires supplying its own
                     configuration parameters. At the minimum, the following
                     parameters are required:
-                      * "git", "github" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
-                      * "perforce"                   - P4PORT (-p4p), P4USER (-p4u), P4PASSWD (-p4P)
-                      * "none"                       - SOURCE_DIR (-fsd)
+                      * "git", "ghapp", "ghactions" and "gerrit" - GIT_REPO (-gr) and GIT_REFSPEC (-grs)
+                      * "perforce"                               - P4PORT (-p4p), P4USER (-p4u), P4PASSWD (-p4P)
+                      * "none"                                   - SOURCE_DIR (-fsd)
                       
                     Depending on the requested action, additional type-specific parameters are
                     required. For example, P4CLIENT (-p4c) is required for CI builds with perforce.
@@ -104,8 +109,10 @@ def create_vcs(class_type: Optional[str] = None) -> Type[ProjectDirectory]:
                 driver_factory = self.git_driver_factory
             elif self.settings.type == "gerrit":
                 driver_factory = self.gerrit_driver_factory
-            elif self.settings.type == "github":
-                driver_factory = self.github_driver_factory
+            elif self.settings.type == "ghapp":
+                driver_factory = self.ghapp_driver_factory
+            elif self.settings.type == "ghactions":
+                driver_factory = self.ghactions_driver_factory
             else:
                 driver_factory = self.perforce_driver_factory
 
