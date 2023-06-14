@@ -1,6 +1,25 @@
 Change log
 ==========
 
+0.19.16 (2023-06-14)
+--------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **vcs:** replace "github" VCS with "ghapp" and "ghactions" for different GitHub CI styles
+
+New features
+~~~~~~~~~~~~
+
+* **report:** support analyzers inline commenting for GitHub Actions VCS
+
+Bug fixes
+~~~~~~~~~
+
+* **doc:** fix changelog for releases 0.19.13 & 0.19.15
+
+
 0.19.15 (2023-05-10)
 --------------------
 
@@ -29,6 +48,12 @@ New features
 
 0.19.13 (2022-10-10)
 --------------------
+
+BREAKING CHANGES
+~~~~~~~~~~~~~~~~
+
+* **artifact:** collect artifacts for each step after that exact step instead of processing whole
+  artifact list after executing all steps as it was before
 
 New features
 ~~~~~~~~~~~~
