@@ -52,8 +52,8 @@ New features
 BREAKING CHANGES
 ~~~~~~~~~~~~~~~~
 
-* **artifact:** collect artifacts for each step after that exact step (instead of processing whole
-  artifact list after executing all steps as it was before)
+* **artifact:** collect artifacts for each step after that exact step instead of processing whole
+  artifact list after executing all steps as it was before
 
 New features
 ~~~~~~~~~~~~
