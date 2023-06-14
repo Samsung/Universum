@@ -2,11 +2,6 @@ name: Universum check
 on:
   pull_request:
     types: [opened, synchronize]
-permissions:
-  issues: write
-  discussions: write
-  pull-requests: write
-  repository-projects: read
 
 jobs:
   universum_check:

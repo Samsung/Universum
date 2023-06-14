@@ -38,7 +38,3 @@ configs = Variations([Step(name="Create virtual environment", command=[python, "
 
 if __name__ == '__main__':
     print(configs.dump())
-
-
-
-
