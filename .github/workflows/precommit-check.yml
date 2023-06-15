@@ -1,5 +1,7 @@
 name: Universum check
-on: push
+on:
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   universum_check:
@@ -19,9 +21,10 @@ jobs:
       run:
         python -u -m universum
         --fail-unsuccessful
-        --vcs-type=git
-        --git-repo $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
-        --git-refspec $GITHUB_REF_NAME
+        --vcs-type="ghactions"
+        --ghactions-payload="@${{ github.event_path }}"
+        --ghactions-token="${{ secrets.GITHUB_TOKEN }}"
+        --report-to-review
         --no-archive
         --no-diff
 
