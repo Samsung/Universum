@@ -47,16 +47,21 @@ def create_settings(test_type: str, vcs_type: str) -> ModuleNamespace:
         settings.TeamcityServer.user_id = "TeamCityUser"
         settings.TeamcityServer.passwd = "TeamCityPassword"
 
-    if vcs_type in ["git", "gerrit", "github"]:
-        settings.GitVcs.repo = "ssh://user@127.0.0.1"
-        # the refspec is crafted to satisfy requirements of our gerrit module, and others don't care
-        settings.GitVcs.refspec = "refs/changes/00/000000/0"
+    if vcs_type in ["git", "gerrit", "ghapp", "ghactions"]:
+        if test_type == "main" and vcs_type == "ghactions":
+            settings.GithubActionsMainVcs.token = "token"
+            settings.GithubActionsMainVcs.payload = "{\"repository\": {\"html_url\": \"None\"}," \
+                                                    " \"pull_request\": {\"head\": {\"ref\": \"None\"}}}"
+        else:
+            settings.GitVcs.repo = "ssh://user@127.0.0.1"
+            # the refspec is crafted to satisfy requirements of our gerrit module, and others don't care
+            settings.GitVcs.refspec = "refs/changes/00/000000/0"
         if test_type == "submit":
             settings.GitSubmitVcs.user = "Testing User"
             settings.GitSubmitVcs.email = "some@email.com"
-        elif test_type == "main" and vcs_type == "github":
+        elif test_type == "main" and vcs_type == "ghapp":
             settings.GitMainVcs.checkout_id = "HEAD"
-            settings.GithubMainVcs.check_id = "000000000"
+            settings.GithubAppMainVcs.check_id = "000000000"
             settings.GithubToken.integration_id = "1234"
             settings.GithubToken.key = "/path"
             settings.GithubTokenWithInstallation.installation_id = "5678"
@@ -109,7 +114,7 @@ def param(test_type: str, module: str, field: str,
         return
 
     if vcs_type == "*":
-        param(test_type, module, field, ["p4", "git", "gerrit", "github", "none"], error_match)
+        param(test_type, module, field, ["p4", "git", "gerrit", "ghapp", "ghactions", "none"], error_match)
         return
 
     if test_type == "*":
@@ -124,12 +129,15 @@ def param(test_type: str, module: str, field: str,
     missing_params.append(pytest.param(test_type, module, field, vcs_type, error_match, id=test_id))
 
 
-param("submit",         "Submit",                       "commit_message",  vcs_type=["p4", "git", "gerrit", "github"])
+param("submit",         "Submit",                       "commit_message",
+      vcs_type=["p4", "git", "gerrit", "ghapp", "ghactions"])
 param("submit",         "PerforceSubmitVcs",            "client",          vcs_type="p4")
 param("main",           "PerforceMainVcs",              "client",          vcs_type="p4")
 param("main",           "LocalMainVcs",                 "source_dir",      vcs_type="none")
-param("submit",         "GitSubmitVcs",                 "user",            vcs_type=["git", "gerrit", "github"])
-param("submit",         "GitSubmitVcs",                 "email",           vcs_type=["git", "gerrit", "github"])
+param("submit",         "GitSubmitVcs",                 "user",
+      vcs_type=["git", "gerrit", "ghapp", "ghactions"])
+param("submit",         "GitSubmitVcs",                 "email",
+      vcs_type=["git", "gerrit", "ghapp", "ghactions"])
 param("main",           "TeamcityServer",               "build_id")
 param("main",           "TeamcityServer",               "configuration_id")
 param("main",           "TeamcityServer",               "server_url",      error_match="TEAMCITY_SERVER")
@@ -142,20 +150,22 @@ param("main",           "Swarm",                        "server_url",      vcs_t
 param("main",           "Swarm",                        "review_id",       vcs_type="p4", error_match="review number")
 param("main",           "Swarm",                        "change",          vcs_type="p4")
 param("*",              "Vcs",                          "type")
-param("*",              "GitVcs",                       "repo",            vcs_type=["git", "gerrit", "github"],
+param("*",              "GitVcs",                       "repo",            vcs_type=["git", "gerrit", "ghapp"],
       error_match="git repo")
 param("main",           "GitVcs",                       "refspec",         vcs_type="gerrit")
-param("main",           "GitMainVcs",                   "checkout_id",     vcs_type="github")
-param("main",           "GithubMainVcs",                "check_id",        vcs_type="github")
-param("main",           "GithubToken",                  "integration_id",  vcs_type="github",
+param("main",           "GitMainVcs",                   "checkout_id",     vcs_type="ghapp")
+param("main",           "GithubAppMainVcs",             "check_id",        vcs_type="ghapp")
+param("main",           "GithubActionsMainVcs",         "token",           vcs_type="ghactions")
+param("main",           "GithubActionsMainVcs",         "payload",         vcs_type="ghactions")
+param("main",           "GithubToken",                  "integration_id",  vcs_type="ghapp",
       error_match="GITHUB_APP_ID")
 param("github-handler", "GithubToken",                  "integration_id",  error_match="GITHUB_APP_ID")
-param("main",           "GithubToken",                  "key",             vcs_type="github")
+param("main",           "GithubToken",                  "key",             vcs_type="ghapp")
 param("github-handler", "GithubToken",                  "key")
 param("github-handler", "GithubHandler",                "event",           error_match="GITHUB_EVENT")
 param("github-handler", "GithubHandler",                "payload",         error_match="GITHUB_PAYLOAD")
 param("github-handler", "GithubHandler",                "trigger_url")
-param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="github",
+param("main",           "GithubTokenWithInstallation",  "installation_id", vcs_type="ghapp",
       error_match="GITHUB_INSTALLATION_ID")
 
 
@@ -439,14 +449,14 @@ def test_multiple_errors_main_gerrit_refspec_and_build_id():
 
 
 def test_multiple_errors_main_github_and_build_id():
-    settings = create_settings("main", "github")
+    settings = create_settings("main", "ghapp")
     settings.TeamcityServer.build_id = None
     settings.GitVcs.repo = None
     settings.GitMainVcs.checkout_id = None
     settings.GithubToken.integration_id = None
     settings.GithubToken.key = None
     settings.GithubTokenWithInstallation.installation_id = None
-    settings.GithubMainVcs.check_id = None
+    settings.GithubAppMainVcs.check_id = None
 
     assert_incorrect_parameter(settings, "id of the build on TeamCity", "git repo", "checkout id for github",
                                "GitHub App ID", "GitHub App private key", "GitHub App installation ID",

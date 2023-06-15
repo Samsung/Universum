@@ -7,7 +7,7 @@ from .lib.utils import make_block
 from .modules.error_state import HasErrorState
 from .modules.output import HasOutput
 from .modules.structure_handler import HasStructure
-from .modules.vcs.github_vcs import GithubToken
+from .modules.vcs.github_app_vcs import GithubToken
 
 
 class GithubHandler(GithubToken, HasOutput, HasStructure, HasErrorState):

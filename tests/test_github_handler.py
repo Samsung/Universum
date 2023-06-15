@@ -3,7 +3,7 @@
 import pathlib
 import pytest
 
-from universum.modules.vcs.github_vcs import GithubToken
+from universum.modules.vcs.github_app_vcs import GithubToken
 from .conftest import FuzzyCallChecker
 from .utils import BaseTestEnvironment, BaseVcsClient
 
