@@ -15,6 +15,7 @@ class StepsInfo:
     conditional_step: Step
     true_branch_steps: Optional[List[Step]]
     false_branch_steps: Optional[List[Step]]
+    steps_after_conditional: List[Step]
     is_conditional_step_passed: bool
 
 
@@ -30,6 +31,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         steps_info.conditional_step = self._build_conditional_step(is_conditional_step_passed)
         steps_info.true_branch_steps = self._build_true_branch_steps()
         steps_info.false_branch_steps = self._build_false_branch_steps()
+        steps_info.steps_after_conditional = self._build_steps_after_conditional()
         steps_info.is_conditional_step_passed = is_conditional_step_passed
 
         return steps_info
@@ -50,6 +52,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         self._check_conditional_step_artifacts_present(steps_info)
         self._check_executed_step_artifacts_present(steps_info)
         self._check_not_executed_step_artifacts_absent(steps_info)
+        self._check_steps_after_conditional_artifacts_present(steps_info)
 
     def check_fail(self, steps_info: StepsInfo) -> None:
         self._write_config_file(steps_info)
@@ -68,12 +71,15 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
                     report_artifacts=conditional_step_report_artifact)
 
     def _build_true_branch_steps(self) -> List[Step]:
-        return self._build_branch_steps(["true_branch", "true_branch_dependent1", "true_branch_dependent2"])
+        return self._build_steps_list(["true_branch", "true_branch_dependent1", "true_branch_dependent2"])
 
     def _build_false_branch_steps(self) -> List[Step]:
-        return self._build_branch_steps(["false_branch", "false_branch_dependent"])
+        return self._build_steps_list(["false_branch", "false_branch_dependent"])
 
-    def _build_branch_steps(self, step_names: List[str]) -> List[Step]:
+    def _build_steps_after_conditional(self) -> List[Step]:
+        return self._build_steps_list(["step_after_conditional"])
+
+    def _build_steps_list(self, step_names: List[str]) -> List[Step]:
         steps = []
         for step_name in step_names:
             step_artifact: str = f"{step_name}_artifact"
@@ -98,6 +104,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         true_branch_config = self._build_configuration_string(steps_info.true_branch_steps)
         false_branch_config = self._build_configuration_string(steps_info.false_branch_steps)
         conditional_children_config = self._build_configuration_string(steps_info.conditional_step.children)
+        config_after_conditional = self._build_configuration_string(steps_info.steps_after_conditional)
         steps_info.conditional_step.children = None  # will be set in config text
         config_lines: List[str] = [
             "from universum.configuration_support import Configuration, Step",
@@ -105,6 +112,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
             f"false_branch_config = {false_branch_config}",
             f"conditional_children_config = {conditional_children_config}",
             f"conditional_step = Step(**{str(steps_info.conditional_step)})",
+            f"config_after_conditional = {config_after_conditional}",
 
             # `true/false_branch_steps` should be Python objects from this script
             "conditional_step.is_conditional = True",
@@ -112,7 +120,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
             "conditional_step.if_failed = false_branch_config",
             "conditional_step.children = conditional_children_config",
 
-            "configs = Configuration([conditional_step])"
+            "configs = Configuration([conditional_step]) + config_after_conditional"
         ]
         config: str = "\n".join(config_lines)
 
@@ -139,6 +147,10 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         not_executed_steps: Optional[List[Step]] = steps_info.false_branch_steps \
             if steps_info.is_conditional_step_passed else steps_info.true_branch_steps
         self._check_artifacts_presence(not_executed_steps, is_presence_expected=False)
+
+    def _check_steps_after_conditional_artifacts_present(self, steps_info: StepsInfo) -> None:
+        steps_after_conditional: List[Step] = steps_info.steps_after_conditional
+        self._check_artifacts_presence(steps_after_conditional, is_presence_expected=True)
 
     def _check_artifacts_presence(self, steps: Optional[List[Step]], is_presence_expected: bool):
         if not steps:  # branch configuration can be not set

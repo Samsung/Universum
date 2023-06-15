@@ -250,10 +250,10 @@ class StructureHandler(HasOutput):
                 step_to_execute: Optional[Configuration] = merged_item.if_succeeded if conditional_step_succeeded \
                     else merged_item.if_failed
                 if step_to_execute:  # branch step can be not set
-                    return self.execute_steps_recursively(parent=Step(),
-                                                          children=step_to_execute,
-                                                          step_executor=step_executor,
-                                                          skip_execution=False)
+                    self.execute_steps_recursively(parent=Step(),
+                                                   children=step_to_execute,
+                                                   step_executor=step_executor,
+                                                   skip_execution=False)
                 current_step_failed = False  # conditional step should be always successful
             else:
                 if merged_item.finish_background and self.active_background_steps:
