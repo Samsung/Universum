@@ -24,6 +24,7 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
     def __init__(self, tmp_path: pathlib.Path, capsys: pytest.CaptureFixture) -> None:
         super().__init__(tmp_path, "main")
         self.capsys = capsys
+        self.captured_out: pytest.CaptureResult[AnyStr] = None
 
     def build_conditional_steps_info(self, is_conditional_step_passed: bool) -> StepsInfo:
         steps_info: StepsInfo = StepsInfo()
@@ -45,9 +46,9 @@ class ConditionalStepsTestEnv(LocalTestEnvironment):
         self._write_config_file(steps_info)
         self.run()
 
-        captured: pytest.CaptureResult[AnyStr] = self.capsys.readouterr()
+        self.captured_out = self.capsys.readouterr()
         conditional_succeeded_regexp: str = r"\] conditional.*Success.*\|   5\.2"
-        assert re.search(conditional_succeeded_regexp, captured.out, re.DOTALL)
+        assert re.search(conditional_succeeded_regexp, self.captured_out.out, re.DOTALL)
 
         self._check_conditional_step_artifacts_present(steps_info)
         self._check_executed_step_artifacts_present(steps_info)
@@ -228,3 +229,11 @@ def test_conditional_step_with_children(test_env: ConditionalStepsTestEnv) -> No
     steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
     steps_info.conditional_step.children = Configuration([Step(name=" dummy child 1"), Step(name=" dummy child 2")])
     test_env.check_fail(steps_info)
+
+
+def test_conditional_step_critical(test_env: ConditionalStepsTestEnv) -> None:
+    steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=False)
+    steps_info.conditional_step.critical = True
+    test_env.check_success(steps_info)
+    assert test_env.captured_out.out
+    assert "WARNING" in test_env.captured_out.out

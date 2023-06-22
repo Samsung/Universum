@@ -416,6 +416,9 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         if self._is_conditional_step_with_children_present(self.project_config):
             raise CriticalCiException("Conditional step doesn't support children configuration")
+        if self._is_critical_conditional_step_present(self.project_config):
+            self.out.log("WARNING: 'critical' flag will be ignored for conditional step. "
+                         "Set it to the 'if_failed' branch step instead")
 
         return self.project_config
 
@@ -453,5 +456,19 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             if Launcher._is_conditional_step_with_children_present(step.children) or \
                Launcher._is_conditional_step_with_children_present(step.if_succeeded) or \
                Launcher._is_conditional_step_with_children_present(step.if_failed):
+                return True
+        return False
+
+    @staticmethod
+    def _is_critical_conditional_step_present(
+            configuration: Optional[configuration_support.Configuration]) -> bool:
+        if not configuration:
+            return False
+        for step in configuration.configs:
+            if step.is_conditional and step.critical:
+                return True
+            if Launcher._is_critical_conditional_step_present(step.children) or \
+               Launcher._is_critical_conditional_step_present(step.if_succeeded) or \
+               Launcher._is_critical_conditional_step_present(step.if_failed):
                 return True
         return False
