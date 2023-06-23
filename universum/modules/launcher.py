@@ -416,9 +416,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         if self._is_conditional_step_with_children_present(self.project_config):
             raise CriticalCiException("Conditional step doesn't support children configuration")
-        if self._is_critical_conditional_step_present(self.project_config):
-            self.out.log("WARNING: 'critical' flag will be ignored for conditional step. "
-                         "Set it to the 'if_failed' branch step instead")
+        self._warn_about_critical_conditional_steps(self.project_config)
 
         return self.project_config
 
@@ -459,16 +457,24 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                 return True
         return False
 
+    def _warn_about_critical_conditional_steps(
+            self, configuration: Optional[configuration_support.Configuration]) -> None:
+        step_names: List[str] = []
+        Launcher._append_critical_conditional_step_names_recursively(configuration, step_names)
+        if step_names:
+            step_names_str: str = ",".join(step_names)
+            self.out.log(f"WARNING: 'critical' flag will be ignored for conditional steps: [{step_names_str}]. "
+                         "Set it to the 'if_failed' branch step instead")
+
     @staticmethod
-    def _is_critical_conditional_step_present(
-            configuration: Optional[configuration_support.Configuration]) -> bool:
+    def _append_critical_conditional_step_names_recursively(
+            configuration: Optional[configuration_support.Configuration],
+            step_names: List[str]) -> None:
         if not configuration:
-            return False
+            return
         for step in configuration.configs:
             if step.is_conditional and step.critical:
-                return True
-            if Launcher._is_critical_conditional_step_present(step.children) or \
-               Launcher._is_critical_conditional_step_present(step.if_succeeded) or \
-               Launcher._is_critical_conditional_step_present(step.if_failed):
-                return True
-        return False
+                step_names.append(f'"{step.name}"')
+            Launcher._append_critical_conditional_step_names_recursively(step.children, step_names)
+            Launcher._append_critical_conditional_step_names_recursively(step.if_succeeded, step_names)
+            Launcher._append_critical_conditional_step_names_recursively(step.if_failed, step_names)
