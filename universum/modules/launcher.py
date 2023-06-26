@@ -462,8 +462,9 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         step_names: List[str] = []
         Launcher._append_critical_conditional_step_names_recursively(configuration, step_names)
         if step_names:
-            step_names_str: str = ",".join(step_names)
-            self.out.log(f"WARNING: 'critical' flag will be ignored for conditional steps: [{step_names_str}]. "
+            step_names = [f'\t* "{name}"' for name in step_names]
+            step_names_str: str = "\n".join(step_names)
+            self.out.log(f"WARNING: 'critical' flag will be ignored for conditional steps: \n{step_names_str}\n "
                          "Set it to the 'if_failed' branch step instead")
 
     @staticmethod
@@ -474,7 +475,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             return
         for step in configuration.configs:
             if step.is_conditional and step.critical:
-                step_names.append(f'"{step.name}"')
+                step_names.append(step.name)
             Launcher._append_critical_conditional_step_names_recursively(step.children, step_names)
             Launcher._append_critical_conditional_step_names_recursively(step.if_succeeded, step_names)
             Launcher._append_critical_conditional_step_names_recursively(step.if_failed, step_names)
