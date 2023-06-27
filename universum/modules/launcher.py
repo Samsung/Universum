@@ -470,7 +470,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     @staticmethod
     def _get_critical_conditional_step_names_recursively(
             configuration: Optional[configuration_support.Configuration]) -> List[str]:
-        step_names = []
+        step_names: List[str] = []
         if not configuration:
             return step_names
         for step in configuration.configs:
