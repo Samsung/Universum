@@ -416,6 +416,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
 
         if self._is_conditional_step_with_children_present(self.project_config):
             raise CriticalCiException("Conditional step doesn't support children configuration")
+        self._warn_if_critical_conditional_steps_present(self.project_config)
 
         return self.project_config
 
@@ -455,3 +456,27 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                Launcher._is_conditional_step_with_children_present(step.if_failed):
                 return True
         return False
+
+    def _warn_if_critical_conditional_steps_present(
+            self, configuration: Optional[configuration_support.Configuration]) -> None:
+        step_names: List[str] = Launcher._get_critical_conditional_step_names_recursively(configuration)
+        if not step_names:
+            return
+        step_names = [f'\t* "{name}"' for name in step_names]
+        step_names_str: str = "\n".join(step_names)
+        self.out.log(f"WARNING: 'critical' flag will be ignored for conditional steps: \n{step_names_str}\n "
+                     "Set it to the 'if_failed' branch step instead")
+
+    @staticmethod
+    def _get_critical_conditional_step_names_recursively(
+            configuration: Optional[configuration_support.Configuration]) -> List[str]:
+        step_names: List[str] = []
+        if not configuration:
+            return step_names
+        for step in configuration.configs:
+            if step.is_conditional and step.critical:
+                step_names.append(step.name)
+            step_names.extend(Launcher._get_critical_conditional_step_names_recursively(step.children))
+            step_names.extend(Launcher._get_critical_conditional_step_names_recursively(step.if_succeeded))
+            step_names.extend(Launcher._get_critical_conditional_step_names_recursively(step.if_failed))
+        return step_names
