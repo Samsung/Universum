@@ -162,9 +162,9 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         artifact_list: List[ArtifactInfo] = []
         for configuration in project_configs.all():
             if configuration.artifacts:
-                artifact_list.append(self.get_config_artifact(configuration))
+                artifact_list.append(self.get_config_artifact(configuration))  # type: ignore
             if configuration.report_artifacts:
-                artifact_list.append(self.get_config_artifact(configuration, is_report_artifact=True))
+                artifact_list.append(self.get_config_artifact(configuration, is_report_artifact=True))  # type: ignore
             if configuration.is_conditional:
                 artifact_list.extend(self.get_conditional_step_branches_artifacts(configuration))
 
@@ -182,14 +182,20 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
 
         artifacts: List[Optional[ArtifactInfo]] = []
         for step in steps_to_process:
-            artifacts.append(self.get_config_artifact(step))
-            artifacts.append(self.get_config_artifact(step, is_report_artifact=True))
+            artifact = self.get_config_artifact(step)
+            if artifact:
+                artifacts.append(artifact)
+            report_artifact = self.get_config_artifact(step, is_report_artifact=True)
+            if report_artifact:
+                artifacts.append(report_artifact)
 
         defined_artifacts: List[ArtifactInfo] = [artifact for artifact in artifacts if artifact]
         return defined_artifacts
 
-    def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> ArtifactInfo:
+    def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> Optional[ArtifactInfo]:
         artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
+        if not artifact:
+            return None
         path: str = utils.parse_path(artifact, self.settings.project_root)
         return dict(path=path, clean=step.artifact_prebuild_clean)
 

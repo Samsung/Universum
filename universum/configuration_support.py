@@ -397,6 +397,22 @@ class Step:
         >>> step2 + step1
         {'name': 'barfoo', 'command': ['bar', 'foo'], 'critical': True, 'background': True, 'my_var1': 'barfoo', 'my_var2': 'baz'}
         """
+        if_succeeded = None
+        if not self.if_succeeded:
+            if_succeeded = other.if_succeeded
+        elif not other.if_succeeded:
+            if_succeeded = self.if_succeeded
+        else:
+            if_succeeded = self.if_succeeded + other.if_succeeded
+
+        if_failed = None
+        if not self.if_failed:
+            if_failed = other.if_failed
+        elif not other.if_failed:
+            if_failed = self.if_failed
+        else:
+            if_failed = self.if_failed+ other.if_failed
+
         return Step(
             name=self.name + other.name,
             command=self.command + other.command,
@@ -412,9 +428,8 @@ class Step:
             pass_tag=self.pass_tag + other.pass_tag,
             fail_tag=self.fail_tag + other.fail_tag,
             if_env_set=self.if_env_set + other.if_env_set,
-            # FIXME: This is a dummy implementation. Define addition logic and implement it.
-            if_succeeded=other.if_succeeded,
-            if_failed=other.if_failed,
+            if_succeeded=if_succeeded,
+            if_failed=if_failed,
             **combine(self._extras, other._extras)
         )
 

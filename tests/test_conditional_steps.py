@@ -237,3 +237,80 @@ def test_conditional_step_critical(test_env: ConditionalStepsTestEnv) -> None:
     test_env.check_success(steps_info)
     assert test_env.captured_out.out
     assert "WARNING" in test_env.captured_out.out
+
+
+def test_example_1(test_env: ConditionalStepsTestEnv) -> None:
+    print("\n" * 5)
+    print("=" * 200)
+    print("Conditional + regular step")
+    print("=" * 200)
+
+    config_lines: List[str] = [
+        "from universum.configuration_support import Configuration, Step",
+
+        "true_branch_config = Configuration([Step(name='true_branch')])",
+        "conditional_step = Step(name='conditional')",
+        "regular_step = Step(name=' regular')",
+
+        "conditional_step.is_conditional = True",
+        "conditional_step.if_succeeded = true_branch_config",
+
+        "configs = Configuration([conditional_step + regular_step])"
+    ]
+    config: str = "\n".join(config_lines)
+    test_env.configs_file.write_text(config, "utf-8")
+    test_env.run()
+
+
+def test_example_2(test_env: ConditionalStepsTestEnv) -> None:
+    print("\n" * 5)
+    print("=" * 200)
+    print("Conditional + conditional step")
+    print("=" * 200)
+
+    config_lines: List[str] = [
+        "from universum.configuration_support import Configuration, Step",
+
+        "true_branch_config1 = Configuration([Step(name='true_branch1')])",
+        "true_branch_config2 = Configuration([Step(name='true_branch2')])",
+        "conditional_step1 = Step(name='conditional1')",
+        "conditional_step2 = Step(name=' conditional2')",
+
+        "conditional_step1.is_conditional = True",
+        "conditional_step1.if_succeeded = true_branch_config1",
+
+        "conditional_step2.is_conditional = True",
+        "conditional_step2.if_succeeded = true_branch_config2",
+
+        "configs = Configuration([conditional_step1 + conditional_step2])"
+    ]
+    config: str = "\n".join(config_lines)
+    test_env.configs_file.write_text(config, "utf-8")
+    test_env.run()
+
+
+def test_example_3(test_env: ConditionalStepsTestEnv) -> None:
+    print("\n" * 5)
+    print("=" * 200)
+    print("Conditional without branch + conditional step with branch")
+    print("=" * 200)
+
+    config_lines: List[str] = [
+        "from universum.configuration_support import Configuration, Step",
+
+        "true_branch_config = Configuration([Step(name='true_branch')])",
+        "false_branch_config = Configuration([Step(name='false_branch')])",
+        "conditional_step1 = Step(name='conditional1')",
+        "conditional_step2 = Step(name=' conditional2')",
+
+        "conditional_step1.is_conditional = True",
+        "conditional_step1.if_failed = false_branch_config",
+
+        "conditional_step2.is_conditional = True",
+        "conditional_step2.if_succeeded = true_branch_config",
+
+        "configs = Configuration([conditional_step1 + conditional_step2])"
+    ]
+    config: str = "\n".join(config_lines)
+    test_env.configs_file.write_text(config, "utf-8")
+    test_env.run()
