@@ -415,7 +415,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
             raise CriticalCiException(text)
 
         if self._is_conditional_step_with_children_present(self.project_config):
-            raise CriticalCiException("Conditional step doesn't support children configuration")
+            raise CriticalCiException("Conditional steps with children configuration are not supported")
         self._warn_if_critical_conditional_steps_present(self.project_config)
 
         return self.project_config

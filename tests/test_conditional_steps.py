@@ -223,17 +223,38 @@ def test_prebuild_clean(test_env: ConditionalStepsTestEnv,
         test_env.check_fail(steps_info)
 
 
-# TODO: implement support of conditional step with children
-#  https://github.com/Samsung/Universum/issues/709
-def test_conditional_step_with_children(test_env: ConditionalStepsTestEnv) -> None:
-    steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
-    steps_info.conditional_step.children = Configuration([Step(name=" dummy child 1"), Step(name=" dummy child 2")])
-    test_env.check_fail(steps_info)
-
-
 def test_conditional_step_critical(test_env: ConditionalStepsTestEnv) -> None:
     steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=False)
     steps_info.conditional_step.critical = True
     test_env.check_success(steps_info)
     assert test_env.captured_out.out
     assert "WARNING" in test_env.captured_out.out
+
+
+# TODO: implement support of conditional step with children
+#  https://github.com/Samsung/Universum/issues/709
+def test_conditional_step_with_children(test_env: ConditionalStepsTestEnv, capsys: pytest.CaptureFixture) -> None:
+    steps_info: StepsInfo = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
+    steps_info.conditional_step.children = Configuration([Step(name=" dummy child 1"), Step(name=" dummy child 2")])
+    test_env.check_fail(steps_info)
+
+    captured_out = capsys.readouterr()
+    assert "not supported" in captured_out.out
+
+
+# TODO: implement support of conditional steps addition and multiplication
+#  https://github.com/Samsung/Universum/issues/709
+def test_conditional_step_addition(test_env: ConditionalStepsTestEnv, capsys: pytest.CaptureFixture) -> None:
+    config_lines: List[str] = [
+        "from universum.configuration_support import Configuration, Step",
+        "true_branch_config = Configuration([Step(name='true branch')])",
+        "conditional_step = Step(name='conditional', if_succeeded=true_branch_config)",
+        "another_step = Step(name='another step')",
+        "configs = Configuration([conditional_step + another_step])"
+    ]
+    config: str = "\n".join(config_lines)
+    test_env.configs_file.write_text(config, "utf-8")
+    test_env.run(expect_failure=True)
+
+    captured_out = capsys.readouterr()
+    assert "not supported" in captured_out.out
