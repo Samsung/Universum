@@ -244,7 +244,7 @@ def test_conditional_step_with_children(test_env: ConditionalStepsTestEnv, capsy
 
 # TODO: implement support of conditional steps addition and multiplication
 #  https://github.com/Samsung/Universum/issues/709
-def test_conditional_step_addition(test_env: ConditionalStepsTestEnv, capsys: pytest.CaptureFixture) -> None:
+def test_add_step_to_conditional(test_env: ConditionalStepsTestEnv, capsys: pytest.CaptureFixture) -> None:
     config_lines: List[str] = [
         "from universum.configuration_support import Configuration, Step",
         "true_branch_config = Configuration([Step(name='true branch')])",
@@ -258,3 +258,29 @@ def test_conditional_step_addition(test_env: ConditionalStepsTestEnv, capsys: py
 
     captured_out = capsys.readouterr()
     assert "not supported" in captured_out.out
+
+
+# TODO: during implementation of the full conditional steps addition support, refactor this test to avoid direct usage
+#       of the ConditionalStepsTestEnv "internal" API (underscored methods) and config building duplication
+#  https://github.com/Samsung/Universum/issues/709
+def test_add_conditional_to_step(test_env: ConditionalStepsTestEnv, capsys: pytest.CaptureFixture) -> None:
+    steps_info = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
+    true_branch_config = test_env._build_configuration_string(steps_info.true_branch_steps)
+    config_lines: List[str] = [
+        "from universum.configuration_support import Configuration, Step",
+        f"true_branch_config = {true_branch_config}",
+        f"conditional_step = Step(**{str(steps_info.conditional_step)})",
+        "another_step = Step(name='another step')",
+
+        # `true/false_branch_steps` should be Python objects from this script
+        "conditional_step.is_conditional = True",
+        "conditional_step.if_succeeded = true_branch_config",
+
+        "configs = Configuration([another_step + conditional_step])"
+    ]
+    config: str = "\n".join(config_lines)
+    test_env.configs_file.write_text(config, "utf-8")
+    test_env.run()
+
+    test_env._check_conditional_step_artifacts_present(steps_info)
+    test_env._check_executed_step_artifacts_present(steps_info)
