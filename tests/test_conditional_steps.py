@@ -264,6 +264,7 @@ def test_add_step_to_conditional(test_env: ConditionalStepsTestEnv, capsys: pyte
 #       of the ConditionalStepsTestEnv "internal" API (underscored methods) and config building duplication
 #  https://github.com/Samsung/Universum/issues/709
 def test_add_conditional_to_step(test_env: ConditionalStepsTestEnv, capsys: pytest.CaptureFixture) -> None:
+    # pylint: disable = protected-access
     steps_info = test_env.build_conditional_steps_info(is_conditional_step_passed=True)
     true_branch_config = test_env._build_configuration_string(steps_info.true_branch_steps)
     config_lines: List[str] = [
@@ -284,3 +285,4 @@ def test_add_conditional_to_step(test_env: ConditionalStepsTestEnv, capsys: pyte
 
     test_env._check_conditional_step_artifacts_present(steps_info)
     test_env._check_executed_step_artifacts_present(steps_info)
+    # pylint: enable = protected-access
