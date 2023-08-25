@@ -6,7 +6,6 @@ from ..error_state import HasErrorState
 from ..output import HasOutput
 from ..reporter import ReportObserver, Reporter
 from ...lib import utils
-from ...lib.utils import Uninterruptible
 from ...lib.ci_exception import CiException
 from ...lib.gravity import Dependency
 
@@ -194,13 +193,15 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
         self.post_comment(report_text)
 
     def code_report_to_review(self, report):
-        with Uninterruptible(self.out.log_error) as run:
-            for path, issues in report.items():
-                abs_path = os.path.join(self.client_root, path)
-                if abs_path in self.mappings_dict:
-                    for issue in issues:
-                        run(self.post_comment, issue['message'], filename=self.mappings_dict[abs_path],
-                            line=issue['line'], no_notification=True)
+        for path, issues in report.items():
+            abs_path = os.path.join(self.client_root, path)
+            if abs_path in self.mappings_dict:
+                for issue in issues:
+                    try:
+                        self.post_comment(issue['message'], filename=self.mappings_dict[abs_path],
+                                          line=issue['line'], no_notification=True)
+                    except CiException as e:
+                        self.out.log_error(str(e))
 
     def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm

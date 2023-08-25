@@ -176,8 +176,6 @@ class Uninterruptible:
                 func(*args, **kwargs)
             except SilentAbortException as e:
                 self.return_code = max(self.return_code, e.application_exit_code)
-            except CiException as e:
-                self.error_logger(str(e))
             except (KeyboardInterrupt, SystemExit):
                 self.error_logger("Interrupted from outer scope\n")
                 self.return_code = 3
