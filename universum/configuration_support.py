@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, TypeVar, Union
 from warnings import warn
 import copy
 import os
+from .lib.ci_exception import CriticalCiException
 
 
 __all__ = [
@@ -397,6 +398,9 @@ class Step:
         >>> step2 + step1
         {'name': 'barfoo', 'command': ['bar', 'foo'], 'critical': True, 'background': True, 'my_var1': 'barfoo', 'my_var2': 'baz'}
         """
+        if self.is_conditional:
+            # TODO: https://github.com/Samsung/Universum/issues/709
+            raise CriticalCiException("Conditional steps addition is not supported yet")
         return Step(
             name=self.name + other.name,
             command=self.command + other.command,
