@@ -148,10 +148,10 @@ class StructureHandler(HasOutput):
             yield
         except SilentAbortException:
             raise
-        except CriticalCiException as e:
+        except CriticalCiException as e:  # system/environment step failed
             self.fail_current_block(str(e))
             raise SilentAbortException() from e
-        except Exception as e:
+        except Exception as e:  # unexpected failure, should not occur
             if pass_errors is True:
                 raise
             self.fail_current_block(str(e))
@@ -210,7 +210,7 @@ class StructureHandler(HasOutput):
         with self.block(block_name=step_label, pass_errors=False):
             process = self.execute_one_step(merged_item, step_executor)
             error = process.get_error()
-            if error:
+            if error and not merged_item.is_conditional:
                 self.fail_current_block(error)
         has_artifacts: bool = bool(merged_item.artifacts) or bool(merged_item.report_artifacts)
         if not merged_item.background and has_artifacts:
@@ -244,12 +244,22 @@ class StructureHandler(HasOutput):
                 with self.block(block_name=step_label, pass_errors=True):
                     current_step_failed = not self.execute_steps_recursively(merged_item, child.children, step_executor,
                                                                              skip_execution)
+            elif child.is_conditional:
+                conditional_step_succeeded: bool = self.process_one_step(merged_item, step_executor,
+                                                                         skip_execution=False)
+                step_to_execute: Optional[Configuration] = merged_item.if_succeeded if conditional_step_succeeded \
+                    else merged_item.if_failed
+                if step_to_execute:  # branch step can be not set
+                    self.execute_steps_recursively(parent=Step(),
+                                                   children=step_to_execute,
+                                                   step_executor=step_executor,
+                                                   skip_execution=False)
+                current_step_failed = False  # conditional step should be always successful
             else:
                 if merged_item.finish_background and self.active_background_steps:
                     self.out.log("All ongoing background steps should be finished before next step execution")
                     if not self.report_background_steps():
                         skip_execution = True
-
                 current_step_failed = not self.process_one_step(merged_item, step_executor, skip_execution)
 
             if current_step_failed:
@@ -282,7 +292,10 @@ class StructureHandler(HasOutput):
         return result
 
     def execute_step_structure(self, configs: Configuration, step_executor) -> None:
-        self.configs_total_count = sum(1 for _ in configs.all())
+        for config in configs.all():
+            self.configs_total_count += 1
+            if config.is_conditional:
+                self.configs_total_count += 1
         self.step_num_len = len(str(self.configs_total_count))
         self.group_numbering = f" [ {'':{self.step_num_len}}+{'':{self.step_num_len}} ] "
 
@@ -291,6 +304,11 @@ class StructureHandler(HasOutput):
         if self.active_background_steps:
             with self.block(block_name="Reporting background steps", pass_errors=False):
                 self.report_background_steps()
+
+    def _build_step_name(self, name):
+        step_num_len = len(str(self.configs_total_count))
+        numbering = f" [ {self.configs_current_number:>{step_num_len}}/{self.configs_total_count} ] "
+        return numbering + name
 
 
 class HasStructure(Module):

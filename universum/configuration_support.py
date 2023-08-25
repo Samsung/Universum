@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, TypeVar, Union
 from warnings import warn
 import copy
 import os
+from .lib.ci_exception import CriticalCiException
 
 
 __all__ = [
@@ -121,9 +122,15 @@ class Step:
         A tag used to mark successful TeamCity builds. This tag can be set independenty
         of `fail_tag` value per each step. The value should be set to a strings without spaces as acceptable by
         TeamCity as tags. Every tag is added (if matching condition) after executing build step it is set in,
-        not in the end of all run.
+        not in the end of all run. Not applicable for conditional steps.
     fail_tag
-        A tag used to mark failed TemCity builds. See `pass_tag` for details.
+        A tag used to mark failed TeamCity builds. See `pass_tag` for details. Not applicable for conditional steps.
+    if_succeeded
+        Another Configuration, that will be executed in case of this step will succeed.
+        Having this parameter non-None will make the current step conditional.
+    if_failed
+        Another Configuration, that will be executed in case of this step will fail.
+        Having this parameter non-None will make the current step conditional.
 
     Each parameter is optional, and is substituted with a falsy value, if omitted.
 
@@ -176,6 +183,8 @@ class Step:
                  pass_tag: str = '',
                  fail_tag: str = '',
                  if_env_set: str = '',
+                 if_succeeded: Optional['Configuration'] = None,
+                 if_failed: Optional['Configuration'] = None,
                  **kwargs) -> None:
         self.name: str = name
         self.directory: str = directory
@@ -191,6 +200,9 @@ class Step:
         self.pass_tag: str = pass_tag
         self.fail_tag: str = fail_tag
         self.if_env_set: str = if_env_set
+        self.if_succeeded: Optional['Configuration'] = if_succeeded
+        self.if_failed: Optional['Configuration'] = if_failed
+        self.is_conditional: bool = bool(self.if_succeeded or self.if_failed)
         self.children: Optional['Configuration'] = None
         self._extras: Dict[str, str] = {}
         for key, value in kwargs.items():
@@ -386,6 +398,9 @@ class Step:
         >>> step2 + step1
         {'name': 'barfoo', 'command': ['bar', 'foo'], 'critical': True, 'background': True, 'my_var1': 'barfoo', 'my_var2': 'baz'}
         """
+        if self.is_conditional:
+            # TODO: https://github.com/Samsung/Universum/issues/709
+            raise CriticalCiException("Conditional steps addition is not supported yet")
         return Step(
             name=self.name + other.name,
             command=self.command + other.command,
@@ -401,6 +416,9 @@ class Step:
             pass_tag=self.pass_tag + other.pass_tag,
             fail_tag=self.fail_tag + other.fail_tag,
             if_env_set=self.if_env_set + other.if_env_set,
+            # FIXME: This is a dummy implementation. Define addition logic and implement it.
+            if_succeeded=other.if_succeeded,
+            if_failed=other.if_failed,
             **combine(self._extras, other._extras)
         )
 
