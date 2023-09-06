@@ -197,10 +197,11 @@ class Swarm(ReportObserver, HasOutput, HasErrorState):
             abs_path = os.path.join(self.client_root, path)
             if abs_path in self.mappings_dict:
                 for issue in issues:
-                    self.post_comment(issue['message'],
-                                      filename=self.mappings_dict[abs_path],
-                                      line=issue['line'],
-                                      no_notification=True)
+                    try:
+                        self.post_comment(issue['message'], filename=self.mappings_dict[abs_path],
+                                          line=issue['line'], no_notification=True)
+                    except CiException as e:
+                        self.out.log_error(str(e))
 
     def report_result(self, result, report_text=None, no_vote=False):
         # Opening links, sent by Swarm
