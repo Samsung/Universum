@@ -1,6 +1,20 @@
 Change log
 ==========
 
+0.19.17 (2023-09-06)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **config:** add support of `conditional steps <configuring.html#conditional-steps>`__
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** quickfix for incorrect '404' response
+
+
 0.19.16 (2023-06-14)
 --------------------
 
