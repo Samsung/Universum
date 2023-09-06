@@ -12,7 +12,8 @@ New features
 Bug fixes
 ~~~~~~~~~
 
-* **swarm:** quickfix for incorrect '404' response
+* **swarm:** quickfix for incorrect '404' response (Swarm server returning '404'
+  when adding comments to newly added files in review, causing report malfunction)
 
 
 0.19.16 (2023-06-14)
