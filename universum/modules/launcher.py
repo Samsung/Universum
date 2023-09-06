@@ -248,16 +248,6 @@ class RunningStep(RunningStepBase):
         else:
             self.out.log_stderr(line)
 
-    def add_tag(self, tag: str) -> None:
-        if not tag:
-            return
-
-        request: Response = self.send_tag(tag)
-        if request.status_code != 200:
-            self.out.log_error(request.text)
-        else:
-            self.out.log("Tag '" + tag + "' added to build.")
-
     def finalize(self) -> None:
         self._error = None
         if not self._needs_finalization:
@@ -282,14 +272,12 @@ class RunningStep(RunningStepBase):
                 text = utils.trim_and_convert_to_unicode(text)
                 if self.file:
                     self.file.write(text + "\n")
-                self.add_tag(self.configuration.fail_tag)
                 self._error = text
-                return
-
-            self.add_tag(self.configuration.pass_tag)
-            return
 
         finally:
+            tag: Optional[str] = self._get_teamcity_build_tag()
+            if tag:
+                self._assign_teamcity_build_tag(tag)
             self.handle_stdout()
             if self.file:
                 self.file.close()
@@ -306,6 +294,19 @@ class RunningStep(RunningStepBase):
         for item in self._postponed_out:
             item[0](item[1])
         self._postponed_out = []
+
+    def _get_teamcity_build_tag(self) -> Optional[str]:
+        if self.configuration.is_conditional:
+            return None  # conditional steps always succeed, no sense to set a tag
+        tag: str = self.configuration.fail_tag if self._error else self.configuration.pass_tag
+        return tag  # can be also None if not set for current Configuration
+
+    def _assign_teamcity_build_tag(self, tag: str) -> None:
+        response: Response = self.send_tag(tag)
+        if response.status_code != 200:
+            self.out.log_error(response.text)
+        else:
+            self.out.log("Tag '" + tag + "' added to build.")
 
 
 class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
@@ -413,6 +414,10 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
                         f"\tExclude patterns: {self.exclude_patterns}"
             raise CriticalCiException(text)
 
+        if self._is_conditional_step_with_children_present(self.project_config):
+            raise CriticalCiException("Conditional steps with child configurations are not supported")
+        self._warn_if_critical_conditional_steps_present(self.project_config)
+
         return self.project_config
 
     def create_process(self, item: configuration_support.Step) -> RunningStep:
@@ -435,3 +440,43 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
     def launch_project(self) -> None:
         self.reporter.add_block_to_report(self.structure.get_current_block())
         self.structure.execute_step_structure(self.project_config, self.create_process)
+
+    # TODO: implement support of conditional step with children
+    #  https://github.com/Samsung/Universum/issues/709
+    @staticmethod
+    def _is_conditional_step_with_children_present(
+            configuration: Optional[configuration_support.Configuration]) -> bool:
+        if not configuration:
+            return False
+        for step in configuration.configs:
+            if step.is_conditional and step.children:
+                return True
+            if Launcher._is_conditional_step_with_children_present(step.children) or \
+               Launcher._is_conditional_step_with_children_present(step.if_succeeded) or \
+               Launcher._is_conditional_step_with_children_present(step.if_failed):
+                return True
+        return False
+
+    def _warn_if_critical_conditional_steps_present(
+            self, configuration: Optional[configuration_support.Configuration]) -> None:
+        step_names: List[str] = Launcher._get_critical_conditional_step_names_recursively(configuration)
+        if not step_names:
+            return
+        step_names = [f'\t* "{name}"' for name in step_names]
+        step_names_str: str = "\n".join(step_names)
+        self.out.log(f"WARNING: 'critical' flag will be ignored for conditional steps: \n{step_names_str}\n "
+                     "Set it to the 'if_failed' branch step instead")
+
+    @staticmethod
+    def _get_critical_conditional_step_names_recursively(
+            configuration: Optional[configuration_support.Configuration]) -> List[str]:
+        step_names: List[str] = []
+        if not configuration:
+            return step_names
+        for step in configuration.configs:
+            if step.is_conditional and step.critical:
+                step_names.append(step.name)
+            step_names.extend(Launcher._get_critical_conditional_step_names_recursively(step.children))
+            step_names.extend(Launcher._get_critical_conditional_step_names_recursively(step.if_succeeded))
+            step_names.extend(Launcher._get_critical_conditional_step_names_recursively(step.if_failed))
+        return step_names

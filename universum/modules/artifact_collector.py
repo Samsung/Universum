@@ -2,10 +2,11 @@ import codecs
 import os
 import shutil
 import zipfile
+from typing import List, Optional, Dict, Union, TypedDict
 
 import glob2
 
-from ..configuration_support import Configuration
+from ..configuration_support import Configuration, Step
 from ..lib.ci_exception import CriticalCiException, CiException
 from ..lib.gravity import Dependency
 from ..lib.utils import make_block
@@ -54,6 +55,11 @@ def make_big_archive(target, source):
             os.chdir(save_cwd)
 
     return filename
+
+
+class ArtifactInfo(TypedDict):
+    path: str
+    clean: bool
 
 
 class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
@@ -153,25 +159,39 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
     @make_block("Preprocessing artifact lists")
     def set_and_clean_artifacts(self, project_configs: Configuration, ignore_existing_artifacts: bool = False) -> None:
         self.html_output.artifact_dir_ready = True
-        artifact_list = []
-        report_artifact_list = []
+        artifact_list: List[ArtifactInfo] = []
         for configuration in project_configs.all():
             if configuration.artifacts:
-                path = utils.parse_path(configuration.artifacts, self.settings.project_root)
-                artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
+                artifact_list.append(self.get_config_artifact(configuration))
             if configuration.report_artifacts:
-                path = utils.parse_path(configuration.report_artifacts, self.settings.project_root)
-                report_artifact_list.append(dict(path=path, clean=configuration.artifact_prebuild_clean))
+                artifact_list.append(self.get_config_artifact(configuration, is_report_artifact=True))
+            if configuration.is_conditional:
+                artifact_list.extend(self.get_conditional_step_branches_artifacts(configuration))
 
         if artifact_list:
             name = "Setting and preprocessing artifacts according to configs"
             with self.structure.block(block_name=name, pass_errors=True):
                 self.preprocess_artifact_list(artifact_list, ignore_existing_artifacts)
 
-        if report_artifact_list:
-            name = "Setting and preprocessing artifacts to be mentioned in report"
-            with self.structure.block(block_name=name, pass_errors=True):
-                self.preprocess_artifact_list(report_artifact_list, ignore_existing_artifacts)
+    def get_conditional_step_branches_artifacts(self, conditional_step: Step) -> List[ArtifactInfo]:
+        steps_to_process: List[Step] = []
+        if conditional_step.if_succeeded:
+            steps_to_process.extend(list(conditional_step.if_succeeded.all()))
+        if conditional_step.if_failed:
+            steps_to_process.extend(list(conditional_step.if_failed.all()))
+
+        artifacts: List[Optional[ArtifactInfo]] = []
+        for step in steps_to_process:
+            artifacts.append(self.get_config_artifact(step))
+            artifacts.append(self.get_config_artifact(step, is_report_artifact=True))
+
+        defined_artifacts: List[ArtifactInfo] = [artifact for artifact in artifacts if artifact]
+        return defined_artifacts
+
+    def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> ArtifactInfo:
+        artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
+        path: str = utils.parse_path(artifact, self.settings.project_root)
+        return dict(path=path, clean=step.artifact_prebuild_clean)
 
     def move_artifact(self, path, is_report=False):
         self.out.log("Processing '" + path + "'")

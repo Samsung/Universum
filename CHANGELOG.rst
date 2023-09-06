@@ -1,6 +1,21 @@
 Change log
 ==========
 
+0.19.17 (2023-09-06)
+--------------------
+
+New features
+~~~~~~~~~~~~
+
+* **config:** add support of `conditional steps <configuring.html#conditional-steps>`__
+
+Bug fixes
+~~~~~~~~~
+
+* **swarm:** quickfix for incorrect '404' response (Swarm server returning '404'
+  when adding comments to newly added files in review, causing report malfunction)
+
+
 0.19.16 (2023-06-14)
 --------------------
 
