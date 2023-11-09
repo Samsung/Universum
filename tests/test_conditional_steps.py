@@ -286,3 +286,16 @@ def test_add_conditional_to_step(test_env: ConditionalStepsTestEnv, capsys: pyte
     test_env._check_conditional_step_artifacts_present(steps_info)
     test_env._check_executed_step_artifacts_present(steps_info)
     # pylint: enable = protected-access
+
+
+def test_no_artifacts(test_env: ConditionalStepsTestEnv) -> None:
+    config_lines: List[str] = [
+        "from universum.configuration_support import Configuration, Step",
+        "true_branch_config = Configuration([Step(name='True branch step')])",
+        "conditional_step = Configuration([Step(name='Conditional step', if_succeeded=true_branch_config)])",
+        "configs = conditional_step"
+    ]
+
+    config: str = "\n".join(config_lines)
+    test_env.configs_file.write_text(config, "utf-8")
+    test_env.run()
