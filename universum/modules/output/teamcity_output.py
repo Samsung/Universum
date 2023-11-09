@@ -33,7 +33,7 @@ class TeamcityOutput(BaseOutput):
         print(f"##teamcity[blockOpened name='{num_str} {escape(name)}']")
 
     def close_block(self, num_str: str, name: str, status: str) -> None:
-        print(f"##teamcity[block\\Closed name='{num_str} {escape(name)}']")
+        print(f"##teamcity[blockClosed name='{num_str} {escape(name)}']")
 
     def log_skipped(self, message: str) -> None:
         lines = message.split("\n")
