@@ -162,9 +162,9 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         artifact_list: List[ArtifactInfo] = []
         for configuration in project_configs.all():
             if configuration.artifacts:
-                artifact_list.append(self.get_config_artifact(configuration))
+                self.append_config_artifact_if_present(artifact_list, configuration)
             if configuration.report_artifacts:
-                artifact_list.append(self.get_config_artifact(configuration, is_report_artifact=True))
+                self.append_config_artifact_if_present(artifact_list, configuration, is_report_artifact=True)
             if configuration.is_conditional:
                 artifact_list.extend(self.get_conditional_step_branches_artifacts(configuration))
 
@@ -180,16 +180,26 @@ class ArtifactCollector(ProjectDirectory, HasOutput, HasStructure):
         if conditional_step.if_failed:
             steps_to_process.extend(list(conditional_step.if_failed.all()))
 
-        artifacts: List[Optional[ArtifactInfo]] = []
+        artifacts: List[ArtifactInfo] = []
         for step in steps_to_process:
-            artifacts.append(self.get_config_artifact(step))
-            artifacts.append(self.get_config_artifact(step, is_report_artifact=True))
+            self.append_config_artifact_if_present(artifacts, step)
+            self.append_config_artifact_if_present(artifacts, step, is_report_artifact=True)
 
         defined_artifacts: List[ArtifactInfo] = [artifact for artifact in artifacts if artifact]
         return defined_artifacts
 
-    def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> ArtifactInfo:
+    def append_config_artifact_if_present(self,
+                                          artifacts: List[ArtifactInfo],
+                                          step: Step,
+                                          is_report_artifact: bool = False) -> None:
+        artifact: Optional[ArtifactInfo] = self.get_config_artifact(step, is_report_artifact)
+        if artifact:
+            artifacts.append(artifact)
+
+    def get_config_artifact(self, step: Step, is_report_artifact: bool = False) -> Optional[ArtifactInfo]:
         artifact: str = step.report_artifacts if is_report_artifact else step.artifacts
+        if not artifact:
+            return None
         path: str = utils.parse_path(artifact, self.settings.project_root)
         return dict(path=path, clean=step.artifact_prebuild_clean)
 
