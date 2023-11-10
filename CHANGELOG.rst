@@ -1,6 +1,16 @@
 Change log
 ==========
 
+0.19.18 (2023-11-10)
+--------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **artifacts:** build initialization failure for conditional/branch step with no artifacts
+* **out:** incorrect block closing for TC, causing unexpected embedment
+
+
 0.19.17 (2023-09-06)
 --------------------
 
