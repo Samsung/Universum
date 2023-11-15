@@ -143,7 +143,7 @@ sarif_report_split_uri = """
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "my_path",
+                  "uri": "my_file",
                   "uriBaseId": "ROOTPATH"
                 },
                 "region": {
@@ -161,7 +161,7 @@ sarif_report_split_uri = """
       ],
       "originalUriBaseIds": {
         "ROOTPATH": {
-          "uri": "my_file"
+          "uri": "my_path"
         }
       }
     }
