@@ -62,8 +62,8 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
         for run in report.get('runs', []):
             analyzer_data: Dict[str, str] = run.get('tool').get('driver')  # non-optional per definition
             who: str = f"{analyzer_data.get('name')} [{analyzer_data.get('version', '?')}]"
-            root_uri_base_ids: Dict[str, str] = {uri_base_id: root_path['uri'] for uri_base_id, root_path in
-                                                 run.get('originalUriBaseIds', {}).items()}
+            root_uri_base_paths: Dict[str, str] = {uri_base_id: urllib.parse.urlparse(root_path['uri']).path for
+                                                   uri_base_id, root_path in run.get('originalUriBaseIds', {}).items()}
             for issue in run.get('results', []):
                 issue_count += 1
                 what: str = issue.get('message')
@@ -81,10 +81,10 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                         if not uri:
                             raise ValueError("Unexpected lack of uri tag")
                         uri_base_id = artifact_data.get('uriBaseId', '')
-                        root_base_path: str = urllib.parse.urlparse(root_uri_base_ids.get(uri_base_id)).path
+                        root_base_path = root_uri_base_paths.get(uri_base_id, '')
                         if uri_base_id and not root_base_path:
                             raise ValueError(f"Unexpected lack of 'originalUriBaseIds' value for {uri_base_id}")
-                        path = str(Path(root_base_path, uri))
+                        path = str(Path(root_base_path, urllib.parse.unquote(uri)))
                     else:
                         path = urllib.parse.unquote(artifact_data.get('uri', ''))
                     region_data = location_data.get('region')
