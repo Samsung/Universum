@@ -10,6 +10,7 @@ Bug fixes
 * **report:** support originalUriBaseIds fields for SARIF
   (causing malfunction of underline comments to the Swarm)
 
+
 0.19.18 (2023-11-10)
 --------------------
 
