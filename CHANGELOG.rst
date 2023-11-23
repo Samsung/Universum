@@ -9,6 +9,7 @@ Bug fixes
 
 * **report:** support originalUriBaseIds fields for SARIF
   (causing malfunction of underline comments to the Swarm)
+* **doc:** update RTD config format, causing doc builds to fail
 
 
 0.19.18 (2023-11-10)
