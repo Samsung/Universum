@@ -54,6 +54,35 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             self.reporter.code_report(path, message)
         return len(report)
 
+    def _process_one_sarif_issue(self, issue, root_uri_base_paths, who) -> None:
+        what: str = issue.get('message')
+        for location in issue.get('locations', []):
+            location_data: Dict[str, Dict[str, str]] = location.get('physicalLocation')
+            if not location_data:
+                continue
+            artifact_data = location_data.get('artifactLocation')
+            if not artifact_data:
+                if location_data.get('address'):
+                    continue  # binary artifact can't be processed
+                raise ValueError("Unexpected lack of artifactLocation tag")
+            if artifact_data.get('uriBaseId'):
+                uri = artifact_data.get('uri')
+                if not uri:
+                    raise ValueError("Unexpected lack of uri tag")
+                uri_base_id = artifact_data.get('uriBaseId', '')
+                root_base_path = root_uri_base_paths.get(uri_base_id, '')
+                if uri_base_id and not root_base_path:
+                    raise ValueError(f"Unexpected lack of 'originalUriBaseIds' value for {uri_base_id}")
+                path = str(Path(root_base_path, urllib.parse.unquote(uri)))
+            else:
+                path = urllib.parse.unquote(artifact_data.get('uri', ''))
+            region_data = location_data.get('region')
+            if not region_data:
+                continue  # TODO: cover this case as comment to the file as a whole
+            message: reporter.ReportMessage = {"message": f"{who} : {what}",
+                                               "line": int(region_data.get('startLine', '0'))}
+            self.reporter.code_report(path, message)
+
     def _report_as_sarif_json(self, report) -> int:
         version: str = report.get('version', '')
         if version != '2.1.0':
@@ -66,33 +95,7 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
                                                    uri_base_id, root_path in run.get('originalUriBaseIds', {}).items()}
             for issue in run.get('results', []):
                 issue_count += 1
-                what: str = issue.get('message')
-                for location in issue.get('locations', []):
-                    location_data: Dict[str, Dict[str, str]] = location.get('physicalLocation')
-                    if not location_data:
-                        continue
-                    artifact_data = location_data.get('artifactLocation')
-                    if not artifact_data:
-                        if location_data.get('address'):
-                            continue  # binary artifact can't be processed
-                        raise ValueError("Unexpected lack of artifactLocation tag")
-                    if artifact_data.get('uriBaseId'):
-                        uri = artifact_data.get('uri')
-                        if not uri:
-                            raise ValueError("Unexpected lack of uri tag")
-                        uri_base_id = artifact_data.get('uriBaseId', '')
-                        root_base_path = root_uri_base_paths.get(uri_base_id, '')
-                        if uri_base_id and not root_base_path:
-                            raise ValueError(f"Unexpected lack of 'originalUriBaseIds' value for {uri_base_id}")
-                        path = str(Path(root_base_path, urllib.parse.unquote(uri)))
-                    else:
-                        path = urllib.parse.unquote(artifact_data.get('uri', ''))
-                    region_data = location_data.get('region')
-                    if not region_data:
-                        continue  # TODO: cover this case as comment to the file as a whole
-                    message: reporter.ReportMessage = {"message": f"{who} : {what}",
-                                                       "line": int(region_data.get('startLine', '0'))}
-                    self.reporter.code_report(path, message)
+                self._process_one_sarif_issue(issue, root_uri_base_paths, who)
         return issue_count
 
     @make_block("Processing code report results")
