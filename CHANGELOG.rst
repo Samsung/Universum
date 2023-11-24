@@ -1,6 +1,18 @@
 Change log
 ==========
 
+0.19.19 (2023-11-22)
+--------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **report:** support originalUriBaseIds fields for SARIF
+  (causing malfunction of underline comments to the Swarm)
+* **doc:** update RTD (https://universum.readthedocs.io/en/latest/) config
+  (old config format no longer supported)
+
+
 0.19.18 (2023-11-10)
 --------------------
 
