@@ -40,14 +40,18 @@ and then use the commands listed below. Please note we use `venv` to properly se
 python interpreter version and to isolate development environment from the system.
 
 Prerequisites:
-1. Install all of the VCS extras as described in the [Universum installation manual](
+1. Make sure the libssl-dev and libcrypto++-dev packages are available in your environment.
+```bash
+sudo apt install libssl-dev libcrypto++-dev
+```
+2. Install all of the VCS extras as described in the [Universum installation manual](
    https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
    (including installation of Git and P4 CLI)
-2. Install Docker (`docker-ce`, `docker-ce-cli`) as described in the [official installation manual](
+3. Install Docker (`docker-ce`, `docker-ce-cli`) as described in the [official installation manual](
    https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
 
    * Also add current user to 'docker' group (use `sudo usermod -a -G docker $USER` and then relogin)
-3. Install Mozilla WebDriver: `sudo apt install firefox-geckodriver`
+4. Install Mozilla WebDriver: `sudo apt install firefox-geckodriver`
 
 Further commands:
 ```bash
