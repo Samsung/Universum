@@ -41,9 +41,9 @@ python interpreter version and to isolate development environment from the syste
 
 Prerequisites:
 1. Make sure the libssl-dev and libcrypto++-dev packages are available in your environment.
-```bash
-sudo apt install libssl-dev libcrypto++-dev
-```
+    ```bash
+    sudo apt install libssl-dev libcrypto++-dev
+    ```
 2. Install all of the VCS extras as described in the [Universum installation manual](
    https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),
    (including installation of Git and P4 CLI)
