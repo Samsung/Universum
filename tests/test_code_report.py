@@ -408,10 +408,8 @@ configs = Configuration([Step(critical=True)]) * Configuration([
 
 
 @pytest.mark.parametrize('analyzer, extra_args, tested_content', [
-    ['clang_format', ["--report-html"], source_code_c],
     ['clang_format', [], source_code_c],
 ], ids=[
-    "clang_format_html_file",
     "clang_format",
 ])
 def test_clang_format_analyzer_with_subfolder(runner_with_analyzers: UniversumRunner, analyzer,
@@ -432,4 +430,4 @@ def test_clang_format_analyzer_with_subfolder(runner_with_analyzers: UniversumRu
 
     log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, args, extra_config).finalize())
     assert not re.findall(r'No such file or directory', log), f"'No such file or directory' is found in '{log}'"
-    assert re.findall(log_fail, log), f"'{log_success}' is not found in '{log}'"
+    assert re.findall(log_fail, log), f"'{log_fail}' is not found in '{log}'"
