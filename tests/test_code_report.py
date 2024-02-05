@@ -405,3 +405,31 @@ configs = Configuration([Step(critical=True)]) * Configuration([
 
     env.run()
     stdout_checker.assert_absent_calls_with_param("${CODE_REPORT_FILE}")
+
+
+@pytest.mark.parametrize('analyzer, extra_args, tested_content', [
+    ['clang_format', ["--report-html"], source_code_c],
+    ['clang_format', [], source_code_c],
+], ids=[
+    "clang_format_html_file",
+    "clang_format",
+])
+def test_clang_format_analyzer_with_subfolder(runner_with_analyzers: UniversumRunner, analyzer,
+                        extra_args, tested_content):
+
+    root = runner_with_analyzers.local.root_directory
+    source_file = root / "subdir" / "source_file"
+    source_file.parent.mkdir(parents=True, exist_ok=True)
+    source_file.write_text(tested_content)
+    common_args = [
+        "--result-file", "${CODE_REPORT_FILE}",
+        "--files", "subdir/source_file"
+    ]
+    (root / ".clang-format").write_text(config_clang_format)
+
+    args = common_args + extra_args
+    extra_config = "artifacts='./diff_temp/source_file.html'"
+
+    log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, args, extra_config).finalize())
+    assert not re.findall(r'No such file or directory', log), f"'No such file or directory' is found in '{log}'"
+    assert re.findall(log_fail, log), f"'{log_success}' is not found in '{log}'"
