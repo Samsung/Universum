@@ -120,7 +120,7 @@ def expand_files_argument(settings: argparse.Namespace) -> None:
     # TODO: subclass argparse.Action
     result: Set[str] = set()
     for pattern in settings.file_list:
-        file_list: List[str] = glob.glob(pattern)
+        file_list: List[str] = glob.glob(pattern, recursive=True)
         if not file_list:
             sys.stderr.write(f"Warning: no files found for input pattern {pattern}\n")
         else:
