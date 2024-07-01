@@ -41,31 +41,31 @@ jobs:
 
         if [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "opened" ]]; then
           ESCAPED_NAME=`echo -e "$PR_NAME" | sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
-          TEXT=`echo -e "<b>$PR_AUTHOR</b> created new <a href=\"$PR_URL\">PR#$PR_NUMBER</a> '$ESCAPED_NAME' to branch '$PR_BASE'"`
+          TEXT=`echo -e "<b>"$PR_AUTHOR"</b> created new <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a> '"$ESCAPED_NAME"' to branch '"$PR_BASE"'"`
         elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "synchronize" ]]; then
-          TEXT=`echo -e "<b>$PR_AUTHOR</b> updated <a href=\"$PR_URL\">PR#$PR_NUMBER</a>"`
+          TEXT=`echo -e "<b>"$PR_AUTHOR"</b> updated <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
         elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
-          TEXT=`echo -e "<b>$PR_MERGED</b> merged <a href=\"$PR_URL\">PR#$PR_NUMBER</a> to branch <b>'$PR_BASE'</b>"`
+          TEXT=`echo -e "<b>"$PR_MERGED"</b> merged <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a> to branch <b>'"$PR_BASE"'</b>"`
         elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" ]]; then
-          TEXT=`echo -e "<b>$PR_AUTHOR</b> closed <a href=\"$PR_URL\">PR#$PR_NUMBER</a>"`
+          TEXT=`echo -e "<b>"$PR_AUTHOR"</b> closed <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
 
         elif [[ ! -z "${{ github.event.comment }}" ]]; then
           ESCAPED_TEXT=`echo -e "$COMMENT_BODY"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
           if [[ ! -z "${{ github.event.pull_request }}" ]]; then
-            TEXT=`echo -e "<b>$COMMENT_AUTHOR</b> posted the following comment to file <i>$COMMENT_FILE</i> in <a href=\"$COMMENT_URL\">PR#$PR_NUMBER</a>:\n<i>$ESCAPED_TEXT</i>"`
+            TEXT=`echo -e "<b>"$COMMENT_AUTHOR"</b> posted the following comment to file <i>"$COMMENT_FILE"</i> in <a href=\"$COMMENT_URL\">PR#"$PR_NUMBER"</a>:\n<i>"$ESCAPED_TEXT"</i>"`
           else
-            TEXT=`echo -e "<b>$COMMENT_AUTHOR</b> posted the following comment to issue <a href=\"$COMMENT_URL\">#$COMMENT_NUMBER</a>:\n<i>$ESCAPED_TEXT</i>"`
+            TEXT=`echo -e "<b>"$COMMENT_AUTHOR"</b> posted the following comment to issue <a href=\"$COMMENT_URL\">#"$COMMENT_NUMBER"</a>:\n<i>"$ESCAPED_TEXT"</i>"`
           fi
 
         elif [[ ! -z "${{ github.event.review }}" && "$REVIEW_STATE" == "changes_requested" ]]; then
-          TEXT=`echo -e "<b>$REVIEW_AUTHOR</b> requested changes for <a href=\"$PR_URL\">PR#$PR_NUMBER</a>"`
+          TEXT=`echo -e "<b>"$REVIEW_AUTHOR"</b> requested changes for <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
         elif [[ ! -z "${{ github.event.review }}" && "$REVIEW_STATE" == "commented" && ! -z "$REVIEW_COMMENT" ]]; then
           ESCAPED_TEXT=`echo -e "$REVIEW_COMMENT"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
-          TEXT=`echo -e "<b>$REVIEW_AUTHOR</b> posted the following comment to <a href=\"$PR_URL\">PR#$PR_NUMBER</a>:\n<i>$ESCAPED_TEXT</i>"`
+          TEXT=`echo -e "<b>"$REVIEW_AUTHOR"</b> posted the following comment to <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>:\n<i>"$ESCAPED_TEXT"</i>"`
         elif [[ ! -z "${{ github.event.review }}" && "$REVIEW_STATE" != "commented" ]]; then
-          TEXT=`echo -e "<b>$REVIEW_AUTHOR</b> $REVIEW_STATE <a href=\"$PR_URL\">PR#$PR_NUMBER</a>"`
+          TEXT=`echo -e "<b>"$REVIEW_AUTHOR"</b> "$REVIEW_STATE" <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
         elif [[ -z "${{ github.event.review }}" && "${{ github.event.action }}" == "submitted" ]]; then
-          TEXT=`echo -e "Due to GitHub Actions bug we cannot identify, who approved <a href=\"$PR_URL\">PR#$PR_NUMBER</a>"`
+          TEXT=`echo -e "Due to GitHub Actions bug we cannot identify, who approved <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
 
         elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
           ESCAPED_TEXT=`echo -e "$UNIVERSUM_BRANCH"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
@@ -75,9 +75,9 @@ jobs:
           TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>FAILED</b>; commit "$ESCAPED_TEXT" "`
         fi
 
-        if [[ ! -z $TEXT ]]; then
+        if [[ ! -z "$TEXT" ]]; then
           curl --get --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode "disable_web_page_preview=True" \
-          --data-urlencode "text=$TEXT" --data-urlencode "parse_mode=HTML" $URL
+          --data-urlencode "text="$TEXT"" --data-urlencode "parse_mode=HTML" "$URL"
         fi
 
       env:
