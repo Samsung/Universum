@@ -15,6 +15,7 @@ Project is executed with `python3.7 -m universum` command.
 Independent analyzers are executed with their module name, e.g. `python3.7 -m universum.analyzers.pylint`.
 Other Universum modes, such as poller or submitter, are called via command line, e.g.
 `python3.7 -m universum poll`
+testtesttest
 
 ## Installation
 
