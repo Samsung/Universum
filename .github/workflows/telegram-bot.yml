@@ -69,10 +69,10 @@ jobs:
 
         elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
           ESCAPED_TEXT=`echo -e "$UNIVERSUM_BRANCH"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
-          TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>SUCCEDED</b>; commit "$ESCAPED_TEXT" "`
+          TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>SUCCEDED</b>; commit "$UNIVERUM_COMMIT" "`
         elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "failure" ]]; then
           ESCAPED_TEXT=`echo -e "$UNIVERSUM_BRANCH"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
-          TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>FAILED</b>; commit "$ESCAPED_TEXT" "`
+          TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>FAILED</b>; commit "$UNIVERUM_COMMIT" "`
         fi
 
         if [[ ! -z "$TEXT" ]]; then
