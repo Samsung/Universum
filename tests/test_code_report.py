@@ -169,6 +169,46 @@ sarif_report_split_uri = """
 }
 """
 
+sarif_report_uri = """
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Checkstyle",
+          "semanticVersion": "8.43",
+          "version": "8.43"
+        }
+      },
+      "results": [
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///my_path/my_file"
+                },
+                "region": {
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Error!"
+          },
+          "ruleId": "testRule"
+        }
+      ]
+    }
+  ]
+}
+"""
+
 config_uncrustify = """
 code_width = 120
 input_tab_size = 2
@@ -189,6 +229,7 @@ log_success = r'Issues not found'
     [[sarif_report_minimal], True],
     [[sarif_report], False],
     [[sarif_report_split_uri], False],
+    [[sarif_report_uri], False],
     [[json_report_minimal, sarif_report_minimal], True],
     [[json_report, sarif_report], False],
     [[json_report_minimal, sarif_report], False],
@@ -199,6 +240,7 @@ log_success = r'Issues not found'
     'sarif_no_issues',
     'sarif_issues_found',
     'sarif_split_uri_issues_found',
+    'sarif_uri',
     'both_tested_no_issues',
     'both_tested_issues_in_both',
     'both_tested_issues_in_sarif',
