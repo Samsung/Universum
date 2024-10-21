@@ -59,7 +59,7 @@ def test_p4_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
                             "-p4d", perforce_workspace.depot,
                             "-jtu", "https://localhost/?%s"])
     assert result != 0
-    stdout_checker.assert_has_calls_with_param("TCP connect to 127.0.0.1:1024 failed.")
+    stdout_checker.assert_has_calls_with_param("Connect to server failed; check $P4PORT")
 
 
 def test_git_error_command_line_wrong_port(stdout_checker: FuzzyCallChecker,
