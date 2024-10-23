@@ -94,7 +94,5 @@ def test_p4_print_exception_in_sync(perforce_environment: P4TestEnvironment, std
 def test_p4_print_exception_already_committed_shelve(perforce_environment: P4TestEnvironment, stdout_checker: FuzzyCallChecker):
     cl = perforce_environment.vcs_client.make_a_change()
     perforce_environment.settings.PerforceMainVcs.shelve_cls = [cl]
-
-    # This is not the 'already committed' case of Swarm review, so it actually should fail
     perforce_environment.run(expect_failure=True)
     stdout_checker.assert_has_calls_with_param(f"Change {cl} is already committed.")
