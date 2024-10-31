@@ -1,6 +1,18 @@
 Change log
 ==========
 
+0.19.20 (2024-10-31)
+--------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **report:** parse data from sarif as URI, instead of treating it as string
+* **code_report:** create parent folders for target file for clang_format
+* **analyzers:** use recursive glob setting
+* **doc:** added dependencies to setup.py and to README
+
+
 0.19.19 (2023-11-22)
 --------------------
 
