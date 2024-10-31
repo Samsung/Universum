@@ -1,11 +1,10 @@
 name: Universum check
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push
 
 jobs:
-  universum_check:
-    name: Universum check
+  universum_postcommit:
+    name: Universum postcommit
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +20,9 @@ jobs:
       run:
         python -u -m universum
         --fail-unsuccessful
-        --vcs-type="ghactions"
-        --ghactions-payload="@${{ github.event_path }}"
-        --ghactions-token="${{ secrets.GITHUB_TOKEN }}"
-        --report-to-review
+        --vcs-type="git"
+        --git-repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+        --git-refspec "$GITHUB_REF_NAME"
         --no-archive
         --no-diff
 

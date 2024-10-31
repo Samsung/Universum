@@ -39,6 +39,7 @@ def main(settings: argparse.Namespace) -> List[utils.ReportData]:
         cmd = [settings.executable, src_file_absolute]
         _add_style_param_if_present(cmd, settings)
         output, _ = utils.run_for_output(cmd)
+        target_file_absolute.parent.mkdir(parents=True, exist_ok=True)
         with open(target_file_absolute, "w", encoding="utf-8") as output_file:
             output_file.write(output)
 

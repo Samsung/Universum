@@ -59,7 +59,8 @@ setup(
             'types-requests',
             'selenium==3.141',
             'urllib3==1.26.15',  # This is required for selenium-3.141 to work correctly
-            'types-PyYAML==6.0'
+            'types-PyYAML==6.0',
+            'wheel'
         ]
     },
     package_data={'': ['*.css', '*.js']}
