@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.19.21 (2024-11-11)
+--------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **setup:** loosen the dependencies for multiplatforming
+
+
 0.19.20 (2024-10-31)
 --------------------
 
