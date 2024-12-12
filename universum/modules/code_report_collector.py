@@ -71,11 +71,12 @@ class CodeReportCollector(ProjectDirectory, HasOutput, HasStructure):
             if artifact_data.get('uriBaseId'):
                 # means path is relative, need to make absolute
                 uri_base_id = artifact_data.get('uriBaseId', '')
-                root_base_path = root_uri_base_paths.get(uri_base_id, '')
-                if uri_base_id and not root_base_path:
+                base_uri = root_uri_base_paths.get(uri_base_id, '')
+                if uri_base_id and not base_uri:
                     raise ValueError(f"Unexpected lack of 'originalUriBaseIds' value for {uri_base_id}")
-                uri = str(Path(root_base_path) / uri)
-            path = urllib.parse.unquote(urllib.parse.urlparse(uri).path)                
+            else:
+                base_uri = ''
+            path = str(Path(urllib.parse.urlparse(urllib.parse.urljoin(base_uri, uri)).path))
             region_data = location_data.get('region')
             if not region_data:
                 continue  # TODO: cover this case as comment to the file as a whole
