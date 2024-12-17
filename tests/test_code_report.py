@@ -161,7 +161,7 @@ sarif_report_split_uri = """
       ],
       "originalUriBaseIds": {
         "ROOTPATH": {
-          "uri": "my_path"
+          "uri": "file:///my_path"
         }
       }
     }
