@@ -1,6 +1,15 @@
 Change log
 ==========
 
+0.19.22 (2024-12-18)
+--------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **report:** adjust for relative uri path and support Klint
+
+
 0.19.21 (2024-11-11)
 --------------------
 
