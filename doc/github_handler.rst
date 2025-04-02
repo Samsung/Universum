@@ -100,6 +100,11 @@ The list of GitHub Handler parameters can be found :ref:`here <additional_comman
 Jenkins jobs example
 --------------------
 
+.. note::
+
+    Please note, that these examples use private key stored via `Credentials` plugin as a secret file
+    (and not the GitHub App credentials)
+
 .. collapsible::
     :header: Here's DSL script for GitHub Handler
 
