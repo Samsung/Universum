@@ -1,5 +1,5 @@
-FROM ubuntu:bionic AS universum_test_env_no_vcs
-ARG PYTHON=python3.7
+FROM ubuntu:noble AS universum_test_env_no_vcs
+ARG PYTHON=python3.12
 
 # Please note: apt-get install will produce the following message in stderr:
 # 'debconf: delaying package configuration, since apt-utils is not installed`
@@ -17,7 +17,7 @@ RUN wget --no-verbose --no-check-certificate -O get-pip.py 'https://bootstrap.py
 RUN ${PYTHON} get-pip.py
 
 FROM universum_test_env_no_vcs AS universum_test_env_no_p4
-ARG PYTHON=python3.7
+ARG PYTHON=python3.12
 
 # Install Git & gitpython
 RUN apt-get install -y git
@@ -30,7 +30,7 @@ RUN apt-get install -y git
 RUN ${PYTHON} -m pip install gitpython
 
 FROM universum_test_env_no_p4 AS universum_test_env
-ARG PYTHON=python3.7
+ARG PYTHON=python3.12
 
 # Install Perforce and p4python
 RUN wget -q http://package.perforce.com/perforce.pubkey -O - | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - && \
