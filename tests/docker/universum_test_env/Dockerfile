@@ -10,12 +10,8 @@ RUN apt-get update && apt-get install -y wget software-properties-common
 
 # Install latest python & pip
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev python3-setuptools \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev python3-setuptools python3-pip \
     gnupg2 libssl-dev build-essential
-
-# Please note: wget is writing logs to stderr, these logs are not any kind of warning
-RUN wget --no-verbose --no-check-certificate -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'
-RUN ${PYTHON} get-pip.py
 
 FROM universum_test_env_no_vcs AS universum_test_env_no_p4
 ARG PYTHON=python3.12
