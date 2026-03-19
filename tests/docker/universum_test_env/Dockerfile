@@ -24,7 +24,7 @@ RUN apt-get install -y git
 # installing them into every newly created container as user
 # a) is not that dangerous as we use disposable docker containers anyway
 # b) saves a lot of times and adds more stability to tests
-RUN ${PYTHON} -m pip install gitpython
+RUN ${PYTHON} -m pip install --break-system-packages gitpython
 
 FROM universum_test_env_no_p4 AS universum_test_env
 ARG PYTHON=python3.12
@@ -35,4 +35,4 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | APT_KEY_DONT_WARN
     apt-get update
 
 RUN apt-get install -y helix-cli
-RUN ${PYTHON} -m pip install p4python
+RUN ${PYTHON} -m pip install --break-system-packages p4python
