@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y wget software-properties-common
 
 # Install latest python & pip
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev $python3-setuptools \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev python3-setuptools \
     gnupg2 libssl-dev build-essential
 
 # Please note: wget is writing logs to stderr, these logs are not any kind of warning
