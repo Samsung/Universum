@@ -30,7 +30,7 @@ configs = Variations([Step(name="Create virtual environment", command=[python, "
 
                       Step(name="Run static pylint", code_report=True,
                            command=run_virtual(f"{python} -m universum.analyzers.pylint "
-                                               f"--python-version={python_version} --rcfile=pylintrc "
+                                               f"--rcfile=pylintrc "
                                                "--result-file=\"${CODE_REPORT_FILE}\" --files *.py universum/ tests/")),
                       Step(name="Run static type checker", code_report=True,
                            command=run_virtual(f"{python} -m universum.analyzers.mypy --python-version={python_version} "
