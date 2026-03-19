@@ -23,7 +23,7 @@ __version__ = "{test_line}"
     init_file.write_bytes(backup)
     assert test_line in output
 
-    docker_main.environment.assert_successful_execution("pip uninstall -y universum")
+    docker_main.environment.assert_successful_execution("pip uninstall --break-system-packages -y universum")
     docker_main.run(utils.simple_test_config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
     docker_main.run(utils.simple_test_config, vcs_type="none")  # not expected to fail
