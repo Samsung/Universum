@@ -14,7 +14,7 @@ def run_virtual(cmd):
 
 
 def pip_install(module_name):
-    return "python -m pip --default-timeout=1200 install --break-system-packages --progress-bar off -U " + module_name
+    return "python -m pip --default-timeout=1200 install --progress-bar off -U " + module_name
 
 
 configs = Variations([Step(name="Create virtual environment", command=[python, "-m", "venv", env_name]),
