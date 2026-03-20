@@ -1,5 +1,5 @@
-FROM ubuntu:bionic AS universum_test_env_no_vcs
-ARG PYTHON=python3.7
+FROM ubuntu:noble AS universum_test_env_no_vcs
+ARG PYTHON=python3.12
 
 # Please note: apt-get install will produce the following message in stderr:
 # 'debconf: delaying package configuration, since apt-utils is not installed`
@@ -10,14 +10,11 @@ RUN apt-get update && apt-get install -y wget software-properties-common
 
 # Install latest python & pip
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev ${PYTHON}-distutils gnupg2 libssl-dev build-essential
-
-# Please note: wget is writing logs to stderr, these logs are not any kind of warning
-RUN wget --no-verbose --no-check-certificate -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'
-RUN ${PYTHON} get-pip.py
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev python3-setuptools python3-pip \
+    gnupg2 libssl-dev build-essential
 
 FROM universum_test_env_no_vcs AS universum_test_env_no_p4
-ARG PYTHON=python3.7
+ARG PYTHON=python3.12
 
 # Install Git & gitpython
 RUN apt-get install -y git
@@ -27,10 +24,10 @@ RUN apt-get install -y git
 # installing them into every newly created container as user
 # a) is not that dangerous as we use disposable docker containers anyway
 # b) saves a lot of times and adds more stability to tests
-RUN ${PYTHON} -m pip install gitpython
+RUN ${PYTHON} -m pip install --break-system-packages gitpython
 
 FROM universum_test_env_no_p4 AS universum_test_env
-ARG PYTHON=python3.7
+ARG PYTHON=python3.12
 
 # Install Perforce and p4python
 RUN wget -q http://package.perforce.com/perforce.pubkey -O - | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - && \
@@ -38,4 +35,4 @@ RUN wget -q http://package.perforce.com/perforce.pubkey -O - | APT_KEY_DONT_WARN
     apt-get update
 
 RUN apt-get install -y helix-cli
-RUN ${PYTHON} -m pip install p4python
+RUN ${PYTHON} -m pip install --break-system-packages p4python

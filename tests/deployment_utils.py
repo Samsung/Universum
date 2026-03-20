@@ -111,7 +111,7 @@ class ExecutionEnvironment:
         if not utils.reuse_docker_containers() or self._force_clean:
             self.assert_unsuccessful_execution("pip show " + module_name)
         # in PyCharm modules are already installed and therefore should be updated
-        cmd = "pip --default-timeout=1200 install -U " + name
+        cmd = "pip --default-timeout=1200 install --break-system-packages -U " + name
         self.assert_successful_execution(cmd)
         self.assert_successful_execution("pip show " + module_name)
 

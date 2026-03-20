@@ -30,6 +30,7 @@ setup(
     py_modules=['universum'],
     python_requires='>=3.6',
     install_requires=[
+        'setuptools',
         'glob2',
         'requests',
         'sh',

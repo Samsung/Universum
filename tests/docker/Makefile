@@ -2,7 +2,7 @@ UNIVERSUM_ENVIRONMENT= universum_test_env universum_test_env_no_p4 universum_tes
 DOCKER_ARGS :=
 PYTHON ?= $(shell python -c 'import sys; print("python%d.%d"% sys.version_info[0:2])' )
 ifeq ($(PYTHON),)
-PYTHON := python3.7
+PYTHON := python3.12
 endif
 
 .PHONY: all $(UNIVERSUM_ENVIRONMENT) run_perforce perforce
