@@ -17,12 +17,18 @@ jobs:
     name: Send comment to TG
     runs-on: ubuntu-latest
     env:
+      EVENT_ACTION: ${{ github.event.action }}
+      HAS_PULL_REQUEST: ${{ github.event.pull_request != null }}
+      HAS_COMMENT: ${{ github.event.comment != null }}
+      HAS_REVIEW: ${{ github.event.review != null }}
+      HAS_WORKFLOW_RUN: ${{ github.event.workflow_run != null }}
       PR_AUTHOR: ${{ github.event.pull_request.user.login }}
       PR_NAME: ${{ github.event.pull_request.title }}
       PR_BASE: ${{ github.event.pull_request.base.ref }}
       PR_URL: ${{ github.event.pull_request.html_url }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       PR_MERGED: ${{ github.event.pull_request.merged_by.login }}
+      PR_IS_MERGED: ${{ github.event.pull_request.merged }}
       REVIEW_STATE: ${{ github.event.review.state }}
       REVIEW_AUTHOR: ${{ github.event.review.user.login }}
       REVIEW_COMMENT: ${{ github.event.review.body }}
@@ -34,43 +40,44 @@ jobs:
       UNIVERUM_COMMIT: ${{ github.event.workflow_run.head_sha }}
       UNIVERSUM_BRANCH: ${{ github.event.workflow_run.head_branch }}
       UNIVERSUM_LOG: ${{ github.event.workflow_run.html_url }}
+      WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
 
     steps:
     - name: Send message to TG
       run: |
 
-        if [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "opened" ]]; then
+        if [[ "$HAS_PULL_REQUEST" == "true" && "$EVENT_ACTION" == "opened" ]]; then
           ESCAPED_NAME=`echo -e "$PR_NAME" | sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
           TEXT=`echo -e "<b>"$PR_AUTHOR"</b> created new <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a> '"$ESCAPED_NAME"' to branch '"$PR_BASE"'"`
-        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "synchronize" ]]; then
+        elif [[ "$HAS_PULL_REQUEST" == "true" && "$EVENT_ACTION" == "synchronize" ]]; then
           TEXT=`echo -e "<b>"$PR_AUTHOR"</b> updated <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
-        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+        elif [[ "$HAS_PULL_REQUEST" == "true" && "$EVENT_ACTION" == "closed" && "$PR_IS_MERGED" == "true" ]]; then
           TEXT=`echo -e "<b>"$PR_MERGED"</b> merged <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a> to branch <b>'"$PR_BASE"'</b>"`
-        elif [[ ! -z "${{ github.event.pull_request }}" && "${{ github.event.action }}" == "closed" ]]; then
+        elif [[ "$HAS_PULL_REQUEST" == "true" && "$EVENT_ACTION" == "closed" ]]; then
           TEXT=`echo -e "<b>"$PR_AUTHOR"</b> closed <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
 
-        elif [[ ! -z "${{ github.event.comment }}" ]]; then
+        elif [[ "$HAS_COMMENT" == "true" ]]; then
           ESCAPED_TEXT=`echo -e "$COMMENT_BODY"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
-          if [[ ! -z "${{ github.event.pull_request }}" ]]; then
+          if [[ "$HAS_PULL_REQUEST" == "true" ]]; then
             TEXT=`echo -e "<b>"$COMMENT_AUTHOR"</b> posted the following comment to file <i>"$COMMENT_FILE"</i> in <a href=\"$COMMENT_URL\">PR#"$PR_NUMBER"</a>:\n<i>"$ESCAPED_TEXT"</i>"`
           else
             TEXT=`echo -e "<b>"$COMMENT_AUTHOR"</b> posted the following comment to issue <a href=\"$COMMENT_URL\">#"$COMMENT_NUMBER"</a>:\n<i>"$ESCAPED_TEXT"</i>"`
           fi
 
-        elif [[ ! -z "${{ github.event.review }}" && "$REVIEW_STATE" == "changes_requested" ]]; then
+        elif [[ "$HAS_REVIEW" == "true" && "$REVIEW_STATE" == "changes_requested" ]]; then
           TEXT=`echo -e "<b>"$REVIEW_AUTHOR"</b> requested changes for <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
-        elif [[ ! -z "${{ github.event.review }}" && "$REVIEW_STATE" == "commented" && ! -z "$REVIEW_COMMENT" ]]; then
+        elif [[ "$HAS_REVIEW" == "true" && "$REVIEW_STATE" == "commented" && ! -z "$REVIEW_COMMENT" ]]; then
           ESCAPED_TEXT=`echo -e "$REVIEW_COMMENT"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
           TEXT=`echo -e "<b>"$REVIEW_AUTHOR"</b> posted the following comment to <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>:\n<i>"$ESCAPED_TEXT"</i>"`
-        elif [[ ! -z "${{ github.event.review }}" && "$REVIEW_STATE" != "commented" ]]; then
+        elif [[ "$HAS_REVIEW" == "true" && "$REVIEW_STATE" != "commented" ]]; then
           TEXT=`echo -e "<b>"$REVIEW_AUTHOR"</b> "$REVIEW_STATE" <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
-        elif [[ -z "${{ github.event.review }}" && "${{ github.event.action }}" == "submitted" ]]; then
+        elif [[ "$HAS_REVIEW" != "true" && "$EVENT_ACTION" == "submitted" ]]; then
           TEXT=`echo -e "Due to GitHub Actions bug we cannot identify, who approved <a href=\"$PR_URL\">PR#"$PR_NUMBER"</a>"`
 
-        elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+        elif [[ "$HAS_WORKFLOW_RUN" == "true" && "$WORKFLOW_CONCLUSION" == "success" ]]; then
           ESCAPED_TEXT=`echo -e "$UNIVERSUM_BRANCH"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
           TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>SUCCEDED</b>; commit "$UNIVERUM_COMMIT" "`
-        elif [[ ! -z "${{ github.event.workflow_run }}" && "${{ github.event.workflow_run.conclusion }}" == "failure" ]]; then
+        elif [[ "$HAS_WORKFLOW_RUN" == "true" && "$WORKFLOW_CONCLUSION" == "failure" ]]; then
           ESCAPED_TEXT=`echo -e "$UNIVERSUM_BRANCH"| sed 's/\&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g'`
           TEXT=`echo -e "<a href=\"$UNIVERSUM_LOG\">Universum run for branch "$ESCAPED_TEXT"</a> <b>FAILED</b>; commit "$UNIVERUM_COMMIT" "`
         fi
