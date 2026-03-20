@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup python 3.8
+    - name: Setup python 3.12
       uses: actions/setup-python@v4
       with:
-        python-version: 3.8
+        python-version: 3.12
 
     - name: Install dependency
       run: pip install universum[test]
