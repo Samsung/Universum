@@ -17,23 +17,20 @@ jobs:
       run: pip install nox
 
     - name: Checkout Triggering Commit
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: debug
-      run: ls -la
+    - name: Run Nox
+      run: nox
 
-#    - name: Run Nox
-#      run: nox
-#
-#    - name: Publish Test Results
-#      uses: EnricoMi/publish-unit-test-result-action@v2
-#      if: always()
-#      with:
-#        files: artifacts/*.xml
-#
-#    - name: Collect artifacts
-#      uses: actions/upload-artifact@v4
-#      if: ${{ always() }}
-#      with:
-#        name: artifacts
-#        path: artifacts
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: artifacts/*.xml
+
+    - name: Collect artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: artifacts
+        path: artifacts
