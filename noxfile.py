@@ -2,7 +2,6 @@
 
 import os
 import nox
-import requests
 
 
 report = "Here are the results of regression testing:"
@@ -14,11 +13,7 @@ def add_report_line(text):
 
 
 def send_report():
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat = os.getenv("TELEGRAM_CHAT_ID")
-    requests.post(url=f"https://api.telegram.org/bot{token}/sendMessage",
-                  data={"chat_id": chat, "text": report},
-                  timeout=30)
+    os.environ["RESULT"]=report
 
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"])
