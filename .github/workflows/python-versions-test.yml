@@ -8,15 +8,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup python 3.12
+    - name: Setup Python 3.12
       uses: actions/setup-python@v4
       with:
         python-version: 3.12
 
-    - name: Install dependency
+    - name: Install Dependency
       run: pip install nox[pbs]
 
-    - name: Checkout Triggering Commit
+    - name: Checkout Last Commit
       uses: actions/checkout@v6
 
     - name: Run Nox
@@ -26,11 +26,4 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: artifacts/*.xml
-
-    - name: Collect artifacts
-      uses: actions/upload-artifact@v4
-      if: ${{ always() }}
-      with:
-        name: artifacts
-        path: artifacts
+        files: ./*.xml

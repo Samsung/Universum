@@ -13,7 +13,7 @@ def add_report_line(text):
 
 
 def send_report():
-    os.environ["RESULT"]=report
+    os.environ["GITHUB_STEP_SUMMARY"]=report
 
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"])
