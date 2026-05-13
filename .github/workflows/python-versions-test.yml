@@ -16,6 +16,9 @@ jobs:
     - name: Install dependency
       run: pip install nox
 
+    - name: Checkout Triggering Commit
+      uses: actions/checkout@v4
+
     - name: debug
       run: ls -la
 
