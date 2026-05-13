@@ -14,7 +14,7 @@ jobs:
         python-version: 3.12
 
     - name: Install dependency
-      run: pip install nox
+      run: pip install universum[test] nox
 
     - name: Checkout Triggering Commit
       uses: actions/checkout@v6
