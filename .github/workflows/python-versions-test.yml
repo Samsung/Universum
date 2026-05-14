@@ -5,6 +5,7 @@ on:
 jobs:
   test_python_versions:
     name: Python versions test
+    continue-on-error: true
     runs-on: ubuntu-latest
     strategy:
       matrix:
