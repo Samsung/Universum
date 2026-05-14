@@ -20,7 +20,9 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Run Nox
-      run: nox
+      run: |
+        nox
+        echo ${{ GITHUB_STEP_SUMMARY }}
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
