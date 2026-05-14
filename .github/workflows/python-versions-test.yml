@@ -1,6 +1,6 @@
 name: Python versions test
 on:
-  [push, workflow_dispatch]
+  workflow_dispatch
 
 jobs:
   test_python_versions:
