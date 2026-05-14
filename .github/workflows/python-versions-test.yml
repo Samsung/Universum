@@ -23,8 +23,8 @@ jobs:
       env:
         UNIVERSUM_NOX_REGRESSION: true
       run: |
-        python${{ matrix.python }} -m virtualenv venv${{ matrix.python }}
-        . ./venv${{ matrix.python }}/bin/activate
+        python${{ matrix.python }} -m venv vu${{ matrix.python }}
+        . ./vu${{ matrix.python }}/bin/activate
         make rebuild
         pip install .[test]
         make test
