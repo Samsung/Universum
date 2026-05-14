@@ -6,45 +6,32 @@ jobs:
   test_python_versions:
     name: Python versions test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - name: Setup Python 3.8
+    - name: Setup Python ${{ matrix.python }}
       uses: actions/setup-python@v4
       with:
-        python-version: 3.8
-
-    - name: Setup Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.12
-
-    - name: Install Dependency
-      run: pip install nox[pbs]
+        python-version: ${{ matrix.python }}
 
     - name: Checkout Last Commit
       uses: actions/checkout@v6
 
-    - name: Run Nox
+    - name: Run Test Scenario
+      env:
+        UNIVERSUM_NOX_REGRESSION: true
       run: |
-        nox || true
-        echo -e "This is $GITHUB_STEP_SUMMARY"
-        echo ${{ env.GITHUB_STEP_SUMMARY }}
+        python${{ matrix.python }} -m virtualenv venv${{ matrix.python }}
+        . ./venv${{ matrix.python }}/bin/activate
+        make rebuild
+        pip install .[test]
+        make test
+        mv junit_results.xml junit_results_${{ matrix.python }}.xml
 
-    - name: Publish Test 3.12 Results
+    - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: ./junit_results_3.12.xml
-
-    - name: Publish Test 3.13 Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: ./junit_results_3.13.xml
-
-    - name: Collect logs
-      uses: actions/upload-artifact@v4
-      if: ${{ always() }}
-      with:
-        name: logs
-        path: logs
+        files: ./junit_results_${{ matrix.python }}.xml
