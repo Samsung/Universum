@@ -27,7 +27,7 @@ jobs:
         python${{ matrix.python }} -m venv vu${{ matrix.python }}
         . ./vu${{ matrix.python }}/bin/activate
         python --version
-        echo "::group::Make Smages"
+        echo "::group::Make Images"
         make rebuild
         echo "::endgroup::"
         pip install .[test]
@@ -39,5 +39,5 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        name: Test results for Python ${{ matrix.python }}
+        check_name: Test results for Python ${{ matrix.python }}
         files: ./junit_results_${{ matrix.python }}.xml
