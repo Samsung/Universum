@@ -1,6 +1,7 @@
 # pylint: disable = import-error
 
 import os
+import pathlib
 import nox
 
 
@@ -13,24 +14,18 @@ def add_report_line(text):
 
 
 def send_report():
-    print("This is report")
-    print(report)
-    os.environ["GITHUB_STEP_SUMMARY"] = report
+    print("This is report file: ", os.environ["GITHUB_STEP_SUMMARY"])
+    pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text(report)
 
 
 # @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"])
 @nox.session(python=["3.8", "3.12"])
 def test(session):
     try:
-        print("::group::Make images")
-        session.run("make", "rebuild", silent=True, external=True)
-        print("::endgroup::")
-        print("::group::Install dependencies")
-        session.install(".[test]")
-        print("::endgroup::")
-        print("::group::Run tests")
-        session.run("make", "test", external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
-        print("::endgroup::")
+        log = pathlib.Path("step_logs", f"python{python}")
+        session.run("make", "rebuild", stdout=log, external=True)
+        session.install(".[test]", stdout=log,)
+        session.run("make", "test", stdout=log, external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
         add_report_line(f"\U00002601 testing for Python {session.python} failed")
