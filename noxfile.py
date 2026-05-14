@@ -22,11 +22,15 @@ def send_report():
 @nox.session(python=["3.8", "3.12"])
 def test(session):
     try:
-        print("::group::My title")
+        print("::group::Make images")
         session.run("make", "rebuild", silent=True, external=True)
         print("::endgroup::")
+        print("::group::Install dependencies")
         session.install(".[test]")
+        print("::endgroup::")
+        print("::group::Run tests")
         session.run("make", "test", external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
+        print("::endgroup::")
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
         add_report_line(f"\U00002601 testing for Python {session.python} failed")

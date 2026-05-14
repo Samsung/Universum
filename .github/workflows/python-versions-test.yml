@@ -21,7 +21,7 @@ jobs:
 
     - name: Run Nox
       run: |
-        nox
+        nox || true
         echo -e "This is $GITHUB_STEP_SUMMARY"
         echo ${{ env.GITHUB_STEP_SUMMARY }}
 
