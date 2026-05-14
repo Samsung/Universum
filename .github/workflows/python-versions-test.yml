@@ -36,4 +36,5 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
+        name: Test results for Python ${{ matrix.python }}
         files: ./junit_results_${{ matrix.python }}.xml
