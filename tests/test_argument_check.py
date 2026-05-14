@@ -102,7 +102,7 @@ def assert_incorrect_parameter(settings: ModuleNamespace, *args):
         __main__.run(settings)
 
 
-missing_params = []
+missing_params: List = []
 
 
 def param(test_type: str, module: str, field: str,
