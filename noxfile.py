@@ -22,7 +22,9 @@ def send_report():
 @nox.session(python=["3.8", "3.12"])
 def test(session):
     try:
-        with pathlib.Path("logs", f"python{session.python}").open() as log:
+        logfile = pathlib.Path("logs", f"python{session.python}")
+        logfile.parent.mkdir(exist_ok=True, parents=True)
+        with logfile.open() as log:
             session.run("make", "rebuild", stdout=log, external=True)
             session.install(".[test]", stdout=log,)
             session.run("make", "test", stdout=log, external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
