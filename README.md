@@ -39,7 +39,6 @@ In order to prepare the development environment for the Universum, please fulfil
 and then use the commands listed below. Please note we use `venv` to properly select
 python interpreter version and to isolate development environment from the system.
 
-> [!IMPORTANT] Python version
 > Even though Universum works correctly on Python >= 3.7, tests require Python >= 3.12
 
 Prerequisites:

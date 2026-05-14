@@ -1,4 +1,4 @@
-name: Universum check
+name: Universum postcommit
 on:
   push
 
