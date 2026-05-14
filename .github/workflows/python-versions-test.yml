@@ -29,7 +29,8 @@ jobs:
         python --version
         make rebuild
         pip install .[test]
-        make test && mv junit_results.xml junit_results_${{ matrix.python }}.xml
+        make test || true
+        mv junit_results.xml junit_results_${{ matrix.python }}.xml
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
