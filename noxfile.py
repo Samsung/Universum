@@ -20,7 +20,7 @@ def send_report():
 
 # @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"])
 @nox.session(python=["3.8", "3.12"])
-def test(session):
+def test(session, python):
     try:
         log = pathlib.Path("step_logs", f"python{python}")
         session.run("make", "rebuild", stdout=log, external=True)
