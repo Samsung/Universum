@@ -27,10 +27,13 @@ jobs:
         python${{ matrix.python }} -m venv vu${{ matrix.python }}
         . ./vu${{ matrix.python }}/bin/activate
         python --version
+        echo "::group::Make Smages"
         make rebuild
+        echo "::endgroup::"
         pip install .[test]
-        make test
-        mv junit_results.xml junit_results_${{ matrix.python }}.xml
+        echo "::group::Run Tests"
+        make test && mv junit_results.xml junit_results_${{ matrix.python }}.xml
+        echo "::endgroup::"
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
