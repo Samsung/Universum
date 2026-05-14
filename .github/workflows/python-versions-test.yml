@@ -22,7 +22,7 @@ jobs:
     - name: Run Nox
       run: |
         nox
-        echo ${{ GITHUB_STEP_SUMMARY }}
+        echo ${{ env.GITHUB_STEP_SUMMARY }}
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
