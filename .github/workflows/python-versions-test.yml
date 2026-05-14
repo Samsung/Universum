@@ -8,6 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
     - name: Setup Python 3.12
       uses: actions/setup-python@v4
       with:
@@ -25,11 +30,17 @@ jobs:
         echo -e "This is $GITHUB_STEP_SUMMARY"
         echo ${{ env.GITHUB_STEP_SUMMARY }}
 
-    - name: Publish Test Results
+    - name: Publish Test 3.12 Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: ./*.xml
+        files: ./junit_results_3.12.xml
+
+    - name: Publish Test 3.13 Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: ./junit_results_3.13.xml
 
     - name: Collect logs
       uses: actions/upload-artifact@v4
