@@ -22,10 +22,10 @@ def send_report():
 @nox.session(python=["3.8", "3.12"])
 def test(session):
     try:
-        log = pathlib.Path("step_logs", f"python{session.python}")
-        session.run("make", "rebuild", stdout=log, external=True)
-        session.install(".[test]", stdout=log,)
-        session.run("make", "test", stdout=log, external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
+        with pathlib.Path("logs", f"python{session.python}").open() as log:
+            session.run("make", "rebuild", stdout=log, external=True)
+            session.install(".[test]", stdout=log,)
+            session.run("make", "test", stdout=log, external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
     except nox.command.CommandFailed:
         add_report_line(f"\U00002601 testing for Python {session.python} failed")
