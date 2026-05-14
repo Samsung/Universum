@@ -25,6 +25,7 @@ jobs:
       run: |
         python${{ matrix.python }} -m venv vu${{ matrix.python }}
         . ./vu${{ matrix.python }}/bin/activate
+        python --version
         make rebuild
         pip install .[test]
         make test
