@@ -22,6 +22,7 @@ jobs:
     - name: Run Nox
       run: |
         nox
+        echo -e "This is $GITHUB_STEP_SUMMARY"
         echo ${{ env.GITHUB_STEP_SUMMARY }}
 
     - name: Publish Test Results

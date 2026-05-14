@@ -13,14 +13,18 @@ def add_report_line(text):
 
 
 def send_report():
-    os.environ["GITHUB_STEP_SUMMARY"]=report
+    print("This is report")
+    print(report)
+    os.environ["GITHUB_STEP_SUMMARY"] = report
 
 
 # @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"])
 @nox.session(python=["3.8", "3.12"])
 def test(session):
     try:
+        print("::group::My title")
         session.run("make", "rebuild", silent=True, external=True)
+        print("::endgroup::")
         session.install(".[test]")
         session.run("make", "test", external=True, env={"UNIVERSUM_NOX_REGRESSION": "True"})
         add_report_line(f"\U00002600 testing for Python {session.python} succeeded")
