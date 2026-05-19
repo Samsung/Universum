@@ -1,0 +1,40 @@
+name: Python versions test
+on:
+  workflow_dispatch
+
+jobs:
+  test_python_versions:
+    name: Python versions test
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+    - name: Setup Python ${{ matrix.python }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Checkout Last Commit
+      uses: actions/checkout@v6
+
+    - name: Run Test Scenario
+      env:
+        UNIVERSUM_NOX_REGRESSION: true
+      run: |
+        python${{ matrix.python }} -m venv vu${{ matrix.python }}
+        . ./vu${{ matrix.python }}/bin/activate
+        python --version
+        make rebuild
+        pip install .[test]
+        make test || true
+        mv junit_results.xml junit_results_${{ matrix.python }}.xml
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        check_name: Test results for Python ${{ matrix.python }}
+        files: ./junit_results_${{ matrix.python }}.xml

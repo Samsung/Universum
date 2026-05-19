@@ -1,11 +1,11 @@
-name: Universum check
+name: Universum PR check
 on:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
   universum_check:
-    name: Universum check
+    name: Universum PR check
     runs-on: ubuntu-latest
 
     steps:
