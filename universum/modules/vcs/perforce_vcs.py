@@ -500,13 +500,16 @@ class PerforceMainVcs(PerforceWithMappings, base_vcs.BaseDownloadVcs):
             diff_result = self.p4.run_diff(depot)
             result: str = utils.trim_and_convert_to_unicode(str(diff_result))
         except P4Exception as e:
-            for line in str(e).splitlines():
-                if not (line.startswith("Librarian checkout")
-                        or line.startswith("Error opening librarian file")
-                        or line.startswith("Transfer of librarian file")
-                        or line.endswith(".gz: No such file or directory")):
-                    raise
             result = utils.trim_and_convert_to_unicode(str(e))
+            for line in str(e).splitlines():
+                if "open for read:" in line:
+                    result = f"Seems there was a version conflict while unshelving a file.\n{ result }"
+                    self.out.log_error(result)
+                elif not (line.startswith("Librarian checkout")
+                          or line.startswith("Error opening librarian file")
+                          or line.startswith("Transfer of librarian file")
+                          or line.endswith(".gz: No such file or directory")):
+                    raise
         return result
 
     def calculate_file_diff(self) -> Optional[List[Dict[str, str]]]:

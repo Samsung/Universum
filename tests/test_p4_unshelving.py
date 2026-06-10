@@ -59,7 +59,7 @@ def diff_parameters(perforce_workspace: PerforceWorkspace):
             params.exit()
 
 
-def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
+def test_p4_revert_unshelved(diff_parameters):  # pylint: disable = too-many-locals
     p4 = diff_parameters.perforce_workspace.p4
     test_dir = diff_parameters.perforce_workspace.root_directory / "test_files"
     test_dir.mkdir()
@@ -84,7 +84,7 @@ def test_p4_c_and_revert(diff_parameters):  # pylint: disable = too-many-locals
     change["Description"] = "Submit test files"
     p4.run_submit(change)
 
-    # open for edit for edit, move/add and move/rename files
+    # open for edit, move/add and move/rename files
     for cur_file in [test_dir / "edit", test_dir / "move", test_dir / "rename"]:
         p4.run("edit", str(cur_file))
 
