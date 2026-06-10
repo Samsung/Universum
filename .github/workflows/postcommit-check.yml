@@ -1,6 +1,9 @@
 name: Universum postcommit
 on:
-  push
+  push:
+    branches:
+      - main
+      - release
 
 jobs:
   universum_postcommit:
