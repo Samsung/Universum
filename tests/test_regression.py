@@ -4,7 +4,7 @@ import pytest
 from . import utils
 from .conftest import FuzzyCallChecker
 from .deployment_utils import UniversumRunner
-from .utils import LocalTestEnvironment
+from .utils import LocalTestEnvironment, python
 
 
 def test_which_universum_is_tested(docker_main: UniversumRunner, pytestconfig):
@@ -19,7 +19,7 @@ __version__ = "{test_line}"
     init_file.write_bytes(backup)
     assert test_line in output
 
-    docker_main.environment.assert_successful_execution("pip uninstall --break-system-packages -y universum")
+    docker_main.environment.assert_successful_execution(f"{ python() } -m pip uninstall --break-system-packages -y universum")
     docker_main.run(utils.simple_test_config, vcs_type="none", force_installed=True, expected_to_fail=True)
     docker_main.clean_artifacts()
     docker_main.run(utils.simple_test_config, vcs_type="none")  # not expected to fail
