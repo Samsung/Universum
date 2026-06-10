@@ -1,7 +1,9 @@
-import pathlib
+# pylint: disable = redefined-outer-name
 
+import pathlib
 import P4
 import pytest
+
 from tests import utils
 from tests.conftest import FuzzyCallChecker
 from tests.perforce_utils import PerforceWorkspace, P4TestEnvironment
