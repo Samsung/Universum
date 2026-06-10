@@ -192,3 +192,23 @@ def test_p4_delete_file_in_shelve(perforce_environment: P4TestEnvironment):
     assert diff_file.exists(), "REPOSITORY_DIFFERENCE.txt should exist for deleted file in shelve"
     diff_content = diff_file.read_text()
     assert "open for read" in diff_content, "We expect an error message in diff file"
+
+
+def test_exit_code_failed_report(perforce_environment: P4TestEnvironment):
+    """
+    This test checks for previous bug where exceptions during result reporting led to exit code 0
+    even when '--fail-unsuccessful' option was enabled (and some steps failed)
+    """
+    config = """
+from universum.configuration_support import Configuration
+
+configs = Configuration([dict(name="Unsuccessful step", command=["exit", "1"])])
+"""
+    perforce_environment.shelve_config(config)
+    perforce_environment.settings.MainVcs.report_to_review = True
+    perforce_environment.settings.Swarm.server_url = "some_server"
+    perforce_environment.settings.Swarm.review_id = "some_id"
+    perforce_environment.settings.Swarm.change = perforce_environment.settings.PerforceMainVcs.shelve_cls[0]
+    perforce_environment.settings.Main.fail_unsuccessful = True
+
+    perforce_environment.run(expect_failure=True)
