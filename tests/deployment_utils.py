@@ -103,6 +103,9 @@ class ExecutionEnvironment:
         return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
     def install_python_module(self, name):
+
+        self.assert_successful_execution(f"{python()} --version")
+
         if os.path.exists(name):
             module_name = 'universum'
             name = f"'{ name }'"
