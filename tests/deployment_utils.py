@@ -103,9 +103,6 @@ class ExecutionEnvironment:
         return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
     def install_python_module(self, name):
-
-        self.assert_successful_execution(f"{python()} --version")
-
         if os.path.exists(name):
             module_name = 'universum'
             name = f"'{ name }'"
@@ -209,7 +206,8 @@ class UniversumRunner:
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
-            "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
+            "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker",
+            "SETUPTOOLS_USE_DISTUTILS=stdlib"
         ])
         self.environment.add_bind_dirs([str(self.local.root_directory)])
 
