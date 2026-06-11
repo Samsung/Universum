@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y wget software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev python3-setuptools python3-pip \
     gnupg2 libssl-dev build-essential
-RUN ${PYTHON} -m pip install --break-system-packages -U pip
 
 FROM universum_test_env_no_vcs AS universum_test_env_no_p4
 ARG PYTHON=python3.12
