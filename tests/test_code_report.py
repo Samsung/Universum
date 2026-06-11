@@ -11,7 +11,6 @@ from .conftest import FuzzyCallChecker
 from .deployment_utils import UniversumRunner
 from .utils import python, python_version
 
-
 @pytest.fixture(name='runner_with_analyzers')
 def fixture_runner_with_analyzers(docker_main: UniversumRunner):
     docker_main.environment.install_python_module("pylint")
@@ -31,10 +30,10 @@ class ConfigData:
             f"configs += Configuration([Step(name='{name}', command={cmd}{step_config})])\n"
         return self
 
-    def add_analyzer(self, analyzer: str, arguments: List[str], step_config: str = '') -> 'ConfigData':
+    def add_analyzer(self, analyzer: str, python: str, arguments: List[str], step_config: str = '') -> 'ConfigData':
         name = f"Run {analyzer}"
         args = [f", '{arg}'" for arg in arguments]
-        cmd = f"['{python()}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
+        cmd = f"['{python}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
         step_config = ', ' + step_config if step_config else ''
         step_config = 'code_report=True' + step_config
         return self.add_cmd(name, cmd, step_config)
@@ -298,7 +297,7 @@ def test_code_report_log(runner_with_analyzers: UniversumRunner, analyzers, extr
         elif analyzer == 'clang_format':
             (runner_with_analyzers.local.root_directory / ".clang-format").write_text(config_clang_format)
 
-        config.add_analyzer(analyzer, args)
+        config.add_analyzer(analyzer, runner_with_analyzers.environment.python, args)
 
     log = runner_with_analyzers.run(config.finalize())
     expected_log = log_success if expected_success else log_fail
@@ -350,7 +349,8 @@ def test_analyzer_specific_params(runner_with_analyzers: UniversumRunner, analyz
     source_file = runner_with_analyzers.local.root_directory / "source_file"
     source_file.write_text(source_code_python)
 
-    log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, arg_set).finalize())
+    log = runner_with_analyzers.run(
+        ConfigData().add_analyzer(analyzer, runner_with_analyzers.environment.python, arg_set).finalize())
     assert re.findall(fr'Run {analyzer} - [^\n]*Failed', log), f"'{analyzer}' info is not found in '{log}'"
     assert expected_log in log, f"'{expected_log}' is not found in '{log}'"
 
@@ -390,7 +390,8 @@ def test_diff_html_file(runner_with_analyzers: UniversumRunner, analyzer,
 
     args = common_args + extra_args
     extra_config = "artifacts='./diff_temp/source_file.html'"
-    log = runner_with_analyzers.run(ConfigData().add_analyzer(analyzer, args, extra_config).finalize())
+    log = runner_with_analyzers.run(
+        ConfigData().add_analyzer(analyzer, runner_with_analyzers.environment.python, args, extra_config).finalize())
 
     expected_log = log_success if expected_success else log_fail
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
