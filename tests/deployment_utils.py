@@ -253,13 +253,13 @@ class UniversumRunner:
         will not be used instead of those installed into system. Without '-I' option `python -m` will first
         try to launch universum from sources in `workdir` if there are any. That is why, if `workdir` is not
         default and there are no universum sources in specified `workdir`, the preinstalled universum will
-        be ran as in case of `force_installed`.
+        be run as in case of `force_installed`.
         """
 
         if force_installed:
-            cmd = f"{python()} -I -m universum"
+            cmd = "-I universum"
         elif utils.reuse_docker_containers() or workdir:
-            cmd = f"{python()} -m universum"
+            cmd = "universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
@@ -275,10 +275,8 @@ class UniversumRunner:
         if not workdir:
             workdir = self.working_dir
 
-        if expected_to_fail:
-            result = self.environment.assert_unsuccessful_execution(cmd, environment=environment, workdir=workdir)
-        else:
-            result = self.environment.assert_successful_execution(cmd, environment=environment, workdir=workdir)
+        result = self.environment.run_as_python_module(cmd, result=not expected_to_fail, environment=environment,
+                                                       workdir=workdir)
 
         os.remove(config_file)
         return result
