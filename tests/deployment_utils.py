@@ -13,7 +13,7 @@ from requests.exceptions import ReadTimeout
 from . import utils
 from .git_utils import GitClient
 from .perforce_utils import PerforceWorkspace
-from .utils import python
+from .utils import python, randomize_name
 
 
 class ExecutionEnvironment:
@@ -25,7 +25,7 @@ class ExecutionEnvironment:
         self._container = None
         self._container_id = None
         self._work_dir = work_dir
-        self.venv_name = "virtual_environment"
+        self.venv_name = randomize_name("virtual_environment")
         self.python = f"{ self._work_dir }/{ self.venv_name }/bin/python"
 
         self._client = docker.from_env(timeout=1200)
