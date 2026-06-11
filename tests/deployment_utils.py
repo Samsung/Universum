@@ -213,7 +213,7 @@ class UniversumRunner:
 
         if self.environment.start_container():
             self.environment.assert_successful_execution(
-                f"{ python() } -m pip install --break-system-packages -U setuptools wheel")
+                f"{ python() } -m pip install --break-system-packages --ignore-installed -U setuptools wheel")
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
