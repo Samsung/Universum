@@ -104,9 +104,9 @@ class ExecutionEnvironment:
         return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
     def run_as_python_module(self, cmd, result=True, environment=None, workdir=None):
-        self._run_and_check(f"{ python() } -m venv { self.venv_name }",
-                            True, None, self.get_working_directory())  # must succeed even if exists
-        cmd = f"{ self.get_working_directory() }/{ self.venv_name }/bin/bash/python -m {cmd}"
+        self.assert_successful_execution(f"{ python() } -m venv { self.venv_name }",
+                                         environment=None, workdir=self.get_working_directory())  # must succeed even if exists
+        cmd = f"{ self.get_working_directory() }/{ self.venv_name }/bin/python -m {cmd}"
         return self._run_and_check(cmd, result, environment, workdir)
 
     def install_python_module(self, name):
@@ -118,8 +118,7 @@ class ExecutionEnvironment:
         if not utils.reuse_docker_containers() or self._force_clean:
             self.run_as_python_module(f"pip show { module_name }", result=False)
         # in PyCharm modules are already installed and therefore should be updated
-        cmd = f"pip --default-timeout=1200 install --break-system-packages -U { name }"
-        self.run_as_python_module(cmd)
+        self.run_as_python_module(f"pip --default-timeout=1200 install -U { name }")
         self.run_as_python_module(f"pip show { module_name }")
 
     def exit(self):
