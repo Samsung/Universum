@@ -299,6 +299,7 @@ def test_code_report_log(runner_with_analyzers: UniversumRunner, analyzers, extr
 
         config.add_analyzer(analyzer, runner_with_analyzers.environment.python, args)
 
+    runner_with_analyzers.environment.install_python_module("universum[test]")
     log = runner_with_analyzers.run(config.finalize())
     expected_log = log_success if expected_success else log_fail
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
@@ -461,7 +462,8 @@ def test_clang_format_analyzer_with_subfolder(runner_with_analyzers: UniversumRu
     ]
 
     (root / ".clang-format").write_text(config_clang_format)
-    log = runner_with_analyzers.run(ConfigData().add_analyzer("clang_format", common_args).finalize())
+    log = runner_with_analyzers.run(
+        ConfigData().add_analyzer("clang_format",runner_with_analyzers.environment.python, common_args).finalize())
 
     assert not re.findall(r'No such file or directory', log), f"'No such file or directory' is found in '{log}'"
     assert re.findall(log_fail, log), f"'{log_fail}' is not found in '{log}'"
