@@ -105,7 +105,7 @@ class ExecutionEnvironment:
         return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
     def run_as_python_module(self, cmd, result=True, environment=None, workdir=None):
-        self.assert_successful_execution(f"{ python() } -m venv { self.venv_name }",
+        self.assert_successful_execution(f"{ python() } -m venv --system-site-packages { self.venv_name }",
                                          environment=None, workdir=self.get_working_directory())  # must succeed even if exists
         return self._run_and_check(f"{ self.python } -m {cmd}", result, environment, workdir)
 
