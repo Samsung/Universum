@@ -206,11 +206,13 @@ class UniversumRunner:
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
-            "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
+            "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker",
+            "SETUPTOOLS_USE_DISTUTILS=stdlib"
         ])
         self.environment.add_bind_dirs([str(self.local.root_directory)])
 
         if self.environment.start_container():
+            self.environment.install_python_module("setuptools")
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
