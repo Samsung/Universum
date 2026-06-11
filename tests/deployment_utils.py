@@ -19,6 +19,7 @@ from .utils import python
 class ExecutionEnvironment:
     def __init__(self, request, work_dir, force_clean=False):
         self.request = request
+        self.venv_name = "virtual_environment"
         self._force_clean = force_clean
         self._image = None
         self._image_name = None
@@ -96,11 +97,17 @@ class ExecutionEnvironment:
 
         return log
 
+    def _run_virtual(self, cmd, result, environment, workdir):
+        self._run_and_check(f"{ python() } -m venv { self.venv_name }",
+                            True, None, self.get_working_directory())  # must succeed even if exists
+        cmd = f". { self.get_working_directory() }/{ self.venv_name }/bin/bash/activate && {cmd}"
+        return self._run_and_check(cmd, result, environment, workdir)
+
     def assert_successful_execution(self, cmd, environment=None, workdir=None):
-        return self._run_and_check(cmd, True, environment=environment, workdir=workdir)
+        return self._run_virtual(cmd, True, environment=environment, workdir=workdir)
 
     def assert_unsuccessful_execution(self, cmd, environment=None, workdir=None):
-        return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
+        return self._run_virtual(cmd, False, environment=environment, workdir=workdir)
 
     def install_python_module(self, name):
         if os.path.exists(name):
@@ -206,14 +213,11 @@ class UniversumRunner:
         self.artifact_dir = os.path.join(self.working_dir, "artifacts")
 
         self.environment.add_environment_variables([
-            "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker",
-            "SETUPTOOLS_USE_DISTUTILS=stdlib"
+            "COVERAGE_FILE=" + self.environment.get_working_directory() + "/.coverage.docker"
         ])
         self.environment.add_bind_dirs([str(self.local.root_directory)])
 
         if self.environment.start_container():
-            self.environment.assert_successful_execution(
-                f"{ python() } -m pip install --break-system-packages --ignore-installed -U setuptools wheel")
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
