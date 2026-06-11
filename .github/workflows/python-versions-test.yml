@@ -26,9 +26,9 @@ jobs:
       run: |
         python${{ matrix.python }} -m venv vu${{ matrix.python }}
         . ./vu${{ matrix.python }}/bin/activate
-        python --version
+        python${{ matrix.python }} pip install pip
         make rebuild
-        pip install .[test]
+        python${{ matrix.python }} pip install .[test]
         make test || true
         mv junit_results.xml junit_results_${{ matrix.python }}.xml
 
