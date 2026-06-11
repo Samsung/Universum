@@ -212,7 +212,8 @@ class UniversumRunner:
         self.environment.add_bind_dirs([str(self.local.root_directory)])
 
         if self.environment.start_container():
-            self.environment.install_python_module("setuptools")
+            self.environment.assert_successful_execution(
+                f"{ python() } -m pip install --break-system-packages -U setuptools wheel")
             self.environment.install_python_module(self.working_dir)
             self.environment.install_python_module("coverage")
 
