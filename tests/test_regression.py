@@ -4,7 +4,7 @@ import pytest
 from . import utils
 from .conftest import FuzzyCallChecker
 from .deployment_utils import UniversumRunner
-from .utils import LocalTestEnvironment, python
+from .utils import LocalTestEnvironment
 
 
 def test_which_universum_is_tested(docker_main: UniversumRunner, pytestconfig):
