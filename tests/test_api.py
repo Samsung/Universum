@@ -13,8 +13,7 @@ configs = Configuration([dict(name="Run script", artifacts="output.json",
 
 
 def test_error_wrong_environment(docker_main_and_nonci: UniversumRunner):
-    cmd = f"{python()} -m universum api file-diff"
-    log = docker_main_and_nonci.environment.assert_unsuccessful_execution(cmd)
+    log = docker_main_and_nonci.environment.run_as_python_module("universum api file-diff")
     assert "Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment" in log
 
 
