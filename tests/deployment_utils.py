@@ -19,13 +19,14 @@ from .utils import python
 class ExecutionEnvironment:
     def __init__(self, request, work_dir, force_clean=False):
         self.request = request
-        self.venv_name = "virtual_environment"
         self._force_clean = force_clean
         self._image = None
         self._image_name = None
         self._container = None
         self._container_id = None
         self._work_dir = work_dir
+        self.venv_name = "virtual_environment"
+        self.python = f"{ self._work_dir }/{ self.venv_name }/bin/python"
 
         self._client = docker.from_env(timeout=1200)
 
@@ -106,8 +107,7 @@ class ExecutionEnvironment:
     def run_as_python_module(self, cmd, result=True, environment=None, workdir=None):
         self.assert_successful_execution(f"{ python() } -m venv { self.venv_name }",
                                          environment=None, workdir=self.get_working_directory())  # must succeed even if exists
-        cmd = f"{ self.get_working_directory() }/{ self.venv_name }/bin/python -m {cmd}"
-        return self._run_and_check(cmd, result, environment, workdir)
+        return self._run_and_check(f"{ self.python } -m {cmd}", result, environment, workdir)
 
     def install_python_module(self, name):
         if os.path.exists(name):
