@@ -260,7 +260,6 @@ class UniversumRunner:
         if force_installed or utils.reuse_docker_containers() or workdir:
             cmd = "universum"
         else:
-            self.environment.install_python_module("coverage")
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
         if self.nonci:
