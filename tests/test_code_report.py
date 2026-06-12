@@ -13,8 +13,7 @@ from .utils import python, python_version
 
 @pytest.fixture(name='runner_with_analyzers')
 def fixture_runner_with_analyzers(docker_main: UniversumRunner):
-    docker_main.environment.install_python_module("pylint")
-    docker_main.environment.install_python_module("mypy")
+    docker_main.environment.install_python_module("universum[test]")
     docker_main.environment.assert_successful_execution("apt install -y uncrustify clang-format")
     yield docker_main
 
@@ -299,7 +298,6 @@ def test_code_report_log(runner_with_analyzers: UniversumRunner, analyzers, extr
 
         config.add_analyzer(analyzer, runner_with_analyzers.environment.python, args)
 
-    runner_with_analyzers.environment.install_python_module("universum[test]")
     log = runner_with_analyzers.run(config.finalize())
     expected_log = log_success if expected_success else log_fail
     assert re.findall(expected_log, log), f"'{expected_log}' is not found in '{log}'"
