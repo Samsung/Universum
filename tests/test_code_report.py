@@ -15,7 +15,7 @@ from .utils import python, python_version
 def fixture_runner_with_analyzers(docker_main: UniversumRunner):
     # This particular test set needs system-wide Python, because analyzers somehow don't support venv
     docker_main.environment.assert_successful_execution(
-        f"{python()} -m pip install --break-system-packages -U pytest-pylint mypy")
+        f"{python()} -m pip install --break-system-packages -U pylint mypy")
     docker_main.environment.assert_successful_execution("apt install -y uncrustify clang-format")
     yield docker_main
 
