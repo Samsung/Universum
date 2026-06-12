@@ -284,6 +284,8 @@ class UniversumRunner:
         self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
         self.environment.assert_successful_execution(
             f"rm -rf '{self.environment.get_working_directory()}/{self.environment.venv_name}'")
+        self.environment.install_python_module(self.working_dir)
+        self.environment.install_python_module("coverage")
 
 
 @pytest.fixture()
