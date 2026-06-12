@@ -104,9 +104,11 @@ class ExecutionEnvironment:
     def assert_unsuccessful_execution(self, cmd, environment=None, workdir=None):
         return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
-    def run_as_python_module(self, cmd, result=True, environment=None, workdir=None):
+    def run_as_python_module(self, cmd, result=True, environment=None, workdir=None, force_installed=False):
         self.assert_successful_execution(f"{ python() } -m venv --system-site-packages { self.venv_name }",
                                          environment=None, workdir=self.get_working_directory())  # must succeed even if exists
+        if force_installed:
+            return self._run_and_check(f"{ self.python } -I -m {cmd}", result, environment, workdir)
         return self._run_and_check(f"{ self.python } -m {cmd}", result, environment, workdir)
 
     def install_python_module(self, name):
@@ -255,10 +257,7 @@ class UniversumRunner:
         default and there are no universum sources in specified `workdir`, the preinstalled universum will
         be run as in case of `force_installed`.
         """
-
-        if force_installed:
-            cmd = "-I universum"
-        elif utils.reuse_docker_containers() or workdir:
+        if force_installed or utils.reuse_docker_containers() or workdir:
             cmd = "universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
@@ -276,7 +275,7 @@ class UniversumRunner:
             workdir = self.working_dir
 
         result = self.environment.run_as_python_module(cmd, result=not expected_to_fail, environment=environment,
-                                                       workdir=workdir)
+                                                       workdir=workdir, force_installed=force_installed)
 
         os.remove(config_file)
         return result

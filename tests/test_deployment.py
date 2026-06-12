@@ -1,5 +1,5 @@
 from .deployment_utils import UniversumRunner
-from .utils import python, simple_test_config
+from .utils import simple_test_config
 
 
 def test_minimal_install(clean_docker_main: UniversumRunner):
