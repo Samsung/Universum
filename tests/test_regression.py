@@ -21,7 +21,7 @@ __version__ = "{test_line}"
 
     docker_main.environment.run_as_python_module("pip uninstall -y universum")
     docker_main.run(utils.simple_test_config, vcs_type="none", force_installed=True, expected_to_fail=True)
-    docker_main.clean_artifacts()
+    docker_main.clean_for_reuse()
     docker_main.run(utils.simple_test_config, vcs_type="none")  # not expected to fail
     if utils.reuse_docker_containers():
         docker_main.environment.install_python_module(docker_main.working_dir)
@@ -68,7 +68,7 @@ configs = Configuration([dict(name="Test configuration", command=["ls", "-la"])]
     assert "\u2514" in output  # I guess this problem doesn't reproduce on newer systems
 
     # 'en_US', unlike 'en_US.UTF-8', is latin-1
-    docker_main.clean_artifacts()
+    docker_main.clean_for_reuse()
     docker_main.environment.assert_successful_execution('apt install -y locales')
     docker_main.environment.assert_successful_execution('locale-gen --purge en_US')
     docker_main.environment.assert_successful_execution('update-locale LANG=en_US')

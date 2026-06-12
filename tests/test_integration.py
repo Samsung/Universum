@@ -73,7 +73,7 @@ configs = background * (script + sleep * multiply) + wait + background * (sleep 
     assert 'Failed' in get_line_with_text("Background unsuccessful step - ", log)
 
     # Test background after failed foreground (regression)
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -85,7 +85,7 @@ configs = Configuration([dict(name="Bad step", command=["ls", "not_a_file"]),
     assert os.path.exists(os.path.join(docker_main_and_nonci.artifact_dir, "file"))
 
     # Test TC step failing
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -94,7 +94,7 @@ configs = Configuration([dict(name="Bad bg step", command=["ls", "not_a_file"], 
     assert "##teamcity[buildProblem description" in log
 
     # Test multiple failing background steps
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -117,7 +117,7 @@ configs = Configuration([dict(name="Good step", command=["echo", "step succeeded
     assert "This shouldn't be in log." not in log
 
     # Test embedded: critical step, critical substep
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -135,7 +135,7 @@ configs = upper * lower
     assert "'Group 2, step 1' skipped because of critical step failure" not in log
 
     # Test embedded: critical step, non-critical substep
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -152,7 +152,7 @@ configs = upper * lower
     assert "This should be in log." in log
 
     # Test critical non-commands
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -168,7 +168,7 @@ configs += Configuration([dict(name="Linear non-command", command=["this-is-not-
     assert "This shouldn't be in log." not in log
 
     # Test successful critical step after failing non-critical step
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -183,7 +183,7 @@ configs *= Configuration([dict(name=", step 1", command=["echo", "step succeeded
     assert "This should be in log 2." in log
 
     # Test background
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 
@@ -263,14 +263,14 @@ configs = Configuration([Step(name="Test step", command=["cat", "{p4_file.name}"
     assert "This line should be in file." not in log
 
     # Pass params via command line
-    docker_main_with_vcs.clean_artifacts()
+    docker_main_with_vcs.clean_for_reuse()
     log = docker_main_with_vcs.run(config, vcs_type="p4",
                                    additional_parameters=" -p4h=" + sync_cl + " -p4s=" + shelve_cl)
     assert "This line shouldn't be in file." not in log
     assert "This line should be in file." in log
 
     # Pass params via environment variables
-    docker_main_with_vcs.clean_artifacts()
+    docker_main_with_vcs.clean_for_reuse()
     log = docker_main_with_vcs.run(config, vcs_type="p4", environment=["SYNC_CHANGELIST=" + sync_cl,
                                                                        "SHELVE_CHANGELIST_1=" + shelve_cl])
     assert "This line shouldn't be in file." not in log
@@ -320,7 +320,7 @@ configs = Configuration([dict(name="Test configuration", command=["script.sh"],
 """)
     assert "This string should be in log" in log
 
-    docker_main_and_nonci.clean_artifacts()
+    docker_main_and_nonci.clean_for_reuse()
     log = docker_main_and_nonci.run("""
 from universum.configuration_support import Configuration
 

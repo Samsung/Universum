@@ -281,15 +281,17 @@ class UniversumRunner:
         os.remove(config_file)
         return result
 
-    def clean_artifacts(self) -> None:
+    def clean_for_reuse(self) -> None:
         self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
+        self.environment.assert_successful_execution(
+            f"rm -rf '{self.environment.get_working_directory()}/{self.environment.venv_name}'")
 
 
 @pytest.fixture()
 def runner_without_environment(perforce_workspace: PerforceWorkspace, git_client: GitClient, local_sources: LocalSources):
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
-    runner.clean_artifacts()
+    runner.clean_for_reuse()
 
 
 @pytest.fixture()
@@ -304,7 +306,7 @@ def docker_fixture_template(request, execution_environment: ExecutionEnvironment
     execution_environment.set_image("universum_test_env_" + python())
     runner.set_environment(execution_environment)
     yield runner
-    runner.clean_artifacts()
+    runner.clean_for_reuse()
 
 
 docker_main = pytest.fixture(params=[False], ids=["main"])(docker_fixture_template)
