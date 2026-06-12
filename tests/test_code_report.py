@@ -13,8 +13,8 @@ from .utils import python, python_version
 
 @pytest.fixture(name='runner_with_analyzers')
 def fixture_runner_with_analyzers(docker_main: UniversumRunner):
-    # can't use "install python module" due to "[test]" part
-    docker_main.environment.run_as_python_module("pip install -U universum[test]")
+    # This particular test needs system-wide Python, because analyzers somehow don't support venv
+    docker_main.environment.assert_successful_execution(f"{python()} -m pip install -U universum[test]")
     docker_main.environment.assert_successful_execution("apt install -y uncrustify clang-format")
     yield docker_main
 
