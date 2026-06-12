@@ -13,7 +13,8 @@ from .utils import python, python_version
 
 @pytest.fixture(name='runner_with_analyzers')
 def fixture_runner_with_analyzers(docker_main: UniversumRunner):
-    docker_main.environment.install_python_module("universum[test]")
+    # can't use "install python module" due to "[test]" part
+    docker_main.environment.assert_successful_execution("pip install -U universum[test]")
     docker_main.environment.assert_successful_execution("apt install -y uncrustify clang-format")
     yield docker_main
 
