@@ -314,7 +314,7 @@ class Step:
         ...     o.name = v
         >>> step = Step(name='foo', my_var='bar')
         >>> do_and_get_warnings(lambda : assign_legacy(step, 'name', 'bar'))  # doctest: +ELLIPSIS
-         [<...WarningMessage ...>]
+         ...WarningMessage ...
         >>> step['name']
         'bar'
         >>> do_and_get_warnings(lambda : assign_name_new(step, 'baz'))
@@ -322,7 +322,7 @@ class Step:
         >>> step['name']
         'baz'
         >>> do_and_get_warnings(lambda : assign_legacy(step, 'directory', 'foo'))  # doctest: +ELLIPSIS
-         [<...WarningMessage ...>]
+         ...WarningMessage ...
         >>> do_and_get_warnings(lambda : assign_legacy(step, 'test', 42))
         []
         >>> do_and_get_warnings(lambda : assign_legacy(step, '_extras', {'name': 'baz'}))
@@ -358,7 +358,7 @@ class Step:
         ...         return w
         >>> step = Step(name='foo', my_var='bar', t1=None, t2=False)
         >>> do_and_get_warnings(lambda : step.get('name', 'test'))  # doctest: +ELLIPSIS
-         [<...WarningMessage ...>]
+         ...WarningMessage ...
 
         Note that step.get('name') has type 'Any', but step.name has type 'str'
 
