@@ -31,10 +31,11 @@ class ConfigData:
             f"configs += Configuration([Step(name='{name}', command={cmd}{step_config})])\n"
         return self
 
-    def add_analyzer(self, analyzer: str, python: str, arguments: List[str], step_config: str = '') -> 'ConfigData':
+    def add_analyzer(self, analyzer: str, python_bin: str,
+                     arguments: List[str], step_config: str = '') -> 'ConfigData':
         name = f"Run {analyzer}"
         args = [f", '{arg}'" for arg in arguments]
-        cmd = f"['{python}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
+        cmd = f"['{python_bin}', '-m', 'universum.analyzers.{analyzer}'{''.join(args)}]"
         step_config = ', ' + step_config if step_config else ''
         step_config = 'code_report=True' + step_config
         return self.add_cmd(name, cmd, step_config)
