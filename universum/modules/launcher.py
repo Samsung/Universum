@@ -348,7 +348,7 @@ class Launcher(ProjectDirectory, HasOutput, HasStructure, HasErrorState):
         self.source_project_configs: configuration_support.Configuration
         self.project_config: configuration_support.Configuration = configuration_support.Configuration()
 
-        self.output: Output = self.settings.output
+        self.output: Union[Output, str] = self.settings.output
         if self.output is None:
             if utils.detect_environment() == "terminal":
                 self.output = "file"

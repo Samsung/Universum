@@ -11,10 +11,10 @@ Full documentation can be found here: https://universum.readthedocs.io/
 Please check out our [code of conduct](CODE_OF_CONDUCT.md)
 and [contribution policy](.github/CONTRIBUTING.md)
 
-Project is executed with `python3.7 -m universum` command.
-Independent analyzers are executed with their module name, e.g. `python3.7 -m universum.analyzers.pylint`.
+Project is executed with `python3 -m universum` command.
+Independent analyzers are executed with their module name, e.g. `python3 -m universum.analyzers.pylint`.
 Other Universum modes, such as poller or submitter, are called via command line, e.g.
-`python3.7 -m universum poll`
+`python3 -m universum poll`
 
 ## Installation
 
@@ -22,15 +22,15 @@ Minimum prerequisites ([see documentation for details](https://universum.readthe
 1. OS Linux
 2. Python version 3.7 or greater
 3. Pip version 9.0 or greater
+
 ```bash
-sudo pip3.7 install -U universum
+python3 -m pip install -U universum
 ```
-or
-```bash
-pip3.7 install --user -U universum
-```
+Use either with ``sudo`` (and ``--break-system-packages`` option for Python >3.11),
+or ``--user`` option, or install into `venv`.
+
 Can also be installed with [extras for using VCS](
-https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras),  but they also require
+https://universum.readthedocs.io/en/latest/install.html#vcs-related-extras), but they also require
 installing respective command-line tools, such as git or p4.
 
 ## Development
@@ -38,6 +38,8 @@ installing respective command-line tools, such as git or p4.
 In order to prepare the development environment for the Universum, please fulfill the prerequisites,
 and then use the commands listed below. Please note we use `venv` to properly select
 python interpreter version and to isolate development environment from the system.
+
+> Even though Universum works correctly on Python >= 3.7, tests require Python >= 3.12
 
 Prerequisites:
 1. Make sure the libssl-dev and libcrypto++-dev packages are available in your environment.
@@ -55,8 +57,8 @@ Prerequisites:
 
 Further commands:
 ```bash
-python3.7 -m venv virtual-environment-python3.7
-source ./virtual-environment-python3.7/bin/activate
+python3.12 -m venv virtual-environment-python3.12
+source ./virtual-environment-python3.12/bin/activate
 git clone https://github.com/Samsung/Universum.git universum-working-dir
 cd universum-working-dir
 git checkout master
@@ -83,9 +85,9 @@ The `[test]` extra will install/update the following additional Python modules:
     * `types-requests`
     * `selenium`
 
-Although it is possible to get these modules via `pip3.7 install -U universum[test]`, it might be more convenient
+Although it is possible to get these modules via `pip install -U universum[test]`, it might be more convenient
 to checkout the Universum branch you are currently working on, change working directory to project root and
-run a `pip3.7 install -U .[test]` command from there for more flexibility. Using virtual environment (via `venv`
+run a `pip install -U .[test]` command from there for more flexibility. Using virtual environment (via `venv`
 command) allows to separate test environment from system and provides even more control over additional modules.
 
 Uninstalling Universum via `pip uninstall universum` will not uninstall all the dependencies installed along with it.
@@ -98,21 +100,13 @@ for another supported Python version, please use environment variable `PYTHON`, 
 ```
 PYTHON=python3.8 make images
 ```
-Currently the following values of the `PYTHON` environment variable are supported:
-'python3.6', 'python3.7' and 'python3.8'.
+To check the list of supported Python versions, please refer to "Python versions test" GitHub action.
+This scenario includes rebuilding docker images for every supported Python version
+and running all the tests for corresponding Python.
 
 The `make test` command runs all the tests (including the doctests) and collects coverage. Tests can also be launched
 manually via `pytest` command with any required options (such as `-k` for running tests based on keywords
 or `-s` for showing the suppressed output).
-
-To test Univesrum for all supported Python versions, please run:
-```
-pip install -U nox
-cd universum-working-dir
-nox
-```
-This will launch the testing scenario, described in `noxfile.py`. This scenario includes rebuilding docker images
-for every supported Python version and running all the tests for corresponding Python.
 
 Also, setting up "REUSE_DOCKER_CONTAINERS" environment variable (or running tests in PyCharm) will let tests
 reuse already created and initialized containers, which speeds up the testing process. But do note that this is

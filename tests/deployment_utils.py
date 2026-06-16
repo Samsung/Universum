@@ -13,7 +13,7 @@ from requests.exceptions import ReadTimeout
 from . import utils
 from .git_utils import GitClient
 from .perforce_utils import PerforceWorkspace
-from .utils import python
+from .utils import python, randomize_name
 
 
 class ExecutionEnvironment:
@@ -25,6 +25,8 @@ class ExecutionEnvironment:
         self._container = None
         self._container_id = None
         self._work_dir = work_dir
+        self.venv_name = randomize_name("virtual_environment")
+        self.python = f"{ self._work_dir }/{ self.venv_name }/bin/python"
 
         self._client = docker.from_env(timeout=1200)
 
@@ -102,18 +104,24 @@ class ExecutionEnvironment:
     def assert_unsuccessful_execution(self, cmd, environment=None, workdir=None):
         return self._run_and_check(cmd, False, environment=environment, workdir=workdir)
 
+    def run_as_python_module(self, cmd, result=True, environment=None, workdir=None, force_installed=False):
+        self.assert_successful_execution(f"{ python() } -m venv --system-site-packages { self.venv_name }",
+                                         environment=None, workdir=self.get_working_directory())  # must succeed even if exists
+        if force_installed:
+            return self._run_and_check(f"{ self.python } -I -m {cmd}", result, environment, workdir)
+        return self._run_and_check(f"{ self.python } -m {cmd}", result, environment, workdir)
+
     def install_python_module(self, name):
         if os.path.exists(name):
             module_name = 'universum'
-            name = f"'{name}'"
+            name = f"'{ name }'"
         else:
             module_name = name
         if not utils.reuse_docker_containers() or self._force_clean:
-            self.assert_unsuccessful_execution("pip show " + module_name)
+            self.run_as_python_module(f"pip show { module_name }", result=False)
         # in PyCharm modules are already installed and therefore should be updated
-        cmd = "pip --default-timeout=1200 install -U " + name
-        self.assert_successful_execution(cmd)
-        self.assert_successful_execution("pip show " + module_name)
+        self.run_as_python_module(f"pip --default-timeout=1200 install -U { name }")
+        self.run_as_python_module(f"pip show { module_name }")
 
     def exit(self):
         try:
@@ -247,13 +255,10 @@ class UniversumRunner:
         will not be used instead of those installed into system. Without '-I' option `python -m` will first
         try to launch universum from sources in `workdir` if there are any. That is why, if `workdir` is not
         default and there are no universum sources in specified `workdir`, the preinstalled universum will
-        be ran as in case of `force_installed`.
+        be run as in case of `force_installed`.
         """
-
-        if force_installed:
-            cmd = f"{python()} -I -m universum"
-        elif utils.reuse_docker_containers() or workdir:
-            cmd = f"{python()} -m universum"
+        if force_installed or utils.reuse_docker_containers() or workdir:
+            cmd = "universum"
         else:
             cmd = f"coverage run --branch --append --source='{self.working_dir}' -m universum"
 
@@ -269,23 +274,25 @@ class UniversumRunner:
         if not workdir:
             workdir = self.working_dir
 
-        if expected_to_fail:
-            result = self.environment.assert_unsuccessful_execution(cmd, environment=environment, workdir=workdir)
-        else:
-            result = self.environment.assert_successful_execution(cmd, environment=environment, workdir=workdir)
+        result = self.environment.run_as_python_module(cmd, result=not expected_to_fail, environment=environment,
+                                                       workdir=workdir, force_installed=force_installed)
 
         os.remove(config_file)
         return result
 
-    def clean_artifacts(self) -> None:
+    def clean_for_reuse(self) -> None:
         self.environment.assert_successful_execution(f"rm -rf '{self.artifact_dir}'")
+        self.environment.assert_successful_execution(
+            f"rm -rf '{self.environment.get_working_directory()}/{self.environment.venv_name}'")
+        self.environment.install_python_module(self.working_dir)
+        self.environment.install_python_module("coverage")
 
 
 @pytest.fixture()
 def runner_without_environment(perforce_workspace: PerforceWorkspace, git_client: GitClient, local_sources: LocalSources):
     runner = UniversumRunner(perforce_workspace, git_client, local_sources, nonci=False)
     yield runner
-    runner.clean_artifacts()
+    runner.clean_for_reuse()
 
 
 @pytest.fixture()
@@ -300,7 +307,7 @@ def docker_fixture_template(request, execution_environment: ExecutionEnvironment
     execution_environment.set_image("universum_test_env_" + python())
     runner.set_environment(execution_environment)
     yield runner
-    runner.clean_artifacts()
+    runner.clean_for_reuse()
 
 
 docker_main = pytest.fixture(params=[False], ids=["main"])(docker_fixture_template)

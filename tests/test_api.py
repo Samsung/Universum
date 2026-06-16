@@ -2,19 +2,19 @@ import json
 from os import path
 
 from .deployment_utils import UniversumRunner
-from .utils import python
 
-config = f"""
+
+def get_config(python_path):
+    return f"""
 from universum.configuration_support import Configuration
 
 configs = Configuration([dict(name="Run script", artifacts="output.json",
-                              command=["bash", "-c", "{python()} -m universum api file-diff > output.json"])])
+                              command=["bash", "-c", "{ python_path } -m universum api file-diff > output.json"])])
 """
 
 
 def test_error_wrong_environment(docker_main_and_nonci: UniversumRunner):
-    cmd = f"{python()} -m universum api file-diff"
-    log = docker_main_and_nonci.environment.assert_unsuccessful_execution(cmd)
+    log = docker_main_and_nonci.environment.run_as_python_module("universum api file-diff", result=False)
     assert "Error: Failed to read the 'UNIVERSUM_DATA_FILE' from environment" in log
 
 
@@ -31,7 +31,8 @@ def test_p4_file_diff(docker_main_with_vcs: UniversumRunner):
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
 
-    log = docker_main_with_vcs.run(config, vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
+    log = docker_main_with_vcs.run(get_config(docker_main_with_vcs.environment.python),
+                                   vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
                                    additional_parameters=" --p4-force-clean")
     assert "Module sh got exit code" not in log
 
@@ -57,7 +58,8 @@ def test_multiple_p4_file_diff(docker_main_with_vcs: UniversumRunner):
     shelve_cl = p4.save_change(change)[0].split()[1]
     p4.run_shelve("-fc", shelve_cl)
 
-    log = docker_main_with_vcs.run(config, vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
+    log = docker_main_with_vcs.run(get_config(docker_main_with_vcs.environment.python),
+                                   vcs_type="p4", environment=[f"SHELVE_CHANGELIST={shelve_cl}"],
                                    additional_parameters=" --p4-force-clean")
     assert "Module sh got exit code" not in log
 
@@ -81,7 +83,7 @@ def test_git_file_diff(docker_main_with_vcs: UniversumRunner):
     change = repo.index.commit("Special commit for testing")
     repo.remotes.origin.push(progress=logger, all=True)
 
-    log = docker_main_with_vcs.run(config, vcs_type="git",
+    log = docker_main_with_vcs.run(get_config(docker_main_with_vcs.environment.python), vcs_type="git",
                                    environment=[f"GIT_CHERRYPICK_ID={change}",
                                                 f"GIT_REFSPEC={server.target_branch}"])
     assert "Module sh got exit code" not in log
@@ -111,7 +113,7 @@ def test_multiple_git_file_diff(docker_main_with_vcs: UniversumRunner):
     change = repo.index.commit("Special commit for testing")
     repo.remotes.origin.push(progress=logger, all=True)
 
-    log = docker_main_with_vcs.run(config, vcs_type="git",
+    log = docker_main_with_vcs.run(get_config(docker_main_with_vcs.environment.python), vcs_type="git",
                                    environment=[f"GIT_CHERRYPICK_ID={change}",
                                                 f"GIT_REFSPEC={server.target_branch}"])
     assert "Module sh got exit code" not in log

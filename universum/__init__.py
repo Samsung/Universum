@@ -1,2 +1,2 @@
 __title__ = "Universum"
-__version__ = "0.19.22"
+__version__ = "0.19.23"
