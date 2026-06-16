@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y wget software-properties-common
 
 # Install latest python & pip
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev python3-setuptools python3-pip \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ${PYTHON}-dev ${PYTHON}-venv python3-setuptools python3-pip \
     gnupg2 libssl-dev build-essential
 
 FROM universum_test_env_no_vcs AS universum_test_env_no_p4

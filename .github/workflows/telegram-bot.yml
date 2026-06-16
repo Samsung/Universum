@@ -5,7 +5,7 @@ on:
   issue_comment:
     types: [created]
   workflow_run:
-    workflows: [Universum check]
+    workflows: [Universum PR check, Universum postcommit]
     types: [completed]
   pull_request_review:
     types: [submitted, edited, dismissed]

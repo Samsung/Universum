@@ -1,6 +1,10 @@
 name: Universum postcommit
 on:
-  push
+  push:
+    branches:
+      - main
+      - release
+  workflow_dispatch:
 
 jobs:
   universum_postcommit:
