@@ -1,6 +1,16 @@
 Change log
 ==========
 
+0.19.23 (2026-06-16)
+--------------------
+
+Bug fixes
+~~~~~~~~~
+
+* **p4:** rare bug with unshelving outdated delete no longer
+  crushes whole run
+
+
 0.19.22 (2024-12-18)
 --------------------
 
